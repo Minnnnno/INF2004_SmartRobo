@@ -1,0 +1,14 @@
+build*/
+!build_make/
+build*.log
+motor-test-configure.log
+.tools/
+third_party/
+*.uf2
+*.elf
+__pycache__/
+.template-reference/
+config/wifi_secrets.h
+*.o
+*.d
+*.map

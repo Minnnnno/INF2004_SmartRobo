@@ -1,0 +1,42 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Configure Pico Project",
+            "type": "process",
+            "command": "cmake",
+            "windows": {
+                "command": "${env:USERPROFILE}/.pico-sdk/cmake/v4.3.4/bin/cmake.exe"
+            },
+            "args": [
+                "-S", "${workspaceFolder}",
+                "-B", "${workspaceFolder}/build",
+                "-G", "Ninja",
+                "-DPICO_BOARD=pico_w",
+                "-DSMP=OFF",
+                "-DWIFI=none",
+                "-DNET=none",
+                "-DPython3_EXECUTABLE=${command:raspberry-pi-pico.getPythonPath}"
+            ],
+            "problemMatcher": [],
+            "presentation": {"reveal": "always", "panel": "dedicated"}
+        },
+        {
+            "label": "Compile Project",
+            "type": "process",
+            "command": "cmake",
+            "windows": {
+                "command": "${env:USERPROFILE}/.pico-sdk/cmake/v4.3.4/bin/cmake.exe"
+            },
+            "args": [
+                "--build", "${workspaceFolder}/build",
+                "--target", "mtkernel_3",
+                "--parallel"
+            ],
+            "dependsOn": "Configure Pico Project",
+            "group": {"kind": "build", "isDefault": true},
+            "problemMatcher": "$gcc",
+            "presentation": {"reveal": "always", "panel": "dedicated"}
+        }
+    ]
+}
