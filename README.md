@@ -25,10 +25,16 @@ Shared interfaces remain in include/robot.h and include/motion.h. Requests pass
 through the Vehicle Controller into Motion Control. Stop/fault/shutdown bypass
 ordinary requests and invalidate stale commands. Other buddies sleep until implemented.
 
-**Motion remains inhibited until real hardware settings are confirmed.**
+**Production motion is enabled after the user's hardware confirmation.**
+Startup stays stopped, manual PWM remains disabled, and production output is
+capped at 25%. Calibration profiles retain inhibited production control.
+See [production firmware and subsystem integration](docs/PRODUCTION_INTEGRATION.md).
 Measured encoder counts/revolution are 2542.4 left and 2543.4 right.
 For the separate one-second, 25% motor-test firmware and serial commands, see
 [safe motor testing](docs/SAFE_MOTOR_TEST.md).
+Verified wheel diameters are 65 mm and track width is 115 mm. For the separate
+encoder-based 90-degree firmware, commands and results, see
+[angle testing](docs/ANGLE_TEST.md).
 SMP is explicitly disabled for this motion integration. WiFi and networking are
 off by default; imported driver code is available for Buddy 1.
 

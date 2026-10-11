@@ -1,5 +1,9 @@
 # Interfaces, states and ownership
 
+Production motion is enabled in normal builds. Calibration profiles retain
+their inhibited controller. See [production integration](PRODUCTION_INTEGRATION.md)
+for the correct UF2, build flags and SOURCE_LINE examples.
+
 `include/robot.h` is the task-context public interface. `include/motion.h` is the
 single-owner portable core: only Motion Control may call its mutation functions
 in target firmware. `motion_hal.h` is private to startup/Motion Control (passive

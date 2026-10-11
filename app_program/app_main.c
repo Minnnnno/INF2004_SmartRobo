@@ -4,6 +4,9 @@
 #include "robot.h"
 #include "subsystems.h"
 #include <math.h>
+#ifdef ROBO_PRODUCTION_BUILD
+#include <tm/tmonitor.h>
+#endif
 
 static robot_bus_t bus;
 static motion_t motion;
@@ -144,6 +147,11 @@ INT usermain(void)
     double now = motion_hal_time();
     motion_init(&motion, &config, motion_hal_sample(), now, setup && ((now - start) <= config.setup_timeout));
     robot_bus_init(&bus, &motion.status);
+#ifdef ROBO_PRODUCTION_BUILD
+    tm_printf((const UB *)"firmware=%s hardware_confirmed=%u manual_enabled=%u max_output_percent=%u production=1\n",
+              (const UB *)ROBO_ENCODER_BUILD_ID, (unsigned)config.hardware_confirmed,
+              (unsigned)config.manual_enabled, (unsigned)(config.max_output * 100.0));
+#endif
     status_mutex = tk_cre_mtx(&mutex);
     if (status_mutex <= 0) { motion_hal_emergency_stop(); return 0; }
     for (i = 0; i < 7U; ++i) {

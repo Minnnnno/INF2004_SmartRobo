@@ -53,9 +53,9 @@ int main(void)
     motion_config_t config = board_motion_config();
     CHECK(config.counts_per_rev[0] == 2542.4 && config.counts_per_rev[1] == 2543.4);
     CHECK(!config.hardware_confirmed && !config.manual_enabled);
-    CHECK(config.motor_sign[0] == 1 && config.motor_sign[1] == -1);
+    CHECK(config.motor_sign[0] == 1 && config.motor_sign[1] == 1);
     CHECK(config.encoder_sign[0] == 1 && config.encoder_sign[1] == 1);
-    CHECK(config.diameter[0] == 0.0 && config.diameter[1] == 0.0 && config.track == 0.0);
+    CHECK(config.diameter[0] == 0.065 && config.diameter[1] == 0.065 && config.track == 0.115);
     CHECK(encoder_pins[0][0] == 4U && encoder_pins[0][1] == 6U);
     CHECK(encoder_pins[1][0] == 5U && encoder_pins[1][1] == 7U);
     sample.reliable = false;
@@ -77,7 +77,7 @@ int main(void)
             sample.count[wheel] = UINT32_MAX - 10U;
             CHECK(motor_test_start(wheel, sign));
             CHECK(enabled[wheel] && !enabled[1U - wheel]);
-            unsigned driven_channel = wheel == 0U ? direction : 1U - direction;
+            unsigned driven_channel = direction;
             CHECK(duty[wheel][driven_channel] == 1000U && duty[wheel][1U - driven_channel] == 0U);
             CHECK(deadline == (uint32_t)(now + 1000000U));
             before = writes;
@@ -122,7 +122,7 @@ int main(void)
         CHECK(motor_test_start_pair(sign));
         CHECK(enabled[0] && enabled[1]);
         CHECK(duty[0][direction] == 1000U && duty[0][1U - direction] == 0U);
-        CHECK(duty[1][1U - direction] == 1000U && duty[1][direction] == 0U);
+        CHECK(duty[1][direction] == 1000U && duty[1][1U - direction] == 0U);
         CHECK(deadline == (uint32_t)(now + 1000000U));
         before = writes;
         CHECK(!motor_test_start(0U, sign) && !motor_test_start(1U, sign));
