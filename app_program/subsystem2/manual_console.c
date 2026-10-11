@@ -1,6 +1,7 @@
 #ifdef ROBO_MANUAL_CONSOLE
 #include "robot_rtos.h"
 #include "robot.h"
+#include "subsystems.h"
 #include "motion_hal.h"
 #include "template_hal.h"
 #include "motor_test.h"
@@ -90,7 +91,7 @@ void manual_console(void)
 #ifdef ROBO_SAFE_MOTOR_TEST
     bool test_shutdown = false;
     bool discard_line = false;
-    printf("firmware=%s safe_motor_test_ready=%u production_inhibited=1 output=25%% max_ms=1000\n",
+    printf("firmware=%s safe_motor_test_ready=%u production_inhibited=1 output=25%% serial_max_ms=1000 ir_continuous=1\n",
            (const UB *)ROBO_ENCODER_BUILD_ID, (unsigned)motor_test_init());
 #endif
     for (;;) {
@@ -113,7 +114,7 @@ void manual_console(void)
             if (input == -2) {
                 used = 0U; armed = false; motion_stop();
 #ifdef ROBO_SAFE_MOTOR_TEST
-                motor_test_stop(); discard_line = true;
+                line_forward_pause(); motor_test_stop(); discard_line = true;
 #endif
                 continue;
             }
@@ -141,7 +142,7 @@ void manual_console(void)
                     }
                     print_counts(&sample);
 #ifdef ROBO_SAFE_MOTOR_TEST
-                    printf("production_inhibited=1 motor_test_active=%u output_percent=25 max_ms=1000\n",
+                    printf("production_inhibited=1 motor_test_active=%u output_percent=25 serial_max_ms=1000 ir_continuous=1\n",
                            (unsigned)motor_test_active());
 #endif
                 } else if (strcmp(line, "encdiag") == 0) {
@@ -156,13 +157,13 @@ void manual_console(void)
 #endif
                 } else if (strcmp(line, "stop") == 0) {
 #ifdef ROBO_SAFE_MOTOR_TEST
-                    motor_test_stop();
+                    line_forward_pause(); motor_test_stop();
                     puts("motors_stopped=1");
 #endif
                     motion_stop(); armed = false;
                 } else if (strcmp(line, "shutdown") == 0) {
 #ifdef ROBO_SAFE_MOTOR_TEST
-                    motor_test_stop(); test_shutdown = true;
+                    motor_test_shutdown(); test_shutdown = true;
 #endif
                     motion_request_shutdown(); armed = false;
 #ifdef ROBO_SAFE_MOTOR_TEST
@@ -208,7 +209,7 @@ void manual_console(void)
             else {
                 used = 0U; armed = false;
 #ifdef ROBO_SAFE_MOTOR_TEST
-                motor_test_stop(); discard_line = true;
+                line_forward_pause(); motor_test_stop(); discard_line = true;
 #endif
             }
         }

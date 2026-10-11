@@ -11,11 +11,13 @@
 /* No production configuration gates are changed. Only this isolated profile
  * can call the test actuator. Alarm3/IRQ3 is unused elsewhere in this build. */
 static volatile bool ready, active, result_pending;
+static bool sensor_forward;
 static encoder_sample_t baseline;
 static volatile motor_test_result_t completed;
 static uint64_t cooldown_until;
 static int motor_sign[2];
-enum { TEST_DUTY = 1000, TEST_DURATION_US = 1000000, TEST_COOLDOWN_US = 300000 };
+enum { TEST_DUTY = 1000, TEST_DURATION_US = 1000000, TEST_COOLDOWN_US = 300000,
+       SENSOR_WATCHDOG_US = 300000 };
 
 static void stop_outputs(void)
 {
@@ -43,13 +45,14 @@ static void finish(bool timed_out)
     completed.timed_out = timed_out;
     cooldown_until = time_us_64() + TEST_COOLDOWN_US;
     active = false;
+    sensor_forward = false;
     result_pending = true;
 }
 
 static void deadline_irq(UINT number)
 {
     (void)number;
-    finish(true); /* Hardware alarm stops PWM even if the console task is delayed. */
+    finish(true); /* Serial cutoff or missed-sensor-update watchdog. */
 }
 
 bool motor_test_init(void)
@@ -76,7 +79,7 @@ bool motor_test_init(void)
     return true;
 }
 
-static bool start_test(unsigned wheel_mask, int direction)
+static bool start_test(unsigned wheel_mask, int direction, bool sensor)
 {
     uint32_t irq_state = save_and_disable_interrupts();
     uint64_t now = time_us_64();
@@ -91,9 +94,10 @@ static bool start_test(unsigned wheel_mask, int direction)
     completed.wheel = wheel_mask == 3U ? 2U : (wheel_mask == 1U ? 0U : 1U);
     completed.direction = direction;
     active = true;
-    /* Arm the cutoff BEFORE enabling PWM. Time spent setting outputs subtracts
-     * from, rather than adds to, the nominal maximum one-second pulse. */
-    out_w(TIMER_ALARM3, (uint32_t)(time_us_64() + TEST_DURATION_US));
+    sensor_forward = sensor;
+    /* Arm the serial cutoff or sensor watchdog BEFORE enabling PWM. */
+    out_w(TIMER_ALARM3, (uint32_t)(time_us_64() +
+          (sensor ? SENSOR_WATCHDOG_US : TEST_DURATION_US)));
     for (wheel = 0U; wheel < 2U; ++wheel) {
         unsigned slice = 4U + wheel;
         int electrical_direction = direction * motor_sign[wheel];
@@ -111,12 +115,26 @@ static bool start_test(unsigned wheel_mask, int direction)
 bool motor_test_start(unsigned wheel, int direction)
 {
     if (wheel > 1U) { return false; }
-    return start_test(1U << wheel, direction);
+    return start_test(1U << wheel, direction, false);
 }
 
 bool motor_test_start_pair(int direction)
 {
-    return start_test(3U, direction);
+    return start_test(3U, direction, false);
+}
+
+bool motor_test_sensor_forward(void)
+{
+    uint32_t irq_state = save_and_disable_interrupts();
+    bool accepted;
+    if (ready && active && sensor_forward) {
+        /* Fresh sensor readings extend the watchdog without touching PWM.
+         * Normal 100 ms updates therefore drive continuously, with no pauses. */
+        out_w(TIMER_ALARM3, (uint32_t)(time_us_64() + SENSOR_WATCHDOG_US));
+        accepted = true;
+    } else { accepted = start_test(3U, 1, true); }
+    restore_interrupts(irq_state);
+    return accepted;
 }
 
 void motor_test_stop(void)
@@ -129,6 +147,14 @@ void motor_test_stop(void)
 bool motor_test_active(void)
 {
     return active;
+}
+
+void motor_test_shutdown(void)
+{
+    uint32_t irq_state = save_and_disable_interrupts();
+    ready = false; /* Block both serial and sensor entry points until reboot. */
+    finish(false);
+    restore_interrupts(irq_state);
 }
 
 bool motor_test_result(motor_test_result_t *result)

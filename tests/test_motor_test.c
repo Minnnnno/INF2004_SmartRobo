@@ -61,6 +61,7 @@ int main(void)
     sample.reliable = false;
     CHECK(!motor_test_init());
     CHECK(!motor_test_start(0U, 1));
+    CHECK(!motor_test_sensor_forward());
     CHECK(!enabled[0] && !enabled[1]);
     sample.reliable = true;
     CHECK(motor_test_init());
@@ -142,6 +143,40 @@ int main(void)
         CHECK(!motor_test_start_pair(-sign));
         expect_pair = false;
     }
+    now += 400000U;
+    expect_pair = true;
+    CHECK(motor_test_sensor_forward());
+    CHECK(enabled[0] && enabled[1] && motor_test_active());
+    CHECK(duty[0][0] == 1000U && duty[0][1] == 0U);
+    CHECK(duty[1][0] == 0U && duty[1][1] == 1000U);
+    unsigned continuous_writes = writes;
+    for (unsigned refresh = 0U; refresh < 50U; ++refresh) {
+        now += 100000U; /* Five seconds of continuous 100 ms sensor updates. */
+        CHECK(motor_test_sensor_forward());
+        CHECK(enabled[0] && enabled[1] && motor_test_active());
+        CHECK(writes == continuous_writes); /* No PWM reset, stop or restart. */
+        CHECK(deadline == (uint32_t)(now + 300000U));
+        CHECK(!motor_test_start_pair(-1) && !motor_test_start(0U, 1));
+    }
+    motor_test_stop();
+    CHECK(!motor_test_active() && !enabled[0] && !enabled[1]);
+    CHECK(motor_test_result(&result) && !result.timed_out && result.wheel == 2U);
+    CHECK(!motor_test_sensor_forward()); /* Cooldown only after an actual stop. */
+    now += 400000U;
+    CHECK(motor_test_sensor_forward());
+    now += 300000U;
+    deadline_handler(3U); /* Sensor readings stop: watchdog turns motors off. */
+    CHECK(!motor_test_active() && !enabled[0] && !enabled[1] && !alarm_armed);
+    CHECK(motor_test_result(&result) && result.timed_out);
+    now = ((uint64_t)UINT32_MAX + 1U) * 2U - 100U;
+    CHECK(motor_test_sensor_forward());
+    CHECK(deadline == (uint32_t)(now + 300000U)); /* Watchdog timer rollover. */
+    motor_test_shutdown();
+    CHECK(!motor_test_active() && !enabled[0] && !enabled[1] && !alarm_armed);
+    CHECK(motor_test_result(&result));
+    now += 400000U;
+    CHECK(!motor_test_start_pair(1) && !motor_test_start(0U, 1));
+    CHECK(!motor_test_sensor_forward());
     printf("PASS: %u motor-test checks (mock registers; no physical hardware claim)\n", checks);
     return 0;
 }

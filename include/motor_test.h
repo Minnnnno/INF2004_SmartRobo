@@ -11,7 +11,9 @@ typedef struct {
 bool motor_test_init(void);
 bool motor_test_start(unsigned wheel, int direction);
 bool motor_test_start_pair(int direction);
+bool motor_test_sensor_forward(void); /* Continuous forward while refreshed by IR task. */
 void motor_test_stop(void);
+void motor_test_shutdown(void);
 bool motor_test_result(motor_test_result_t *result);
 bool motor_test_active(void);
 #endif
