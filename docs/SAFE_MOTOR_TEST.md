@@ -1,7 +1,7 @@
 # Buddy 2 isolated motor test
 
 The latest verified geometry and motor polarity are documented in
-[angle testing](ANGLE_TEST.md): diameter 65 mm, track 115 mm, motor signs `{1,1}`.
+[angle testing](ANGLE_TEST.md): diameter 65 mm, track 115 mm, motor signs `{1,-1}`.
 These supersede the earlier geometry/polarity discussion below. The angle-test
 UF2 is a separate profile with different commands and an eight-second timeout.
 

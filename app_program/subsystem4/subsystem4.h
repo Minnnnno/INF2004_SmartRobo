@@ -1,32 +1,11 @@
-/*
- *	subsystem4.h
- *	Subsystem 4 -- Monitor (reporting).  Student ID: <student ID>.
- *
- *	Public interface of subsystem 4.  Other subsystems include it as
- *	"../subsystem4/subsystem4.h".
- */
-
+/* GY-511 configuration; terrain_task is started by usermain at priority 8. */
 #ifndef SUBSYSTEM4_H
 #define SUBSYSTEM4_H
-
-#include "../app.h"
-
-#define S4_PRI_MONITOR		18	/* priority band 18-19 (TEAM.md) */
-#define S4_ALARM_MS		2000	/* report anyway if nothing for 2 s */
-
-/* IF-03: send one text line (at most S4_SUMMARY_MAX bytes, no '\0'
-   needed) to mbf_summary, then set FLG_BATCH in flg_events. */
-#define S4_SUMMARY_MAX		48
-#define FLG_BATCH		0x0002	/* set by subsystem 3 */
-#define FLG_ALARM		0x0001	/* private: set by our alarm handler */
-
-IMPORT ID	mbf_summary;
-IMPORT ID	flg_events;
-
-/* Private to subsystem 4 */
-IMPORT ID	alm_monitor;
-IMPORT UW	s4_lines_received;	/* for the tests */
-IMPORT void	monitor_task(INT stacd, void *exinf);
-IMPORT void	monitor_alarm_handler(void *exinf);
-
-#endif /* SUBSYSTEM4_H */
+#include "robot_rtos.h"
+#define S4_GY511_I2C_DEVICE "iicb"
+#define S4_GY511_ACC_ADDRESS (0x19U)
+#define S4_GY511_MAG_ADDRESS (0x1EU)
+/* Task context only. Configure once, then sample from the sole bus owner. */
+ER subsystem4_gy511_configure(void);
+void terrain_task(INT code, void *p_context);
+#endif

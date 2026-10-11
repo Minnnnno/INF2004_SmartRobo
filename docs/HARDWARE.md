@@ -27,7 +27,7 @@ signal can connect directly to Pico GPIO. Confirm the ultrasonic echo interface 
 | Right motor M2A/M2B | 10/11, fixed board driver links |
 | Left encoder A/B | GP4/GP6, matching CSC24 Week 6 report section 2 |
 | Right encoder A/B | GP5/GP7, matching CSC24 Week 6 report section 2 |
-| Magnetometer/IMU | 2/3, reserved for **I2C1**, not I2C0 on these pins |
+| Magnetometer/IMU | 2/3 (SDA/SCL), **I2C1**, owned by subsystem 4 |
 | Servo | 12, reserved; PWM slice 6A |
 | Ultrasonic | 16/17, reserved TRIG/ECHO |
 | Line sensors | 26/27, ADC0/1 |
@@ -43,13 +43,14 @@ Encoder connector wiring from `CSC24_Week6_Report.docx`, section 2:
 | 4 | Supply | 3V3 | 3V3 |
 
 Connector pins 2/3 are labels on the encoder connector. They do not mean GP2/GP3
-on the Pico; those GPIOs are reserved for I2C. Named definitions are in
+on the Pico. The IMU now uses GP2/GP3. Named definitions are in
 `include/board_config.h`. The report specifies this wiring; physical encoder
 compatibility, signs and counts still require the calibration checks.
 
 Motors use PWM slices 4 and 5; encoder signals are digital inputs, not PWM. ADC
-use on 26/27 does not claim PWM slice 5. Disable BSP sample drivers: their sample
-I2C pin selection in the earlier BSP included GP8/9. Do not start core 1 or overwrite
+use on 26/27 does not claim PWM slice 5. Only the I2C1 driver is enabled,
+on GP2/GP3; the earlier BSP I2C0 defaults GP8/9 overlap motor pins
+and I2C0 must remain inactive. Do not start core 1 or overwrite
 the board GPIO dispatcher. Other buddies register nonoverlapping pin masks through
 board_gpio_irq_register; see TEAM.md. The template USB IRQ shim is not a GPIO dispatcher.
 

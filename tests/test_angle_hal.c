@@ -40,15 +40,15 @@ int main(void)
     unsigned before;
     CHECK(angle_test_init()); CHECK(!enabled[0] && !enabled[1] && !angle_test_active());
     CHECK(angle_test_start(1)); CHECK(enabled[0] && enabled[1]);
-    CHECK(duty[0][0]==0U && duty[0][1]==1000U && duty[1][0]==1000U && duty[1][1]==0U);
+    CHECK(duty[0][0]==0U && duty[0][1]==1000U && duty[1][0]==0U && duty[1][1]==1000U);
     CHECK(deadline==8000000U); CHECK(!angle_test_start(-1) && deadline==8000000U);
     sample.count[0]=0U-1000U; sample.count[1]=1000U; now=10000U; angle_test_poll();
-    CHECK(duty[0][1]<1000U && duty[1][0]<1000U);
+    CHECK(duty[0][1]<1000U && duty[1][1]<1000U);
     sample.count[0]=0U-1125U; sample.count[1]=1125U; now=20000U; angle_test_poll();
     CHECK(!enabled[0] && !enabled[1] && angle_test_status().state==ANGLE_BRAKING);
     now=330000U; angle_test_poll(); CHECK(angle_test_status().state==ANGLE_DONE && !armed);
     now=1000000U; CHECK(angle_test_start(-1));
-    CHECK(duty[0][0]==1000U && duty[0][1]==0U && duty[1][0]==0U && duty[1][1]==1000U);
+    CHECK(duty[0][0]==1000U && duty[0][1]==0U && duty[1][0]==1000U && duty[1][1]==0U);
     now=1100000U; angle_test_stop(); CHECK(!enabled[0] && !enabled[1] && !armed);
     CHECK(angle_test_status().state==ANGLE_STOPPED && !angle_test_start(1));
     now=1500000U; CHECK(angle_test_start(1));

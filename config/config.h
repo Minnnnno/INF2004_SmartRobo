@@ -168,7 +168,7 @@
 /* Use Sample device driver.
  *  1: Valid  0: Invalid
  */
-#define USE_SDEV_DRV		(0)	/* Application owners explicitly configure sensors. */
+#define USE_SDEV_DRV		(1)	/* I2C1 only; subsystem 4 configures the sensor. */
 
 /*---------------------------------------------------------------------- */
 /*

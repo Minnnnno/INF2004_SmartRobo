@@ -32,7 +32,8 @@ motion_config_t board_motion_config(void)
     motion_config_t config = {
         /* User-confirmed production measurements and polarity. */
         .counts_per_rev = {2542.4, 2543.4}, .diameter = {0.065, 0.065}, .track = 0.115,
-        .motor_sign = {1, 1}, .encoder_sign = {1, 1}, .quadrature = {true, true},
+        /* Right motor reversed: user wheel test and commit 5825f0c agree. */
+        .motor_sign = {1, -1}, .encoder_sign = {1, 1}, .quadrature = {true, true},
         /* Provisional tuning only; validate on the actual robot. */
         .max_speed = 0.25, .acceleration = 0.3, .max_output = 0.25,
         .period = 0.01, .max_dt = 0.05,

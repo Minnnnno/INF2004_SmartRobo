@@ -166,3 +166,11 @@ limits; state resets at stops/faults/mode transitions, not speed refresh. Per-wh
 gains and PWM may differ to achieve equal wheel speeds. Configure stopping distance,
 low-speed resolution and settling jointly: pulses absent for the settling interval
 cannot prove zero speed below the encoder's measurable resolution.
+
+Subsystem 4 now supplies the Terrain snapshot from its background GY-511 task.
+The validity mask uses bit 1 (value 2) for pitch. Heading and hump-height slots
+remain zero and invalid. Availability indicates raw readings less than 200 ms
+old; the snapshot timestamp is the sample time, not a repeated publish time.
+Separate forward and side classifications and raw axes are queued through
+Buddy 1 when MQTT is online. See app_program/subsystem4/README.md for payloads.
+Terrain action names are suggestions; the monitor does not command motors.

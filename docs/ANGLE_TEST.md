@@ -1,17 +1,18 @@
 # Buddy 2 encoder-based 90-degree tests
 
-The user's verified settings are installed in `board_config.c`:
+The current mounting settings are installed in `board_config.c`:
 
 ```c
 .counts_per_rev = {2542.4, 2543.4},
 .diameter = {0.065, 0.065},
 .track = 0.115,
-.motor_sign = {1, 1},
+.motor_sign = {1, -1},
 .encoder_sign = {1, 1},
 ```
 
-Lengths are in metres. These motor signs intentionally replace the earlier
-right-motor reversal, following the user's latest verified values.
+Lengths are in metres. The right-motor reversal is restored from commit 5825f0c
+after the user observed the right wheel moving backward on a forward command.
+Rebuild the angle-test image before using this corrected polarity.
 Encoders remain left GP4/GP6, right GP5/GP7. Motors remain left GP8/GP9,
 right GP10/GP11. `hardware_confirmed=false` and `manual_enabled=false` remain
 unchanged in this angle-test profile. The production controller stays inhibited even though geometry is

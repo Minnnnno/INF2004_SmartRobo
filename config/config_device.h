@@ -25,11 +25,9 @@
  *	1: Use   0: Do not use
  */
 
-#define DEVCNF_USE_SER		1		// Serial communication device 
-#define DEVCNF_USE_ADC		1		// A/D conversion device
-#define DEVCNF_USE_IIC		0		// I2C communication device
-		/* Off by default so no pins are claimed at boot.  To use I2C,
-		   set this to 1 and choose the pins in
-		   device/i2c/sysdepend/rp2040/i2c_cnf_sysdep.h. */
+#define DEVCNF_USE_SER		0		// Serial communication device
+#define DEVCNF_USE_ADC		0		// A/D conversion device
+#define DEVCNF_USE_IIC		1		// I2C communication device
+		/* Only I2C1 is initialised at boot, on GP2/GP3. */
 
 #endif	/* __DEV_CONFIG_H__ */

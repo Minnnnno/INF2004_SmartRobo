@@ -21,7 +21,7 @@ int main(void)
     encoder_sample_t sample = {.count={UINT32_MAX-10U,20U}, .reliable=true};
     unsigned direction, i;
     CHECK(!config.hardware_confirmed && !config.manual_enabled);
-    CHECK(config.motor_sign[0] == 1 && config.motor_sign[1] == 1);
+    CHECK(config.motor_sign[0] == 1 && config.motor_sign[1] == -1);
     for (direction = 0U; direction < 2U; ++direction) {
         int sign = direction == 0U ? 1 : -1;
         angle_control_init(&c,&config);
