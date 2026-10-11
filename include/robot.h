@@ -5,7 +5,6 @@
 typedef enum { SOURCE_MANUAL, SOURCE_LINE, SOURCE_BARCODE, SOURCE_OBSTACLE, SOURCE_WIFI, SOURCE_TERRAIN } request_source_t;
 typedef enum { CONTROL_STOP = 1U, CONTROL_RELEASE = 2U, CONTROL_RESET = 4U,
                CONTROL_FAULT = 8U, CONTROL_SHUTDOWN = 16U } robot_control_t;
-typedef enum { REMOTE_START = 1, REMOTE_STOP, REMOTE_ESTOP } robot_remote_command_t;
 typedef struct { request_source_t source; motion_command_t command; } robot_request_t;
 typedef struct {
     bool available; /* false until owner supplies genuine data */
@@ -38,8 +37,6 @@ void robot_bus_init(robot_bus_t *bus, const motion_status_t *status);
 motion_result_t robot_request(robot_bus_t *bus, const robot_request_t *request);
 void robot_control(robot_bus_t *bus, robot_control_t control, bool checks_ok, bool external_rest);
 void vehicle_controller_cycle(robot_bus_t *bus, double now);
-/* Bridge for Buddy 1's queued start/stop/estop commands; caller holds bus mutex. */
-motion_result_t vehicle_controller_remote_command(robot_bus_t *bus, robot_remote_command_t command);
 /* Take controls/approved under lock; run control calculations outside lock. */
 void robot_motion_inputs(robot_bus_t *bus, motion_t *motion, encoder_sample_t sample, double now);
 void robot_publish(robot_bus_t *bus, motion_t *motion, double now);

@@ -1,21 +1,18 @@
 {
     "configurations": [
         {
-            "name": "Pico",
-            "includePath": [
-                "${workspaceFolder}/**",
-                "${userHome}/.pico-sdk/sdk/2.3.0/**"
-            ],
-            "forcedInclude": [
-                "${workspaceFolder}/build/generated/pico_base/pico/config_autogen.h",
-                "${userHome}/.pico-sdk/sdk/2.3.0/src/common/pico_base_headers/include/pico.h"
-            ],
-            "defines": [],
+            "name": "Pico W",
             "compilerPath": "${userHome}/.pico-sdk/toolchain/15_2_Rel1/bin/arm-none-eabi-gcc.exe",
             "compileCommands": "${workspaceFolder}/build/compile_commands.json",
-            "cStandard": "c17",
-            "cppStandard": "c++14",
-            "intelliSenseMode": "linux-gcc-arm"
+            "includePath": [
+                "${workspaceFolder}/include",
+                "${workspaceFolder}/config",
+                "${workspaceFolder}/app_program/**"
+            ],
+            "defines": ["_PICO_RP2040_", "CNF_SMP=0"],
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-arm"
         }
     ],
     "version": 4

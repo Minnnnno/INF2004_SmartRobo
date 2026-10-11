@@ -5,7 +5,6 @@ option(ROBO_HOST_TESTS "Build portable Buddy 2 host tests only" OFF)
 option(ROBO_MANUAL_CONSOLE "Enable deliberately armed motion calibration console" OFF)
 option(ROBO_ENCODER_DIAGNOSTICS_ONLY "Read-only encoder/USB diagnostics; compile out motor activation" OFF)
 option(ROBO_SAFE_MOTOR_TEST "Isolated 25 percent, one-second motor tests" OFF)
-option(ROBO_ANGLE_TEST "Isolated encoder-based 90-degree turns" OFF)
 if(ROBO_HOST_TESTS)
     project(smart_robo_tests C)
     set(CMAKE_C_STANDARD 11)
@@ -28,36 +27,14 @@ if(ROBO_HOST_TESTS)
         target_link_libraries(motor_test_checks m)
     endif()
     add_test(NAME motor_test_checks COMMAND motor_test_checks)
-    add_executable(angle_control_checks app_program/subsystem2/angle_control.c
-        app_program/subsystem2/math.c app_program/subsystem2/board_config.c tests/test_angle_control.c)
-    target_compile_definitions(angle_control_checks PRIVATE ROBO_ANGLE_TEST=1)
-    add_executable(angle_hal_checks app_program/subsystem2/angle_test.c
-        app_program/subsystem2/angle_control.c app_program/subsystem2/math.c
-        app_program/subsystem2/board_config.c tests/test_angle_hal.c)
-    target_compile_definitions(angle_hal_checks PRIVATE ROBO_ANGLE_TEST=1 ROBO_MOTOR_TEST_HOST=1)
-    foreach(angle_check angle_control_checks angle_hal_checks)
-        target_include_directories(${angle_check} PRIVATE include tests)
-        if(NOT MSVC)
-            target_compile_options(${angle_check} PRIVATE -Wall -Wextra -Werror -Wconversion -Wshadow)
-            target_link_libraries(${angle_check} m)
-        endif()
-        add_test(NAME ${angle_check} COMMAND ${angle_check})
-    endforeach()
     return()
 endif()
 
-if(ROBO_ANGLE_TEST AND (NOT ROBO_MANUAL_CONSOLE OR ROBO_SAFE_MOTOR_TEST OR ROBO_ENCODER_DIAGNOSTICS_ONLY))
-    message(FATAL_ERROR "Angle tests require the console and an exclusive firmware profile.")
-endif()
 if(ROBO_SAFE_MOTOR_TEST AND (NOT ROBO_MANUAL_CONSOLE OR ROBO_ENCODER_DIAGNOSTICS_ONLY))
     message(FATAL_ERROR "Motor tests require the console and cannot use the read-only encoder profile.")
 endif()
 if(ROBO_ENCODER_DIAGNOSTICS_ONLY AND NOT ROBO_MANUAL_CONSOLE)
     message(FATAL_ERROR "Encoder diagnostics require ROBO_MANUAL_CONSOLE=ON for serial input.")
-endif()
-set(ROBO_PRODUCTION_BUILD OFF)
-if(NOT ROBO_MANUAL_CONSOLE AND NOT ROBO_ENCODER_DIAGNOSTICS_ONLY AND NOT ROBO_SAFE_MOTOR_TEST AND NOT ROBO_ANGLE_TEST)
-    set(ROBO_PRODUCTION_BUILD ON)
 endif()
 
 set(CMAKE_C_STANDARD 11)
@@ -123,9 +100,6 @@ endif()
 if(ROBO_SAFE_MOTOR_TEST AND (NOT WIFI STREQUAL "none" OR NOT NET STREQUAL "none" OR NOT CONSOLE STREQUAL "usb_cdc"))
     message(FATAL_ERROR "Safe motor tests require USB CDC and disabled WiFi/networking.")
 endif()
-if(ROBO_ANGLE_TEST AND (NOT WIFI STREQUAL "none" OR NOT NET STREQUAL "none" OR NOT CONSOLE STREQUAL "usb_cdc"))
-    message(FATAL_ERROR "Angle tests require USB CDC and disabled WiFi/networking.")
-endif()
 if(MQTT AND NOT NET STREQUAL "lwip")
     message(FATAL_ERROR "MQTT requires NET=lwip.")
 endif()
@@ -162,8 +136,6 @@ file(GLOB MTK_SOURCES CONFIGURE_DEPENDS
     "device/ser/sysdepend/rp2040/*.c"
 )
 
-# Imported producer/consumer/monitor examples are archived and not robot tasks.
-list(FILTER MTK_SOURCES EXCLUDE REGEX "/app_program/subsystem[2-5]/(subsystem2|subsystem[2-5]_test|task_(producer|consumer|monitor))\\.c$")
 add_executable(mtkernel_3
     ${MTK_SOURCES}
     kernel/sysdepend/cpu/core/armv6m/dispatch.S
@@ -174,8 +146,6 @@ target_compile_definitions(mtkernel_3 PRIVATE
     $<$<BOOL:${ROBO_MANUAL_CONSOLE}>:ROBO_MANUAL_CONSOLE=1>
     $<$<BOOL:${ROBO_ENCODER_DIAGNOSTICS_ONLY}>:ROBO_ENCODER_DIAGNOSTICS_ONLY=1>
     $<$<BOOL:${ROBO_SAFE_MOTOR_TEST}>:ROBO_SAFE_MOTOR_TEST=1>
-    $<$<BOOL:${ROBO_ANGLE_TEST}>:ROBO_ANGLE_TEST=1>
-    $<$<BOOL:${ROBO_PRODUCTION_BUILD}>:ROBO_PRODUCTION_BUILD=1>
     _PICO_RP2040_
     CNF_SMP=$<BOOL:${SMP}>
     APP_TEST=$<BOOL:${TEST}>
@@ -186,20 +156,15 @@ target_compile_definitions(mtkernel_3 PRIVATE
     TM_NET_LWIP=$<STREQUAL:${NET},lwip>
     TM_MQTT=$<BOOL:${MQTT}>
 )
-if(ROBO_ENCODER_DIAGNOSTICS_ONLY OR ROBO_SAFE_MOTOR_TEST OR ROBO_ANGLE_TEST OR ROBO_PRODUCTION_BUILD)
+if(ROBO_ENCODER_DIAGNOSTICS_ONLY OR ROBO_SAFE_MOTOR_TEST)
     string(TIMESTAMP encoder_build_stamp "%Y%m%dT%H%M%SZ" UTC)
-    if(ROBO_ANGLE_TEST)
-        set(encoder_build_id "b2-angle-test-v1-${encoder_build_stamp}")
-    elseif(ROBO_SAFE_MOTOR_TEST)
+    if(ROBO_SAFE_MOTOR_TEST)
         set(encoder_build_id "b2-motor-test-v1-${encoder_build_stamp}")
-    elseif(ROBO_ENCODER_DIAGNOSTICS_ONLY)
-        set(encoder_build_id "b2-encdiag-v1-${encoder_build_stamp}")
     else()
-        set(encoder_build_id "b2-production-v1-${encoder_build_stamp}")
+        set(encoder_build_id "b2-encdiag-v1-${encoder_build_stamp}")
     endif()
     target_compile_definitions(mtkernel_3 PRIVATE ROBO_ENCODER_BUILD_ID="${encoder_build_id}")
     file(WRITE "${CMAKE_BINARY_DIR}/encoder-build-id.txt" "${encoder_build_id}\n")
-    file(WRITE "${CMAKE_BINARY_DIR}/firmware-build-id.txt" "${encoder_build_id}\n")
 endif()
 target_compile_options(mtkernel_3 PRIVATE
     -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft -ffreestanding -O2 -g3
@@ -356,18 +321,6 @@ if(ROBO_ENCODER_DIAGNOSTICS_ONLY)
         "${CMAKE_CURRENT_BINARY_DIR}/buddy2_encoder_diag.uf2")
 endif()
 target_link_libraries(mtkernel_3 PRIVATE m)
-if(ROBO_PRODUCTION_BUILD)
-    add_custom_command(TARGET mtkernel_3 POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${CMAKE_CURRENT_BINARY_DIR}/mtkernel_3.uf2"
-        "${CMAKE_CURRENT_BINARY_DIR}/buddy2_production.uf2")
-endif()
-if(ROBO_ANGLE_TEST)
-    add_custom_command(TARGET mtkernel_3 POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${CMAKE_CURRENT_BINARY_DIR}/mtkernel_3.uf2"
-        "${CMAKE_CURRENT_BINARY_DIR}/buddy2_angle_test.uf2")
-endif()
 if(ROBO_SAFE_MOTOR_TEST)
     add_custom_command(TARGET mtkernel_3 POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different

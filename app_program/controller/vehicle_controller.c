@@ -86,18 +86,6 @@ void vehicle_controller_cycle(robot_bus_t *b, double now)
     b->approved_valid = true;
 }
 
-motion_result_t vehicle_controller_remote_command(robot_bus_t *b, robot_remote_command_t command)
-{
-    if (command == REMOTE_STOP) { robot_control(b, CONTROL_STOP, false, false); return R_OK; }
-    if (command == REMOTE_ESTOP) { robot_control(b, CONTROL_FAULT, false, false); return R_OK; }
-    if (command != REMOTE_START) { return R_INVALID; }
-    if (b->shutdown_latched || b->controls != 0U || b->status.motion.state != STOPPED ||
-        b->status.motion.fault != F_NONE || !b->status.motion.stationary ||
-        !b->status.motion.feedback_trusted) { return R_HELD; }
-    robot_control(b, CONTROL_RELEASE, true, false);
-    return R_OK;
-}
-
 void robot_motion_inputs(robot_bus_t *b, motion_t *m, encoder_sample_t sample, double now)
 {
     uint32_t controls = b->controls;

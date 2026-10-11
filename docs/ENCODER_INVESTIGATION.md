@@ -1,10 +1,8 @@
 # Buddy 2 encoder investigation and read-only firmware
 
 Production counts/revolution are now **2542.4 left, 2543.4 right**, per the
-user's measurements. Normal production motion is now enabled by the user's
-confirmation; calibration profiles retain inhibited production controllers.
-See [production integration](PRODUCTION_INTEGRATION.md). Verified geometry and the latest separate 90-degree build are documented
-in [angle testing](ANGLE_TEST.md). For the isolated motor-capable test image, use
+user's measurements. Geometry and enabling flags still inhibit production
+motion. For the new isolated motor-capable test image, use
 [safe motor testing](SAFE_MOTOR_TEST.md). The encoder-only image remains read-only;
 its latest ID/hash are recorded in `build-encoder-diag/encoder-build-manifest.json`.
 
@@ -81,7 +79,7 @@ Identified corrections:
   The linked `motion_hal_write` is a return instruction. Startup holds GP8/9/10/11
   LOW with PWM disabled. ARM, movement, release, and reset commands are unavailable.
 
-Configuration now uses `counts_per_rev={2542.4,2543.4}`, `diameter={0.065,0.065}`, `track=0.115`,
+Configuration now uses `counts_per_rev={2542.4,2543.4}`, `diameter={0,0}`, `track=0`,
 `hardware_confirmed=false`, `manual_enabled=false`. The expected configuration
 fault does not prevent encoder initialization: the HAL is initialized before
 the motion core validates geometry. Raw sampling and diagnostics stay available

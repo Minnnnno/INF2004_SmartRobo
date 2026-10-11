@@ -3,7 +3,6 @@
 #include "template_hal.h"
 #include "encoder_capture.h"
 #include "motor_test.h"
-#include "angle_test.h"
 #include <math.h>
 
 static motion_config_t configuration;
@@ -105,7 +104,7 @@ bool motion_hal_init(const motion_config_t *config)
     }
     encoder_initialised = true;
     restore_interrupts(irq_state);
-#if defined(ROBO_ENCODER_DIAGNOSTICS_ONLY) || defined(ROBO_SAFE_MOTOR_TEST) || defined(ROBO_ANGLE_TEST)
+#if defined(ROBO_ENCODER_DIAGNOSTICS_ONLY) || defined(ROBO_SAFE_MOTOR_TEST)
     /* This build never changes motor GPIOs to PWM, even if settings are edited. */
     return true;
 #else
@@ -145,9 +144,6 @@ void motion_hal_encoder_diagnostics(encoder_diagnostics_t *d)
 #ifdef ROBO_SAFE_MOTOR_TEST
     d->motors_inhibited = !motor_test_active();
 #endif
-#ifdef ROBO_ANGLE_TEST
-    d->motors_inhibited = !angle_test_active();
-#endif
     d->sample.reliable = encoder_initialised;
     for (w = 0; w < 2U; ++w) {
         d->sample.count[w] = capture.count[w];
@@ -166,7 +162,7 @@ void motion_hal_encoder_diagnostics(encoder_diagnostics_t *d)
 
 void motion_hal_write(const double output[2], bool inhibited, double now)
 {
-#if defined(ROBO_ENCODER_DIAGNOSTICS_ONLY) || defined(ROBO_SAFE_MOTOR_TEST) || defined(ROBO_ANGLE_TEST)
+#if defined(ROBO_ENCODER_DIAGNOSTICS_ONLY) || defined(ROBO_SAFE_MOTOR_TEST)
     (void)output; (void)inhibited; (void)now;
     return; /* Startup left all motor outputs LOW; no drive path in this build. */
 #else

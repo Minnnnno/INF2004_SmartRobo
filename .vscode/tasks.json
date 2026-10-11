@@ -16,10 +16,6 @@
                 "-DSMP=OFF",
                 "-DWIFI=none",
                 "-DNET=none",
-                "-DROBO_ANGLE_TEST=OFF",
-                "-DROBO_SAFE_MOTOR_TEST=OFF",
-                "-DROBO_ENCODER_DIAGNOSTICS_ONLY=OFF",
-                "-DROBO_MANUAL_CONSOLE=OFF",
                 "-DPython3_EXECUTABLE=${command:raspberry-pi-pico.getPythonPath}"
             ],
             "problemMatcher": [],

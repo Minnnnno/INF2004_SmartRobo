@@ -3,34 +3,12 @@
 #include "motion_hal.h"
 #include "robot.h"
 #include "subsystems.h"
-#include "app.h"
-#include "subsystem1/comms.h"
-_Static_assert((int)COMMS_CMD_START == (int)REMOTE_START && (int)COMMS_CMD_STOP == (int)REMOTE_STOP &&
-               (int)COMMS_CMD_ESTOP == (int)REMOTE_ESTOP, "Buddy 1 command mapping changed");
 #include <math.h>
-#ifdef ROBO_PRODUCTION_BUILD
-#include <tm/tmonitor.h>
-#endif
 
 static robot_bus_t bus;
 static motion_t motion;
 static ID status_mutex;
 static bool running;
-
-/* Buddy 1's communications owner uses the shared task-creation helper. */
-ID app_start_task(FP entry, PRI priority, UW processor, const char *name)
-{
-    T_CTSK task = {.tskatr = TA_HLNG | TA_RNG0, .task = entry,
-                  .itskpri = priority, .stksz = TASK_STACK_SIZE};
-    ID id;
-    ER result;
-    (void)processor; (void)name; /* This integration requires SMP=OFF. */
-    id = tk_cre_tsk(&task);
-    if (id <= 0) { return id; }
-    result = tk_sta_tsk(id, 0);
-    if (result < E_OK) { (void)tk_del_tsk(id); return result; }
-    return id;
-}
 
 static bool lock_bus(void)
 {
@@ -146,17 +124,6 @@ static void controller_task(INT code, void *context)
 {
     (void)code; (void)context;
     for (;;) {
-        /* Consume Buddy 1's command buffer without blocking motion scheduling. */
-        for (unsigned budget = 0U; budget < 4U; ++budget) {
-            COMMS_CMD command;
-            INT received = tk_rcv_mbf(mbf_comms_cmd, &command, TMO_POL);
-            if (received < E_OK) { break; }
-            if (received != (INT)sizeof(command)) { continue; }
-            if (tk_loc_mtx(status_mutex, TMO_FEVR) == E_OK) {
-                (void)vehicle_controller_remote_command(&bus, (robot_remote_command_t)command);
-                unlock_bus();
-            }
-        }
         if (lock_bus()) { vehicle_controller_cycle(&bus, motion_hal_time()); unlock_bus(); }
         (void)tk_dly_tsk(10U);
     }
@@ -177,14 +144,8 @@ INT usermain(void)
     double now = motion_hal_time();
     motion_init(&motion, &config, motion_hal_sample(), now, setup && ((now - start) <= config.setup_timeout));
     robot_bus_init(&bus, &motion.status);
-#ifdef ROBO_PRODUCTION_BUILD
-    tm_printf((const UB *)"firmware=%s hardware_confirmed=%u manual_enabled=%u max_output_percent=%u production=1\n",
-              (const UB *)ROBO_ENCODER_BUILD_ID, (unsigned)config.hardware_confirmed,
-              (unsigned)config.manual_enabled, (unsigned)(config.max_output * 100.0));
-#endif
     status_mutex = tk_cre_mtx(&mutex);
     if (status_mutex <= 0) { motion_hal_emergency_stop(); return 0; }
-    if (subsystem1_init() < E_OK) { motion_hal_emergency_stop(); return 0; }
     for (i = 0; i < 7U; ++i) {
         T_CTSK task = {.tskatr = TA_HLNG | TA_RNG0, .task = tasks[i].entry,
                       .itskpri = tasks[i].priority, .stksz = 4096};
@@ -192,7 +153,6 @@ INT usermain(void)
         if (ids[i] <= 0) { motion_hal_emergency_stop(); return 0; }
     }
     running = true;
-    if (subsystem1_start() < E_OK) { motion_hal_emergency_stop(); return 0; }
     for (i = 0; i < 7U; ++i) {
         if (tk_sta_tsk(ids[i], 0) < E_OK) {
             control(CONTROL_SHUTDOWN, false, false);

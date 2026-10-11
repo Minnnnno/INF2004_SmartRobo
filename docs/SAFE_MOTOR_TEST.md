@@ -1,10 +1,5 @@
 # Buddy 2 isolated motor test
 
-The latest verified geometry and motor polarity are documented in
-[angle testing](ANGLE_TEST.md): diameter 65 mm, track 115 mm, motor signs `{1,1}`.
-These supersede the earlier geometry/polarity discussion below. The angle-test
-UF2 is a separate profile with different commands and an eight-second timeout.
-
 Production configuration now uses `counts_per_rev={2542.4,2543.4}`.
 Encoder left A/B is GP4/GP6; right A/B is GP5/GP7. The temporary GP12 mapping
 and its validation exception are removed. Motor left A/B is GP8/GP9 and right
