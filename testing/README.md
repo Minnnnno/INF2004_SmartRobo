@@ -72,10 +72,3 @@ the test's result row. `videos/README.md` explains how.
 - **A FAIL needs a note** saying what went wrong and, later, which commit fixed it.
 - Before merging a change into `main`, re-run your subsystem's unit tests.
   Before a demo or hand-in, run every test and record the full set.
-# Integrated SmartRobo tests
-
-The imported demo-test instructions below are historical. For the merged robot
-application use ../docs/BUILD.md and ../docs/VERIFICATION.md. CMake TEST=ON is
-disabled; hardware motion tests require explicit manual-console arming. The
-portable motion regression suite is ../tests/test_motion.c.
-

@@ -95,6 +95,8 @@ static void math_tests(void)
     pid_reset(&p);
     CHECK(!p.seeded);
     c = board_motion_config();
+    CHECK(motion_config_valid(&c));
+    c.hardware_confirmed = false;
     CHECK(!motion_config_valid(&c));
     c = simulation_config(); c.track = NAN;
     CHECK(!motion_config_valid(&c));
@@ -412,11 +414,77 @@ static void encoder_capture_tests(void)
     }
 }
 
+static void production_line_integration_tests(void)
+{
+    rig_t r;
+    robot_bus_t bus;
+    robot_request_t request;
+    motion_command_t manual;
+    unsigned i;
+    memset(&r, 0, sizeof(r));
+    motion_config_t config = board_motion_config();
+    CHECK(config.hardware_confirmed && !config.manual_enabled);
+    CHECK(config.max_output == 0.25 && motion_config_valid(&config));
+    r.sample.reliable = true;
+    motion_init(&r.m, &config, r.sample, 0.0, true);
+    CHECK(r.m.status.state == INITIALISING && r.m.status.inhibited);
+    for (i = 0U; i < 40U; ++i) {
+        tick(&r, false);
+        CHECK(r.m.status.output[0] == 0.0 && r.m.status.output[1] == 0.0);
+    }
+    CHECK(r.m.status.state == READY && r.m.status.fault == F_NONE);
+    manual = command(&r, MANUAL_OUTPUT, 0.0);
+    manual.deadline = r.now + config.manual_timeout;
+    manual.speed[0] = 0.1; manual.speed[1] = 0.1;
+    CHECK(motion_accept(&r.m, &manual, r.now) == R_INVALID);
+    robot_bus_init(&bus, &r.m.status);
+    request.source = SOURCE_LINE;
+    request.command = command(&r, WHEEL_SPEED_TRACKING, 0.0);
+    request.command.id = 3001U;
+    request.command.speed[0] = 0.08; request.command.speed[1] = 0.06;
+    for (i = 0U; i < 50U; ++i) {
+        request.command.expires = r.now + config.command_lifetime;
+        request.command.deadline = r.now + config.movement_timeout;
+        CHECK(robot_request(&bus, &request) == R_OK);
+        vehicle_controller_cycle(&bus, r.now);
+        robot_motion_inputs(&bus, &r.m, r.sample, r.now);
+        tick(&r, true);
+        robot_publish(&bus, &r.m, r.now);
+        CHECK(r.m.status.state == DRIVING && r.m.status.fault == F_NONE);
+        CHECK(fabs(r.m.status.output[0]) <= 0.25 && fabs(r.m.status.output[1]) <= 0.25);
+        CHECK(bus.status.owner_valid && bus.status.owner == SOURCE_LINE);
+    }
+    robot_control(&bus, CONTROL_STOP, false, false);
+    robot_motion_inputs(&bus, &r.m, r.sample, r.now);
+    CHECK(r.m.status.inhibited && r.m.status.output[0] == 0.0 && r.m.status.output[1] == 0.0);
+    CHECK(robot_request(&bus, &request) != R_OK);
+    for (i = 0U; i < 80U; ++i) { tick(&r, true); }
+    CHECK(r.m.status.state == STOPPED && r.m.status.hold);
+    robot_publish(&bus, &r.m, r.now);
+    vehicle_controller_cycle(&bus, r.now);
+    CHECK(vehicle_controller_remote_command(&bus, (robot_remote_command_t)99) == R_INVALID);
+    CHECK(vehicle_controller_remote_command(&bus, REMOTE_START) == R_OK);
+    robot_motion_inputs(&bus, &r.m, r.sample, r.now);
+    CHECK(r.m.status.state == READY && !r.m.status.hold);
+    robot_publish(&bus, &r.m, r.now);
+    CHECK(vehicle_controller_remote_command(&bus, REMOTE_STOP) == R_OK);
+    CHECK(vehicle_controller_remote_command(&bus, REMOTE_START) == R_HELD);
+    CHECK(vehicle_controller_remote_command(&bus, REMOTE_ESTOP) == R_OK);
+    robot_motion_inputs(&bus, &r.m, r.sample, r.now);
+    CHECK(r.m.status.state == FAULT && r.m.status.fault == F_SYSTEM && r.m.status.inhibited);
+    robot_publish(&bus, &r.m, r.now);
+    CHECK(vehicle_controller_remote_command(&bus, REMOTE_START) == R_HELD);
+    config.hardware_confirmed = false;
+    motion_init(&r.m, &config, r.sample, r.now, true);
+    CHECK(r.m.status.state == FAULT && r.m.status.fault == F_CONFIG && r.m.status.inhibited);
+}
+
 int main(void)
 {
     math_tests(); movement_tests(); safety_tests(); correction_and_final_tests(); bus_tests(); validation_tests();
     low_speed_feedback_tests();
     encoder_capture_tests();
+    production_line_integration_tests();
     printf("PASS: %u checks (synthetic host model; no hardware accuracy claim)\n", checks);
     return 0;
 }

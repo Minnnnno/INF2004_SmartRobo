@@ -1,10 +1,16 @@
 # Buddy 2 isolated motor test
 
+The latest verified geometry and motor polarity are documented in
+[angle testing](ANGLE_TEST.md): diameter 65 mm, track 115 mm, motor signs `{1,-1}`.
+The angle-test
+UF2 is a separate profile with different commands and an eight-second timeout.
+
 Production configuration now uses `counts_per_rev={2542.4,2543.4}`.
 Encoder left A/B is GP4/GP6; right A/B is GP5/GP7. The temporary GP12 mapping
 and its validation exception are removed. Motor left A/B is GP8/GP9 and right
-A/B is GP10/GP11. `hardware_confirmed=false`, `manual_enabled=false`, wheel
-diameters and track width remain zero. Production motion is inhibited.
+A/B is GP10/GP11. This motor-test profile keeps `hardware_confirmed=false`
+and `manual_enabled=false`; its production controller remains inhibited.
+Measured wheel diameters are 65 mm and track width is 115 mm.
 Based on the user's wheel-direction test, motor polarity is now `{1,-1}`:
 left unchanged, right reversed. Both the production driver and isolated test
 use this configuration. Encoder polarity stays `{1,1}` pending signed-count
@@ -16,9 +22,9 @@ Flash this file using BOOTSEL:
 
 `C:\Y2 Tri 1\Embedded Systems\Assignment\INF2004_SmartRobo\build-safe-motor-test\buddy2_safe_motor_test.uf2`
 
-The delivered firmware ID is `b2-motor-test-v1-20261011T110944Z`.
-SHA256: `362FE4CB2EE8E26E75F96B3E74E2B041E0B0E3C52535C9FEE4EC229177EFCD14`.
-File size is 160768 bytes. Metadata is in
+The delivered firmware ID is `b2-motor-test-v1-20261011T114440Z`.
+SHA256: `8637C0A2EFC3C4957C92A4C843F56AB98D59BFAFDADDA43BD6B3BF2E1CDD72F6`.
+File size is 186880 bytes. Metadata is in
 `build-safe-motor-test/encoder-build-manifest.json`.
 
 1. With motor power disconnected, flash the UF2 and open USB serial at 115200
@@ -105,7 +111,7 @@ by the console task. Hardware cutoff timing has not been measured on the robot.
 The safe motor-test Pico W build with IR triggering and the normal build with
 the trigger disabled both passed. Sanitized host tests
 passed 202 actual line-task checks and 721 motor-actuator checks.
-The unchanged motion/encoder tests previously passed 1879 checks. Actuator
+The merged motion/encoder/controller tests passed 2137 checks. Actuator
 tests use the actual motor-test implementation with mock registers. These
 cover stopped startup, failed initialization, both wheels/directions, exact PWM
 duty, arm-before-drive ordering, individual motor isolation, paired motor

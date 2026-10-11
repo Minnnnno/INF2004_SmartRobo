@@ -30,11 +30,12 @@ bool board_pins_valid(void)
 motion_config_t board_motion_config(void)
 {
     motion_config_t config = {
-        /* Measured counts/revolution. Geometry still inhibits normal motion. */
-        .counts_per_rev = {2542.4, 2543.4}, .diameter = {0.0, 0.0}, .track = 0.0,
+        /* User-confirmed production measurements and polarity. */
+        .counts_per_rev = {2542.4, 2543.4}, .diameter = {0.065, 0.065}, .track = 0.115,
+        /* Right motor reversed: user wheel test and commit 5825f0c agree. */
         .motor_sign = {1, -1}, .encoder_sign = {1, 1}, .quadrature = {true, true},
         /* Provisional tuning only; validate on the actual robot. */
-        .max_speed = 0.25, .acceleration = 0.3, .max_output = 0.35,
+        .max_speed = 0.25, .acceleration = 0.3, .max_output = 0.25,
         .period = 0.01, .max_dt = 0.05,
         .distance_tolerance = 0.01, .angle_tolerance = 0.05,
         .stopped_speed = 0.005, .settle_time = 0.3,
@@ -45,9 +46,13 @@ motion_config_t board_motion_config(void)
         .straight_gain = 1.0, .reversal_time = 0.1,
         .manual_limit = 0.15, .manual_timeout = 0.5,
         .pid = {{1.0, 0.5, 0.0, 0.05}, {1.0, 0.5, 0.0, 0.05}},
-        .pwm_hz = 20000U, .hardware_confirmed = false,
+        .pwm_hz = 20000U, .hardware_confirmed = true,
         .brake = true, .manual_enabled = false
     };
+#if defined(ROBO_ENCODER_DIAGNOSTICS_ONLY) || defined(ROBO_SAFE_MOTOR_TEST) || defined(ROBO_ANGLE_TEST) || defined(ROBO_MANUAL_CONSOLE)
+    /* Calibration images retain their isolated actuator and inhibited controller. */
+    config.hardware_confirmed = false;
+#endif
     return config;
 }
 

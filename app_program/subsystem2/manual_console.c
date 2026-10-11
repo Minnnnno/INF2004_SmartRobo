@@ -5,10 +5,20 @@
 #include "motion_hal.h"
 #include "template_hal.h"
 #include "motor_test.h"
+#include "angle_test.h"
 #include <tm/tmonitor.h>
 #define printf(format, ...) tm_printf((const UB *)(format), __VA_ARGS__)
 #define puts(text) tm_putstring((const UB *)(text "\n"))
 #include <string.h>
+#include <math.h>
+
+#ifdef ROBO_ANGLE_TEST
+static const UB *angle_state_name(angle_state_t state)
+{
+    static const char *names[] = {"idle", "turning", "braking", "done", "stopped", "timeout", "feedback_fault", "overshoot"};
+    return (const UB *)names[(unsigned)state];
+}
+#endif
 
 #ifndef ROBO_ENCODER_BUILD_ID
 #define ROBO_ENCODER_BUILD_ID "manual-console-encdiag-v1"
@@ -80,7 +90,7 @@ void manual_console(void)
 {
     char line[64];
     unsigned used = 0U;
-#if !defined(ROBO_ENCODER_DIAGNOSTICS_ONLY) && !defined(ROBO_SAFE_MOTOR_TEST)
+#if !defined(ROBO_ENCODER_DIAGNOSTICS_ONLY) && !defined(ROBO_SAFE_MOTOR_TEST) && !defined(ROBO_ANGLE_TEST)
     uint32_t id = 1U;
     bool armed = false;
     double armed_at = 0.0;
@@ -88,6 +98,12 @@ void manual_console(void)
     bool armed = false;
 #endif
     motion_hal_console_init();
+#ifdef ROBO_ANGLE_TEST
+    bool angle_shutdown = false, angle_discard = false;
+    angle_state_t reported = ANGLE_IDLE;
+    printf("firmware=%s angle_test_ready=%u production_inhibited=1 max_output_percent=25 timeout_ms=8000\n",
+           (const UB *)ROBO_ENCODER_BUILD_ID, (unsigned)angle_test_init());
+#endif
 #ifdef ROBO_SAFE_MOTOR_TEST
     bool test_shutdown = false;
     bool discard_line = false;
@@ -97,6 +113,18 @@ void manual_console(void)
     for (;;) {
         int input;
         unsigned budget = 32U;
+#ifdef ROBO_ANGLE_TEST
+        angle_test_poll();
+        angle_control_t angle_status = angle_test_status();
+        if (angle_status.state != reported) {
+            reported = angle_status.state;
+            printf("angle_state=%s angle_mdeg=%d delta_counts=%s%lu,%s%lu motors_stopped=%u\n",
+                   angle_state_name(reported), (int)(angle_status.angle * 57295.779513),
+                   count_sign(angle_status.delta[0]), count_magnitude(angle_status.delta[0]),
+                   count_sign(angle_status.delta[1]), count_magnitude(angle_status.delta[1]),
+                   (unsigned)!angle_test_active());
+        }
+#endif
 #ifdef ROBO_SAFE_MOTOR_TEST
         motor_test_result_t result;
         if (motor_test_result(&result)) {
@@ -113,12 +141,21 @@ void manual_console(void)
             input = motion_hal_console_read();
             if (input == -2) {
                 used = 0U; armed = false; motion_stop();
+#ifdef ROBO_ANGLE_TEST
+                angle_test_stop(); angle_discard = true;
+#endif
 #ifdef ROBO_SAFE_MOTOR_TEST
                 line_forward_pause(); motor_test_stop(); discard_line = true;
 #endif
                 continue;
             }
             if (input < 0) { break; }
+#ifdef ROBO_ANGLE_TEST
+            if (angle_discard) {
+                if (input == '\n' || input == '\r') { angle_discard = false; }
+                continue;
+            }
+#endif
 #ifdef ROBO_SAFE_MOTOR_TEST
             if (discard_line) {
                 if ((input == '\n') || (input == '\r')) { discard_line = false; }
@@ -141,6 +178,14 @@ void manual_console(void)
                             (int)(status.motion.output[0] * 1000.0), (int)(status.motion.output[1] * 1000.0));
                     }
                     print_counts(&sample);
+#ifdef ROBO_ANGLE_TEST
+                    angle_control_t turn = angle_test_status();
+                    printf("firmware=%s production_inhibited=1 angle_state=%s angle_mdeg=%d target_mdeg=%d output_permille=%d,%d goal_counts=%u,%u\n",
+                           (const UB *)ROBO_ENCODER_BUILD_ID, angle_state_name(turn.state),
+                           (int)(turn.angle * 57295.779513), turn.direction * 90000,
+                           (int)(turn.output[0] * 1000.0), (int)(turn.output[1] * 1000.0),
+                           (unsigned)ceil(turn.goal[0]), (unsigned)ceil(turn.goal[1]));
+#endif
 #ifdef ROBO_SAFE_MOTOR_TEST
                     printf("production_inhibited=1 motor_test_active=%u output_percent=25 serial_max_ms=1000 ir_continuous=1\n",
                            (unsigned)motor_test_active());
@@ -149,23 +194,35 @@ void manual_console(void)
                     encoder_diagnostics();
                 } else if (strcmp(line, "usbdiag") == 0) {
                     usb_diagnostics();
-#if !defined(ROBO_ENCODER_DIAGNOSTICS_ONLY) && !defined(ROBO_SAFE_MOTOR_TEST)
+#if !defined(ROBO_ENCODER_DIAGNOSTICS_ONLY) && !defined(ROBO_SAFE_MOTOR_TEST) && !defined(ROBO_ANGLE_TEST)
                 } else if (strcmp(line, "ARM") == 0) {
                     armed = true;
                     armed_at = motion_hal_time();
                     puts("One command armed for 5 seconds; configuration gates still apply.");
 #endif
                 } else if (strcmp(line, "stop") == 0) {
+#ifdef ROBO_ANGLE_TEST
+                    angle_test_stop(); puts("angle_test_stopped motors_stopped=1");
+#endif
 #ifdef ROBO_SAFE_MOTOR_TEST
                     line_forward_pause(); motor_test_stop();
                     puts("motors_stopped=1");
 #endif
                     motion_stop(); armed = false;
                 } else if (strcmp(line, "shutdown") == 0) {
+#ifdef ROBO_ANGLE_TEST
+                    angle_test_stop(); angle_shutdown = true;
+#endif
 #ifdef ROBO_SAFE_MOTOR_TEST
                     motor_test_shutdown(); test_shutdown = true;
 #endif
                     motion_request_shutdown(); armed = false;
+#ifdef ROBO_ANGLE_TEST
+                } else if (strcmp(line, "turn_left_90") == 0 || strcmp(line, "turn_right_90") == 0) {
+                    if (!angle_shutdown && angle_test_start(strcmp(line, "turn_left_90") == 0 ? 1 : -1)) {
+                        puts("angle_test_started target_deg=90 max_output_percent=25 timeout_ms=8000");
+                    } else { puts("angle_test_rejected: busy, cooling down or initialization failed"); }
+#endif
 #ifdef ROBO_SAFE_MOTOR_TEST
                 } else if ((strcmp(line, "left_forward") == 0) || (strcmp(line, "left_reverse") == 0) ||
                            (strcmp(line, "right_forward") == 0) || (strcmp(line, "right_reverse") == 0) ||
@@ -177,7 +234,7 @@ void manual_console(void)
                         puts("motor_test_started output_percent=25 cutoff_ms=1000");
                     } else { puts("motor_test_rejected: busy, cooling down, disabled or initialization failed"); }
 #endif
-#if !defined(ROBO_ENCODER_DIAGNOSTICS_ONLY) && !defined(ROBO_SAFE_MOTOR_TEST)
+#if !defined(ROBO_ENCODER_DIAGNOSTICS_ONLY) && !defined(ROBO_SAFE_MOTOR_TEST) && !defined(ROBO_ANGLE_TEST)
                 } else if (armed && ((motion_hal_time() - armed_at) <= 5.0)) {
                     motion_result_t result = R_INVALID;
                     armed = false;
@@ -197,7 +254,9 @@ void manual_console(void)
 #endif
                 } else if (line[0] != '\0') {
                     puts("status | encdiag | usbdiag | stop | shutdown");
-#ifdef ROBO_SAFE_MOTOR_TEST
+#ifdef ROBO_ANGLE_TEST
+                    puts("turn_left_90 | turn_right_90 | status | stop");
+#elif defined(ROBO_SAFE_MOTOR_TEST)
                     puts("forward | backward | left_forward | left_reverse | right_forward | right_reverse; wait for completion between tests");
 #elif defined(ROBO_ENCODER_DIAGNOSTICS_ONLY)
                     puts("Read-only diagnostics build: movement, ARM and reset are unavailable.");
@@ -208,12 +267,19 @@ void manual_console(void)
             } else if (used < sizeof(line) - 1U) { line[used++] = (char)input; }
             else {
                 used = 0U; armed = false;
+#ifdef ROBO_ANGLE_TEST
+                angle_test_stop(); angle_discard = true;
+#endif
 #ifdef ROBO_SAFE_MOTOR_TEST
                 line_forward_pause(); motor_test_stop(); discard_line = true;
 #endif
             }
         }
+#ifdef ROBO_ANGLE_TEST
+        (void)tk_dly_tsk(10U);
+#else
         (void)tk_dly_tsk(20U);
+#endif
     }
 }
 #endif
