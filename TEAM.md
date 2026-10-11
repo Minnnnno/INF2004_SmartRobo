@@ -10,6 +10,10 @@
 
 Vehicle Controller: app_program/controller. Startup and seven application tasks:
 app_program/app_main.c. Kernel USB service is an additional template service task.
+Buddy 1's `comms.c` adds its periodic status task (priority 20), telemetry/event
+queues and the command buffer consumed by the Vehicle Controller. Legacy
+producer/consumer/monitor demos are excluded from the robot build; their originals
+are preserved in docs/template_original/buddy1_demos.
 
 Requests: include/robot.h. Sources submit to the controller, never motor GPIO.
 Status is copied under a micro T-Kernel inheritance mutex. Stop/fault/shutdown are

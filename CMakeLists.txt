@@ -162,6 +162,8 @@ file(GLOB MTK_SOURCES CONFIGURE_DEPENDS
     "device/ser/sysdepend/rp2040/*.c"
 )
 
+# Imported producer/consumer/monitor examples are archived and not robot tasks.
+list(FILTER MTK_SOURCES EXCLUDE REGEX "/app_program/subsystem[2-5]/(subsystem2|subsystem[2-5]_test|task_(producer|consumer|monitor))\\.c$")
 add_executable(mtkernel_3
     ${MTK_SOURCES}
     kernel/sysdepend/cpu/core/armv6m/dispatch.S

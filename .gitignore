@@ -1,14 +1,37 @@
+﻿Debug
+Release
+
+# Build artifacts
+build/
+*.elf
+*.uf2
+*.map
+*.o
+*.d
+build_make/tools/elf2uf2
+tools/elf2uf2/elf2uf2
+build_make/.build_profile
+
+# Real WiFi credentials -- never commit these. Copy config/wifi_secrets.example.h
+# to config/wifi_secrets.h and fill in your own network's SSID/password.
+config/wifi_secrets.h
+
+# Videos are shared as unlisted YouTube links (videos/README.md), never committed
+*.mp4
+*.mov
+*.webm
+*.avi
+*.mkv
+
+# macOS
+.DS_Store
+
+# Buddy 2 build variants and local tools
 build*/
 !build_make/
 build*.log
 motor-test-configure.log
 .tools/
 third_party/
-*.uf2
-*.elf
-__pycache__/
 .template-reference/
-config/wifi_secrets.h
-*.o
-*.d
-*.map
+__pycache__/

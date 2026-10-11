@@ -1,11 +1,10 @@
 # Production motion and Buddy 3 integration
 
-These changes are published on `buddy2/production-motion`. Shared `main` has
-new Buddy 1 changes that replace the task startup and build setup. Merge this
-branch with that work while preserving both Buddy 1 communications and the
-`robot_submit()` implementation, Vehicle Controller and Motion Control tasks.
-The UF2 described here builds the Buddy 2 workspace; it does not contain those
-new remote Buddy 1 changes or a real line-sensing implementation.
+Buddy 1 communications and Buddy 2 production motion are now merged on `main`.
+Startup initializes Buddy 1's queues and starts its status task alongside the
+Vehicle Controller and Motion Control tasks. The real line-sensing task is still
+to be implemented. Imported producer/consumer/monitor demos are excluded from
+the robot build and preserved in docs/template_original/buddy1_demos.
 
 Production motion is enabled by the user's explicit hardware confirmation.
 Normal `board_motion_config()` now returns `hardware_confirmed=true`, with
@@ -72,6 +71,7 @@ or PWM directly and never use calibration actuators in the sensor task.
 ## Prompt for your teammate's Codex
 
 ```text
+Update from origin/main, preserving any local work. Read TEAM.md first.
 Integrate our real line-sensor task in app_program/subsystem3/subsystem3.c.
 Read include/robot.h, docs/API.md and docs/PRODUCTION_INTEGRATION.md.
 Use robot_submit(SOURCE_LINE, session_id, WHEEL_SPEED_TRACKING, 0.0,
@@ -81,15 +81,28 @@ faults and startup readiness through motion_get_status(). Submit finite
 distance/turn requests once per event and wait for matching completion.
 Use motion_stop() when sensing requires stopping; the Vehicle Controller
 handles release. Do not access motor GPIO/PWM or calibration actuators.
-Production confirmation is enabled by the owner. Keep the verified values,
+Keep Buddy 1 communications, app_start_task(), the motion/Vehicle Controller
+startup and existing task entry points. Do not restore the producer/consumer
+demo startup or enable SMP. Production confirmation is enabled by the owner.
+Keep the verified values,
 25% output cap, manual_enabled=false and safety checks unchanged.
 Implement actual sensor readings, not fabricated values. Build a combined
 production image with all calibration profiles disabled and report its UF2.
 ```
 
 Validation: the production build passed. Sanitized host motion/encoder/controller
-tests passed 2129 checks, including actual production configuration, stopped
+tests passed 2137 checks, including actual production configuration, stopped
 startup, READY transition, SOURCE_LINE acceptance/refresh, the output cap,
 manual PWM rejection, stop/hold and disabled-confirmation faults. Calibration
 regressions passed 673 angle-controller, 184 angle-HAL and 358 motor-test checks.
 No hardware line-following or PID accuracy test was performed remotely.
+
+The merged controller also consumes Buddy 1's start/stop/estop command queue.
+Stop requests hold motion; estop latches a fault. Start requests only release
+STOPPED motion with trusted stationary feedback and no fault, shutdown or
+pending control. Start never clears a fault or initiates a movement itself.
+Buddy 1's MQTT acknowledgement means the command was queued, not physically
+completed or released. The default production UF2 uses WIFI=none/NET=none.
+WiFi radio and full MQTT builds were also compile-checked; MQTT used only the
+example placeholder credentials, and the temporary secrets file was removed.
+Actual network connection requires local credentials and broker configuration.

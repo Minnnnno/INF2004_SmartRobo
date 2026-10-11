@@ -15,7 +15,7 @@ Pico SDK startup adapter is archived and is not linked.
 |---|---|
 | Startup / task creation | app_program/app_main.c |
 | Vehicle Controller | app_program/controller/vehicle_controller.c |
-| Buddy 1 WiFi/MQTT | app_program/subsystem1/subsystem1.c |
+| Buddy 1 WiFi/MQTT queues and hooks | app_program/subsystem1/comms.c |
 | Buddy 2 motion, PID, encoders, configuration | app_program/subsystem2/ |
 | Buddy 3 line and barcode | app_program/subsystem3/subsystem3.c |
 | Buddy 4 heading/terrain | app_program/subsystem4/subsystem4.c |
@@ -23,7 +23,10 @@ Pico SDK startup adapter is archived and is not linked.
 
 Shared interfaces remain in include/robot.h and include/motion.h. Requests pass
 through the Vehicle Controller into Motion Control. Stop/fault/shutdown bypass
-ordinary requests and invalidate stale commands. Other buddies sleep until implemented.
+ordinary requests and invalidate stale commands. Buddy 1's queues and status task
+are initialized alongside motion; other sensor buddies sleep until implemented.
+The controller consumes Buddy 1 start/stop/estop messages. WiFi/MQTT radio setup
+still requires an explicit network build and local credentials.
 
 **Production motion is enabled after the user's hardware confirmation.**
 Startup stays stopped, manual PWM remains disabled, and production output is

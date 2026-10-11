@@ -460,6 +460,20 @@ static void production_line_integration_tests(void)
     CHECK(robot_request(&bus, &request) != R_OK);
     for (i = 0U; i < 80U; ++i) { tick(&r, true); }
     CHECK(r.m.status.state == STOPPED && r.m.status.hold);
+    robot_publish(&bus, &r.m, r.now);
+    vehicle_controller_cycle(&bus, r.now);
+    CHECK(vehicle_controller_remote_command(&bus, (robot_remote_command_t)99) == R_INVALID);
+    CHECK(vehicle_controller_remote_command(&bus, REMOTE_START) == R_OK);
+    robot_motion_inputs(&bus, &r.m, r.sample, r.now);
+    CHECK(r.m.status.state == READY && !r.m.status.hold);
+    robot_publish(&bus, &r.m, r.now);
+    CHECK(vehicle_controller_remote_command(&bus, REMOTE_STOP) == R_OK);
+    CHECK(vehicle_controller_remote_command(&bus, REMOTE_START) == R_HELD);
+    CHECK(vehicle_controller_remote_command(&bus, REMOTE_ESTOP) == R_OK);
+    robot_motion_inputs(&bus, &r.m, r.sample, r.now);
+    CHECK(r.m.status.state == FAULT && r.m.status.fault == F_SYSTEM && r.m.status.inhibited);
+    robot_publish(&bus, &r.m, r.now);
+    CHECK(vehicle_controller_remote_command(&bus, REMOTE_START) == R_HELD);
     config.hardware_confirmed = false;
     motion_init(&r.m, &config, r.sample, r.now, true);
     CHECK(r.m.status.state == FAULT && r.m.status.fault == F_CONFIG && r.m.status.inhibited);
