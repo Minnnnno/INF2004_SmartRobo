@@ -30,21 +30,6 @@ IMPORT unsigned	tm_tusb_write_available(void);
 IMPORT void	tm_tusb_write_char(char value);
 IMPORT void	tm_tusb_write_flush(void);
 IMPORT void	tm_tusb_discard_input(void);
-IMPORT int tm_tusb_read_char(void);
-/* RX has one producer (USB service), one consumer (manual task), short IRQ locks. */
-LOCAL UB rx_buffer[128];
-LOCAL UW rx_head, rx_tail;
-LOCAL BOOL rx_overflow;
-EXPORT int tm_usb_console_read(void)
-{
-    UINT state;
-    int value = -1;
-    DI(state);
-    if (rx_overflow) { rx_overflow = FALSE; rx_tail = rx_head; EI(state); return -2; }
-    if (rx_tail != rx_head) { value = rx_buffer[rx_tail]; rx_tail = (rx_tail + 1U) % 128U; }
-    EI(state);
-    return value;
-}
 
 #define USB_TASK_PRIORITY	3
 #if TK_SUPPORT_SMP
@@ -210,21 +195,7 @@ LOCAL void usb_service_task(INT stacd, void *exinf)
 			}
 			tm_tusb_write_flush();
 		}
-#ifdef ROBO_MANUAL_CONSOLE
-        for (unsigned budget = 0; budget < 64U; ++budget) {
-            int value = tm_tusb_read_char();
-            UW next;
-            UINT state;
-            if (value < 0) break;
-            DI(state);
-            next = (rx_head + 1U) % 128U;
-            if (next != rx_tail) { rx_buffer[rx_head] = (UB)value; rx_head = next; }
-            else { rx_overflow = TRUE; rx_tail = rx_head; }
-            EI(state);
-        }
-#else
-        tm_tusb_discard_input();
-#endif
+		tm_tusb_discard_input();
 
 		/* Sleep until the controller interrupts, with a periodic
 		   fallback so the ring still drains when the link is idle. */

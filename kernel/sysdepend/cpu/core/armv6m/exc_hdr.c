@@ -81,8 +81,6 @@ __asm__(
 
 EXPORT void knl_hard_fault_report(void)
 {
-    extern void robo_board_force_stop(void);
-    robo_board_force_stop();
 #if (USE_EXCEPTION_DBG_MSG  && USE_TMONITOR)
 
 	ID		ctskid;

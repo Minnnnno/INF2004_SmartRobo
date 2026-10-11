@@ -62,11 +62,6 @@ void tm_tusb_discard_input(void)
     while (tud_cdc_available()) (void)tud_cdc_read_char();
 }
 
-int tm_tusb_read_char(void)
-{
-    return tud_cdc_available() ? (int)tud_cdc_read_char() : -1;
-}
-
 /*
  * Diagnostics.  The console cannot report on the console, so these are read
  * out over GPIO when USB fails to enumerate.

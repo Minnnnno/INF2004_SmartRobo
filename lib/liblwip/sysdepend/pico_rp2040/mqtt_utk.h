@@ -10,7 +10,8 @@
  * Call once, from cyw43_utk_task() the first time the link reaches
  * CYW43_LINK_UP (see cyw43_utk.c). Starts the MQTT connection to
  * MQTT_BROKER_IP:MQTT_BROKER_PORT (config/wifi_secrets.h) and, once
- * connected, a periodic heartbeat publish on MQTT_TOPIC. Safe to call more
+ * connected, a 1 s heartbeat plus whatever the comms subsystem has queued
+ * (app_program/subsystem1/comms_hooks.h). Safe to call more
  * than once -- a second call while already connecting/connected is a no-op.
  */
 void mqtt_utk_start(void);

@@ -38,7 +38,7 @@
 
 #define	CNF_MAX_TSKPRI		32	/* Task Max priority */
 
-#define CNF_TIMER_PERIOD	1	/* 1 ms tick; application control period is 10 ms. */
+#define CNF_TIMER_PERIOD	10	/* System timer period */
 
 /* Maximum number of kernel objects (raised for a 5-subsystem team project) */
 #define CNF_MAX_TSKID		32	/* Task */
@@ -168,7 +168,7 @@
 /* Use Sample device driver.
  *  1: Valid  0: Invalid
  */
-#define USE_SDEV_DRV		(0)	/* Application owners explicitly configure sensors. */
+#define USE_SDEV_DRV		(1)	/* Use Sample device driver */
 
 /*---------------------------------------------------------------------- */
 /*

@@ -48,7 +48,6 @@ LOCAL const UW module_tbl[] = {
 	RESETS_RESET_IO_BANK0,		/* IO_BANK0 */
 	RESETS_RESET_PADS_BANK0,	/* PADS_BANK0 */
 	RESETS_RESET_UART0,		/* UART0 */
-    RESETS_RESET_TIMER,       /* Monotonic motion-control microsecond clock */
 
 #if TM_WIFI_CYW43
 	/* The Pico W radio transport runs a PIO state machine with two DMA
@@ -86,17 +85,6 @@ LOCAL const T_SETUP_REG pinfnc_tbl[] = {
 	   adc_cnf_sysdep.h and i2c_cnf_sysdep.h. */
 	{0, 0}
 };
-
-/* Application safety hook: no globals, valid even before data/BSS startup. */
-EXPORT void robo_board_force_stop(void)
-{
-    for (UINT pin = 8U; pin <= 11U; ++pin) {
-        out_w(GPIO_OUT_CLR, 1UL << pin);
-        out_w(GPIO(pin), GPIO_IE | GPIO_DRIVE_4MA | GPIO_SHEMITT);
-        out_w(GPIO_CTRL(pin), GPIO_CTRL_FUNCSEL_SIO);
-        out_w(GPIO_OE_SET, 1UL << pin);
-    }
-}
 
 #if BOARD_DIAG_GPIO_SCAN
 /*
@@ -208,10 +196,6 @@ EXPORT void knl_startup_hw(void)
 	for(p = pinfnc_tbl; p->addr != 0; p++) {
 		out_w(p->addr, p->data);
 	}
-    robo_board_force_stop();
-    /* 12 MHz crystal / 12 = 1 MHz TIMER tick, without watchdog resets. */
-    out_w(0x4005802cU, (1U << 9U) | 12U);
-    out_w(TIMER_PAUSE, 0U);
 
 #if BOARD_DIAG_GPIO_SCAN
 	knl_diag_attention();		/* start of ladder */
@@ -226,7 +210,6 @@ EXPORT void knl_startup_hw(void)
 EXPORT void knl_shutdown_hw( void )
 {
 	disint();
-    robo_board_force_stop();
 	while(1);
 }
 #endif /* USE_SHUTDOWN */

@@ -24,7 +24,7 @@
  */
 #define INITTASK_EXINF		(0x0)
 #define INITTASK_ITSKPRI	(1)
-#define INITTASK_STKSZ		(4*1024)
+#define INITTASK_STKSZ		(1*1024)
 #define INITTASK_DSNAME		"inittsk"
 
 #if USE_IMALLOC

@@ -16,10 +16,7 @@
 # by SIO CPUID and needs the same profile.
 ################################################################################
 
-SMP ?= 0
-ifneq ($(SMP),0)
-$(error Buddy 2 integration requires SMP=0 until cross-core motion validation)
-endif
+SMP ?= 1
 
 ifneq ($(SMP),0)
 ifneq ($(SMP),1)
