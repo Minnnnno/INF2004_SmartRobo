@@ -2,6 +2,7 @@
 Release
 
 # Build artifacts
+build/
 *.elf
 *.uf2
 *.map
