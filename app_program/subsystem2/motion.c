@@ -70,6 +70,7 @@ void motion_init(motion_t *m, const motion_config_t *c,
     m->status.generation = 1U;
     m->last_time = now;
     m->entered = now;
+    m->status.sample_time = now;
     m->status.feedback_trusted = sample.reliable;
     for (w = 0; w < 2U; ++w) {
         m->odom.previous[w] = sample.count[w];
@@ -79,6 +80,19 @@ void motion_init(motion_t *m, const motion_config_t *c,
     if (!motion_config_valid(c) || !isfinite(now)) { motion_raise_fault(m, F_CONFIG, now); }
     else if (!setup_ok) { motion_raise_fault(m, F_SETUP, now); }
     else if (!sample.reliable) { motion_raise_fault(m, F_FEEDBACK, now); }
+}
+
+void motion_begin_sampling(motion_t *m, encoder_sample_t sample, double now)
+{
+    unsigned w;
+    if (m->status.state != INITIALISING || m->active) { return; }
+    if (!isfinite(now) || now < m->last_time) { motion_raise_fault(m, F_TIMING, now); return; }
+    if (!sample.reliable || sample.invalid[0] != m->invalid[0] || sample.invalid[1] != m->invalid[1]) {
+        motion_raise_fault(m, F_FEEDBACK, now); return;
+    }
+    for (w=0U; w<2U; ++w) { m->odom.previous[w]=sample.count[w]; }
+    m->last_time=now; m->entered=now; m->status.sample_time=now;
+    m->still_tracking=false; m->status.stationary=false;
 }
 
 static void stopping(motion_t *m, double now)
@@ -151,12 +165,27 @@ motion_result_t motion_accept(motion_t *m, const motion_command_t *c, double now
         !isfinite(c->speed[1]) || !isfinite(c->deadline) || (c->deadline <= now) ||
         (c->deadline > now + m->config.movement_timeout) ||
         (c->expires > now + m->config.command_lifetime) ||
-        ((unsigned)c->mode > (unsigned)MANUAL_OUTPUT)) { return R_INVALID; }
+        !isfinite(c->angle) || !isfinite(c->duration) ||
+        ((unsigned)c->mode > (unsigned)ARC_MOVE)) { return R_INVALID; }
     if ((m->status.state == FAULT) || (m->status.state == SHUTDOWN) || m->status.hold ||
         (m->status.state == INITIALISING)) { return R_HELD; }
     if ((m->status.state != READY) && !refresh) { return R_BUSY; }
     if ((c->mode == DISTANCE_MOVE) && (fabs(c->value) > m->config.max_distance)) { return R_INVALID; }
     if ((c->mode == ENCODER_TURN) && (fabs(c->value) > m->config.max_angle)) { return R_INVALID; }
+    if (c->mode == ARC_MOVE) {
+        if (fabs(c->value) > m->config.max_distance || fabs(c->angle) > m->config.max_angle ||
+            c->duration < 0.0 || (c->value == 0.0 && c->angle == 0.0) ||
+            (c->duration > 0.0 && (c->duration + m->config.command_lifetime >= m->config.movement_timeout ||
+                                   now + c->duration > c->deadline))) { return R_INVALID; }
+        for (w = 0U; w < 2U; ++w) {
+            double goal = c->value + (w == 0U ? -1.0 : 1.0) * c->angle * m->config.track / 2.0;
+            if (goal * c->speed[w] < 0.0 || (goal != 0.0 && c->speed[w] == 0.0)) { return R_INVALID; }
+            if (c->duration > 0.0 &&
+                (fabs(c->speed[w] - goal / c->duration) > 1e-9 ||
+                 1.5 * fabs(c->speed[w]) > m->config.max_speed ||
+                 6.0 * fabs(goal) / (c->duration * c->duration) > m->config.acceleration)) { return R_INVALID; }
+        }
+    }
     for (w = 0; w < 2U; ++w) {
         double limit = (c->mode == MANUAL_OUTPUT) ? m->config.manual_limit : m->config.max_speed;
         if (fabs(c->speed[w]) > limit) { return R_INVALID; }
@@ -189,6 +218,10 @@ static bool final_goal(const motion_t *m)
 {
     double left = m->odom.travel[0] - m->start[0];
     double right = m->odom.travel[1] - m->start[1];
+    if (m->command.mode == ARC_MOVE) {
+        return fabs((left + right) / 2.0 - m->command.value) <= m->config.distance_tolerance &&
+               fabs((right - left) / m->config.track - m->command.angle) <= m->config.angle_tolerance;
+    }
     if (m->command.mode == DISTANCE_MOVE) {
         return (fabs((left + right) / 2.0 - m->command.value) <= m->config.distance_tolerance) &&
                (fabs(right - left) <= 2.0 * m->config.distance_tolerance);
@@ -208,6 +241,38 @@ static void drive(motion_t *m, double now, double dt, const bool progressed[2])
     if (now >= m->command.deadline) { motion_raise_fault(m, F_DEADLINE, now); return; }
     if ((m->command.mode == WHEEL_SPEED_TRACKING) &&
         (now >= m->command.expires)) { motion_raise_fault(m, F_EXPIRED, now); return; }
+    if (m->command.mode == ARC_MOVE) {
+        double elapsed = now - m->entered;
+        double tolerance = fmin(m->config.distance_tolerance / 2.0,
+                                m->config.angle_tolerance * m->config.track / 4.0);
+        bool reached = true;
+        if (m->command.duration > 0.0 && elapsed >= m->command.duration) {
+            m->goal_pending = true;
+            stopping(m, now); /* Final encoder distance AND heading are checked after settling. */
+            return;
+        }
+        for (w = 0U; w < 2U; ++w) {
+            double goal = m->command.value + (w == 0U ? -1.0 : 1.0) * m->command.angle * m->config.track / 2.0;
+            double travelled = m->odom.travel[w] - m->start[w];
+            double remaining = goal - travelled;
+            if (fabs(remaining) > tolerance) { reached = false; }
+            if (m->command.duration > 0.0) {
+                double u = fmax(0.0, fmin(1.0, elapsed / m->command.duration));
+                double progress = u * u * (3.0 - 2.0 * u);
+                desired[w] = m->command.speed[w] * 6.0 * u * (1.0 - u) +
+                             2.0 * m->config.straight_gain * (goal * progress - travelled);
+            } else {
+                desired[w] = fabs(remaining) <= tolerance ? 0.0 :
+                    copysign(fmin(fabs(m->command.speed[w]),
+                                  sqrt(2.0 * m->config.acceleration * fabs(remaining))), remaining);
+            }
+        }
+        if (m->command.duration == 0.0 && reached) {
+            m->goal_pending = true;
+            stopping(m, now);
+            return;
+        }
+    }
     if ((m->command.mode == DISTANCE_MOVE) || (m->command.mode == ENCODER_TURN)) {
         double left = m->odom.travel[0] - m->start[0];
         double right = m->odom.travel[1] - m->start[1];
@@ -274,6 +339,7 @@ void motion_step(motion_t *m, encoder_sample_t sample, double now)
         return;
     }
     m->last_time = now;
+    m->status.sample_time = now;
     for (w = 0; w < 2U; ++w) {
         progressed[w] = sample.count[w] != m->odom.previous[w];
         if (sample.invalid[w] != m->invalid[w]) { sample.reliable = false; }

@@ -11,6 +11,13 @@ encoder reads are permitted by the manual diagnostic console).
 
 ## Commands
 
+Buddy 3/Buddy 5 steering helpers and encoder feedback are in `include/steering.h`.
+See [steering and line-tracking](STEERING.md) for continuous minor corrections,
+heading changes over a distance/time and robot tuning. Those helpers use degrees;
+the original API below uses radians. ARC_MOVE core commands add `angle` radians
+and `duration` seconds to the by-value command; duration zero selects encoder
+distance stopping, while a positive duration selects a timed smooth trajectory.
+
 All ordinary calls return immediately after copying a request. `R_OK` means
 queued, not physical completion or even controller approval. Watch the status and
 events for the same command ID. SI units: metres, seconds, radians, m/s; positive

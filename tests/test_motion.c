@@ -61,7 +61,7 @@ static void init(rig_t *r)
 static motion_command_t command(rig_t *r, motion_mode_t mode, double value)
 {
     motion_command_t c = {1U, r->m.status.generation, mode, value, {0.12, 0.12},
-                          r->now + 0.25, r->now + 20.0};
+                          r->now + 0.25, r->now + 20.0, 0.0, 0.0};
     return c;
 }
 
@@ -479,12 +479,152 @@ static void production_line_integration_tests(void)
     CHECK(r.m.status.state == FAULT && r.m.status.fault == F_CONFIG && r.m.status.inhibited);
 }
 
+static void arc_tests(void)
+{
+    rig_t r;
+    motion_command_t c;
+    unsigned i, direction;
+    for (direction = 0U; direction < 3U; ++direction) {
+        init(&r);
+        c = command(&r, ARC_MOVE, direction == 1U ? -0.12 : 0.20);
+        c.angle = direction == 2U ? 0.0 : (direction == 1U ? -0.1745329252 : 0.1745329252);
+        for (i = 0U; i < 2U; ++i) {
+            double goal = c.value + (i == 0U ? -1.0 : 1.0) * c.angle * r.m.config.track / 2.0;
+            c.speed[i] = goal * 0.08 / fabs(c.value);
+        }
+        CHECK(motion_accept(&r.m, &c, r.now) == R_OK);
+        for (i = 0U; i < 1900U && (r.m.status.state == DRIVING || r.m.status.state == STOPPING); ++i) {
+            tick(&r, true);
+            CHECK(fabs(r.m.status.output[0]) <= r.m.config.max_output);
+            CHECK(fabs(r.m.status.output[1]) <= r.m.config.max_output);
+        }
+        CHECK(r.m.status.state == READY && r.m.status.fault == F_NONE);
+        NEAR(r.m.status.centre, c.value, r.m.config.distance_tolerance);
+        NEAR(r.m.status.heading, c.angle, r.m.config.angle_tolerance);
+        CHECK(r.m.status.sample_time == r.now);
+    }
+    init(&r); c = command(&r, ARC_MOVE, 0.12);
+    c.angle = 0.1745329252; c.duration = 3.0;
+    for (i = 0U; i < 2U; ++i) {
+        c.speed[i] = (c.value + (i == 0U ? -1.0 : 1.0) * c.angle * r.m.config.track/2.0) / c.duration;
+    }
+    CHECK(motion_accept(&r.m, &c, r.now) == R_OK);
+    /* Encoder samples follow a known smooth trajectory; no accuracy claim for a real plant. */
+    for (i = 1U; i <= 350U; ++i) {
+        double u = fmin(1.0, (double)i * 0.01 / c.duration);
+        double progress = u*u*(3.0-2.0*u);
+        for (unsigned w = 0U; w < 2U; ++w) {
+            double quantum = 3.141592653589793 * r.m.config.diameter[w] / r.m.config.counts_per_rev[w];
+            double goal = c.value + (w == 0U ? -1.0 : 1.0) * c.angle * r.m.config.track/2.0;
+            r.sample.count[w] = (uint32_t)(int32_t)llround(goal * progress / quantum);
+        }
+        tick(&r, false);
+        if (i < 300U) { CHECK(r.m.status.state == DRIVING); }
+    }
+    CHECK(r.m.status.state == READY && r.m.status.fault == F_NONE);
+    NEAR(r.m.status.centre, c.value, r.m.config.distance_tolerance);
+    NEAR(r.m.status.heading, c.angle, r.m.config.angle_tolerance);
+    /* A timed command must not report completion if encoder goals were missed. */
+    init(&r); c.generation = r.m.status.generation; c.expires=r.now+0.25; c.deadline=r.now+20.0;
+    r.m.config.feedback_timeout=5.0;
+    CHECK(motion_accept(&r.m, &c, r.now) == R_OK);
+    for (i = 0U; i < 350U; ++i) { tick(&r, false); }
+    CHECK(r.m.status.state == FAULT && r.m.status.fault == F_FINAL_GOAL && r.m.status.inhibited);
+    init(&r); c = command(&r, ARC_MOVE, 0.2); c.angle=0.1;
+    c.speed[0]=-0.08;
+    CHECK(motion_accept(&r.m, &c, r.now) == R_INVALID);
+    c.speed[0]=0.08; c.angle=NAN;
+    CHECK(motion_accept(&r.m, &c, r.now) == R_INVALID);
+    c.angle=0.1; c.duration=-1.0;
+    CHECK(motion_accept(&r.m, &c, r.now) == R_INVALID);
+    c.duration=0.1;
+    CHECK(motion_accept(&r.m, &c, r.now) == R_INVALID);
+    c.duration=0.0;
+    CHECK(motion_accept(&r.m, &c, r.now) == R_OK);
+    motion_cancel(&r.m, r.now);
+    CHECK(r.m.status.hold && r.m.status.inhibited);
+    /* The new mode uses normal source ownership; line steering cannot replace an obstacle arc. */
+    robot_bus_t b; robot_request_t request;
+    init(&r); robot_bus_init(&b, &r.m.status);
+    request=(robot_request_t){.source=SOURCE_OBSTACLE, .command=command(&r, ARC_MOVE, 0.2)};
+    CHECK(robot_request(&b, &request) == R_OK);
+    vehicle_controller_cycle(&b, r.now); robot_motion_inputs(&b, &r.m, r.sample, r.now);
+    robot_publish(&b, &r.m, r.now);
+    CHECK(b.status.owner_valid && b.status.owner == SOURCE_OBSTACLE);
+    request.source=SOURCE_LINE; request.command=command(&r, WHEEL_SPEED_TRACKING, 0.0);
+    CHECK(robot_request(&b, &request) == R_OK);
+    vehicle_controller_cycle(&b, r.now);
+    CHECK(!b.approved_valid && b.status.rejected_requests > 0U);
+    /* Unequal motor gains: equal wheel-speed requests converge through PID.
+     * A steering refresh preserves PID history and changes targets gradually. */
+    init(&r); c=command(&r, WHEEL_SPEED_TRACKING, 0.0); c.speed[0]=0.08; c.speed[1]=0.08;
+    CHECK(motion_accept(&r.m, &c, r.now) == R_OK);
+    for (i=0U; i<800U; ++i) {
+        double old_target[2]={r.m.status.target[0],r.m.status.target[1]};
+        c.expires=r.now+0.25; c.deadline=r.now+20.0;
+        CHECK(motion_accept(&r.m, &c, r.now) == R_OK);
+        tick(&r, true);
+        CHECK(r.m.status.state == DRIVING && r.m.status.fault == F_NONE);
+        CHECK(fabs(r.m.status.target[0]-old_target[0]) <= r.m.config.acceleration*0.01+1e-12);
+        CHECK(fabs(r.m.status.target[1]-old_target[1]) <= r.m.config.acceleration*0.01+1e-12);
+    }
+    NEAR(r.m.status.speed[0],0.08,0.015); NEAR(r.m.status.speed[1],0.08,0.015);
+    NEAR(r.m.status.speed[0],r.m.status.speed[1],0.01);
+    double integral=r.m.pid[0].integral;
+    c.speed[0]=0.07; c.speed[1]=0.09; c.expires=r.now+0.25; c.deadline=r.now+20.0;
+    CHECK(motion_accept(&r.m,&c,r.now) == R_OK && r.m.pid[0].integral == integral);
+    double left_before=r.m.status.target[0], right_before=r.m.status.target[1];
+    tick(&r,true);
+    CHECK(r.m.status.target[0] < left_before && r.m.status.target[1] > right_before);
+    CHECK(fabs(r.m.status.target[0]-left_before) <= r.m.config.acceleration*0.01+1e-12);
+    CHECK(fabs(r.m.status.target[1]-right_before) <= r.m.config.acceleration*0.01+1e-12);
+}
+
+static void startup_sampling_tests(void)
+{
+    rig_t r={0};
+    motion_config_t c=simulation_config();
+    r.sample.reliable=true;
+    motion_init(&r.m,&c,r.sample,0.0,true);
+    r.now=0.15; r.sample.count[0]=100U; r.sample.count[1]=200U;
+    motion_begin_sampling(&r.m,r.sample,r.now);
+    CHECK(r.m.status.state==INITIALISING && r.m.status.fault==F_NONE && r.m.status.inhibited);
+    CHECK(r.m.last_time==r.now && r.m.odom.previous[0]==100U && r.m.odom.previous[1]==200U);
+    for (unsigned i=0U;i<40U;++i) { tick(&r,false); }
+    CHECK(r.m.status.state==READY && r.m.status.stationary);
+    NEAR(r.m.status.centre,0.0,1e-12);
+    motion_command_t command_value=command(&r,WHEEL_SPEED_TRACKING,0.0);
+    CHECK(motion_accept(&r.m,&command_value,r.now)==R_OK);
+    double last_time=r.m.last_time;
+    motion_begin_sampling(&r.m,r.sample,r.now+1.0);
+    CHECK(r.m.last_time==last_time); /* Cannot rebase an active command. */
+    r.now+=0.06; motion_step(&r.m,r.sample,r.now);
+    CHECK(r.m.status.state==FAULT && r.m.status.fault==F_TIMING && r.m.status.inhibited);
+    c.hardware_confirmed=false;
+    motion_init(&r.m,&c,r.sample,0.0,true);
+    motion_begin_sampling(&r.m,r.sample,0.15);
+    CHECK(r.m.status.state==FAULT && r.m.status.fault==F_CONFIG);
+    c.hardware_confirmed=true;
+    motion_init(&r.m,&c,r.sample,0.0,false);
+    motion_begin_sampling(&r.m,r.sample,0.15);
+    CHECK(r.m.status.state==FAULT && r.m.status.fault==F_SETUP);
+    motion_init(&r.m,&c,r.sample,0.0,true);
+    ++r.sample.invalid[1];
+    motion_begin_sampling(&r.m,r.sample,0.15);
+    CHECK(r.m.status.state==FAULT && r.m.status.fault==F_FEEDBACK);
+    motion_init(&r.m,&c,r.sample,0.1,true);
+    motion_begin_sampling(&r.m,r.sample,0.0);
+    CHECK(r.m.status.state==FAULT && r.m.status.fault==F_TIMING);
+}
+
 int main(void)
 {
     math_tests(); movement_tests(); safety_tests(); correction_and_final_tests(); bus_tests(); validation_tests();
     low_speed_feedback_tests();
     encoder_capture_tests();
     production_line_integration_tests();
+    arc_tests();
+    startup_sampling_tests();
     printf("PASS: %u checks (synthetic host model; no hardware accuracy claim)\n", checks);
     return 0;
 }

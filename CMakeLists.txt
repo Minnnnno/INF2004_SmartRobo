@@ -6,6 +6,7 @@ option(ROBO_MANUAL_CONSOLE "Enable deliberately armed motion calibration console
 option(ROBO_ENCODER_DIAGNOSTICS_ONLY "Read-only encoder/USB diagnostics; compile out motor activation" OFF)
 option(ROBO_SAFE_MOTOR_TEST "Isolated 25 percent, one-second motor tests" OFF)
 option(ROBO_ANGLE_TEST "Isolated encoder-based 90-degree turns" OFF)
+option(ROBO_LINE_STEERING "Production encoder/PID line following with gentle digital steering" OFF)
 if(ROBO_HOST_TESTS)
     project(smart_robo_tests C)
     set(CMAKE_C_STANDARD 11)
@@ -35,6 +36,23 @@ if(ROBO_HOST_TESTS)
         target_compile_options(line_test_checks PRIVATE -Wall -Wextra -Werror -Wconversion -Wshadow)
     endif()
     add_test(NAME line_test_checks COMMAND line_test_checks)
+    add_executable(steering_checks app_program/subsystem2/steering.c
+        app_program/subsystem2/board_config.c tests/test_steering.c)
+    target_include_directories(steering_checks PRIVATE include)
+    if(NOT MSVC)
+        target_compile_options(steering_checks PRIVATE -Wall -Wextra -Werror -Wconversion -Wshadow)
+        target_link_libraries(steering_checks m)
+    endif()
+    add_test(NAME steering_checks COMMAND steering_checks)
+    add_executable(line_pid_checks app_program/subsystem3/subsystem3.c
+        app_program/subsystem2/steering.c app_program/subsystem2/board_config.c tests/test_line_pid.c)
+    target_include_directories(line_pid_checks PRIVATE include tests)
+    target_compile_definitions(line_pid_checks PRIVATE ROBO_LINE_STEERING=1 ROBO_LINE_TEST_HOST=1)
+    if(NOT MSVC)
+        target_compile_options(line_pid_checks PRIVATE -Wall -Wextra -Werror -Wconversion -Wshadow)
+        target_link_libraries(line_pid_checks m)
+    endif()
+    add_test(NAME line_pid_checks COMMAND line_pid_checks)
     add_executable(angle_control_checks app_program/subsystem2/angle_control.c
         app_program/subsystem2/math.c app_program/subsystem2/board_config.c tests/test_angle_control.c)
     target_compile_definitions(angle_control_checks PRIVATE ROBO_ANGLE_TEST=1)
@@ -61,6 +79,9 @@ if(ROBO_SAFE_MOTOR_TEST AND (NOT ROBO_MANUAL_CONSOLE OR ROBO_ENCODER_DIAGNOSTICS
 endif()
 if(ROBO_ENCODER_DIAGNOSTICS_ONLY AND NOT ROBO_MANUAL_CONSOLE)
     message(FATAL_ERROR "Encoder diagnostics require ROBO_MANUAL_CONSOLE=ON for serial input.")
+endif()
+if(ROBO_LINE_STEERING AND (ROBO_MANUAL_CONSOLE OR ROBO_SAFE_MOTOR_TEST OR ROBO_ANGLE_TEST OR ROBO_ENCODER_DIAGNOSTICS_ONLY))
+    message(FATAL_ERROR "PID line steering is a production profile; disable calibration profiles.")
 endif()
 set(ROBO_PRODUCTION_BUILD OFF)
 if(NOT ROBO_MANUAL_CONSOLE AND NOT ROBO_ENCODER_DIAGNOSTICS_ONLY AND NOT ROBO_SAFE_MOTOR_TEST AND NOT ROBO_ANGLE_TEST)
@@ -183,6 +204,7 @@ target_compile_definitions(mtkernel_3 PRIVATE
     $<$<BOOL:${ROBO_SAFE_MOTOR_TEST}>:ROBO_SAFE_MOTOR_TEST=1>
     $<$<BOOL:${ROBO_ANGLE_TEST}>:ROBO_ANGLE_TEST=1>
     $<$<BOOL:${ROBO_PRODUCTION_BUILD}>:ROBO_PRODUCTION_BUILD=1>
+    $<$<BOOL:${ROBO_LINE_STEERING}>:ROBO_LINE_STEERING=1>
     _PICO_RP2040_
     CNF_SMP=$<BOOL:${SMP}>
     APP_TEST=$<BOOL:${TEST}>
@@ -195,7 +217,9 @@ target_compile_definitions(mtkernel_3 PRIVATE
 )
 if(ROBO_ENCODER_DIAGNOSTICS_ONLY OR ROBO_SAFE_MOTOR_TEST OR ROBO_ANGLE_TEST OR ROBO_PRODUCTION_BUILD)
     string(TIMESTAMP encoder_build_stamp "%Y%m%dT%H%M%SZ" UTC)
-    if(ROBO_ANGLE_TEST)
+    if(ROBO_LINE_STEERING)
+        set(encoder_build_id "b2-line-steering-v1-${encoder_build_stamp}")
+    elseif(ROBO_ANGLE_TEST)
         set(encoder_build_id "b2-angle-test-v1-${encoder_build_stamp}")
     elseif(ROBO_SAFE_MOTOR_TEST)
         set(encoder_build_id "b2-motor-test-v1-${encoder_build_stamp}")
@@ -363,6 +387,12 @@ if(ROBO_ENCODER_DIAGNOSTICS_ONLY)
         "${CMAKE_CURRENT_BINARY_DIR}/buddy2_encoder_diag.uf2")
 endif()
 target_link_libraries(mtkernel_3 PRIVATE m)
+if(ROBO_LINE_STEERING)
+    add_custom_command(TARGET mtkernel_3 POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_CURRENT_BINARY_DIR}/mtkernel_3.uf2"
+        "${CMAKE_CURRENT_BINARY_DIR}/buddy2_line_steering.uf2")
+endif()
 if(ROBO_PRODUCTION_BUILD)
     add_custom_command(TARGET mtkernel_3 POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different

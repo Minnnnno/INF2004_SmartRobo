@@ -38,21 +38,29 @@ static bool lock_bus(void)
 }
 static void unlock_bus(void) { (void)tk_unl_mtx(status_mutex); }
 
-motion_result_t robot_submit(request_source_t source, uint32_t id, motion_mode_t mode,
-                             double value, double left, double right)
+static motion_result_t submit(request_source_t source, uint32_t id, motion_mode_t mode,
+                             double value, double left, double right, double angle, double duration)
 {
     robot_request_t request;
     motion_result_t result;
     double now = motion_hal_time();
     if (!running || !lock_bus()) { return R_BUSY; }
     request.source = source;
-    request.command = (motion_command_t){id, bus.generation, mode, value, {left, right},
-        now + motion.config.command_lifetime,
-        now + ((mode == MANUAL_OUTPUT) ? motion.config.manual_timeout : motion.config.movement_timeout)};
+    request.command = (motion_command_t){.id=id, .generation=bus.generation, .mode=mode,
+        .value=value, .speed={left, right}, .expires=now + motion.config.command_lifetime,
+        .deadline=now + ((mode == MANUAL_OUTPUT) ? motion.config.manual_timeout : motion.config.movement_timeout),
+        .angle=angle, .duration=duration};
     result = robot_request(&bus, &request);
     unlock_bus();
     return result;
 }
+
+motion_result_t robot_submit(request_source_t source, uint32_t id, motion_mode_t mode,
+                             double value, double left, double right)
+{ return submit(source, id, mode, value, left, right, 0.0, 0.0); }
+motion_result_t robot_submit_arc(request_source_t source, uint32_t id, double metres,
+                                 double radians, double seconds, double left, double right)
+{ return submit(source, id, ARC_MOVE, metres, left, right, radians, seconds); }
 
 static motion_result_t magnitude(uint32_t id, motion_mode_t mode, double value, int sign)
 {
@@ -112,16 +120,24 @@ bool robot_update_subsystem(request_source_t source, const subsystem_status_t *s
 static void motion_task(INT code, void *context)
 {
     double next = motion_hal_time();
+    bool first_sample = true;
     (void)code; (void)context;
+    /* Boot banner, communications and task creation are not control-loop intervals. */
+    motion_begin_sampling(&motion, motion_hal_sample(), next);
     for (;;) {
         double now = motion_hal_time();
+        double previous_time = motion.last_time;
         encoder_sample_t sample = motion_hal_sample();
         if (tk_loc_mtx(status_mutex, TMO_FEVR) == E_OK) {
             robot_motion_inputs(&bus, &motion, sample, now);
             unlock_bus();
         } else { motion_raise_fault(&motion, F_SYSTEM, now); }
-        /* Reset establishes a new sample/time origin; avoid an artificial zero-dt fault. */
-        if (now > motion.last_time) { motion_step(&motion, sample, now); }
+        /* Skip equal timestamps only on startup/reset; a stalled or backwards
+         * runtime clock must still fault instead of repeating stale PWM. */
+        if (now != motion.last_time || (!first_sample && motion.last_time == previous_time)) {
+            motion_step(&motion, sample, now);
+        }
+        first_sample = false;
         if (tk_loc_mtx(status_mutex, TMO_FEVR) == E_OK) {
             robot_publish(&bus, &motion, now);
             /* A stop arriving while calculating wins before the hardware write. */

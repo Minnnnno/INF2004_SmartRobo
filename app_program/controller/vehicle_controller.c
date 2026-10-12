@@ -15,7 +15,8 @@ motion_result_t robot_request(robot_bus_t *b, const robot_request_t *r)
     if (((unsigned)r->source > (unsigned)SOURCE_TERRAIN) ||
         (r->command.id == 0U) || !isfinite(r->command.value) ||
         !isfinite(r->command.speed[0]) || !isfinite(r->command.speed[1]) ||
-        ((unsigned)r->command.mode > (unsigned)MANUAL_OUTPUT)) { return R_INVALID; }
+        !isfinite(r->command.angle) || !isfinite(r->command.duration) ||
+        ((unsigned)r->command.mode > (unsigned)ARC_MOVE)) { return R_INVALID; }
     if ((r->command.generation != b->generation) || b->shutdown_latched) { return R_STALE; }
     if ((b->controls != 0U) || b->status.motion.hold ||
         ((b->status.motion.state != READY) && (b->status.motion.state != DRIVING))) { return R_HELD; }

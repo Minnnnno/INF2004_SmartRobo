@@ -53,6 +53,8 @@ motion_result_t motion_set_wheel_speeds(uint32_t id, double left, double right);
 motion_result_t motion_manual_output(uint32_t id, double left, double right);
 motion_result_t robot_submit(request_source_t source, uint32_t id, motion_mode_t mode,
                              double value, double left, double right);
+motion_result_t robot_submit_arc(request_source_t source, uint32_t id, double metres,
+                                 double radians, double seconds, double left, double right);
 void motion_stop(void);
 void motion_controller_release(bool checks_ok);
 void motion_fault_reset(bool cause_cleared, bool externally_verified_rest);

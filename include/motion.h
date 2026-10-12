@@ -6,7 +6,7 @@
 
 /* All distances metres, speeds m/s, angles radians, times seconds. */
 typedef enum { INITIALISING, READY, DRIVING, STOPPING, STOPPED, FAULT, SHUTDOWN } motion_state_t;
-typedef enum { DISTANCE_MOVE, ENCODER_TURN, WHEEL_SPEED_TRACKING, MANUAL_OUTPUT } motion_mode_t;
+typedef enum { DISTANCE_MOVE, ENCODER_TURN, WHEEL_SPEED_TRACKING, MANUAL_OUTPUT, ARC_MOVE } motion_mode_t;
 typedef enum { F_NONE, F_CONFIG, F_SETUP, F_TIMING, F_FEEDBACK, F_DEADLINE,
                F_EXPIRED, F_STOP_TIMEOUT, F_FINAL_GOAL, F_EVENT_OVERFLOW, F_SYSTEM } motion_fault_t;
 typedef enum { R_OK, R_INVALID, R_BUSY, R_HELD, R_STALE, R_FULL } motion_result_t;
@@ -30,6 +30,7 @@ typedef struct {
     uint32_t id, generation;
     motion_mode_t mode;
     double value, speed[2], expires, deadline;
+    double angle, duration; /* ARC_MOVE: heading change radians; 0=distance goal, >0=timed trajectory. */
 } motion_command_t;
 typedef struct {
     uint32_t count[2], invalid[2];
@@ -49,7 +50,7 @@ typedef struct {
     motion_mode_t mode;
     motion_fault_t fault;
     uint32_t id, generation;
-    double speed[2], travel[2], output[2], target[2], centre, path, heading;
+    double speed[2], travel[2], output[2], target[2], centre, path, heading, sample_time;
     bool stationary, feedback_trusted, inhibited, hold;
 } motion_status_t;
 typedef struct {
@@ -76,6 +77,8 @@ bool odometry_step(odometry_t *odom, const motion_config_t *config,
                    const encoder_sample_t *sample, double dt);
 void motion_init(motion_t *motion, const motion_config_t *config,
                  encoder_sample_t sample, double now, bool setup_ok);
+/* Call once at task startup, before the first update. Never clears a fault. */
+void motion_begin_sampling(motion_t *motion, encoder_sample_t sample, double now);
 void motion_step(motion_t *motion, encoder_sample_t sample, double now);
 motion_result_t motion_accept(motion_t *motion, const motion_command_t *command, double now);
 void motion_cancel(motion_t *motion, double now);
