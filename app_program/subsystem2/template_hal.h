@@ -24,6 +24,8 @@ static inline void gpio_put(unsigned pin, bool high) { out_w(high ? GPIO_OUT_SET
 static inline void gpio_set_dir(unsigned pin, bool output) { out_w(output ? GPIO_OE_SET : GPIO_OE_CLR, 1UL << pin); }
 static inline bool gpio_get(unsigned pin) { return (in_w(GPIO_IN) & (1UL << pin)) != 0U; }
 static inline void gpio_disable_pulls(unsigned pin) { clr_w(GPIO(pin), GPIO_PUE | GPIO_PDE); }
+static inline void gpio_pull_up(unsigned pin)
+{ clr_w(GPIO(pin), GPIO_PDE); set_w(GPIO(pin), GPIO_PUE); }
 static inline void gpio_set_function(unsigned pin, unsigned function) { out_w(GPIO_CTRL(pin), function); }
 #define GPIO_FUNC_PWM GPIO_CTRL_FUNCSEL_PWM
 #define GPIO_IRQ_EDGE_FALL 4U

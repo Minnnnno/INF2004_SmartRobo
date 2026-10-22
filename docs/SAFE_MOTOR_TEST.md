@@ -1,5 +1,8 @@
 # Buddy 2 isolated motor test
 
+For the separate GP20 start/stop two-second battery run, see
+[battery forward testing](BATTERY_FORWARD_TEST.md).
+
 The latest verified geometry and motor polarity are documented in
 [angle testing](ANGLE_TEST.md): diameter 65 mm, track 115 mm, motor signs `{1,-1}`.
 The angle-test
@@ -22,20 +25,21 @@ Flash this file using BOOTSEL:
 
 `C:\Y2 Tri 1\Embedded Systems\Assignment\INF2004_SmartRobo\build-safe-motor-test\buddy2_safe_motor_test.uf2`
 
-The delivered firmware ID is `b2-motor-test-v1-20261011T114440Z`.
-SHA256: `8637C0A2EFC3C4957C92A4C843F56AB98D59BFAFDADDA43BD6B3BF2E1CDD72F6`.
-File size is 186880 bytes. Metadata is in
+Each rebuild generates a firmware ID; use `status`/`encdiag` to identify the
+flashed image. The current build ID, file size and SHA256 are in
 `build-safe-motor-test/encoder-build-manifest.json`.
 
 1. With motor power disconnected, flash the UF2 and open USB serial at 115200
    with newline enabled. Send `encdiag` and `status`. Confirm the firmware ID,
    left GP4/GP6 and right GP5/GP7, encoder init/IRQ status, and motors stopped.
-   An expected configuration fault remains visible because geometry is unset.
+   An expected configuration fault remains visible because production hardware
+   confirmation is disabled in this test profile.
 2. This image reads digital IR signals in subsystem 3: left DO -> GP26,
    right DO -> GP27. Move the signal wires from AO to DO with power disconnected.
    DO must be 3.3 V compatible, and the sensors share ground with the Pico.
-   After a two-second startup delay it reports every 100 ms as
-   `left_digital=0/1 right_digital=0/1`. These are actual GPIO levels, with no
+   After a two-second startup delay it samples every 100 ms. Periodic IR and
+   terrain console messages are disabled to keep `status` and test results
+   readable. Inputs are actual GPIO levels, with no
    ADC conversion or numerical light threshold. Using the existing HIGH (1)
    detection level, while at least one reading is 1,
    both motors run
@@ -43,8 +47,13 @@ File size is 186880 bytes. Metadata is in
    Both readings 0 stop sensor-driven movement on the next sample.
    Each valid either-HIGH sample refreshes a 300 ms hardware watchdog without
    resetting PWM; if the task stops updating, the watchdog stops the motors.
-   Serial `stop` pauses automatic forward until both sensors
-   become 0; `shutdown` also prevents all new sensor and
+   Send `stop` before calibration; its reply includes
+   `motors_stopped=1 ir_paused_until_reboot=1`.
+   Serial `stop` latches automatic IR movement off until reboot, including
+   after both sensors become 0 and later detect black again. Manual motor
+   commands also latch IR movement off so calibration pulses stay bounded.
+   The individual and paired manual commands remain available after `stop`.
+   `shutdown` also prevents all new sensor and
    serial tests until reboot. There is no steering logic or production enabling.
 3. Disconnect power while reconnecting the motor wiring and the robot's proper
    motor supply. Support the robot with both wheels clear of the ground. On
@@ -65,8 +74,17 @@ status
 ```
 
 The four left/right commands apply exactly 25% PWM to the selected motor.
-`forward` and `backward` apply 25% to both motors together, using the corrected
-right motor polarity. A hardware timer
+`forward` and `backward` apply **24.9% left and 25% right**, using the corrected
+right motor polarity. This is a provisional test trim from the forward ground
+measurements (left mean 2193 counts, right mean 1864.67 at equal 25% duty),
+then increased from the initial 21.25% estimate through 22%, 22.5%, 24% and 25%
+after repeated leftward mat drift. Left was then reduced to 24.5% after slight
+rightward drift at 25%, then increased to 24.7% after slight leftward drift at 24.5%.
+The current requested mat trial uses 24.9% on the left.
+Repeat three forward ground tests to assess drift and encoder deltas before
+treating it as calibrated. Reverse accuracy has not been measured. The trim
+applies only to these paired serial tests; individual and automatic IR outputs
+stay at 25%, and production PID configuration is unchanged. A hardware timer
 interrupt stops both motors at the one-second deadline. `stop` ends the test
 early when parsed. There is no ARM step in this profile. Starting another test
 while active, while a result is pending, or during cooldown is rejected and
@@ -98,6 +116,8 @@ faults. Startup and completion use LOW/LOW outputs with PWM disabled.
 
 The actuator initializes PWM slices 4/5 at 20 kHz: wrap 3999, divider 1.5625,
 compare value 1000 gives exactly 25% duty at the kernel's asserted 125 MHz clock.
+Paired serial tests use compare value 996 on the left (996/4000 = 24.9%) and
+1000 on the right (25%).
 Both motors are disabled before each test. Individual commands enable only the
 selected slice; paired commands enable slices 4 and 5 under one shared cutoff.
 The sensor entry point uses the same PWM and direction setup but refreshes its
@@ -110,8 +130,8 @@ by the console task. Hardware cutoff timing has not been measured on the robot.
 
 The safe motor-test Pico W build with IR triggering and the normal build with
 the trigger disabled both passed. Sanitized host tests
-passed 202 actual line-task checks and 721 motor-actuator checks.
-The merged motion/encoder/controller tests passed 2137 checks. Actuator
+passed 123 actual line-task checks, 886 motor-actuator checks and 54 serial
+parser checks after the latched-stop fix. Actuator
 tests use the actual motor-test implementation with mock registers. These
 cover stopped startup, failed initialization, both wheels/directions, exact PWM
 duty, arm-before-drive ordering, individual motor isolation, paired motor
@@ -121,8 +141,9 @@ rollover, invalid deltas, shutdown blocking both entry points and timer low-word
 rollover. Continuous-mode tests keep motors enabled for five seconds of sensor
 updates and verify no PWM resets or stop/restart writes, then check stopping,
 missed-update watchdog cutoff and shutdown. Line-task tests cover
-GPIO input initialization, all four digital input combinations, displayed
-0/1 values, continuous refresh, serial-stop pause/re-arm and rejected
+GPIO input initialization, all four digital input combinations, quiet console
+output, continuous refresh, no restart after serial stop despite repeated
+LOW/HIGH input changes, and rejected
 triggers.
 No firmware was flashed
 or physically tested by the agent.

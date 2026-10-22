@@ -26,7 +26,7 @@ int main(void)
         int sign = direction == 0U ? 1 : -1;
         angle_control_init(&c,&config);
         CHECK(c.ready && c.state == ANGLE_IDLE && c.output[0] == 0.0 && c.output[1] == 0.0);
-        CHECK(fabs(c.goal[0]-1124.523076923) < 0.001 && fabs(c.goal[1]-1124.965384615) < 0.001);
+        CHECK(fabs(c.goal[0]-1082.874074074) < 0.001 && fabs(c.goal[1]-1076.918262150) < 0.001);
         CHECK(angle_control_start(&c,sign,sample,0.0));
         CHECK(!angle_control_start(&c,-sign,sample,0.01));
         CHECK(c.deadline == 8.0);

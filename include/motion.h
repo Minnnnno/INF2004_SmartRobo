@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "motion_storage.h"
 
 /* All distances metres, speeds m/s, angles radians, times seconds. */
 typedef enum { INITIALISING, READY, DRIVING, STOPPING, STOPPED, FAULT, SHUTDOWN } motion_state_t;
@@ -10,7 +11,11 @@ typedef enum { DISTANCE_MOVE, ENCODER_TURN, WHEEL_SPEED_TRACKING, MANUAL_OUTPUT,
 typedef enum { F_NONE, F_CONFIG, F_SETUP, F_TIMING, F_FEEDBACK, F_DEADLINE,
                F_EXPIRED, F_STOP_TIMEOUT, F_FINAL_GOAL, F_EVENT_OVERFLOW, F_SYSTEM } motion_fault_t;
 typedef enum { R_OK, R_INVALID, R_BUSY, R_HELD, R_STALE, R_FULL } motion_result_t;
+typedef enum { FB_NONE, FB_UNRELIABLE, FB_INVALID_TRANSITION, FB_ODOMETRY, FB_NO_PROGRESS } motion_feedback_cause_t;
 typedef enum { EV_COMPLETE, EV_CANCELLED, EV_FAULT, EV_STOPPED, EV_REJECTED } motion_event_type_t;
+
+_Static_assert((SHUTDOWN <= 7) && (ARC_MOVE <= 7) && (F_SYSTEM <= 15) &&
+               (EV_REJECTED <= 7), "Update Buddy 2 packed field widths for new enum values");
 typedef struct { double kp, ki, kd, derivative_tau; } pid_config_t;
 typedef struct { double integral, previous, derivative; bool seeded; } pid_t;
 typedef struct {
@@ -52,19 +57,32 @@ typedef struct {
     uint32_t id, generation;
     double speed[2], travel[2], output[2], target[2], centre, path, heading, sample_time;
     bool stationary, feedback_trusted, inhibited, hold;
+    /* First timing failure is retained until init/reset; never print in ISR. */
+    double last_dt, max_observed_dt, timing_fault_dt;
+    motion_state_t timing_fault_state;
+    bool timing_fault_recorded;
+    uint32_t startup_gaps;
+    double max_startup_gap;
+    motion_feedback_cause_t feedback_cause;
+    encoder_sample_t feedback_fault_sample;
+    uint32_t feedback_previous_count[2], feedback_previous_invalid[2];
 } motion_status_t;
 typedef struct {
     motion_config_t config;
     motion_status_t status;
     odometry_t odom;
     pid_t pid[2];
-    motion_command_t command;
+    motion_storage_command_t command;
     uint32_t start_count[2]; /* Raw modular counts captured on command entry. */
     double start[2], last_time, entered, last_progress[2], expected_since[2], still_since;
     uint32_t invalid[2];
-    bool active, still_tracking, goal_pending, feedback_latched;
-    motion_event_t events[8];
-    unsigned event_head, event_count;
+    /* active remains a public bridge member used by the unchanged controller.
+     * Other owner-only booleans and independent fault causes are packed. */
+    bool active;
+    uint8_t runtime_flags;
+    uint16_t fault_flags; /* F_CONFIG..F_SYSTEM: bit(fault-1), reset by init. */
+    motion_storage_events_t events;
+    uint8_t event_queue; /* head:3 bits, occupancy:4 bits, reserved:1 bit. */
 } motion_t;
 
 bool motion_config_valid(const motion_config_t *config);

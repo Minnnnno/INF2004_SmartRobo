@@ -85,6 +85,22 @@ static void usb_diagnostics(void)
 #endif
 }
 
+#ifdef ROBO_BATTERY_FORWARD_TEST
+static void button_diagnostics(void)
+{
+    motor_test_button_diag_t d;
+    if (!motor_test_get_buttons(&d)) { return; }
+    printf("firmware=%s profile=button_test gp20_mode=toggle gp21_mode=stop ir_enabled=0 automatic_start=0\n", (const UB *)ROBO_ENCODER_BUILD_ID);
+    printf("GP20=%u GP21=%u pressed_level=0 ready=%u armed=%u active=%u polls=%lu stop_actions=%lu\n",
+        (unsigned)d.start_high, (unsigned)d.stop_high, (unsigned)d.ready,
+        (unsigned)d.armed, (unsigned)d.active, (unsigned long)d.polls, (unsigned long)d.stop_actions);
+    printf("button_irq_registered=%u button_irq_events=%lu cutoff_ms=2000\n",
+        (unsigned)d.irq_registered, (unsigned long)d.irq_events);
+    printf("cutoff_irq_count=%lu polled_cutoffs=%lu remaining_ms=%lu\n",
+        (unsigned long)d.cutoff_irq_count, (unsigned long)d.polled_cutoffs, (unsigned long)d.remaining_ms);
+}
+#endif
+
 /* Test-only task. No motor activation on USB connection or ARM alone. */
 void manual_console(void)
 {
@@ -107,12 +123,21 @@ void manual_console(void)
 #ifdef ROBO_SAFE_MOTOR_TEST
     bool test_shutdown = false;
     bool discard_line = false;
-    printf("firmware=%s safe_motor_test_ready=%u production_inhibited=1 output=25%% serial_max_ms=1000 ir_continuous=1\n",
-           (const UB *)ROBO_ENCODER_BUILD_ID, (unsigned)motor_test_init());
+    bool test_ready = motor_test_init();
+    printf("firmware=%s safe_motor_test_ready=%u production_inhibited=1 single_output_percent=25 paired_left_percent=24.9 paired_right_percent=25 serial_max_ms=1000\n",
+           (const UB *)ROBO_ENCODER_BUILD_ID, (unsigned)test_ready);
+#ifdef ROBO_BATTERY_FORWARD_TEST
+    puts("button_test_ready start_stop=GP20 extra_stop=GP21 active_low=1 cutoff_ms=2000 ir_enabled=0 automatic_start=0");
+#endif
 #endif
     for (;;) {
         int input;
         unsigned budget = 32U;
+#ifdef ROBO_BATTERY_FORWARD_TEST
+        motor_test_poll_buttons();
+#elif defined(ROBO_SAFE_MOTOR_TEST)
+        motor_test_poll();
+#endif
 #ifdef ROBO_ANGLE_TEST
         angle_test_poll();
         angle_control_t angle_status = angle_test_status();
@@ -187,8 +212,15 @@ void manual_console(void)
                            (unsigned)ceil(turn.goal[0]), (unsigned)ceil(turn.goal[1]));
 #endif
 #ifdef ROBO_SAFE_MOTOR_TEST
-                    printf("production_inhibited=1 motor_test_active=%u output_percent=25 serial_max_ms=1000 ir_continuous=1\n",
+                    printf("production_inhibited=1 motor_test_active=%u single_output_percent=25 paired_left_percent=24.9 paired_right_percent=25 serial_max_ms=1000\n",
                            (unsigned)motor_test_active());
+#ifdef ROBO_BATTERY_FORWARD_TEST
+                    button_diagnostics();
+#endif
+#endif
+#ifdef ROBO_BATTERY_FORWARD_TEST
+                } else if (strcmp(line, "buttons") == 0) {
+                    button_diagnostics();
 #endif
                 } else if (strcmp(line, "encdiag") == 0) {
                     encoder_diagnostics();
@@ -206,7 +238,7 @@ void manual_console(void)
 #endif
 #ifdef ROBO_SAFE_MOTOR_TEST
                     line_forward_pause(); motor_test_stop();
-                    puts("motors_stopped=1");
+                    puts("motors_stopped=1 ir_paused_until_reboot=1");
 #endif
                     motion_stop(); armed = false;
                 } else if (strcmp(line, "shutdown") == 0) {
@@ -230,8 +262,10 @@ void manual_console(void)
                     unsigned wheel = line[0] == 'l' ? 0U : 1U;
                     bool both = (strcmp(line, "forward") == 0) || (strcmp(line, "backward") == 0);
                     int direction = (strstr(line, "reverse") != NULL || strcmp(line, "backward") == 0) ? -1 : 1;
+                    line_forward_pause(); /* Calibration pulses cannot be followed by automatic IR movement. */
                     if (!test_shutdown && (both ? motor_test_start_pair(direction) : motor_test_start(wheel, direction))) {
-                        puts("motor_test_started output_percent=25 cutoff_ms=1000");
+                        if (both) { puts("motor_test_started left_output_percent=24.9 right_output_percent=25 cutoff_ms=1000"); }
+                        else { puts("motor_test_started output_percent=25 cutoff_ms=1000"); }
                     } else { puts("motor_test_rejected: busy, cooling down, disabled or initialization failed"); }
 #endif
 #if !defined(ROBO_ENCODER_DIAGNOSTICS_ONLY) && !defined(ROBO_SAFE_MOTOR_TEST) && !defined(ROBO_ANGLE_TEST)
@@ -254,6 +288,9 @@ void manual_console(void)
 #endif
                 } else if (line[0] != '\0') {
                     puts("status | encdiag | usbdiag | stop | shutdown");
+#ifdef ROBO_BATTERY_FORWARD_TEST
+                    puts("buttons: raw GP20/GP21 levels and button polling/stop diagnostics");
+#endif
 #ifdef ROBO_ANGLE_TEST
                     puts("turn_left_90 | turn_right_90 | status | stop");
 #elif defined(ROBO_SAFE_MOTOR_TEST)

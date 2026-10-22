@@ -10,6 +10,19 @@ static bool geometry(const motion_config_t *c)
     return isfinite(c->track) && c->track > 0.0 &&
            isfinite(c->max_speed) && c->max_speed > 0.0;
 }
+motion_result_t motion_move_mm(request_source_t source, uint32_t id, double mm)
+{
+    motion_config_t c = board_motion_config();
+    if (!isfinite(mm) || fabs(mm / 1000.0) > c.max_distance) { return R_INVALID; }
+    return robot_submit(source, id, DISTANCE_MOVE, mm / 1000.0, 0.0, 0.0);
+}
+motion_result_t motion_turn_degrees(request_source_t source, uint32_t id, double degrees)
+{
+    motion_config_t c = board_motion_config();
+    double radians = degrees * DEG_TO_RAD;
+    if (!isfinite(radians) || fabs(radians) > c.max_angle) { return R_INVALID; }
+    return robot_submit(source, id, ENCODER_TURN, radians, 0.0, 0.0);
+}
 static motion_result_t wheel_request(request_source_t source, uint32_t id,
                                      double left, double right)
 {
@@ -22,6 +35,11 @@ static motion_result_t wheel_request(request_source_t source, uint32_t id,
         right *= c.max_speed / largest; /* Preserve the requested curvature. */
     }
     return robot_submit(source, id, WHEEL_SPEED_TRACKING, 0.0, left, right);
+}
+motion_result_t motion_set_wheel_speeds_mm_s(request_source_t source, uint32_t id,
+                                            double left, double right)
+{
+    return wheel_request(source, id, left / 1000.0, right / 1000.0);
 }
 motion_result_t motion_steer(request_source_t source, uint32_t id,
                             double speed, double turn_deg_s)
@@ -99,6 +117,24 @@ bool motion_get_feedback(motion_feedback_t *feedback)
         .heading_deg=status.motion.heading / DEG_TO_RAD,
         .state=status.motion.state, .fault=status.motion.fault,
         .feedback_trusted=status.motion.feedback_trusted && motion_config_valid(&c)};
+    return true;
+}
+bool motion_get_measurements_mm(motion_measurements_mm_t *measurements)
+{
+    motion_feedback_t feedback;
+    if (measurements == NULL || !motion_get_feedback(&feedback)) { return false; }
+    *measurements = (motion_measurements_mm_t){
+        .timestamp_s=feedback.timestamp_s,
+        .left_speed_mm_s=feedback.left_speed_m_s * 1000.0,
+        .right_speed_mm_s=feedback.right_speed_m_s * 1000.0,
+        .centre_speed_mm_s=feedback.centre_speed_m_s * 1000.0,
+        .left_distance_mm=feedback.left_metres * 1000.0,
+        .right_distance_mm=feedback.right_metres * 1000.0,
+        .centre_distance_mm=feedback.centre_metres * 1000.0,
+        .path_distance_mm=feedback.path_metres * 1000.0,
+        .heading_deg=feedback.heading_deg,
+        .state=feedback.state, .fault=feedback.fault,
+        .feedback_trusted=feedback.feedback_trusted};
     return true;
 }
 line_direction_t motion_line_direction(line_steering_t *state, bool left, bool right)

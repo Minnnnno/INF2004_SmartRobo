@@ -1,0 +1,40 @@
+{
+    "date":  "2026-10-22",
+    "compiler":  "ARM GCC 15.2.1",
+    "board":  "pico_w",
+    "nominal_period_ms":  10,
+    "before":  {
+                   "text":  95620,
+                   "data":  28,
+                   "bss":  20804,
+                   "motion_t":  936,
+                   "encoder_capture_t":  72,
+                   "driver_config":  304,
+                   "uf2_sha256":  "1D227AE6440F3ED791E3EDB0123618CE9997456C2D010BAF330AD6CA0A230FBF"
+               },
+    "after":  {
+                  "text":  99716,
+                  "data":  28,
+                  "bss":  20404,
+                  "motion_t":  856,
+                  "encoder_capture_t":  40,
+                  "driver_config":  24,
+                  "internal_command":  56,
+                  "event_queue_payload":  72,
+                  "uf2_sha256":  "93D084AA776A509594BE8505418BA3F31D486C4ADAC423AB31D8E5446207A77D"
+              },
+    "static_ram_saved_bytes":  400,
+    "extra_flash_bytes":  4096,
+    "regression_suites_passed":  15,
+    "additional_suites_passed":  2,
+    "compact_assertions_passed":  85465,
+    "hardware_validated":  false,
+    "public_layouts_preserved":  [
+                                     "motion_command_t",
+                                     "motion_status_t",
+                                     "motion_event_t",
+                                     "encoder_sample_t",
+                                     "robot_bus_t"
+                                 ],
+    "unchanged_nominal_control_period_ms":  10
+}

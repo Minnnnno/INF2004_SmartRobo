@@ -23,6 +23,10 @@ static int g_direction;
 static unsigned g_wheel;
 static bool g_active;
 static bool g_init_ok;
+#ifdef ROBO_BATTERY_FORWARD_TEST
+static unsigned g_button_polls;
+static unsigned g_button_diagnostics;
+#endif
 
 static void check(bool condition, char const *name)
 {
@@ -68,6 +72,7 @@ void motion_stop(void) {}
 void motion_request_shutdown(void) { g_shutdowns++; }
 bool motor_test_init(void) { g_active = false; return g_init_ok; }
 bool motor_test_active(void) { return g_active; }
+void motor_test_poll(void) {}
 bool motor_test_result(motor_test_result_t *result)
 { (void)result; return false; }
 void motor_test_stop(void) { g_active = false; g_stops++; }
@@ -85,6 +90,16 @@ bool motor_test_start(unsigned wheel, int direction)
 }
 bool motor_test_start_pair(int direction)
 { return motor_test_start(2U, direction); }
+#ifdef ROBO_BATTERY_FORWARD_TEST
+void motor_test_poll_buttons(void) { g_button_polls++; }
+bool motor_test_get_buttons(motor_test_button_diag_t *d)
+{
+    *d = (motor_test_button_diag_t){.start_high=true, .stop_high=true,
+        .ready=g_init_ok, .active=g_active, .polls=g_button_polls};
+    g_button_diagnostics++;
+    return true;
+}
+#endif
 
 static void run(char const *input, bool init_ok)
 {
@@ -100,11 +115,32 @@ static void run(char const *input, bool init_ok)
     g_wheel = 0U;
     g_active = false;
     g_init_ok = init_ok;
+#ifdef ROBO_BATTERY_FORWARD_TEST
+    g_button_polls = 0U;
+    g_button_diagnostics = 0U;
+#endif
     if (setjmp(g_done) == 0) { manual_console(); }
 }
 
 int main(void)
 {
+#ifdef ROBO_BATTERY_FORWARD_TEST
+    run("", true); /* No incoming serial bytes or host connection required. */
+    check(g_starts == 0U && !g_active && g_button_polls >= 2U,
+          "button profile polls buttons without serial input and never starts automatically");
+    run("status\n", true);
+    check(g_starts == 0U, "status never starts movement");
+    check(g_button_diagnostics == 1U, "status includes raw button diagnostics");
+    run("buttons\nbuttons\n", true);
+    check(g_button_diagnostics == 2U && g_starts == 0U && g_stops == 0U,
+          "buttons command reports input levels without changing motor state");
+    run("forward\nstop\n", true);
+    check(g_starts == 1U && !g_active && g_stops == 1U,
+          "serial stop cancels movement without restarting it");
+    run("", false);
+    check(g_starts == 0U && !g_active && g_attempts == 0U,
+          "failed initialization never starts movement");
+#else
     char oversized[128];
     run("", true);
     check(g_starts == 0U, "startup does not drive motors");
@@ -118,13 +154,14 @@ int main(void)
     run("left_forward\n", true);
     check(g_starts == 1U && g_wheel == 0U && g_direction == 1,
           "left motor command");
+    check(g_sensor_pauses == 1U, "manual calibration disables IR restart");
     run("right_reverse\n", true);
     check(g_starts == 1U && g_wheel == 1U && g_direction == -1,
           "right motor command");
     run("forward\nforward\n", true);
     check(g_attempts == 2U && g_starts == 1U, "busy start is not queued");
     run("forward\nstop\n", true);
-    check(g_starts == 1U && g_stops == 1U && !g_active && g_sensor_pauses == 1U,
+    check(g_starts == 1U && g_stops == 1U && !g_active && g_sensor_pauses == 2U,
           "stop reaches the test actuator");
     run("forward\nshutdown\nforward\n", true);
     check(g_starts == 1U && g_stops == 1U && g_shutdowns == 1U && !g_active,
@@ -147,6 +184,7 @@ int main(void)
     check(g_starts == 1U && g_stops == 1U, "RX loss recovery needs newline");
     run("forward", true);
     check(g_starts == 0U, "unterminated command never drives motors");
+#endif
     printf("PASS: %u serial command checks\n", g_checks);
     return EXIT_SUCCESS;
 }

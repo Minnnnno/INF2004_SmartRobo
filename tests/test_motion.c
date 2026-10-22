@@ -225,7 +225,7 @@ static void bus_tests(void)
     init(&r); robot_bus_init(&b, &r.m.status); b.event_count = 8U;
     motion_raise_fault(&r.m, F_FEEDBACK, r.now); robot_publish(&b, &r.m, r.now);
     CHECK(b.status.dropped_events == 1U && r.m.status.inhibited && r.m.status.fault == F_FEEDBACK);
-    init(&r); r.m.event_count = 8U;
+    init(&r); r.m.event_queue = (uint8_t)(8u << 3u);
     motion_raise_fault(&r.m, F_SYSTEM, r.now);
     CHECK(r.m.status.state == FAULT && r.m.status.inhibited);
 }
@@ -371,7 +371,7 @@ static void encoder_capture_tests(void)
                 capture_bank0_event(&capture, event, levels);
                 CHECK(capture.count[1U - wheel] == 0U);
                 CHECK(capture.invalid[1U - wheel] == 0U);
-                CHECK(capture.previous_ab[1U - wheel] == 0U);
+                CHECK(encoder_capture_previous_ab(&capture, 1U - wheel) == 0U);
                 CHECK(capture.edges[1U - wheel][0] == 0U && capture.edges[1U - wheel][1] == 0U);
             }
             CHECK(capture.count[wheel] == (direction == 0U ? 4U : UINT32_MAX - 3U));
@@ -380,7 +380,7 @@ static void encoder_capture_tests(void)
         }
     }
     encoder_capture_init(&capture, pins, quadrature, sign, (1U << 4U) | (1U << 7U));
-    CHECK(capture.previous_ab[0] == 2U && capture.previous_ab[1] == 1U);
+    CHECK(encoder_capture_previous_ab(&capture, 0) == 2U && encoder_capture_previous_ab(&capture, 1) == 1U);
     capture_bank0_event(&capture, 4U << (7U * 4U), 1U << 4U);
     CHECK(capture.count[1] == UINT32_MAX && capture.count[0] == 0U);
     encoder_capture_init(&capture, pins, quadrature, sign, 0U);
@@ -388,7 +388,7 @@ static void encoder_capture_tests(void)
                            (1U << 5U) | (1U << 7U));
     CHECK(capture.invalid[1] == 1U && capture.invalid[0] == 0U);
     CHECK(capture.count[0] == 0U && capture.count[1] == 0U);
-    CHECK(capture.previous_ab[1] == 3U);
+    CHECK(encoder_capture_previous_ab(&capture, 1) == 3U);
     encoder_capture_init(&capture, pins, quadrature, sign, 0U);
     capture_bank0_event(&capture, (8U << (6U * 4U)) | (8U << (7U * 4U)),
                            (1U << 6U) | (1U << 7U));
@@ -398,7 +398,7 @@ static void encoder_capture_tests(void)
     capture_bank0_event(&capture, 8U << (5U * 4U), (1U << 5U) | (1U << 7U));
     CHECK(capture.count[1] == 0U && capture.count[0] == 1U);
     capture_bank0_event(&capture, 8U, 0U); /* Unowned GPIO0; leave both states intact. */
-    CHECK(capture.previous_ab[0] == 1U && capture.previous_ab[1] == 3U);
+    CHECK(encoder_capture_previous_ab(&capture, 0) == 1U && encoder_capture_previous_ab(&capture, 1) == 3U);
     {
         const int inverted[2] = {1, -1};
         const bool single[2] = {true, false};
@@ -406,7 +406,7 @@ static void encoder_capture_tests(void)
         capture_bank0_event(&capture, 8U << (7U * 4U), 1U << 7U);
         CHECK(capture.count[1] == UINT32_MAX);
         encoder_capture_init(&capture, pins, single, sign, 0U);
-        capture.inferred_direction[1] = -1;
+        encoder_capture_set_direction(&capture, 1u, -1);
         capture_bank0_event(&capture, 8U << (7U * 4U), 1U << 7U);
         CHECK(capture.count[1] == 0U && capture.edges[1][1] == 0U);
         capture_bank0_event(&capture, 8U << (5U * 4U), 1U << 5U);
@@ -600,6 +600,18 @@ static void startup_sampling_tests(void)
     CHECK(r.m.last_time==last_time); /* Cannot rebase an active command. */
     r.now+=0.06; motion_step(&r.m,r.sample,r.now);
     CHECK(r.m.status.state==FAULT && r.m.status.fault==F_TIMING && r.m.status.inhibited);
+    CHECK(r.m.status.timing_fault_recorded && r.m.status.timing_fault_state==DRIVING);
+    NEAR(r.m.status.timing_fault_dt,0.06,1e-12);
+    NEAR(r.m.status.max_observed_dt,0.06,1e-12);
+    r.now+=0.12; motion_step(&r.m,r.sample,r.now);
+    NEAR(r.m.status.timing_fault_dt,0.06,1e-12); /* Retain first failure after later gaps. */
+    NEAR(r.m.status.last_dt,0.12,1e-12);
+    NEAR(r.m.status.max_observed_dt,0.12,1e-12);
+    motion_init(&r.m,&c,r.sample,0.0,true);
+    CHECK(!r.m.status.timing_fault_recorded);
+    motion_step(&r.m,r.sample,0.0);
+    CHECK(r.m.status.fault==F_TIMING && r.m.status.timing_fault_recorded);
+    CHECK(r.m.status.timing_fault_dt==0.0 && r.m.status.timing_fault_state==INITIALISING);
     c.hardware_confirmed=false;
     motion_init(&r.m,&c,r.sample,0.0,true);
     motion_begin_sampling(&r.m,r.sample,0.15);
@@ -615,6 +627,77 @@ static void startup_sampling_tests(void)
     motion_init(&r.m,&c,r.sample,0.1,true);
     motion_begin_sampling(&r.m,r.sample,0.0);
     CHECK(r.m.status.state==FAULT && r.m.status.fault==F_TIMING);
+    CHECK(r.m.status.timing_fault_recorded && r.m.status.timing_fault_state==INITIALISING);
+    NEAR(r.m.status.timing_fault_dt,-0.1,1e-12);
+}
+
+static void startup_gap_tests(void)
+{
+    rig_t r={0};
+    motion_config_t c=simulation_config();
+    r.sample.reliable=true;
+    motion_init(&r.m,&c,r.sample,0.0,true);
+    r.now=0.142231; motion_step(&r.m,r.sample,r.now); /* Captured robot startup gap. */
+    CHECK(r.m.status.state==INITIALISING && r.m.status.fault==F_NONE);
+    CHECK(r.m.status.inhibited && !r.m.status.stationary && !r.m.status.feedback_trusted);
+    CHECK(r.m.status.output[0]==0.0 && r.m.status.output[1]==0.0);
+    CHECK(r.m.status.startup_gaps==1U && !r.m.status.timing_fault_recorded);
+    NEAR(r.m.status.max_startup_gap,0.142231,1e-12);
+    CHECK(r.m.entered==0.0); /* Startup deadline is not extended. */
+    motion_command_t move=command(&r,WHEEL_SPEED_TRACKING,0.0);
+    CHECK(motion_accept(&r.m,&move,r.now)==R_HELD);
+    for(unsigned i=0U;i<20U;++i) { tick(&r,false); }
+    CHECK(r.m.status.state==INITIALISING && r.m.status.inhibited);
+    r.now+=0.10; motion_step(&r.m,r.sample,r.now);
+    CHECK(r.m.status.startup_gaps==2U && !r.m.status.stationary);
+    for(unsigned i=0U;i<20U;++i) { tick(&r,false); }
+    CHECK(r.m.status.state==INITIALISING); /* Rest settling restarts after each gap. */
+    for(unsigned i=0U;i<20U;++i) { tick(&r,false); }
+    CHECK(r.m.status.state==READY && r.m.status.feedback_trusted && r.m.status.stationary);
+    r.now+=0.06; motion_step(&r.m,r.sample,r.now);
+    CHECK(r.m.status.fault==F_TIMING && r.m.status.timing_fault_state==READY);
+    CHECK(r.m.status.inhibited && r.m.status.hold);
+
+    motion_init(&r.m,&c,r.sample,0.0,true);
+    for(unsigned i=1U;i<=15U;++i) { r.now=(double)i*0.15; motion_step(&r.m,r.sample,r.now); }
+    CHECK(r.m.status.fault==F_SETUP && r.m.status.inhibited);
+    CHECK(r.m.entered>=2.0); /* Fault time; no indefinite initialization grace. */
+
+    motion_init(&r.m,&c,r.sample,0.0,true);
+    ++r.sample.invalid[0]; motion_step(&r.m,r.sample,0.142231);
+    CHECK(r.m.status.fault==F_FEEDBACK && r.m.status.inhibited);
+    --r.sample.invalid[0];
+    motion_init(&r.m,&c,r.sample,0.0,true);
+    r.sample.reliable=false; motion_step(&r.m,r.sample,0.142231);
+    CHECK(r.m.status.fault==F_FEEDBACK);
+    r.sample.reliable=true;
+    motion_init(&r.m,&c,r.sample,0.1,true);
+    motion_step(&r.m,r.sample,0.0);
+    CHECK(r.m.status.fault==F_TIMING); /* Backwards clocks never qualify as startup gaps. */
+}
+
+static void feedback_diagnostic_tests(void)
+{
+    rig_t r;
+    init(&r);
+    r.sample.invalid[0]=1U;
+    tick(&r,false);
+    CHECK(r.m.status.fault==F_FEEDBACK && r.m.status.feedback_cause==FB_INVALID_TRANSITION);
+    CHECK(r.m.status.feedback_fault_sample.invalid[0]==1U && r.m.status.feedback_fault_sample.invalid[1]==0U);
+    CHECK(r.m.status.feedback_previous_invalid[0]==0U && r.m.status.feedback_previous_invalid[1]==0U);
+    r.sample.invalid[1]=5U; tick(&r,false);
+    CHECK(r.m.status.feedback_fault_sample.invalid[1]==0U); /* Preserve the triggering sample. */
+    CHECK(r.m.status.output[0]==0.0 && r.m.status.output[1]==0.0 && r.m.status.hold);
+
+    init(&r); CHECK(r.m.status.feedback_cause==FB_NONE);
+    r.sample.count[1]=100000U; tick(&r,false);
+    CHECK(r.m.status.fault==F_FEEDBACK && r.m.status.feedback_cause==FB_ODOMETRY);
+    CHECK(r.m.status.feedback_fault_sample.count[1]==100000U && r.m.status.feedback_previous_count[1]==0U);
+    CHECK(r.m.status.feedback_fault_sample.reliable && r.m.status.feedback_fault_sample.invalid[1]==0U);
+
+    init(&r); r.sample.reliable=false; tick(&r,false);
+    CHECK(r.m.status.fault==F_FEEDBACK && r.m.status.feedback_cause==FB_UNRELIABLE);
+    CHECK(!r.m.status.feedback_fault_sample.reliable && r.m.status.inhibited);
 }
 
 int main(void)
@@ -625,6 +708,8 @@ int main(void)
     production_line_integration_tests();
     arc_tests();
     startup_sampling_tests();
+    startup_gap_tests();
+    feedback_diagnostic_tests();
     printf("PASS: %u checks (synthetic host model; no hardware accuracy claim)\n", checks);
     return 0;
 }

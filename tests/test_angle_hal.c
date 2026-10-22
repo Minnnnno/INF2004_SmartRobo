@@ -44,7 +44,7 @@ int main(void)
     CHECK(deadline==8000000U); CHECK(!angle_test_start(-1) && deadline==8000000U);
     sample.count[0]=0U-1000U; sample.count[1]=1000U; now=10000U; angle_test_poll();
     CHECK(duty[0][1]<1000U && duty[1][1]<1000U);
-    sample.count[0]=0U-1125U; sample.count[1]=1125U; now=20000U; angle_test_poll();
+    sample.count[0]=0U-1083U; sample.count[1]=1077U; now=20000U; angle_test_poll();
     CHECK(!enabled[0] && !enabled[1] && angle_test_status().state==ANGLE_BRAKING);
     now=330000U; angle_test_poll(); CHECK(angle_test_status().state==ANGLE_DONE && !armed);
     now=1000000U; CHECK(angle_test_start(-1));

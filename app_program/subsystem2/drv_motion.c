@@ -6,15 +6,62 @@
 #include "angle_test.h"
 #include <math.h>
 
-static motion_config_t configuration;
+static motion_motor_storage_t g_motor_config;
 static volatile encoder_capture_t capture;
 static uint32_t encoder_event_mask[4];
-static bool encoder_initialised, encoder_irq_registered;
-static int last_direction[2];
+static uint8_t g_driver_flags;
 static double neutral_since[2];
-static bool neutral[2] = {true, true};
-static bool configured;
+static uint8_t g_wheel_flags = 3u; /* neutral bits0:1; last directions bits2:5 */
 static uint16_t wrap;
+
+#define DRIVER_ENCODER_READY  0x01u
+#define DRIVER_IRQ_REGISTERED 0x02u
+#define DRIVER_PWM_READY      0x04u
+#define MOTOR_BRAKE_ENABLED   0x01u
+
+static bool motor_state_get(uint8_t mask)
+{
+    return (0u != ((uint32_t)g_driver_flags & mask));
+}
+
+static void motor_state_set(uint8_t mask, bool b_value)
+{
+    uint32_t flags = g_driver_flags;
+    flags = b_value ? (flags | mask) : (flags & ~(uint32_t)mask);
+    g_driver_flags = (uint8_t)flags;
+}
+
+static bool motor_is_neutral(uint32_t wheel)
+{
+    return (0u != ((uint32_t)g_wheel_flags & (UINT32_C(1) << wheel)));
+}
+
+static void motor_neutral_set(uint32_t wheel, bool b_value)
+{
+    uint32_t mask = UINT32_C(1) << wheel;
+    uint32_t flags = g_wheel_flags;
+    flags = b_value ? (flags | mask) : (flags & ~mask);
+    g_wheel_flags = (uint8_t)flags;
+}
+
+static int32_t motor_direction_get(uint32_t wheel)
+{
+    uint32_t encoded = ((uint32_t)g_wheel_flags >> (2u + 2u * wheel)) & 3u;
+    return (1u == encoded) ? 1 : ((2u == encoded) ? -1 : 0);
+}
+
+static void motor_direction_set(uint32_t wheel, int32_t direction)
+{
+    uint32_t shift = 2u + 2u * wheel;
+    uint32_t encoded = (direction > 0) ? 1u : ((direction < 0) ? 2u : 0u);
+    uint32_t flags = g_wheel_flags;
+    g_wheel_flags = (uint8_t)((flags & ~(UINT32_C(3) << shift)) | (encoded << shift));
+}
+
+static int32_t motor_sign_get(uint32_t wheel)
+{
+    return (0u != ((uint32_t)g_motor_config.flags & (UINT32_C(1) << (wheel + 1u)))) ? -1 : 1;
+}
 
 static void encoder_irq(void)
 {
@@ -50,7 +97,7 @@ void motion_hal_emergency_stop(void)
         gpio_set_dir(b, (b != encoder_pins[0][0]) && (b != encoder_pins[0][1]) &&
                         (b != encoder_pins[1][0]) && (b != encoder_pins[1][1]));
     }
-    configured = false;
+    motor_state_set(DRIVER_PWM_READY, false);
 }
 
 bool motion_hal_init(const motion_config_t *config)
@@ -59,7 +106,11 @@ bool motion_hal_init(const motion_config_t *config)
     uint32_t mask = 0U;
     uint32_t irq_state;
     double divider;
-    configuration = *config;
+    g_motor_config.max_output = config->max_output;
+    g_motor_config.reversal_time = config->reversal_time;
+    g_motor_config.flags = config->brake ? MOTOR_BRAKE_ENABLED : 0u;
+    if (config->motor_sign[0] < 0) { g_motor_config.flags |= 2u; }
+    if (config->motor_sign[1] < 0) { g_motor_config.flags |= 4u; }
     motion_hal_emergency_stop();
     if (!board_pins_valid()) { return false; }
     /* Keep safe GPIO levels when settings have not been confirmed. */
@@ -89,7 +140,7 @@ bool motion_hal_init(const motion_config_t *config)
     }
     /* Board dispatcher owns IRQ 13; each registered handler owns only its pin mask. */
     if (!board_gpio_irq_register(mask, encoder_irq)) { return false; }
-    encoder_irq_registered = true;
+    motor_state_set(DRIVER_IRQ_REGISTERED, true);
     irq_state = save_and_disable_interrupts();
     for (w = 0U; w < 4U; ++w) {
         out_w(IO_BANK0_BASE + 0xf0U + w * 4U, encoder_event_mask[w]);
@@ -103,7 +154,7 @@ bool motion_hal_init(const motion_config_t *config)
             gpio_set_irq_enabled(encoder_pins[w][1], GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
         }
     }
-    encoder_initialised = true;
+    motor_state_set(DRIVER_ENCODER_READY, true);
     restore_interrupts(irq_state);
 #if defined(ROBO_ENCODER_DIAGNOSTICS_ONLY) || defined(ROBO_SAFE_MOTOR_TEST) || defined(ROBO_ANGLE_TEST)
     /* This build never changes motor GPIOs to PWM, even if settings are edited. */
@@ -115,7 +166,7 @@ bool motion_hal_init(const motion_config_t *config)
         gpio_set_function(motor_pins[w][1], GPIO_FUNC_PWM);
         pwm_set_enabled(pwm_gpio_to_slice_num(motor_pins[w][0]), true);
     }
-    configured = true;
+    motor_state_set(DRIVER_PWM_READY, true);
     return true;
 #endif
 }
@@ -128,7 +179,7 @@ encoder_sample_t motion_hal_sample(void)
     sample.count[1] = capture.count[1];
     sample.invalid[0] = capture.invalid[0];
     sample.invalid[1] = capture.invalid[1];
-    sample.reliable = encoder_initialised;
+    sample.reliable = motor_state_get(DRIVER_ENCODER_READY);
     restore_interrupts(irq_state);
     return sample;
 }
@@ -138,21 +189,21 @@ void motion_hal_encoder_diagnostics(encoder_diagnostics_t *d)
     unsigned w, channel;
     uint32_t irq_state = save_and_disable_interrupts();
     d->levels = in_w(GPIO_IN);
-    d->initialised = encoder_initialised;
-    d->irq_registered = encoder_irq_registered;
+    d->initialised = motor_state_get(DRIVER_ENCODER_READY);
+    d->irq_registered = motor_state_get(DRIVER_IRQ_REGISTERED);
     d->nvic_enabled = (in_w(0xe000e100U) & (1UL << 13U)) != 0U;
-    d->motors_inhibited = !configured;
+    d->motors_inhibited = !motor_state_get(DRIVER_PWM_READY);
 #ifdef ROBO_SAFE_MOTOR_TEST
     d->motors_inhibited = !motor_test_active();
 #endif
 #ifdef ROBO_ANGLE_TEST
     d->motors_inhibited = !angle_test_active();
 #endif
-    d->sample.reliable = encoder_initialised;
+    d->sample.reliable = motor_state_get(DRIVER_ENCODER_READY);
     for (w = 0; w < 2U; ++w) {
         d->sample.count[w] = capture.count[w];
         d->sample.invalid[w] = capture.invalid[w];
-        d->previous_ab[w] = capture.previous_ab[w];
+        d->previous_ab[w] = encoder_capture_previous_ab(&capture, w);
         for (channel = 0; channel < 2U; ++channel) {
             unsigned pin = encoder_pins[w][channel];
             d->pins[w][channel] = pin;
@@ -171,30 +222,30 @@ void motion_hal_write(const double output[2], bool inhibited, double now)
     return; /* Startup left all motor outputs LOW; no drive path in this build. */
 #else
     unsigned w;
-    if (!configured) { return; }
+    if (!motor_state_get(DRIVER_PWM_READY)) { return; }
     for (w = 0; w < 2U; ++w) {
         double value = (!inhibited && isfinite(output[w])) ?
-                       fmax(-configuration.max_output, fmin(configuration.max_output, output[w])) : 0.0;
+                       fmax(-g_motor_config.max_output, fmin(g_motor_config.max_output, output[w])) : 0.0;
         int direction = (value > 0.0) ? 1 : ((value < 0.0) ? -1 : 0);
         uint16_t a = 0U;
         uint16_t b = 0U;
-        if ((direction != 0) && (last_direction[w] != 0) && (direction != last_direction[w]) &&
-            (!neutral[w] || ((now - neutral_since[w]) < configuration.reversal_time))) {
+        if ((direction != 0) && (motor_direction_get(w) != 0) && (direction != motor_direction_get(w)) &&
+            (!motor_is_neutral(w) || ((now - neutral_since[w]) < g_motor_config.reversal_time))) {
             value = 0.0;
             direction = 0;
         }
         if (direction == 0) {
-            if (!neutral[w]) { neutral_since[w] = now; }
-            neutral[w] = true;
-            if (!configuration.brake) { a = (uint16_t)(wrap + 1U); b = a; }
+            if (!motor_is_neutral(w)) { neutral_since[w] = now; }
+            motor_neutral_set(w, true);
+            if ((0u == ((uint32_t)g_motor_config.flags & MOTOR_BRAKE_ENABLED))) { a = (uint16_t)(wrap + 1U); b = a; }
         } else {
             uint16_t duty = (uint16_t)(fabs(value) * (wrap + 1U));
             uint32_t irq_state = save_and_disable_interrupts();
-            capture.inferred_direction[w] = direction;
+            encoder_capture_set_direction(&capture, w, direction);
             restore_interrupts(irq_state);
-            last_direction[w] = direction;
-            neutral[w] = false;
-            if ((direction * configuration.motor_sign[w]) > 0) { a = duty; }
+            motor_direction_set(w, direction);
+            motor_neutral_set(w, false);
+            if ((direction * motor_sign_get(w)) > 0) { a = duty; }
             else { b = duty; }
         }
         /* Both compare values share a single slice register write. */

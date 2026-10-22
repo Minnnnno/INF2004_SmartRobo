@@ -11,7 +11,20 @@ typedef struct {
 bool motor_test_init(void);
 bool motor_test_start(unsigned wheel, int direction);
 bool motor_test_start_pair(int direction);
+void motor_test_poll(void); /* Absolute-time cutoff fallback; task context, no output. */
+#ifdef ROBO_BATTERY_FORWARD_TEST
+void motor_test_poll_buttons(void); /* GP20 toggles run/stop; GP21 also stops. Active LOW; two-second cap. */
+typedef struct {
+    bool start_high, stop_high, ready, armed, active;
+    uint32_t polls, stop_actions;
+    bool irq_registered;
+    uint32_t irq_events;
+    uint32_t cutoff_irq_count, polled_cutoffs, remaining_ms;
+} motor_test_button_diag_t;
+bool motor_test_get_buttons(motor_test_button_diag_t *diagnostics); /* Read-only GPIO/task snapshot. */
+#endif
 bool motor_test_sensor_forward(void); /* Continuous forward while refreshed by IR task. */
+void motor_test_pause_sensor(void); /* Latch IR movement off until reboot; manual tests remain available. */
 void motor_test_stop(void);
 void motor_test_shutdown(void);
 bool motor_test_result(motor_test_result_t *result);
