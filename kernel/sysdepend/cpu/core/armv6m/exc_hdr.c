@@ -23,6 +23,7 @@
 #include <tm/tmonitor.h>
 #include <kernel.h>
 #include "../../../sysdepend.h"
+#include <crash_log.h>
 
 #if (USE_EXCEPTION_DBG_MSG && USE_TMONITOR)
 	#define EXCEPTION_DBG_MSG(a)	tm_putstring((UB*)a)
@@ -83,7 +84,6 @@ EXPORT void knl_hard_fault_report(void)
 {
     extern void robo_board_force_stop(void);
     robo_board_force_stop();
-#if (USE_EXCEPTION_DBG_MSG  && USE_TMONITOR)
 
 	ID		ctskid;
 	volatile UW	*f = knl_fault_frame;
@@ -93,6 +93,11 @@ EXPORT void knl_hard_fault_report(void)
 	} else {
 		ctskid = 0;
 	}
+	/* Saved before printing: printing here was seen to hang until the
+	   watchdog fired, which lost the details (include/crash_log.h). */
+	crash_log_save(CRASH_MAGIC_FAULT, (f != NULL)? f[6]: 0U,
+		       (f != NULL)? f[5]: 0U, (UW)ctskid);
+#if (USE_EXCEPTION_DBG_MSG  && USE_TMONITOR)
 	/* Report the processor too: a faulting core halts below while the other
 	   keeps running, so without it the log reads as if nothing happened. */
 	tm_printf((UB*)"*** Hard fault ***  prc:%d ctxtsk:%d\n",
@@ -128,7 +133,9 @@ EXPORT void knl_hard_fault_report(void)
 			  f[0], f[1], f[2], f[3], f[4]);
 	}
 #endif
-	while(1);
+	/* The USB console cannot drain from here: reboot and let usermain()
+	   report the saved details. */
+	crash_log_reboot();
 }
 
 /*

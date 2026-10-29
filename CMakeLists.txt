@@ -7,6 +7,7 @@ option(ROBO_ENCODER_DIAGNOSTICS_ONLY "Read-only encoder/USB diagnostics; compile
 option(ROBO_SAFE_MOTOR_TEST "Isolated 25 percent, one-second motor tests" OFF)
 option(ROBO_ANGLE_TEST "Isolated encoder-based 90-degree turns" OFF)
 option(ROBO_LINE_STEERING "Production encoder/PID line following with gentle digital steering" OFF)
+option(ROBO_IR_MONITOR "Line-steering image that only prints IR readings; never requests motion" OFF)
 if(ROBO_HOST_TESTS)
     project(smart_robo_tests C)
     set(CMAKE_C_STANDARD 11)
@@ -82,6 +83,9 @@ if(ROBO_ENCODER_DIAGNOSTICS_ONLY AND NOT ROBO_MANUAL_CONSOLE)
 endif()
 if(ROBO_LINE_STEERING AND (ROBO_MANUAL_CONSOLE OR ROBO_SAFE_MOTOR_TEST OR ROBO_ANGLE_TEST OR ROBO_ENCODER_DIAGNOSTICS_ONLY))
     message(FATAL_ERROR "PID line steering is a production profile; disable calibration profiles.")
+endif()
+if(ROBO_IR_MONITOR AND NOT ROBO_LINE_STEERING)
+    message(FATAL_ERROR "ROBO_IR_MONITOR requires ROBO_LINE_STEERING=ON.")
 endif()
 set(ROBO_PRODUCTION_BUILD OFF)
 if(NOT ROBO_MANUAL_CONSOLE AND NOT ROBO_ENCODER_DIAGNOSTICS_ONLY AND NOT ROBO_SAFE_MOTOR_TEST AND NOT ROBO_ANGLE_TEST)
@@ -205,6 +209,7 @@ target_compile_definitions(mtkernel_3 PRIVATE
     $<$<BOOL:${ROBO_ANGLE_TEST}>:ROBO_ANGLE_TEST=1>
     $<$<BOOL:${ROBO_PRODUCTION_BUILD}>:ROBO_PRODUCTION_BUILD=1>
     $<$<BOOL:${ROBO_LINE_STEERING}>:ROBO_LINE_STEERING=1>
+    $<$<BOOL:${ROBO_IR_MONITOR}>:ROBO_IR_MONITOR=1>
     _PICO_RP2040_
     CNF_SMP=$<BOOL:${SMP}>
     APP_TEST=$<BOOL:${TEST}>

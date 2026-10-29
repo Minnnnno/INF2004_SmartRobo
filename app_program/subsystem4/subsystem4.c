@@ -30,8 +30,10 @@ void terrain_task(INT code, void *p_context)
     (void)code;
     (void)p_context;
     b_ready = b_ready && (configuration_status == E_OK);
+#ifndef ROBO_IR_MONITOR /* Keep the IR monitor's single console line clean. */
     tm_printf((UB const *)"[IMU] I2C1 GP2/GP3 init=%d\n",
               configuration_status);
+#endif
     for (;;)
     {
         ER read_status = E_NOEXS;
@@ -66,6 +68,7 @@ void terrain_task(INT code, void *p_context)
         status.values[2] = 0.0;
         status.values[3] = result.b_tilt_valid ? S4_VALID_PITCH : 0U;
         (void)robot_update_subsystem(SOURCE_TERRAIN, &status);
+#ifndef ROBO_IR_MONITOR
         if (now >= next_report)
         {
             next_report = now + S4_REPORT_S;
@@ -79,6 +82,7 @@ void terrain_task(INT code, void *p_context)
                           "[TERRAIN] Unavailable (error=%d)\n", read_status);
             }
         }
+#endif
         (void)tk_dly_tsk(b_ready ? S4_SAMPLE_MS : 1000U);
     }
 }

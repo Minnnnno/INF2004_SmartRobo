@@ -46,7 +46,9 @@ motion_config_t board_motion_config(void)
         .max_distance = 5.0, .max_angle = 6.283185307179586,
         .straight_gain = 1.0, .reversal_time = 0.1,
         .manual_limit = 0.15, .manual_timeout = 0.5,
-        .pid = {{1.0, 0.5, 0.0, 0.05}, {1.0, 0.5, 0.0, 0.05}},
+        /* Raised from {1.0, 0.5}: 0.08 m/s started at ~8% PWM, below the right motor's
+         * starting threshold, so the 0.8 s no-progress check faulted (Buddy 3 test). */
+        .pid = {{3.0, 2.0, 0.0, 0.05}, {3.0, 2.0, 0.0, 0.05}},
         .pwm_hz = 20000U, .hardware_confirmed = true,
         .brake = true, .manual_enabled = false
     };

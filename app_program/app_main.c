@@ -5,6 +5,7 @@
 #include "subsystems.h"
 #include "app.h"
 #include "subsystem1/comms.h"
+#include "crash_log.h"
 _Static_assert((int)COMMS_CMD_START == (int)REMOTE_START && (int)COMMS_CMD_STOP == (int)REMOTE_STOP &&
                (int)COMMS_CMD_ESTOP == (int)REMOTE_ESTOP, "Buddy 1 command mapping changed");
 #include <math.h>
@@ -124,8 +125,10 @@ static void motion_task(INT code, void *context)
     (void)code; (void)context;
     /* Boot banner, communications and task creation are not control-loop intervals. */
     motion_begin_sampling(&motion, motion_hal_sample(), next);
+    crash_watchdog_start(1000U); /* Reboot and report if this loop stalls for 1 s. */
     for (;;) {
         double now = motion_hal_time();
+        crash_watchdog_feed(1000U);
         double previous_time = motion.last_time;
         encoder_sample_t sample = motion_hal_sample();
         if (tk_loc_mtx(status_mutex, TMO_FEVR) == E_OK) {
@@ -187,8 +190,26 @@ INT usermain(void)
     ID ids[7];
     unsigned i;
     T_CMTX mutex = {.mtxatr = TA_INHERIT};
-    motion_config_t config = board_motion_config();
-    double start = motion_hal_time();
+    motion_config_t config;
+    double start;
+    UW crash_reason = in_w(CRASH_WDT_REASON);
+    crash_watchdog_stop();
+    /* After a crash reboot, report it with the motors never enabled. Repeats so
+     * it is seen after the serial port reconnects; power-on clears it. */
+    if (in_w(CRASH_WDT_SCRATCH0) == CRASH_MAGIC_FAULT || (crash_reason & CRASH_REASON_TIMER) != 0U) {
+        for (;;) {
+            if (in_w(CRASH_WDT_SCRATCH0) == CRASH_MAGIC_FAULT) {
+                tm_printf((const UB *)"LAST CRASH: hard fault task=%u pc=%08x lr=%08x (motors held; power-cycle to run)\n",
+                          (unsigned)in_w(CRASH_WDT_SCRATCH0 + 12U), (unsigned)in_w(CRASH_WDT_SCRATCH0 + 4U),
+                          (unsigned)in_w(CRASH_WDT_SCRATCH0 + 8U));
+            } else {
+                tm_printf((const UB *)"LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run)\n");
+            }
+            (void)tk_dly_tsk(2000U);
+        }
+    }
+    config = board_motion_config();
+    start = motion_hal_time();
     bool setup = motion_hal_init(&config);
     double now = motion_hal_time();
     motion_init(&motion, &config, motion_hal_sample(), now, setup && ((now - start) <= config.setup_timeout));
