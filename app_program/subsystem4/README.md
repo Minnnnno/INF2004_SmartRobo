@@ -8,7 +8,7 @@ I2C transfers wait on kernel events with a 20 ms per-transfer timeout.
 
 ## Wiring and mounting
 
-I2C1: SDA = GP2, SCL = GP3 (GPIO numbers, not physical header numbers).
+I2C1: SDA = GP6, SCL = GP7 (GPIO numbers, not physical header numbers).
 Keep the already tested 3.3 V supply and common ground. I2C0 stays inactive;
 the driver's old default pins overlap motors/encoders. UART and ADC drivers
 remain disabled as in the original production build.

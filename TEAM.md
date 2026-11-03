@@ -33,6 +33,6 @@ general GPIO dispatcher.
 Hardware measurements, safety policy and interfaces: docs/HARDWARE.md,
 docs/CALIBRATION.md and docs/API.md. Subsystem 4 supplies real IMU/tilt readings; other sensor placeholders remain inactive.
 
-Subsystem 4 now owns I2C1 GP2 SDA / GP3 SCL and runs the GY-511
+Subsystem 4 now owns I2C1 GP6 SDA / GP7 SCL and runs the GY-511
 background monitor at the existing priority 8. I2C0 is not initialised.
 See app_program/subsystem4/README.md for telemetry and validity semantics.

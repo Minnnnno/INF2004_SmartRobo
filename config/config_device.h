@@ -28,6 +28,6 @@
 #define DEVCNF_USE_SER		0		// Serial communication device
 #define DEVCNF_USE_ADC		0		// A/D conversion device
 #define DEVCNF_USE_IIC		1		// I2C communication device
-		/* Only I2C1 is initialised at boot, on GP2/GP3. */
+		/* Only I2C1 is initialised at boot, on GP6/GP7. */
 
 #endif	/* __DEV_CONFIG_H__ */

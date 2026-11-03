@@ -25,31 +25,34 @@ signal can connect directly to Pico GPIO. Confirm the ultrasonic echo interface 
 |---|---|
 | Left motor M1A/M1B | 8/9, fixed board driver links |
 | Right motor M2A/M2B | 10/11, fixed board driver links |
-| Left encoder A/B | GP4/GP6, matching CSC24 Week 6 report section 2 |
-| Right encoder A/B | GP5/GP7, matching CSC24 Week 6 report section 2 |
-| Magnetometer/IMU | 2/3 (SDA/SCL), **I2C1**, owned by subsystem 4 |
+| Left encoder A/B | GP2/GP3 |
+| Right encoder A/B | GP4/GP5 |
+| Magnetometer/IMU | 6/7 (SDA/SCL), **I2C1**, owned by subsystem 4 |
 | Servo | 12, reserved; PWM slice 6A |
 | Ultrasonic | 16/17, reserved TRIG/ECHO |
-| Line sensors | 26/27, ADC0/1 |
-| Barcode | 28, ADC2; confirm VBAT-sense jumper open |
+| Right/centre line sensors | 26/27, ADC0/1 |
+| Barcode | 28, ADC2, reserved and inactive; confirm VBAT-sense jumper open |
+| Calibration buttons | 20/21, optional |
+| UART TX/RX | 0/1, optional (`CONSOLE=uart` / `CRASH_REPORT`) |
+| Pico W internal | 23/24/25/29, reserved for the radio |
 
-Encoder connector wiring from `CSC24_Week6_Report.docx`, section 2:
+Encoder connector wiring:
 
 | Encoder connector pin | Signal | Left encoder (M1) | Right encoder (M2) |
 |---|---|---|---|
 | 1 | GND | GND | GND |
-| 2 | A | GP4 | GP5 |
-| 3 | B | GP6 | GP7 |
+| 2 | A | GP2 | GP4 |
+| 3 | B | GP3 | GP5 |
 | 4 | Supply | 3V3 | 3V3 |
 
-Connector pins 2/3 are labels on the encoder connector. They do not mean GP2/GP3
-on the Pico. The IMU now uses GP2/GP3. Named definitions are in
-`include/board_config.h`. The report specifies this wiring; physical encoder
+Connector pins 2/3 are labels on the encoder connector, not Pico GPIO numbers.
+Named definitions are in `include/board_config.h`; the I2C1 pins are set in
+`device/i2c/sysdepend/rp2040/i2c_cnf_sysdep.h`. Physical encoder
 compatibility, signs and counts still require the calibration checks.
 
 Motors use PWM slices 4 and 5; encoder signals are digital inputs, not PWM. ADC
 use on 26/27 does not claim PWM slice 5. Only the I2C1 driver is enabled,
-on GP2/GP3; the earlier BSP I2C0 defaults GP8/9 overlap motor pins
+on GP6/GP7; the earlier BSP I2C0 defaults GP8/9 overlap motor pins
 and I2C0 must remain inactive. Do not start core 1 or overwrite
 the board GPIO dispatcher. Other buddies register nonoverlapping pin masks through
 board_gpio_irq_register; see TEAM.md. The template USB IRQ shim is not a GPIO dispatcher.

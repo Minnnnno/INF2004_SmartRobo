@@ -31,7 +31,7 @@ void terrain_task(INT code, void *p_context)
     (void)p_context;
     b_ready = b_ready && (configuration_status == E_OK);
 #ifndef ROBO_IR_MONITOR /* Keep the IR monitor's single console line clean. */
-    tm_printf((UB const *)"[IMU] I2C1 GP2/GP3 init=%d\n",
+    tm_printf((UB const *)"[IMU] I2C1 GP6/GP7 init=%d\n",
               configuration_status);
 #endif
     for (;;)

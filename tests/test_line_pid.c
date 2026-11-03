@@ -78,7 +78,7 @@ motion_result_t robot_submit(request_source_t source,uint32_t id,motion_mode_t m
                              double value,double left,double right)
 {
     CHECK(source==SOURCE_LINE && mode==WHEEL_SPEED_TRACKING && value==0.0);
-    static const double wheels[][2]={{0.0,0.0},{0.08,0.08},{0.05,0.11},{0.11,0.05},{0.0,0.08},{0.08,0.0},{0.0,0.0},{-0.06,-0.06}};
+    static const double wheels[][2]={{0.0,0.0},{0.1,0.1},{0.0625,0.1375},{0.1375,0.0625},{0.0,0.1},{0.1,0.0},{0.0,0.0},{-0.075,-0.075}};
     CHECK(id==3001U && inputs[row].request!=NONE);
     CHECK(fabs(left-wheels[inputs[row].request][0])<1e-9 && fabs(right-wheels[inputs[row].request][1])<1e-9);
     status.motion.state=DRIVING; status.owner_valid=true; status.owner=SOURCE_LINE; status.motion.id=id;

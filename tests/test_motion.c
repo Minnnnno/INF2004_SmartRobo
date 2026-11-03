@@ -330,7 +330,7 @@ static void capture_bank0_event(encoder_capture_t *capture, uint32_t event, uint
 /* Exercise the actual ISR capture path with RP2040 GPIO event bits. */
 static void encoder_capture_tests(void)
 {
-    const unsigned pins[2][2] = {{4U, 6U}, {5U, 7U}};
+    const unsigned pins[2][2] = {{2U, 3U}, {4U, 5U}};
     const bool quadrature[2] = {true, true};
     const int sign[2] = {1, 1};
     const unsigned forward[5] = {0U, 1U, 3U, 2U, 0U};
@@ -338,7 +338,7 @@ static void encoder_capture_tests(void)
     encoder_capture_t capture;
     unsigned wheel, direction, step;
     {
-        const unsigned moved[2][2] = {{4U, 6U}, {BOARD_ENC_R_A, 7U}};
+        const unsigned moved[2][2] = {{BOARD_ENC_L_A, BOARD_ENC_L_B}, {BOARD_ENC_R_A, BOARD_ENC_R_B}};
         for (direction = 0U; direction < 2U; ++direction) {
             const unsigned *sequence = direction == 0U ? forward : reverse;
             encoder_capture_init(&capture, moved, quadrature, sign, 0U);
@@ -346,7 +346,7 @@ static void encoder_capture_tests(void)
                 unsigned channel = (sequence[step] ^ sequence[step - 1U]) == 2U ? 0U : 1U;
                 unsigned pin = moved[1][channel];
                 uint32_t pending[4] = {0U, 0U, 0U, 0U};
-                uint32_t levels = ((sequence[step] >> 1U) << BOARD_ENC_R_A) | ((sequence[step] & 1U) << 7U);
+                uint32_t levels = ((sequence[step] >> 1U) << BOARD_ENC_R_A) | ((sequence[step] & 1U) << BOARD_ENC_R_B);
                 pending[pin / 8U] = ((levels & (1U << pin)) != 0U ? 8U : 4U) << ((pin % 8U) * 4U);
                 encoder_capture_events(&capture, pending, levels);
                 CHECK(capture.count[0] == 0U && capture.invalid[0] == 0U);
@@ -379,23 +379,23 @@ static void encoder_capture_tests(void)
             CHECK(capture.edges[wheel][0] == 2U && capture.edges[wheel][1] == 2U);
         }
     }
-    encoder_capture_init(&capture, pins, quadrature, sign, (1U << 4U) | (1U << 7U));
+    encoder_capture_init(&capture, pins, quadrature, sign, (1U << 2U) | (1U << 5U));
     CHECK(encoder_capture_previous_ab(&capture, 0) == 2U && encoder_capture_previous_ab(&capture, 1) == 1U);
-    capture_bank0_event(&capture, 4U << (7U * 4U), 1U << 4U);
+    capture_bank0_event(&capture, 4U << (5U * 4U), 1U << 2U);
     CHECK(capture.count[1] == UINT32_MAX && capture.count[0] == 0U);
     encoder_capture_init(&capture, pins, quadrature, sign, 0U);
-    capture_bank0_event(&capture, (8U << (5U * 4U)) | (8U << (7U * 4U)),
-                           (1U << 5U) | (1U << 7U));
+    capture_bank0_event(&capture, (8U << (4U * 4U)) | (8U << (5U * 4U)),
+                           (1U << 4U) | (1U << 5U));
     CHECK(capture.invalid[1] == 1U && capture.invalid[0] == 0U);
     CHECK(capture.count[0] == 0U && capture.count[1] == 0U);
     CHECK(encoder_capture_previous_ab(&capture, 1) == 3U);
     encoder_capture_init(&capture, pins, quadrature, sign, 0U);
-    capture_bank0_event(&capture, (8U << (6U * 4U)) | (8U << (7U * 4U)),
-                           (1U << 6U) | (1U << 7U));
+    capture_bank0_event(&capture, (8U << (3U * 4U)) | (8U << (5U * 4U)),
+                           (1U << 3U) | (1U << 5U));
     CHECK(capture.count[0] == 1U && capture.count[1] == 1U);
     CHECK(capture.invalid[0] == 0U && capture.invalid[1] == 0U);
     capture.count[1] = UINT32_MAX;
-    capture_bank0_event(&capture, 8U << (5U * 4U), (1U << 5U) | (1U << 7U));
+    capture_bank0_event(&capture, 8U << (4U * 4U), (1U << 4U) | (1U << 5U));
     CHECK(capture.count[1] == 0U && capture.count[0] == 1U);
     capture_bank0_event(&capture, 8U, 0U); /* Unowned GPIO0; leave both states intact. */
     CHECK(encoder_capture_previous_ab(&capture, 0) == 1U && encoder_capture_previous_ab(&capture, 1) == 3U);
@@ -403,13 +403,13 @@ static void encoder_capture_tests(void)
         const int inverted[2] = {1, -1};
         const bool single[2] = {true, false};
         encoder_capture_init(&capture, pins, quadrature, inverted, 0U);
-        capture_bank0_event(&capture, 8U << (7U * 4U), 1U << 7U);
+        capture_bank0_event(&capture, 8U << (5U * 4U), 1U << 5U);
         CHECK(capture.count[1] == UINT32_MAX);
         encoder_capture_init(&capture, pins, single, sign, 0U);
         encoder_capture_set_direction(&capture, 1u, -1);
-        capture_bank0_event(&capture, 8U << (7U * 4U), 1U << 7U);
-        CHECK(capture.count[1] == 0U && capture.edges[1][1] == 0U);
         capture_bank0_event(&capture, 8U << (5U * 4U), 1U << 5U);
+        CHECK(capture.count[1] == 0U && capture.edges[1][1] == 0U);
+        capture_bank0_event(&capture, 8U << (4U * 4U), 1U << 4U);
         CHECK(capture.count[1] == UINT32_MAX && capture.count[0] == 0U);
     }
 }

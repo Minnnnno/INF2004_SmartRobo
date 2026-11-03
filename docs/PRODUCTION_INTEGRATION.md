@@ -72,7 +72,7 @@ or PWM directly and never use calibration actuators in the sensor task.
 
 ```text
 Update from origin/main, preserving any local work. Read TEAM.md first.
-Integrate our real line-sensor task in app_program/subsystem3/subsystem3.c.
+Integrate our real line-sensor task in app_program/subsystem3/line_following.c.
 Read include/robot.h, docs/API.md and docs/PRODUCTION_INTEGRATION.md.
 Use robot_submit(SOURCE_LINE, session_id, WHEEL_SPEED_TRACKING, 0.0,
 left_speed_m_s, right_speed_m_s) to steer. Refresh every 50 ms with one stable

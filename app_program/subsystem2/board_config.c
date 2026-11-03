@@ -3,12 +3,11 @@
 #include <math.h>
 
 const unsigned motor_pins[2][2] = {{8U, 9U}, {10U, 11U}};
-/* CSC24_Week6_Report, section 2 Hardware Integration Pin Layout.
- * Encoder connector pin 2 = A, pin 3 = B; pin 1 = GND, pin 4 = 3V3.
+/* Encoder connector pin 2 = A, pin 3 = B; pin 1 = GND, pin 4 = 3V3.
  * Rows are left/right; columns are A/B. Values below are Pico GPIO numbers. */
 const unsigned encoder_pins[2][2] = {
-    {BOARD_ENC_L_A, BOARD_ENC_L_B}, /* M1: ENC_L_A -> GP4; ENC_L_B -> GP6 */
-    {BOARD_ENC_R_A, BOARD_ENC_R_B}  /* M2: ENC_R_A -> GP5; ENC_R_B -> GP7 */
+    {BOARD_ENC_L_A, BOARD_ENC_L_B}, /* M1: ENC_L_A -> GP2; ENC_L_B -> GP3 */
+    {BOARD_ENC_R_A, BOARD_ENC_R_B}  /* M2: ENC_R_A -> GP4; ENC_R_B -> GP5 */
 };
 
 bool board_pins_valid(void)
@@ -21,7 +20,7 @@ bool board_pins_valid(void)
         (motor_pins[1][0] != 10U) || (motor_pins[1][1] != 11U)) { return false; }
     for (i = 0; i < 4U; ++i) {
         if (enc[i] > 29U) { return false; }
-        if ((enc[i] < 4U) || (enc[i] > 7U)) { return false; }
+        if ((enc[i] < 2U) || (enc[i] > 5U)) { return false; }
         for (j = 0; j < i; ++j) { if (enc[i] == enc[j]) { return false; } }
     }
     return true;
@@ -33,8 +32,10 @@ motion_config_t board_motion_config(void)
         /* Provisional effective diameters from three passive 1000 mm rolls.
          * Validate under power; these include rolling/measurement effects. */
         .counts_per_rev = {2542.4, 2543.4}, .diameter = {0.0675, 0.0679}, .track = 0.115,
-        /* Right motor reversed: user wheel test and commit 5825f0c agree. */
-        .motor_sign = {1, -1}, .encoder_sign = {-1, 1}, .quadrature = {true, true},
+        /* Right motor reversed: user wheel test and commit 5825f0c agree.
+         * Both encoder signs flipped with the GP2..GP5 rewire: each wheel read about
+         * -200 mm/s at +25% output until its sign was inverted. */
+        .motor_sign = {1, -1}, .encoder_sign = {1, -1}, .quadrature = {true, true},
         /* Provisional tuning only; validate on the actual robot. */
         .max_speed = 0.25, .acceleration = 0.3, .max_output = 0.25,
         .period = 0.01, .max_dt = 0.05,

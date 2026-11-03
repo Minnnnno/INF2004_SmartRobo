@@ -17,7 +17,7 @@ Pico SDK startup adapter is archived and is not linked.
 | Vehicle Controller | app_program/controller/vehicle_controller.c |
 | Buddy 1 WiFi/MQTT queues and hooks | app_program/subsystem1/comms.c |
 | Buddy 2 motion, PID, encoders, configuration | app_program/subsystem2/ |
-| Buddy 3 line and barcode | app_program/subsystem3/subsystem3.c |
+| Buddy 3 line and barcode | app_program/subsystem3/line_following.c, barcode.c |
 | Buddy 4 heading/terrain | app_program/subsystem4/subsystem4.c |
 | Buddy 5 obstacle avoidance | app_program/subsystem5/subsystem5.c |
 
