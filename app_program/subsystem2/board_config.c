@@ -3,12 +3,11 @@
 #include <math.h>
 
 const unsigned motor_pins[2][2] = {{8U, 9U}, {10U, 11U}};
-/* CSC24_Week6_Report, section 2 Hardware Integration Pin Layout.
- * Encoder connector pin 2 = A, pin 3 = B; pin 1 = GND, pin 4 = 3V3.
+/* Encoder connector pin 2 = A, pin 3 = B; pin 1 = GND, pin 4 = 3V3.
  * Rows are left/right; columns are A/B. Values below are Pico GPIO numbers. */
 const unsigned encoder_pins[2][2] = {
-    {BOARD_ENC_L_A, BOARD_ENC_L_B}, /* M1: ENC_L_A -> GP4; ENC_L_B -> GP6 */
-    {BOARD_ENC_R_A, BOARD_ENC_R_B}  /* M2: ENC_R_A -> GP5; ENC_R_B -> GP7 */
+    {BOARD_ENC_L_A, BOARD_ENC_L_B}, /* M1: ENC_L_A -> GP2; ENC_L_B -> GP3 */
+    {BOARD_ENC_R_A, BOARD_ENC_R_B}  /* M2: ENC_R_A -> GP4; ENC_R_B -> GP5 */
 };
 
 bool board_pins_valid(void)
@@ -21,7 +20,8 @@ bool board_pins_valid(void)
         (motor_pins[1][0] != 10U) || (motor_pins[1][1] != 11U)) { return false; }
     for (i = 0; i < 4U; ++i) {
         if (enc[i] > 29U) { return false; }
-        if ((enc[i] < 4U) || (enc[i] > 7U)) { return false; }
+        if ((enc[i] < 2U) || (enc[i] > 5U)) { return false; }
+        if ((enc[i] == BOARD_I2C_SDA) || (enc[i] == BOARD_I2C_SCL)) { return false; }
         for (j = 0; j < i; ++j) { if (enc[i] == enc[j]) { return false; } }
     }
     return true;
@@ -33,7 +33,9 @@ motion_config_t board_motion_config(void)
         /* Provisional effective diameters from three passive 1000 mm rolls.
          * Validate under power; these include rolling/measurement effects. */
         .counts_per_rev = {2542.4, 2543.4}, .diameter = {0.0675, 0.0679}, .track = 0.115,
-        /* Right motor reversed: user wheel test and commit 5825f0c agree. */
+        /* Motor polarity retains the verified forward drive direction.
+         * 2026-11-04: user confirmed physical forward motion while BOTH measured
+         * speeds were negative with encoder signs {+1,-1}; invert feedback only. */
         .motor_sign = {1, -1}, .encoder_sign = {-1, 1}, .quadrature = {true, true},
         /* Provisional tuning only; validate on the actual robot. */
         .max_speed = 0.25, .acceleration = 0.3, .max_output = 0.25,
@@ -46,7 +48,9 @@ motion_config_t board_motion_config(void)
         .max_distance = 5.0, .max_angle = 6.283185307179586,
         .straight_gain = 1.0, .reversal_time = 0.1,
         .manual_limit = 0.15, .manual_timeout = 0.5,
-        .pid = {{1.0, 0.5, 0.0, 0.05}, {1.0, 0.5, 0.0, 0.05}},
+        /* Raised from {1.0, 0.5}: 0.08 m/s started at ~8% PWM, below the right motor's
+         * starting threshold, so the 0.8 s no-progress check faulted (Buddy 3 test). */
+        .pid = {{3.0, 2.0, 0.0, 0.05}, {3.0, 2.0, 0.0, 0.05}},
         .pwm_hz = 20000U, .hardware_confirmed = true,
         .brake = true, .manual_enabled = false
     };

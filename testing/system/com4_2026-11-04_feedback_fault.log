@@ -1,0 +1,194 @@
+---- Opened the serial port COM4 ----
+output_percent=25 production=1 subsystem4_enabled=0 subsystem5_enabled=1
+[STACK] idle_capacity=2048 bytes (interrupts share the idle stack)
+[OBSTACLE] ready: servo GP12 at 90 deg, ultrasonic TRIG GP16 / ECHO GP17, slow zone 450 mm, stop at 150 mm
+[OBSTACLE] approaching: 270 mm ahead at 0 mm/s
+[STACK] idle_used=200 capacity=2048 guard_ok=1
+line_pid centre_ir=1 right_ir=0 direction=0 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=0 state=2 fault=0 speed_mm_s=41,83 output_permille=87,198
+line_pid centre_ir=1 right_ir=1 direction=2 sweep=0 request=0 state=2 fault=0 speed_mm_s=90,45 output_permille=194,127
+line_pid centre_ir=0 right_ir=1 direction=3 sweep=0 request=0 state=2 fault=0 speed_mm_s=46,93 output_permille=133,233
+[STACK] idle_used=248 capacity=2048 guard_ok=1
+line_pid centre_ir=1 right_ir=1 direction=2 sweep=0 request=0 state=2 fault=0 speed_mm_s=92,74 output_permille=156,170
+line_pid centre_ir=0 right_ir=1 direction=1 sweep=0 request=0 state=2 fault=0 speed_mm_s=60,106 output_permille=123,234
+line_pid centre_ir=1 right_ir=1 direction=2 sweep=0 request=0 state=2 fault=0 speed_mm_s=111,74 output_permille=161,167
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=0 state=2 fault=0 speed_mm_s=75,106 output_permille=97,250
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+line_pid centre_ir=1 right_ir=1 direction=2 sweep=0 request=0 state=2 fault=0 speed_mm_s=113,68 output_permille=210,158
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=0 state=2 fault=0 speed_mm_s=64,111 output_permille=140,250
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=0 state=2 fault=0 speed_mm_s=68,106 output_permille=122,250
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=0 state=2 fault=0 speed_mm_s=60,106 output_permille=140,250
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+line_pid centre_ir=1 right_ir=0 direction=1 sweep=1 request=0 state=2 fault=0 speed_mm_s=0,83 output_permille=0,238
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=0 state=2 fault=0 speed_mm_s=50,92 output_permille=57,250
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=0 state=2 fault=0 speed_mm_s=45,91 output_permille=87,250
+[OBSTACLE] approaching: 358 mm ahead at 65 mm/s
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=0 state=2 fault=0 speed_mm_s=50,83 output_permille=86,250
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=0 state=2 fault=0 speed_mm_s=53,83 output_permille=88,250
+line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=0 state=2 fault=0 speed_mm_s=60,76 output_permille=118,250
+[OBSTACLE] STOP: 152 mm ahead at 88 mm/s
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=3 fault=0 speed_mm_s=0,0 output_permille=0,0
+[OBSTACLE] scanning 20..160 deg
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=4 fault=0 speed_mm_s=line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+[OBSTACLE] stopped 153 mm from the obstacle (target 150 mm), 5/5 pings agree
+[OBSTACLE] coarse sweep, 10 deg steps (obstacle = forward distance within 55 mm of 90 deg)
+[OBSTACLE] coarse  20 deg:  507 mm, forward  184 mm,  5/ 5 agree -> OBSTACLE
+[OBSTACLE] coarse  30 deg:  508 mm, forward  269 mm,  4/ 5 agree -> clear
+[OBSTACLE] coarse  40 deg:  800 mm, forward  534 mm,  5/10 agree -> clear
+[OBSTACLE] coarse  50 deg:  199 mm, forward  175 mm,  4/ 5 agree -> OBSTACLE
+[OBSTACLE] coarse  60 deg:  196 mm, forward  195 mm,  5/ 5 agree -> OBSTACLE
+[OBSTACLE] coarse  70 deg:  169 mm, forward  187 mm,  5/ 5 agree -> OBSTACLE
+[OBSTACLE] coarse  80 deg:  163 mm, forward  190 mm,  5/ 5 agree -> OBSTACLE
+[OBSTACLE] coarse  90 deg:  153 mm, forward  183 mm,  5/ 5 agree -> OBSTACLE
+[OBSTACLE] coarse 100 deg:  156 mm, forward  183 mm,  5/ 5 agree -> OBSTACLE
+[OBSTACLE] coarse 110 deg:  156 mm, forward  175 mm,  5/ 5 agree -> OBSTACLE
+[OBSTACLE] coarse 120 deg:  156 mm, forward  161 mm,  5/ 5 agree -> OBSTACLE
+[OBSTACLE] coarse 130 deg:  163 mm, forward  148 mm,  5/ 5 agree -> OBSTACLE
+[OBSTACLE] coarse 140 deg:  172 mm, forward  130 mm,  5/ 5 agree -> OBSTACLE
+[OBSTACLE] coarse 150 deg:  166 mm, forward   98 mm,  4/ 5 agree -> clear
+[OBSTACLE] coarse 160 deg:  693 mm, forward  247 mm,  3/10 agree -> clear
+[OBSTACLE] fine scan, left edge, 1 deg steps (out, then back in)
+[OBSTACLE] out     49 deg:  209 mm, forward  180 mm,  5/ 5 agree -> OBSTACLE
+[OBSTACLE] out     48 deg: no echo      (0/5 pings echoed)          -> clear
+[OBSTACLE] out     47 deg: no echo      (0/5 pings echoed)          -> clear
+[OBSTACLE] in      48 deg: no echo      (0/5 pings echoed)          -> clear
+[OBSTACLE] in      49 deg:  234 mm, forward  199 mm,  5/ 5 agree -> OBSTACLE
+[OBSTACLE] in      50 deg:  199 mm, forward  175 mm,  5/ 5 agree -> OBSTACLE
+[OBSTACLE] fine scan, right edge, 1 deg steps (out, then back in)
+[OBSTACLE] out    141 deg:  602 mm, forward  398 mm,  4/ 5 agree -> clear
+[OBSTACLE] out    142 deg:  606 mm, forward  392 mm,  3/ 5 agree -> clear
+[OBSTACLE] in     141 deg:  613 mm, forward  405 mm,  5/ 5 agree -> clear
+[OBSTACLE] in     140 deg:  609 mm, forward  411 mm,  5/ 5 agree -> clear
+[OBSTACLE] in     139 deg:  614 mm, forward  422 mm,  3/ 5 agree -> clear
+[OBSTACLE] in     138 deg:  173 mm, forward  136 mm,  5/ 5 agree -> OBSTACLE
+[OBSTACLE] in     137 deg:  173 mm, forward  138 mm,  5/ 5 agree -> OBSTACLE
+[OBSTACLE] left  edge: outward 48.5 deg, inward 48.5 deg -> 70.5 deg, 209 mm away, 65 mm left of centre
+[OBSTACLE] right edge: outward 140.5 deg, inward 138.5 deg -> 117.5 deg, 172 mm away, 95 mm right of centre
+[OBSTACLE] ===== OBSTACLE WIDTH 160 mm (16.0 cm), 153 mm ahead, centre 15 mm right =====
+[OBSTACLE] position: CENTRE (left edge 19.5 deg, right edge 27.5 deg, within 12.0 deg)
+[OBSTACLE] ===== PASS ON THE RIGHT (centred: default side) =====
+[OBSTACLE]   left : move 180 mm, nothing beside it -> room
+[OBSTACLE]   right: move 210 mm, nearest thing beside it 491 mm out -> room
+[DETOUR] out: back 0 mm, turn -66 deg, diagonal 230 mm -> 210 mm right of the line
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=2 fault=0 speed_mm_s=58,-58 output_permille=214,-211
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=2 fault=0 speed_mm_s=66,-33 output_permille=181,-250
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=3 fault=0 speed_mm_s=0,0 output_permille=0,0
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=2 fault=0 speed_mm_s=0,33 output_permille=182,78
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=2 fault=0 speed_mm_s=37,38 output_permille=109,103
+line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=2 fault=0 speed_mm_s=41,41 output_permille=119,114
+line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=2 fault=0 speed_mm_s=50,50 output_permille=109,108
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=2 fault=0 speed_mm_s=41,41 output_permille=145,150
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=2 fault=0 speed_mm_s=50,50 output_permille=128,139
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=2 fault=0 speed_mm_s=50,50 output_permille=132,147
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=2 fault=0 speed_mm_s=58,58 output_permille=108,115
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=2 fault=0 speed_mm_s=58,58 output_permille=100,120
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=2 fault=0 speed_mm_s=41,58 output_permille=59,126
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=2 fault=0 speed_mm_s=0,0 output_permille=-58,0
+[DETOUR] move 5101 interrupted: hold 1, state 5, fault 4
+[DETOUR] gave up at x 97 y -210, heading -66 deg
+[OBSTACLE] ===== DETOUR ABANDONED: stopped and holding =====
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=10712,11075 invalid=0,0 previous_invalid=0,0
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+---- Closed the serial port COM4 ----
+
+

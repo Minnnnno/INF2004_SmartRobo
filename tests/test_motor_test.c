@@ -225,8 +225,8 @@ int main(int argc, char **argv)
     CHECK(config.motor_sign[0] == 1 && config.motor_sign[1] == -1);
     CHECK(config.encoder_sign[0] == -1 && config.encoder_sign[1] == 1);
     CHECK(config.diameter[0] == 0.0675 && config.diameter[1] == 0.0679 && config.track == 0.115);
-    CHECK(encoder_pins[0][0] == 4U && encoder_pins[0][1] == 6U);
-    CHECK(encoder_pins[1][0] == 5U && encoder_pins[1][1] == 7U);
+    CHECK(encoder_pins[0][0] == 2U && encoder_pins[0][1] == 3U);
+    CHECK(encoder_pins[1][0] == 4U && encoder_pins[1][1] == 5U);
     sample.reliable = false;
     CHECK(!motor_test_init());
     CHECK(!motor_test_start(0U, 1));

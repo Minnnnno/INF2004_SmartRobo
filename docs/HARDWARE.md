@@ -25,31 +25,42 @@ signal can connect directly to Pico GPIO. Confirm the ultrasonic echo interface 
 |---|---|
 | Left motor M1A/M1B | 8/9, fixed board driver links |
 | Right motor M2A/M2B | 10/11, fixed board driver links |
-| Left encoder A/B | GP4/GP6, matching CSC24 Week 6 report section 2 |
-| Right encoder A/B | GP5/GP7, matching CSC24 Week 6 report section 2 |
-| Magnetometer/IMU | 2/3 (SDA/SCL), **I2C1**, owned by subsystem 4 |
-| Servo | 12, reserved; PWM slice 6A |
-| Ultrasonic | 16/17, reserved TRIG/ECHO |
-| Line sensors | 26/27, ADC0/1 |
-| Barcode | 28, ADC2; confirm VBAT-sense jumper open |
+| Left encoder A/B | GP2/GP3 |
+| Right encoder A/B | GP4/GP5 |
+| Magnetometer/IMU | GP6/GP7 (SDA/SCL), **I2C1**; subsystem 4 temporarily disabled by default |
+| Servo | GP7; PWM slice 3B, when subsystem 5 is enabled; shares I2C1 SCL, so subsystem 4 must stay disabled |
+| Ultrasonic | GP16/GP17, TRIG/ECHO, when subsystem 5 is enabled |
+| Line sensors | GP26 right / GP27 centre, digital inputs in line-steering firmware |
+| Barcode | GP28, reserved ADC2; barcode acquisition is currently inactive |
+| UART0 TX/RX | GP0/GP1, only when UART console/crash reporting is enabled |
+| Test buttons | GP20 start/stop / GP21 stop, only in button calibration profiles |
+| Pico W internal signals | GP23/GP24/GP25/GP29, reserved for board/radio use |
 
-Encoder connector wiring from `CSC24_Week6_Report.docx`, section 2:
+Current encoder connector wiring (GPIO assignments supersede the Week 6 report):
 
 | Encoder connector pin | Signal | Left encoder (M1) | Right encoder (M2) |
 |---|---|---|---|
 | 1 | GND | GND | GND |
-| 2 | A | GP4 | GP5 |
-| 3 | B | GP6 | GP7 |
+| 2 | A | GP2 | GP4 |
+| 3 | B | GP3 | GP5 |
 | 4 | Supply | 3V3 | 3V3 |
 
-Connector pins 2/3 are labels on the encoder connector. They do not mean GP2/GP3
-on the Pico. The IMU now uses GP2/GP3. Named definitions are in
-`include/board_config.h`. The report specifies this wiring; physical encoder
-compatibility, signs and counts still require the calibration checks.
+Connector pins 2/3 label channels A/B. The left encoder now connects these to
+GP2/GP3 and the right encoder to GP4/GP5. Move the IMU SDA/SCL wires to GP6/GP7
+to avoid sharing GP2/GP3 with the left encoder. Named definitions are in
+`include/board_config.h`; the I2C1 driver pin settings are in
+`device/i2c/sysdepend/rp2040/i2c_cnf_sysdep.h`. Physical encoder compatibility,
+signs and counts still require the calibration checks.
+
+Production encoder direction signs are now left **-1**, right **+1**. The user
+confirmed physical forward motion while both measured speeds were negative
+with the previous signs. See [encoder polarity evidence and correction](ENCODER_POLARITY_2026-11-04.md).
 
 Motors use PWM slices 4 and 5; encoder signals are digital inputs, not PWM. ADC
-use on 26/27 does not claim PWM slice 5. Only the I2C1 driver is enabled,
-on GP2/GP3; the earlier BSP I2C0 defaults GP8/9 overlap motor pins
+use on 26/27 does not claim PWM slice 5. The I2C1 driver on GP6/GP7 is only
+initialized when `ROBO_SUBSYSTEM4=ON` (currently OFF by default). GP7 is now
+the subsystem 5 servo output, so subsystem 4 cannot use this wiring concurrently.
+The earlier BSP I2C0 defaults GP8/9 overlap motor pins
 and I2C0 must remain inactive. Do not start core 1 or overwrite
 the board GPIO dispatcher. Other buddies register nonoverlapping pin masks through
 board_gpio_irq_register; see TEAM.md. The template USB IRQ shim is not a GPIO dispatcher.

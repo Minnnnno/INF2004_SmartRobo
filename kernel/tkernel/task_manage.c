@@ -20,8 +20,49 @@
 #include "wait.h"
 #include "check.h"
 #include <tm/tmonitor.h>
+#include <stack_debug.h>
 
 #include "../sysdepend/cpu_task.h"
+
+/* Keep the allocation bounds separately from each TCB: a bad saved stack
+ * pointer must be reported, never followed while collecting diagnostics. */
+#define TASK_STACK_PAINT 0xa5a5a5a5UL
+LOCAL struct { UW base, capacity; } task_stack_bounds[NUM_TSKID];
+
+EXPORT ER knl_task_stack_debug(ID id, stack_debug_t *info)
+{
+    TCB *tcb;
+    UW base, capacity, free_words;
+    volatile UW *words;
+    ER result = E_OK;
+    if (info == NULL || id < MIN_TSKID || id > MAX_TSKID) { return E_PAR; }
+    knl_memset(info, 0, sizeof(*info));
+    BEGIN_CRITICAL_SECTION;
+    tcb = get_tcb(id);
+    base = task_stack_bounds[INDEX_TSK(id)].base;
+    capacity = task_stack_bounds[INDEX_TSK(id)].capacity;
+    if (tcb->state == TS_NONEXIST) {
+        result = E_NOEXS;
+    } else if (base < INTERNAL_RAM_START || base >= INTERNAL_RAM_END ||
+               (base & 3U) != 0U || capacity < 32U || (capacity & 3U) != 0U ||
+               capacity > INTERNAL_RAM_END - base ||
+               (UW)tcb->isstack != base + capacity || (UW)tcb->sstksz != capacity) {
+        result = E_SYS;
+    } else {
+        words = (volatile UW *)base;
+        for (free_words = 0U; free_words < capacity / sizeof(UW); ++free_words) {
+            if (words[free_words] != TASK_STACK_PAINT) { break; }
+        }
+        info->capacity = capacity;
+        info->used = capacity - free_words * sizeof(UW);
+        info->guard_ok = free_words >= 8U; /* Bottom 32 bytes are a warning margin. */
+        info->saved_sp = (UW)tcb->tskctxb.ssp;
+        info->saved_sp_ok = info->saved_sp >= base + 32U && info->saved_sp < base + capacity;
+        info->state = (UW)tcb->state;
+    }
+    END_CRITICAL_SECTION;
+    return result;
+}
 
 /*
  * Create task
@@ -106,6 +147,10 @@ SYSCALL ID tk_cre_tsk( CONST T_CTSK *pk_ctsk )
 
 	/* Set stack pointer */
 	tcb->isstack = (VB*)stack + sstksz;
+	/* Paint before knl_make_dormant writes the initial exception frame. */
+	knl_memset(stack, 0xa5, sstksz);
+	task_stack_bounds[INDEX_TSK(tcb->tskid)].base = (UW)stack;
+	task_stack_bounds[INDEX_TSK(tcb->tskid)].capacity = (UW)sstksz;
 
 	/* Set initial value of task operation mode */
 	tcb->isysmode = 1;

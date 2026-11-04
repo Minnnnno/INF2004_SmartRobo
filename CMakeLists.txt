@@ -7,6 +7,10 @@ option(ROBO_ENCODER_DIAGNOSTICS_ONLY "Read-only encoder/USB diagnostics; compile
 option(ROBO_SAFE_MOTOR_TEST "Isolated 25 percent, one-second motor tests" OFF)
 option(ROBO_ANGLE_TEST "Isolated encoder-based 90-degree turns" OFF)
 option(ROBO_LINE_STEERING "Production encoder/PID line following with gentle digital steering" OFF)
+option(ROBO_IR_MONITOR "Line-steering image that only prints IR readings; never requests motion" OFF)
+option(ROBO_SUBSYSTEM4 "Enable Buddy 4 IMU/terrain monitoring and its I2C1 driver" OFF)
+option(ROBO_SUBSYSTEM5 "Enable production obstacle detection and servo scanning" ON)
+option(ROBO_MOTION_FAULTS_DISABLED "Firmware: Buddy 2 never enters the latched FAULT state" ON)
 if(ROBO_HOST_TESTS)
     project(smart_robo_tests C)
     set(CMAKE_C_STANDARD 11)
@@ -20,6 +24,16 @@ if(ROBO_HOST_TESTS)
         target_link_libraries(motion_tests m)
     endif()
     add_test(NAME motion_tests COMMAND motion_tests)
+    add_executable(motion_faults_disabled_checks app_program/subsystem2/math.c app_program/subsystem2/motion.c
+        app_program/subsystem2/board_config.c app_program/subsystem2/encoder_capture.c
+        app_program/controller/vehicle_controller.c tests/test_motion_faults_disabled.c)
+    target_include_directories(motion_faults_disabled_checks PRIVATE include)
+    target_compile_definitions(motion_faults_disabled_checks PRIVATE ROBO_MOTION_FAULTS_DISABLED=1)
+    if(NOT MSVC)
+        target_compile_options(motion_faults_disabled_checks PRIVATE -Wall -Wextra -Werror -Wconversion -Wshadow)
+        target_link_libraries(motion_faults_disabled_checks m)
+    endif()
+    add_test(NAME motion_faults_disabled_checks COMMAND motion_faults_disabled_checks)
     add_executable(motor_test_checks app_program/subsystem2/motor_test.c
         app_program/subsystem2/board_config.c tests/test_motor_test.c)
     target_include_directories(motor_test_checks PRIVATE include tests)
@@ -29,7 +43,7 @@ if(ROBO_HOST_TESTS)
         target_link_libraries(motor_test_checks m)
     endif()
     add_test(NAME motor_test_checks COMMAND motor_test_checks)
-    add_executable(line_test_checks app_program/subsystem3/subsystem3.c tests/test_line_sensor.c)
+    add_executable(line_test_checks app_program/subsystem3/line_following.c tests/test_line_sensor.c)
     target_include_directories(line_test_checks PRIVATE include tests)
     target_compile_definitions(line_test_checks PRIVATE ROBO_SAFE_MOTOR_TEST=1 ROBO_LINE_TEST_HOST=1)
     if(NOT MSVC)
@@ -53,7 +67,7 @@ if(ROBO_HOST_TESTS)
         target_link_libraries(steering_checks m)
     endif()
     add_test(NAME steering_checks COMMAND steering_checks)
-    add_executable(line_pid_checks app_program/subsystem3/subsystem3.c
+    add_executable(line_pid_checks app_program/subsystem3/line_following.c
         app_program/subsystem2/steering.c app_program/subsystem2/board_config.c tests/test_line_pid.c)
     target_include_directories(line_pid_checks PRIVATE include tests)
     target_compile_definitions(line_pid_checks PRIVATE ROBO_LINE_STEERING=1 ROBO_LINE_TEST_HOST=1)
@@ -77,6 +91,37 @@ if(ROBO_HOST_TESTS)
         endif()
         add_test(NAME ${angle_check} COMMAND ${angle_check})
     endforeach()
+    add_executable(obstacle_geometry_checks app_program/subsystem5/obstacle_scan.c
+        app_program/subsystem5/detour_plan.c app_program/subsystem5/subsystem5_test.c)
+    target_compile_definitions(obstacle_geometry_checks PRIVATE S5_BEAM_CORRECTION_DEG=0.0)
+    add_executable(obstacle_runtime_checks tests/subsystem5/test_runtime.c
+        app_program/subsystem5/obstacle_scan.c app_program/subsystem5/detour_plan.c)
+    target_include_directories(obstacle_runtime_checks PRIVATE tests/subsystem5 include)
+    target_compile_definitions(obstacle_runtime_checks PRIVATE ROBO_PRODUCTION_BUILD=1 ROBO_SUBSYSTEM5=1)
+    foreach(obstacle_check obstacle_geometry_checks obstacle_runtime_checks)
+        if(NOT MSVC)
+            target_compile_options(${obstacle_check} PRIVATE -Wall -Wextra -Werror -Wconversion -Wshadow)
+            target_link_libraries(${obstacle_check} m)
+        endif()
+        add_test(NAME ${obstacle_check} COMMAND ${obstacle_check})
+    endforeach()
+    add_executable(tmonitor_format_checks lib/libtm/libtm_printf.c tests/tmonitor/test_format.c)
+    target_include_directories(tmonitor_format_checks PRIVATE tests/tmonitor include)
+    add_test(NAME tmonitor_format_checks COMMAND tmonitor_format_checks)
+    add_executable(motor_driver_diagnostics_checks tests/buddy2_compact/test_driver.c
+        app_program/subsystem2/drv_motion.c app_program/subsystem2/math.c
+        app_program/subsystem2/board_config.c app_program/subsystem2/encoder_capture.c)
+    target_include_directories(motor_driver_diagnostics_checks PRIVATE include tests/buddy2_compact)
+    target_compile_definitions(motor_driver_diagnostics_checks PRIVATE ROBO_TEMPLATE_HAL_H=1 TM_CONSOLE_USB_CDC=1)
+    if(MSVC)
+        target_compile_options(motor_driver_diagnostics_checks PRIVATE /FI${CMAKE_CURRENT_SOURCE_DIR}/tests/buddy2_compact/driver_fake.h)
+    else()
+        target_compile_options(motor_driver_diagnostics_checks PRIVATE
+            -include ${CMAKE_CURRENT_SOURCE_DIR}/tests/buddy2_compact/driver_fake.h
+            -Wall -Wextra -Werror -Wconversion -Wshadow)
+        target_link_libraries(motor_driver_diagnostics_checks m)
+    endif()
+    add_test(NAME motor_driver_diagnostics_checks COMMAND motor_driver_diagnostics_checks)
     return()
 endif()
 
@@ -91,6 +136,9 @@ if(ROBO_ENCODER_DIAGNOSTICS_ONLY AND NOT ROBO_MANUAL_CONSOLE)
 endif()
 if(ROBO_LINE_STEERING AND (ROBO_MANUAL_CONSOLE OR ROBO_SAFE_MOTOR_TEST OR ROBO_ANGLE_TEST OR ROBO_ENCODER_DIAGNOSTICS_ONLY))
     message(FATAL_ERROR "PID line steering is a production profile; disable calibration profiles.")
+endif()
+if(ROBO_IR_MONITOR AND NOT ROBO_LINE_STEERING)
+    message(FATAL_ERROR "ROBO_IR_MONITOR requires ROBO_LINE_STEERING=ON.")
 endif()
 set(ROBO_PRODUCTION_BUILD OFF)
 if(NOT ROBO_MANUAL_CONSOLE AND NOT ROBO_ENCODER_DIAGNOSTICS_ONLY AND NOT ROBO_SAFE_MOTOR_TEST AND NOT ROBO_ANGLE_TEST)
@@ -201,6 +249,12 @@ file(GLOB MTK_SOURCES CONFIGURE_DEPENDS
 
 # Imported producer/consumer/monitor examples are archived and not robot tasks.
 list(FILTER MTK_SOURCES EXCLUDE REGEX "/app_program/subsystem[2-5]/(subsystem2|subsystem[2-5]_test|task_(producer|consumer|monitor))\\.c$")
+if(NOT ROBO_SUBSYSTEM4)
+    list(FILTER MTK_SOURCES EXCLUDE REGEX "/app_program/subsystem4/.*\\.c$")
+endif()
+if(NOT ROBO_SUBSYSTEM5)
+    list(FILTER MTK_SOURCES EXCLUDE REGEX "/app_program/subsystem5/.*\\.c$")
+endif()
 add_executable(mtkernel_3
     ${MTK_SOURCES}
     kernel/sysdepend/cpu/core/armv6m/dispatch.S
@@ -214,6 +268,10 @@ target_compile_definitions(mtkernel_3 PRIVATE
     $<$<BOOL:${ROBO_ANGLE_TEST}>:ROBO_ANGLE_TEST=1>
     $<$<BOOL:${ROBO_PRODUCTION_BUILD}>:ROBO_PRODUCTION_BUILD=1>
     $<$<BOOL:${ROBO_LINE_STEERING}>:ROBO_LINE_STEERING=1>
+    $<$<BOOL:${ROBO_IR_MONITOR}>:ROBO_IR_MONITOR=1>
+    $<$<BOOL:${ROBO_MOTION_FAULTS_DISABLED}>:ROBO_MOTION_FAULTS_DISABLED=1>
+    ROBO_SUBSYSTEM4=$<BOOL:${ROBO_SUBSYSTEM4}>
+    ROBO_SUBSYSTEM5=$<BOOL:${ROBO_SUBSYSTEM5}>
     _PICO_RP2040_
     CNF_SMP=$<BOOL:${SMP}>
     APP_TEST=$<BOOL:${TEST}>
@@ -236,6 +294,12 @@ if(ROBO_ENCODER_DIAGNOSTICS_ONLY OR ROBO_SAFE_MOTOR_TEST OR ROBO_ANGLE_TEST OR R
         set(encoder_build_id "b2-encdiag-v1-${encoder_build_stamp}")
     else()
         set(encoder_build_id "b2-production-v1-${encoder_build_stamp}")
+    endif()
+    if(NOT ROBO_SUBSYSTEM4)
+        string(APPEND encoder_build_id "-no-s4")
+    endif()
+    if(NOT ROBO_SUBSYSTEM5)
+        string(APPEND encoder_build_id "-no-s5")
     endif()
     target_compile_definitions(mtkernel_3 PRIVATE ROBO_ENCODER_BUILD_ID="${encoder_build_id}")
     file(WRITE "${CMAKE_BINARY_DIR}/encoder-build-id.txt" "${encoder_build_id}\n")

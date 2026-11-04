@@ -3,6 +3,16 @@
 #include <math.h>
 #include <string.h>
 
+/* ROBO_MOTION_FAULTS_DISABLED (CMake option, firmware default): the FAULT state
+ * is never entered and status.fault stays F_NONE, so nothing latches the robot
+ * stopped. Causes are still recorded in fault_flags. Time limits on a command
+ * and the remote e-stop still stop the motors: see motion_fault_unlatched. */
+#ifdef ROBO_MOTION_FAULTS_DISABLED
+#define MOTION_FAULTS_ENABLED false
+#else
+#define MOTION_FAULTS_ENABLED true
+#endif
+
 static bool motion_flag_get(const motion_t *p_motion, uint8_t mask)
 {
     return (0u != ((uint32_t)p_motion->runtime_flags & mask));
@@ -50,11 +60,102 @@ static void zero_output(motion_t *m)
     m->status.inhibited = true;
 }
 
+static int32_t debug_scaled(double value, double scale)
+{
+    double scaled = value * scale;
+    if (!isfinite(scaled)) { return INT32_MIN; }
+    if (scaled >= (double)INT32_MAX) { return INT32_MAX; }
+    if (scaled <= (double)INT32_MIN + 1.0) { return INT32_MIN + 1; }
+    return (int32_t)scaled;
+}
+
+static void record_fault_context(motion_t *m, double now)
+{
+    motion_fault_debug_t *d = &m->status.debug;
+    motion_command_t command;
+    bool decoded;
+    if (d->recorded) { return; }
+    d->state = m->status.state;
+    d->mode = m->status.mode;
+    d->id = m->status.id;
+    d->time_ms = debug_scaled(now, 1000.0);
+    d->dt_us = debug_scaled(m->status.last_dt, 1000000.0);
+    decoded = m->active && motion_config_valid(&m->config) &&
+              motion_compact_decode(&m->command, &m->config, &command);
+    d->finite_goal = decoded && (command.mode == DISTANCE_MOVE ||
+                                  command.mode == ENCODER_TURN || command.mode == ARC_MOVE);
+    for (unsigned w = 0U; w < 2U; ++w) {
+        double target = fabs(m->status.target[w]);
+        double limit = 0.0;
+        d->target_mm_s[w] = debug_scaled(m->status.target[w], 1000.0);
+        d->speed_mm_s[w] = debug_scaled(m->status.speed[w], 1000.0);
+        d->output_permille[w] = debug_scaled(m->status.output[w], 1000.0);
+        d->no_progress_ms[w] = debug_scaled(now - m->last_progress[w], 1000.0);
+        if (target > 1e-9 && m->config.counts_per_rev[w] > 0.0) {
+            double quantum = 3.141592653589793 * m->config.diameter[w] / m->config.counts_per_rev[w];
+            limit = m->config.feedback_timeout + 2.0 * quantum / target;
+        }
+        d->feedback_limit_ms[w] = debug_scaled(limit, 1000.0);
+        if (d->finite_goal) {
+            double goal = command.value;
+            double sign = w == 0U ? -1.0 : 1.0;
+            if (command.mode == ENCODER_TURN) { goal = sign * command.value * m->config.track / 2.0; }
+            if (command.mode == ARC_MOVE) { goal += sign * command.angle * m->config.track / 2.0; }
+            d->remaining_um[w] = debug_scaled(goal - (m->odom.travel[w] - m->start[w]), 1000000.0);
+        }
+    }
+    d->recorded = true;
+}
+
+const char *motion_fault_name(motion_fault_t fault)
+{
+    switch (fault) {
+    case F_NONE: return "NONE";
+    case F_CONFIG: return "CONFIG";
+    case F_SETUP: return "SETUP";
+    case F_TIMING: return "TIMING";
+    case F_FEEDBACK: return "FEEDBACK";
+    case F_DEADLINE: return "DEADLINE";
+    case F_EXPIRED: return "EXPIRED";
+    case F_STOP_TIMEOUT: return "STOP_TIMEOUT";
+    case F_FINAL_GOAL: return "FINAL_GOAL";
+    case F_EVENT_OVERFLOW: return "EVENT_OVERFLOW";
+    case F_SYSTEM: return "SYSTEM";
+    default: return "UNKNOWN";
+    }
+}
+
+const char *motion_feedback_name(motion_feedback_cause_t cause)
+{
+    switch (cause) {
+    case FB_NONE: return "NONE";
+    case FB_UNRELIABLE: return "UNRELIABLE";
+    case FB_INVALID_TRANSITION: return "INVALID_TRANSITION";
+    case FB_ODOMETRY: return "ODOMETRY";
+    case FB_NO_PROGRESS: return "NO_ENCODER_PROGRESS";
+    default: return "UNKNOWN";
+    }
+}
+
+const char *motion_mode_name(motion_mode_t mode)
+{
+    switch (mode) {
+    case DISTANCE_MOVE: return "DISTANCE";
+    case ENCODER_TURN: return "TURN";
+    case WHEEL_SPEED_TRACKING: return "TRACKING";
+    case MANUAL_OUTPUT: return "MANUAL";
+    case ARC_MOVE: return "ARC";
+    default: return "UNKNOWN";
+    }
+}
+
 static void event(motion_t *m, motion_event_type_t type)
 {
     motion_event_t e = {type, m->status.id, m->status.generation, m->status.fault};
     if (motion_queue_count(m) == MOTION_EVENT_CAPACITY) {
+        if (!MOTION_FAULTS_ENABLED) { motion_fault_record(m, F_EVENT_OVERFLOW); return; }
         /* Local state remains authoritative even when notifications cannot be delivered. */
+        record_fault_context(m, m->last_time);
         zero_output(m);
         m->active = false;
         m->status.hold = true;
@@ -82,10 +183,14 @@ bool motion_next_event(motion_t *m, motion_event_t *e)
     return true;
 }
 
+static void motion_fault_unlatched(motion_t *m, motion_fault_t fault, double now);
+
 void motion_raise_fault(motion_t *m, motion_fault_t fault, double now)
 {
     if (m->status.state == SHUTDOWN) { return; }
     motion_fault_record(m, fault);
+    record_fault_context(m, now);
+    if (!MOTION_FAULTS_ENABLED) { motion_fault_unlatched(m, fault, now); return; }
     zero_output(m);
     m->status.hold = true;
     m->active = false;
@@ -194,6 +299,51 @@ void motion_shutdown(motion_t *m, double now)
     zero_output(m);
     m->status.state = SHUTDOWN;
     m->status.hold = true;
+}
+
+/* Only reached with faults disabled. Nothing here sets FAULT or status.fault. */
+static void motion_fault_unlatched(motion_t *m, motion_fault_t fault, double now)
+{
+    switch (fault) {
+    case F_DEADLINE:
+    case F_EXPIRED:
+        /* Time limits still end the command: without them the last PWM would be
+         * held forever once a sender stops refreshing. No hold, so it can restart. */
+        event(m, EV_CANCELLED);
+        m->active = false;
+        motion_flag_set(m, MOTION_GOAL_PENDING, false);
+        ++m->status.generation;
+        stopping(m, now);
+        break;
+    case F_STOP_TIMEOUT:
+    case F_FINAL_GOAL:
+        /* The outputs are already off: finish the stop instead of latching. */
+        zero_output(m);
+        if (m->status.hold) {
+            m->status.state = STOPPED;
+            event(m, EV_STOPPED);
+        } else {
+            bool goal_pending = motion_flag_get(m, MOTION_GOAL_PENDING);
+            m->status.state = READY;
+            m->active = false;
+            motion_flag_set(m, MOTION_GOAL_PENDING, false);
+            if (goal_pending) { event(m, EV_COMPLETE); }
+        }
+        break;
+    case F_SYSTEM:
+        /* Remote e-stop and robot_system_fault arrive here: a held stop. */
+        motion_cancel(m, now);
+        break;
+    case F_CONFIG:
+        /* motion_step cannot run without a valid config, so never hold stale PWM. */
+        zero_output(m);
+        m->active = false;
+        motion_flag_set(m, MOTION_GOAL_PENDING, false);
+        break;
+    default:
+        /* F_SETUP, F_TIMING, F_FEEDBACK, F_EVENT_OVERFLOW: recorded, keep running. */
+        break;
+    }
 }
 
 bool motion_release(motion_t *m, bool checks_ok)
@@ -336,9 +486,17 @@ static void drive(motion_t *m, double now, double dt, const bool progressed[2])
         (now >= command.expires)) { motion_raise_fault(m, F_EXPIRED, now); return; }
     if (command.mode == ARC_MOVE) {
         double elapsed = now - m->entered;
+        double left = m->odom.travel[0] - m->start[0];
+        double right = m->odom.travel[1] - m->start[1];
         double tolerance = fmin(m->config.distance_tolerance / 2.0,
                                 m->config.angle_tolerance * m->config.track / 4.0);
-        bool reached = true;
+        /* Distance and heading constrain common and differential wheel error
+         * separately. Requiring EACH wheel within the smaller angular-derived
+         * tolerance makes a valid endpoint chase millimetres in reverse until
+         * the no-progress protection trips. Keep half of each configured
+         * tolerance for stopping, then verify both full limits after settling. */
+        bool reached = fabs((left + right) / 2.0 - command.value) <= m->config.distance_tolerance / 2.0 &&
+                       fabs((right - left) / m->config.track - command.angle) <= m->config.angle_tolerance / 2.0;
         if (command.duration > 0.0 && elapsed >= command.duration) {
             motion_flag_set(m, MOTION_GOAL_PENDING, true);
             stopping(m, now); /* Final encoder distance AND heading are checked after settling. */
@@ -348,7 +506,6 @@ static void drive(motion_t *m, double now, double dt, const bool progressed[2])
             double goal = command.value + (w == 0U ? -1.0 : 1.0) * command.angle * m->config.track / 2.0;
             double travelled = m->odom.travel[w] - m->start[w];
             double remaining = goal - travelled;
-            if (fabs(remaining) > tolerance) { reached = false; }
             if (command.duration > 0.0) {
                 double u = fmax(0.0, fmin(1.0, elapsed / command.duration));
                 double progress = u * u * (3.0 - 2.0 * u);
@@ -408,13 +565,14 @@ static void drive(motion_t *m, double now, double dt, const bool progressed[2])
             (fabs(m->status.output[w]) < 1e-9)) {
             m->expected_since[w] = now;
             m->last_progress[w] = now;
-        } else {
+        } else if (MOTION_FAULTS_ENABLED) {
             double timeout = m->config.feedback_timeout + 2.0 * quantum / fabs(m->status.target[w]);
             if (((now - m->expected_since[w]) >= m->config.startup_grace) &&
                 ((now - m->last_progress[w]) > timeout)) {
                 encoder_sample_t sample = {{m->odom.previous[0], m->odom.previous[1]},
                                            {m->invalid[0], m->invalid[1]}, true};
                 record_feedback(m, sample, FB_NO_PROGRESS);
+                m->status.debug.stalled_wheels = (uint8_t)(1U << w);
                 motion_raise_fault(m, F_FEEDBACK, now);
                 return;
             }
@@ -426,6 +584,7 @@ void motion_step(motion_t *m, encoder_sample_t sample, double now)
 {
     double dt = now - m->last_time;
     bool progressed[2];
+    bool fresh;
     unsigned w;
     if (m->status.state == SHUTDOWN) { zero_output(m); return; }
     m->status.last_dt = dt;
@@ -441,10 +600,11 @@ void motion_step(motion_t *m, encoder_sample_t sample, double now)
         m->status.max_startup_gap = fmax(m->status.max_startup_gap, dt);
         motion_flag_set(m, MOTION_STILL_TRACKING, false);
         m->status.stationary = false;
-        if (now - m->entered > m->config.setup_timeout) {
+        if (MOTION_FAULTS_ENABLED && (now - m->entered > m->config.setup_timeout)) {
             motion_raise_fault(m, F_SETUP, now); return;
         }
-        if (!sample.reliable || sample.invalid[0] != m->invalid[0] || sample.invalid[1] != m->invalid[1]) {
+        if (MOTION_FAULTS_ENABLED &&
+            (!sample.reliable || sample.invalid[0] != m->invalid[0] || sample.invalid[1] != m->invalid[1])) {
             record_feedback(m, sample, sample.reliable ? FB_INVALID_TRANSITION : FB_UNRELIABLE);
             motion_raise_fault(m, F_FEEDBACK, now); return;
         }
@@ -460,7 +620,15 @@ void motion_step(motion_t *m, encoder_sample_t sample, double now)
     } else if (!isfinite(now) || !isfinite(dt) || (dt <= 0.0) || (dt > m->config.max_dt)) {
         timing_fault(m, now, dt);
         if (isfinite(now)) { m->last_time = now; }
-        return;
+        if (MOTION_FAULTS_ENABLED) { return; }
+        if (!isfinite(now) || !isfinite(dt) || (dt <= 0.0)) {
+            /* No usable clock means no deadline checks: do not keep driving. */
+            m->status.output[0] = 0.0;
+            m->status.output[1] = 0.0;
+            return;
+        }
+        /* A late cycle must still reach the deadline checks below. */
+        dt = m->config.max_dt;
     }
     m->last_time = now;
     m->status.sample_time = now;
@@ -469,16 +637,22 @@ void motion_step(motion_t *m, encoder_sample_t sample, double now)
         progressed[w] = sample.count[w] != m->odom.previous[w];
         if (sample.invalid[w] != m->invalid[w]) {
             record_feedback(m, sample, FB_INVALID_TRANSITION);
-            sample.reliable = false;
+            if (MOTION_FAULTS_ENABLED) { sample.reliable = false; }
         }
         m->invalid[w] = sample.invalid[w];
     }
-    if (!sample.reliable || !odometry_step(&m->odom, &m->config, &sample, dt)) {
+    fresh = sample.reliable && odometry_step(&m->odom, &m->config, &sample, dt);
+    if (!fresh) {
         record_feedback(m, sample, FB_ODOMETRY);
         motion_raise_fault(m, F_FEEDBACK, now);
-        return;
+        if (MOTION_FAULTS_ENABLED) { return; }
+        /* Rebase, or a rejected jump would be rejected again on every later sample
+         * and the state machine below (deadlines, stopping) would never run. */
+        if (sample.reliable) {
+            for (w = 0U; w < 2U; ++w) { m->odom.previous[w] = sample.count[w]; }
+        }
     }
-    m->status.feedback_trusted = !motion_flag_get(m, MOTION_FEEDBACK_LATCHED);
+    m->status.feedback_trusted = fresh && !motion_flag_get(m, MOTION_FEEDBACK_LATCHED);
     for (w = 0; w < 2U; ++w) {
         m->status.speed[w] = m->odom.speed[w];
         m->status.travel[w] = m->odom.travel[w];
@@ -493,7 +667,7 @@ void motion_step(motion_t *m, encoder_sample_t sample, double now)
     } else { motion_flag_set(m, MOTION_STILL_TRACKING, false); m->status.stationary = false; }
     switch (m->status.state) {
     case INITIALISING:
-        if ((now - m->entered) > m->config.setup_timeout) { motion_raise_fault(m, F_SETUP, now); }
+        if (MOTION_FAULTS_ENABLED && ((now - m->entered) > m->config.setup_timeout)) { motion_raise_fault(m, F_SETUP, now); }
         else if (m->status.stationary) { m->status.state = m->status.hold ? STOPPED : READY; }
         break;
     case DRIVING:

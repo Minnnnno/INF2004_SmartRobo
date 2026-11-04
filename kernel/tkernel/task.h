@@ -64,6 +64,8 @@ IMPORT volatile UW knl_idle_entries[TK_MAX_CORE];
 IMPORT volatile UW knl_idle_loops[TK_MAX_CORE];
 IMPORT volatile UW knl_idle_handler_entries[TK_MAX_CORE];
 IMPORT UW knl_idle_stack_used( UINT core );
+IMPORT UW knl_idle_stack_size( void );
+IMPORT BOOL knl_idle_stack_intact( UINT core );
 
 /*
  * Get TCB from task ID.

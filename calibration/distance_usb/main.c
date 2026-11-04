@@ -8,6 +8,7 @@
 #include "hardware/clocks.h"
 #include "hardware/watchdog.h"
 #include "encoder_capture.h"
+#include "board_config.h"
 #include "control.h"
 #include "speed_window.h"
 #include "turn_command.h"
@@ -15,7 +16,9 @@
 static volatile encoder_capture_t capture;
 static distance_test_t test;
 static speed_window_t speed_window;
-static const unsigned pins[2][2]={{4U,6U},{5U,7U}};
+static const unsigned pins[2][2]={
+    {BOARD_ENC_L_A,BOARD_ENC_L_B},{BOARD_ENC_R_A,BOARD_ENC_R_B}
+};
 static const bool quadrature[2]={true,true};
 static const int signs[2]={-1,1};
 static volatile uint64_t serviced;

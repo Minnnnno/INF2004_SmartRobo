@@ -50,6 +50,18 @@ typedef struct {
     uint32_t id, generation;
     motion_fault_t fault;
 } motion_event_t;
+/* First fault context, saved before the stop zeros the requested outputs.
+ * Integer units keep status copies small. INT32_MIN means an invalid value. */
+typedef struct {
+    bool recorded, finite_goal;
+    uint8_t stalled_wheels; /* bit 0 left, bit 1 right */
+    motion_state_t state;
+    motion_mode_t mode;
+    uint32_t id;
+    int32_t time_ms, dt_us;
+    int32_t target_mm_s[2], speed_mm_s[2], output_permille[2];
+    int32_t remaining_um[2], no_progress_ms[2], feedback_limit_ms[2];
+} motion_fault_debug_t;
 typedef struct {
     motion_state_t state;
     motion_mode_t mode;
@@ -66,6 +78,7 @@ typedef struct {
     motion_feedback_cause_t feedback_cause;
     encoder_sample_t feedback_fault_sample;
     uint32_t feedback_previous_count[2], feedback_previous_invalid[2];
+    motion_fault_debug_t debug;
 } motion_status_t;
 typedef struct {
     motion_config_t config;
@@ -106,5 +119,8 @@ bool motion_reset(motion_t *motion, bool cause_cleared, bool externally_verified
                   encoder_sample_t sample, double now);
 void motion_shutdown(motion_t *motion, double now);
 bool motion_next_event(motion_t *motion, motion_event_t *event);
+const char *motion_fault_name(motion_fault_t fault);
+const char *motion_feedback_name(motion_feedback_cause_t cause);
+const char *motion_mode_name(motion_mode_t mode);
 /* Core API is single-owner: only the motion task calls these functions. */
 #endif

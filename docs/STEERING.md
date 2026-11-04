@@ -71,12 +71,18 @@ The old isolated motor-test image remains available for direction/encoder tests.
 The new production line profile reads DO on GP26/GP27 every 20 ms, requires two
 equal consecutive observations, and requests gentle encoder/PID steering:
 
-| Left black (1) | Right black (1) | Action |
+GP27 is the centre sensor and GP26 sits slightly right of it; both read black
+when centred (Buddy 3 update).
+
+| GP27 centre (1=black) | GP26 right (1=black) | Action |
 | --- | --- | --- |
 | 1 | 1 | Both wheel targets 0.08 m/s |
-| 1 | 0 | Left correction: 0.07 / 0.09 m/s |
-| 0 | 1 | Right correction: 0.09 / 0.07 m/s |
-| 0 | 0 | Stop the owned line session and hold |
+| 1 | 0 | Line to the left: 0.05 / 0.11 m/s |
+| 0 | 1 | Line to the right: 0.11 / 0.05 m/s |
+| 0 | 0 | Repeat the last command for 0.2 s; then pivot (inner wheel 0, outer 0.08 m/s) up to 60° towards the side last seen (left if unknown), then up to 60° past the original heading the other way. If both miss: turn back to the heading on the line, reverse 0.06 m/s by the overshoot + 2 cm, sweep both sides once more; then refresh 0 / 0 m/s. Resumes when the line returns |
+
+Line loss no longer calls `motion_stop()`, so it creates no latched hold. Zero-speed
+refreshes keep the line session alive and avoid `F_EXPIRED`.
 
 This retains the existing HIGH=black interpretation. Verify actual sensor
 polarity, mounting height and placement on black/white before motor testing.

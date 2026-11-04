@@ -87,11 +87,19 @@ Noinit(EXPORT QUEUE	knl_free_tcb);	/* FreeQue */
  * advance. These private TCBs let an empty processor exception-return to a
  * real Thread-mode idle loop without consuming a public task ID or priority.
  */
-#define KNL_IDLE_STACK_SIZE	TMP_STACK_SIZE
+/* Interrupts run on MSP, including when the private idle task is running.
+ * TMP_STACK_SIZE only budgets the dispatcher's short assembly path. On RP2040
+ * its 256-byte UP default cannot hold SysTick -> GPIO encoder -> NMI nesting
+ * (304 bytes with this application's GCC 15 build). Overflow grows into the
+ * idle TCB and can stop scheduling before the crash reporter can save a PC.
+ * Keep a separate budget with room for USB and fault handling as well. */
+#define KNL_IDLE_STACK_SIZE	((TMP_STACK_SIZE < 2048) ? 2048 : TMP_STACK_SIZE)
 #define KNL_IDLE_STACK_WORDS	(KNL_IDLE_STACK_SIZE / sizeof(UW))
 #define KNL_IDLE_STACK_PAINT	0x1d1e1d1eUL
+_Static_assert((KNL_IDLE_STACK_SIZE % 8) == 0, "Idle stack must preserve 8-byte alignment");
 
-Noinit(LOCAL UW	knl_idle_stack[TK_MAX_CORE][KNL_IDLE_STACK_WORDS]);
+Noinit(LOCAL UW	knl_idle_stack[TK_MAX_CORE][KNL_IDLE_STACK_WORDS])
+	__attribute__((aligned(8)));
 Noinit(LOCAL TCB	knl_idle_tcb[TK_MAX_CORE]);
 Noinit(EXPORT TCB *knl_idletsk[TK_MAX_CORE]);
 
@@ -164,6 +172,24 @@ EXPORT UW knl_idle_stack_used( UINT core )
 		if ( knl_idle_stack[core][i] != KNL_IDLE_STACK_PAINT ) break;
 	}
 	return KNL_IDLE_STACK_SIZE - (UW)i * sizeof(UW);
+}
+
+/* Diagnostic accessors: call from task context, while idle is not executing.
+ * Reserve the bottom 32 bytes as a warning margin; they stay painted. */
+EXPORT UW knl_idle_stack_size( void )
+{
+	return KNL_IDLE_STACK_SIZE;
+}
+
+EXPORT BOOL knl_idle_stack_intact( UINT core )
+{
+	UINT i;
+
+	if ( core >= TK_MAX_CORE ) return FALSE;
+	for ( i = 0; i < 8; i++ ) {
+		if ( knl_idle_stack[core][i] != KNL_IDLE_STACK_PAINT ) return FALSE;
+	}
+	return TRUE;
 }
 
 /*

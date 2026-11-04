@@ -1,0 +1,1155 @@
+﻿=== logger start 2026-11-03T22:52:03.9264998+08:00 port=COM4 ===
+=== 22:52:03.942 port opened ===
+22:52:03.953 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=4025
+22:52:03.953 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=4025
+22:52:03.953 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=4025
+22:52:04.960 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=4025
+22:52:06.954 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=4025
+=== 22:52:07.512 port lost: Exception calling "ReadLine" with "0" argument(s): "The I/O operation has been aborted because of either a thread exit or an application request.
+" ===
+=== 22:52:08.788 port opened ===
+22:52:08.798 0261103T143131Z-no-s4 hardware_confirmed=1 manual_enabled=0 max_output_percent=25 production=1 subsystem4_enabled=0 subsystem5_enabled=1
+22:52:09.206 [OBSTACLE] ready: servo GP12 at 90 deg, ultrasonic TRIG GP16 / ECHO GP17, slow zone 450 mm, stop at 150 mm
+22:52:09.271 [OBSTACLE] approaching: 366 mm ahead at 0 mm/s
+22:52:10.604 line_pid centre_ir=0 right_ir=1 direction=0 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:11.117 line_pid centre_ir=1 right_ir=1 direction=2 sweep=0 request=0 state=2 fault=0 speed_mm_s=83,41 output_permille=143,120
+22:52:11.613 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=0 state=2 fault=0 speed_mm_s=66,83 output_permille=131,130
+22:52:12.119 line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=0 state=2 fault=0 speed_mm_s=75,83 output_permille=131,151
+22:52:12.633 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=0 state=2 fault=0 speed_mm_s=100,75 output_permille=173,99
+22:52:13.133 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=0 state=2 fault=0 speed_mm_s=83,92 output_permille=120,182
+22:52:13.643 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=0 state=2 fault=0 speed_mm_s=101,55 output_permille=244,137
+22:52:13.741 [OBSTACLE] STOP: 148 mm ahead at 79 mm/s
+22:52:14.144 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=3 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:14.172 [OBSTACLE] scanning 20..160 deg
+22:52:14.643 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:15.149 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:15.655 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:16.161 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:16.668 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:17.170 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:17.669 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:18.174 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:18.682 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:19.188 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:19.694 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:20.189 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:20.695 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:21.191 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:21.708 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:22.214 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:22.709 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:23.215 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:23.708 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:24.216 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:24.735 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:25.220 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:25.735 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:26.228 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:26.747 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:27.248 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:27.749 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:28.249 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:28.752 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:29.260 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:29.762 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:30.277 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:52:30.487 [OBSTACLE] stopped 132 mm from the obstacle (target 150 mm), 5/5 pings agree
+22:52:30.487 [OBSTACLE] coarse sweep, 10 deg steps (obstacle = forward distance within 49 mm of 90 deg)
+22:52:30.487 [OBSTACLE] coarse  20 deg:  192 mm, forward   76 mm,  3/ 5 agree -> clear
+22:52:30.487 [OBSTACLE] coarse  30 deg:  670 mm, forward  350 mm,  4/10 agree -> clear
+22:52:30.487 [OBSTACLE] coarse  40 deg:  204 mm, forward  150 mm,  4/ 5 agree -> OBSTACLE
+22:52:30.487 [OBSTACLE] coarse  50 deg:  166 mm, forward  150 mm,  4/ 5 agree -> OBSTACLE
+22:52:30.487 [OBSTACLE] coarse  60 deg:  166 mm, forward  170 mm,  5/ 5 agree -> OBSTACLE
+22:52:30.487 [OBSTACLE] coarse  70 deg:  148 mm, forward  167 mm,  5/ 5 agree -> OBSTACLE
+22:52:30.487 [OBSTACLE] coarse  80 deg:  139 mm, forward  167 mm,  5/ 5 agree -> OBSTACLE
+22:52:30.487 [OBSTACLE] coarse  90 deg:  139 mm, forward  169 mm,  5/ 5 agree -> OBSTACLE
+22:52:30.502 [OBSTACLE] coarse 100 deg:  143 mm, forward  170 mm,  5/ 5 agree -> OBSTACLE
+22:52:30.502 [OBSTACLE] coarse 110 deg:  143 mm, forward  162 mm,  5/ 5 agree -> OBSTACLE
+22:52:30.502 [OBSTACLE] coarse 120 deg:  153 mm, forward  158 mm,  5/ 5 agree -> OBSTACLE
+22:52:30.502 [OBSTACLE] coarse 130 deg:  160 mm, forward  145 mm,  4/ 5 agree -> OBSTACLE
+22:52:30.518 [OBSTACLE] coarse 140 deg:  388 mm, forward  269 mm,  3/ 5 agree -> clear
+22:52:30.518 [OBSTACLE] coarse 150 deg:  386 mm, forward  208 mm,  3/ 5 agree -> OBSTACLE
+22:52:30.518 [OBSTACLE] coarse 160 deg:  163 mm, forward   66 mm,  4/ 5 agree -> clear
+22:52:30.518 [OBSTACLE] fine scan, left edge, 1 deg steps (out, then back in)
+22:52:30.518 [OBSTACLE] out     39 deg:  577 mm, forward  382 mm,  6/10 agree -> clear
+22:52:30.518 [OBSTACLE] out     38 deg:  577 mm, forward  374 mm,  5/ 5 agree -> clear
+22:52:30.518 [OBSTACLE] in      39 deg:  578 mm, forward  383 mm,  4/ 5 agree -> clear
+22:52:30.518 [OBSTACLE] in      40 deg:  958 mm, forward  635 mm,  5/ 5 agree -> clear
+22:52:30.518 [OBSTACLE] in      41 deg:  956 mm, forward  647 mm,  3/ 5 agree -> clear
+22:52:30.518 [OBSTACLE] in      42 deg:  958 mm, forward  661 mm,  5/ 5 agree -> clear
+22:52:30.518 [OBSTACLE] in      43 deg:  956 mm, forward  672 mm,  3/ 5 agree -> clear
+22:52:30.518 [OBSTACLE] in      44 deg:  713 mm, forward  516 mm,  3/ 5 agree -> clear
+22:52:30.518 [OBSTACLE] in      45 deg:  713 mm, forward  525 mm,  4/ 5 agree -> clear
+22:52:30.518 [OBSTACLE] in      46 deg:  189 mm, forward  158 mm,  5/ 5 agree -> OBSTACLE
+22:52:30.518 [OBSTACLE] in      47 deg:  163 mm, forward  141 mm,  4/ 5 agree -> OBSTACLE
+22:52:30.518 [OBSTACLE] fine scan, right edge, 1 deg steps (out, then back in)
+22:52:30.534 [OBSTACLE] out    131 deg:  160 mm, forward  143 mm,  5/ 5 agree -> OBSTACLE
+22:52:30.534 [OBSTACLE] out    132 deg:  170 mm, forward  148 mm,  5/ 5 agree -> OBSTACLE
+22:52:30.534 [OBSTACLE] out    133 deg:  170 mm, forward  146 mm,  5/ 5 agree -> OBSTACLE
+22:52:30.534 [OBSTACLE] out    134 deg:  170 mm, forward  144 mm,  5/ 5 agree -> OBSTACLE
+22:52:30.534 [OBSTACLE] out    135 deg:  170 mm, forward  141 mm,  5/ 5 agree -> OBSTACLE
+22:52:30.534 [OBSTACLE] out    136 deg:  170 mm, forward  139 mm,  4/ 5 agree -> OBSTACLE
+22:52:30.534 [OBSTACLE] out    137 deg:  416 mm, forward  304 mm,  5/ 5 agree -> clear
+22:52:30.534 [OBSTACLE] out    138 deg:  409 mm, forward  294 mm,  5/ 5 agree -> clear
+22:52:30.534 [OBSTACLE] in     137 deg:  409 mm, forward  299 mm,  5/ 5 agree -> clear
+22:52:30.534 [OBSTACLE] in     136 deg:  411 mm, forward  306 mm,  5/ 5 agree -> clear
+22:52:30.534 [OBSTACLE] in     135 deg:  170 mm, forward  141 mm,  5/ 5 agree -> OBSTACLE
+22:52:30.534 [OBSTACLE] in     134 deg:  170 mm, forward  144 mm,  5/ 5 agree -> OBSTACLE
+22:52:30.534 [OBSTACLE] left  edge: outward 39.5 deg, inward 45.5 deg -> 64.5 deg, 204 mm away, 77 mm left of centre
+22:52:30.534 [OBSTACLE] right edge: outward 136.5 deg, inward 135.5 deg -> 114.0 deg, 170 mm away, 72 mm right of centre
+22:52:30.534 [OBSTACLE] ===== OBSTACLE WIDTH 150 mm (15.0 cm), 132 mm ahead, centre 3 mm left =====
+22:52:30.534 [OBSTACLE] position: CENTRE (left edge 25.5 deg, right edge 24.0 deg, within 12.0 deg)
+22:52:30.534 [OBSTACLE] ===== PASS ON THE RIGHT (centred: default side) =====
+22:52:30.550 [OBSTACLE]   left : move 192 mm, nearest thing beside it 472 mm out -> room
+22:52:30.550 [OBSTACLE]   right: move 187 mm, nothing beside it -> room
+22:52:30.552 [DETOUR] out: back 0 mm, turn -69 deg, diagonal 201 mm -> 187 mm right of the line
+22:52:30.778 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=2 fault=0 speed_mm_s=37,-38 output_permille=125,-127
+22:52:31.280 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=2 fault=0 speed_mm_s=41,0 output_permille=250,-250
+22:52:31.536 [DETOUR] move 5100 interrupted: hold 1, state 5, fault 4
+22:52:31.537 [DETOUR] gave up at x 0 y 0, heading -34 deg
+22:52:31.634 [OBSTACLE] ===== DETOUR ABANDONED: stopped and holding =====
+22:52:31.790 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:31.791 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:32.296 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:32.297 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:32.801 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:32.803 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:33.307 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:33.309 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:33.803 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:33.804 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:34.308 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:34.308 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:34.815 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:34.816 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:35.321 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:35.321 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:35.821 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:35.821 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:36.323 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:36.324 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:36.830 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:36.831 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:37.335 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:37.336 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:37.829 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:37.844 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:38.347 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:38.348 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:38.843 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:38.845 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:39.349 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:39.350 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:39.855 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:39.856 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:40.355 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:40.355 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:40.853 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:40.869 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:41.362 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:41.362 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:41.868 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:41.868 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:42.376 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:42.377 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:42.882 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:42.882 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:43.379 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:43.379 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:43.872 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:43.885 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:44.389 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:44.389 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:44.896 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:44.897 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:45.387 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:45.403 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:45.894 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:45.894 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:46.403 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:46.403 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:46.902 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:46.902 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:47.415 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:47.417 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:47.923 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:47.924 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:48.419 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:48.420 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:48.911 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:48.927 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:49.431 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:49.433 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:49.937 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:49.938 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:50.436 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:50.436 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:50.939 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:50.940 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:51.444 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:51.444 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:51.943 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:51.943 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:52.457 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:52.458 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:52.964 line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:52.965 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:53.459 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:53.459 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:53.965 line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:53.966 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:54.471 line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:54.473 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:54.977 line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:54.979 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:55.476 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:55.476 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:55.976 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:55.976 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:56.474 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:56.474 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:56.989 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:56.989 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+22:52:57.497 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+22:52:57.499 line_fb cause=4 reliable=1 counts=3471,2257 invalid=0,0 previous_invalid=0,0
+=== 22:52:58.005 port lost: Exception calling "ReadLine" with "0" argument(s): "The I/O operation has been aborted because of either a thread exit or an application request.
+" ===
+=== 22:53:03.425 port opened ===
+22:53:03.430 0261103T143131Z-no-s4 hardware_confirmed=1 manual_enabled=0 max_output_percent=25 production=1 subsystem4_enabled=0 subsystem5_enabled=1
+22:53:03.681 [OBSTACLE] ready: servo GP12 at 90 deg, ultrasonic TRIG GP16 / ECHO GP17, slow zone 450 mm, stop at 150 mm
+22:53:03.744 [OBSTACLE] approaching: 363 mm ahead at 0 mm/s
+22:53:05.078 line_pid centre_ir=0 right_ir=1 direction=0 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:53:05.581 line_pid centre_ir=1 right_ir=1 direction=2 sweep=0 request=0 state=2 fault=0 speed_mm_s=66,50 output_permille=131,132
+22:53:06.081 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=0 state=2 fault=0 speed_mm_s=75,75 output_permille=141,123
+22:53:06.588 line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=0 state=2 fault=0 speed_mm_s=75,83 output_permille=91,196
+22:53:07.107 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=0 state=2 fault=0 speed_mm_s=101,65 output_permille=202,97
+22:53:07.598 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=0 state=2 fault=0 speed_mm_s=116,67 output_permille=182,96
+22:53:08.101 line_pid centre_ir=0 right_ir=0 direction=4 sweep=0 request=0 state=2 fault=0 speed_mm_s=116,41 output_permille=207,175
+22:53:08.133 [OBSTACLE] STOP: 152 mm ahead at 113 mm/s
+22:53:08.557 [OBSTACLE] scanning 20..160 deg
+22:53:08.621 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:53:09.124 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:53:09.633 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:53:10.128 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:53:10.634 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:53:11.131 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:53:11.637 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:53:12.142 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:53:12.648 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:53:13.145 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:53:13.648 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:53:14.166 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:53:14.672 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:53:15.167 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:53:15.674 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:53:16.178 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:53:16.685 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:53:17.179 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:53:17.688 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:53:18.191 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:53:18.693 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:53:19.183 [OBSTACLE] stopped 143 mm from the obstacle (target 150 mm), 5/5 pings agree
+22:53:19.199 [OBSTACLE] coarse sweep, 10 deg steps (obstacle = forward distance within 52 mm of 90 deg)
+22:53:19.199 [OBSTACLE] coarse  20 deg:  727 mm, forward  259 mm,  4/ 5 agree -> clear
+22:53:19.199 [OBSTACLE] coarse  30 deg:  733 mm, forward  381 mm,  5/ 5 agree -> clear
+22:53:19.199 [OBSTACLE] coarse  40 deg:  944 mm, forward  626 mm,  3/ 5 agree -> clear
+22:53:19.215 [OBSTACLE] coarse  50 deg:  951 mm, forward  752 mm,  5/ 5 agree -> clear
+22:53:19.215 [OBSTACLE] coarse  60 deg:  163 mm, forward  167 mm,  5/ 5 agree -> OBSTACLE
+22:53:19.215 [OBSTACLE] coarse  70 deg:  160 mm, forward  178 mm,  3/ 5 agree -> OBSTACLE
+22:53:19.222 [OBSTACLE] coarse  80 deg:  153 mm, forward  180 mm,  5/ 5 agree -> OBSTACLE
+22:53:19.222 [OBSTACLE] coarse  90 deg:  143 mm, forward  173 mm,  5/ 5 agree -> OBSTACLE
+22:53:19.222 [OBSTACLE] coarse 100 deg:  132 mm, forward  160 mm,  5/ 5 agree -> OBSTACLE
+22:53:19.222 [OBSTACLE] coarse 110 deg:  132 mm, forward  153 mm,  5/ 5 agree -> OBSTACLE
+22:53:19.222 [OBSTACLE] coarse 120 deg:  143 mm, forward  149 mm,  5/ 5 agree -> OBSTACLE
+22:53:19.222 [OBSTACLE] coarse 130 deg:  153 mm, forward  140 mm,  5/ 5 agree -> OBSTACLE
+22:53:19.222 [OBSTACLE] coarse 140 deg:  173 mm, forward  130 mm,  5/ 5 agree -> OBSTACLE
+22:53:19.222 [OBSTACLE] coarse 150 deg:  387 mm, forward  208 mm,  3/ 5 agree -> OBSTACLE
+22:53:19.222 [OBSTACLE] coarse 160 deg:  405 mm, forward  149 mm,  5/ 5 agree -> OBSTACLE
+22:53:19.230 [OBSTACLE] fine scan, left edge, 1 deg steps (out, then back in)
+22:53:19.230 [OBSTACLE] out     59 deg:  173 mm, forward  174 mm,  5/ 5 agree -> OBSTACLE
+22:53:19.230 [OBSTACLE] out     58 deg:  173 mm, forward  172 mm,  4/ 5 agree -> OBSTACLE
+22:53:19.230 [OBSTACLE] out     57 deg:  183 mm, forward  178 mm,  4/ 5 agree -> OBSTACLE
+22:53:19.230 [OBSTACLE] out     56 deg:  183 mm, forward  176 mm,  5/ 5 agree -> OBSTACLE
+22:53:19.230 [OBSTACLE] out     55 deg:  952 mm, forward  804 mm,  5/ 5 agree -> clear
+22:53:19.230 [OBSTACLE] out     54 deg:  950 mm, forward  793 mm,  5/ 5 agree -> clear
+22:53:19.230 [OBSTACLE] in      55 deg:  183 mm, forward  174 mm,  5/ 5 agree -> OBSTACLE
+22:53:19.230 [OBSTACLE] in      56 deg:  952 mm, forward  814 mm,  3/ 5 agree -> clear
+22:53:19.230 [OBSTACLE] in      57 deg:  186 mm, forward  181 mm,  4/ 5 agree -> OBSTACLE
+22:53:19.230 [OBSTACLE] in      58 deg:  173 mm, forward  172 mm,  5/ 5 agree -> OBSTACLE
+22:53:19.230 [OBSTACLE] fine scan, right edge, 1 deg steps (out, then back in)
+22:53:19.230 [OBSTACLE] left  edge: outward 55.5 deg, inward 56.5 deg -> 78.0 deg, 183 mm away, 37 mm left of centre
+22:53:19.230 [OBSTACLE] right edge: NOT FOUND, obstacle continues past the 160 deg limit (192 mm right of centre)
+22:53:19.230 [OBSTACLE] ===== OBSTACLE WIDTH >= 228 mm (22.8 cm), 143 mm ahead, centre 77 mm right =====
+22:53:19.230 [OBSTACLE] position: RIGHT by 36.0 deg (left edge 12.0 deg, right edge 48.0 deg, tolerance 12.0 deg), one edge beyond the sweep
+22:53:19.246 [OBSTACLE] ===== PASS ON THE LEFT (obstacle reaches less far that way) =====
+22:53:19.246 [OBSTACLE]   left : move 152 mm, nearest thing beside it 660 mm out -> room
+22:53:19.246 [OBSTACLE]   right: move >= 307 mm, nothing beside it -> NO ROOM (edge beyond the sweep)
+22:53:19.246 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+22:53:19.246 [DETOUR] out: back 0 mm, turn 61 deg, diagonal 173 mm -> 152 mm left of the line
+22:53:19.703 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=2 fault=0 speed_mm_s=-83,92 output_permille=-223,190
+=== 22:53:20.835 port lost: Exception calling "ReadLine" with "0" argument(s): "The I/O operation has been aborted because of either a thread exit or an application request.
+" ===
+=== 22:53:21.275 port opened ===
+22:53:21.275 code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:53:22.982 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:53:24.984 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:53:26.984 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:53:28.988 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:53:30.989 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:53:32.993 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:53:34.992 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:53:36.985 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:53:38.984 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:53:40.983 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:53:42.992 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:53:44.990 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:53:46.990 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:53:48.997 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:53:50.994 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:53:53.002 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:53:54.995 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:53:57.002 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:53:59.000 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:01.010 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:03.003 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:05.003 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:07.006 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:09.001 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:11.010 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:13.012 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:14.999 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:17.004 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:19.008 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:21.014 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:23.023 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:25.014 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:27.016 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:29.018 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:31.021 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:33.021 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:35.019 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:37.022 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:39.020 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:41.030 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:43.031 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:45.035 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:47.023 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:49.028 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:51.022 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:53.025 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:55.020 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:57.023 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:54:59.034 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:01.037 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:03.032 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:05.036 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:07.046 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:09.029 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:11.036 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:13.032 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:15.029 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:17.046 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:19.044 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:21.037 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:23.041 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:25.042 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:27.045 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:29.055 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:31.044 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:33.041 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:35.047 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:37.044 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:39.058 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:41.046 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:43.048 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:45.055 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:47.059 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:49.067 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:51.063 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:53.048 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:55.055 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:57.056 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:55:59.066 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:01.060 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:03.065 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:05.065 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:07.064 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:09.078 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:11.078 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:13.083 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:15.063 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:17.076 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:19.078 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:21.080 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:23.082 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:25.084 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:27.087 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:29.088 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:31.090 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:33.092 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:35.083 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:37.086 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:39.087 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:41.090 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:43.092 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:45.093 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:47.096 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:49.098 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:51.100 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:53.102 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:55.104 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:57.100 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:56:59.096 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:01.096 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:03.102 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:05.104 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:07.100 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:09.108 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:11.104 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:13.104 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:15.114 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:17.116 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:19.118 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:21.097 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:23.111 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:25.111 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:27.115 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:29.117 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:31.107 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:33.122 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:35.122 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:37.126 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:39.119 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:41.129 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:43.121 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:45.123 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:47.124 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:49.122 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:51.118 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:53.131 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:55.124 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:57.126 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:57:59.124 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:01.137 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:03.134 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:05.133 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:07.132 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:09.133 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:11.129 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:13.139 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:15.144 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:17.143 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:19.146 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:21.147 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:23.153 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:25.152 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:27.145 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:29.147 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:31.148 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:33.151 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:35.150 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:37.156 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:39.145 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:41.148 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:43.153 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:45.164 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:47.167 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:49.147 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:51.154 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:53.146 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:55.152 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:57.163 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:58:59.159 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:01.165 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:03.172 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:05.167 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:07.176 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:09.176 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:11.159 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:13.169 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:15.165 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:17.162 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:19.175 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:21.167 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:23.179 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:25.172 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:27.183 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:29.184 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:31.179 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:33.170 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:35.181 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:37.171 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:39.185 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:41.182 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:43.182 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:45.193 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:47.187 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:49.190 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:51.197 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:53.193 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:55.188 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:57.195 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+22:59:59.196 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:01.199 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:03.190 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:05.203 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:07.203 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:09.207 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:11.204 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:13.207 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:15.213 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:17.205 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:19.207 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:21.201 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:23.211 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:25.213 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:27.214 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:29.207 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:31.215 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:33.217 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:35.222 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:37.211 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:39.206 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:41.216 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:43.220 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:45.217 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:47.224 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:49.225 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:51.225 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:53.226 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:55.227 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:57.235 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:00:59.237 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:01.228 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:03.230 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:05.229 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:07.234 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:09.236 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:11.239 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:13.238 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:15.238 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:17.240 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:19.235 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:21.236 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:23.231 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:25.240 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:27.238 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:29.246 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:31.237 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:33.250 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:35.244 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:37.239 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:39.248 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:41.248 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:43.246 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:45.240 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:47.252 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:49.248 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:51.253 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:53.251 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:55.248 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:57.254 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:01:59.263 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:01.268 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:03.263 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:05.268 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:07.261 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:09.266 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:11.255 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:13.259 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:15.270 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:17.260 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:19.276 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:21.270 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:23.276 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:25.279 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:27.279 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:29.272 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:31.266 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:33.271 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:35.267 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:37.278 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:39.271 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:41.279 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:43.285 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:45.278 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:47.286 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:49.293 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:51.274 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:53.288 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:55.280 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:57.291 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:02:59.293 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:01.287 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:03.297 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:05.300 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:07.298 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:09.305 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:11.307 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:13.288 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:15.294 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:17.288 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:19.290 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:21.302 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:23.296 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:25.302 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:27.297 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:29.309 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:31.303 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:33.314 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:35.310 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:37.300 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:39.314 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:41.309 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:43.318 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:45.316 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:47.319 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:49.323 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:51.315 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:53.324 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:55.324 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:57.315 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:03:59.310 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:01.326 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:03.322 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:05.329 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:07.319 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:09.330 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:11.331 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:13.325 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:15.327 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:17.342 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:19.318 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:21.324 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:23.335 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:25.331 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:27.331 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:29.340 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:31.330 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:33.339 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:35.347 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:37.336 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:39.340 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:41.339 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:43.332 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:45.342 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:47.349 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:49.346 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:51.342 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:53.347 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:55.357 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:57.357 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:04:59.351 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:01.358 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:03.352 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:05.349 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:07.349 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:09.362 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:11.357 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:13.355 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:15.365 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:17.371 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:19.369 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:21.361 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:23.367 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:25.358 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:27.355 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:29.369 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:31.360 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:33.373 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:35.378 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:37.371 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:39.381 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:41.372 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:43.385 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:45.379 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:47.374 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:49.373 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:51.381 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:53.376 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:55.389 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:57.380 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:05:59.392 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:01.385 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:03.382 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:05.386 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:07.395 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:09.386 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:11.381 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:13.395 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:15.390 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:17.385 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:19.393 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:21.390 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:23.400 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:25.399 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:27.408 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:29.407 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:31.402 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:33.398 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:35.397 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:37.405 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:39.404 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:41.411 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:43.405 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:45.411 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:47.418 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:49.408 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:51.423 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:53.402 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:55.415 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:57.410 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:06:59.419 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:01.411 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:03.420 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:05.422 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:07.426 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:09.428 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:11.429 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:13.436 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:15.416 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:17.415 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:19.424 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:21.424 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:23.434 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:25.436 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:27.434 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:29.428 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:31.432 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:33.442 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:35.437 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:37.426 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:39.434 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:41.430 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:43.438 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:45.433 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:47.439 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:49.450 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:51.444 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:53.454 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:55.447 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:57.446 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:07:59.443 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:01.442 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:03.441 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:05.450 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:07.454 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:09.458 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:11.462 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:13.454 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:15.464 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:17.462 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:19.471 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:21.449 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:23.464 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:25.458 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:27.454 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:29.464 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:31.471 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:33.461 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:35.469 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:37.473 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:39.465 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:41.468 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:43.461 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:45.472 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:47.476 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:49.470 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:51.466 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:53.483 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:55.477 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:57.488 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:08:59.487 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:01.481 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:03.491 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:05.484 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:07.481 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:09.488 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:11.483 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:13.479 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:15.483 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:17.497 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:19.500 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:21.493 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:23.502 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:25.493 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:27.487 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:29.498 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:31.489 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:33.501 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:35.498 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:37.493 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:39.499 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:41.511 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:43.505 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:45.504 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:47.512 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:49.503 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:51.508 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:53.505 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:55.504 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:57.511 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:09:59.506 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:01.512 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:03.523 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:05.522 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:07.517 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:09.528 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:11.520 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:13.516 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:15.511 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:17.520 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:19.516 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:21.522 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:23.531 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:25.530 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:27.536 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:29.536 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:31.537 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:33.528 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:35.533 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:37.529 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:39.526 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:41.535 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:43.530 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:45.543 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:47.533 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:49.542 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:51.549 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:53.542 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:55.537 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:57.535 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:10:59.545 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:01.549 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:03.543 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:05.553 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:07.552 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:09.546 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:11.549 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:13.550 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:15.558 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:17.549 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:19.544 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:21.553 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:23.551 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:25.557 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:27.559 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:29.568 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:31.564 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:33.568 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:35.568 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:37.565 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:39.566 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:41.567 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:43.571 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:45.573 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:47.575 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:49.577 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:51.579 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:53.581 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:55.583 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:57.578 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:11:59.582 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:01.576 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:03.573 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:05.581 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:07.572 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:09.576 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:11.584 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:13.582 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:15.591 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:17.586 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:19.595 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:21.590 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:23.577 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:25.579 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:27.591 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:29.590 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:31.585 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:33.595 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:35.598 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:37.594 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:39.605 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:41.601 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:43.597 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:45.588 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:47.594 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:49.605 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:51.599 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:53.610 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:55.605 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:57.599 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:12:59.608 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:01.607 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:03.620 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:05.619 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:07.610 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:09.610 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:11.616 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:13.620 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:15.621 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:17.617 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:19.613 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:21.626 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:23.622 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:25.620 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:27.627 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:29.621 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:31.619 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:33.627 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:35.623 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:37.630 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:39.624 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:41.628 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:43.637 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:45.626 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:47.632 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:49.645 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:51.626 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:53.637 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:55.641 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:57.637 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:13:59.643 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:01.634 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:03.644 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:05.638 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:07.650 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:09.651 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:11.646 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:13.643 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:15.640 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:17.642 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:19.654 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:21.642 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:23.651 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:25.660 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:27.650 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:29.664 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:31.658 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:33.667 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:35.661 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:37.663 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:39.664 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:41.656 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:43.659 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:45.670 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:47.672 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:49.667 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:51.664 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:53.672 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:55.677 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:57.669 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:14:59.670 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:01.666 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:03.677 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:05.672 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:07.680 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:09.684 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:11.686 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:13.688 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:15.679 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:17.682 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:19.677 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:21.686 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:23.680 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:25.689 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:27.684 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:29.686 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:31.694 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:33.684 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:35.688 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:37.700 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:39.689 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:41.688 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:43.697 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:45.688 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:47.693 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:49.690 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:51.702 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:53.697 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:55.701 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:57.709 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:15:59.712 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:01.705 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:03.702 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:05.703 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:07.707 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:09.702 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:11.701 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:13.714 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:15.708 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:17.720 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:19.722 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:21.726 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:23.719 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:25.714 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:27.708 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:29.716 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:31.719 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:33.727 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:35.729 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:37.724 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:39.722 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:41.733 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:43.737 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:45.730 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:47.720 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:49.721 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:51.727 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:53.736 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:55.730 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:57.739 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:16:59.728 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:01.739 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:03.747 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:05.742 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:07.740 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:09.739 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:11.737 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:13.745 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:15.748 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:17.746 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:19.737 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:21.745 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:23.751 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:25.748 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:27.759 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:29.747 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:31.753 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:33.741 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:35.752 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:37.754 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:39.761 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:41.758 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:43.766 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:45.756 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:47.762 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:49.757 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:51.767 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:53.760 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:55.757 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:57.758 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:17:59.761 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:01.770 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:03.771 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:05.765 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:07.768 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:09.778 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:11.782 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:13.783 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:15.764 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:17.771 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:19.773 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:21.780 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:23.770 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:25.776 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:27.785 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:29.781 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:31.791 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:33.789 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:35.791 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:37.784 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:39.788 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:41.789 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:43.794 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:45.792 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:47.783 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:49.797 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:51.791 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:53.802 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:55.791 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:57.806 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:18:59.799 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:01.795 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:03.790 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:05.793 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:07.805 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:09.804 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:11.810 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:13.813 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:15.804 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:17.813 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:19.819 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:21.807 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:23.801 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:25.813 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:27.809 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:29.818 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:31.813 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:33.822 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:35.821 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:37.816 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:39.824 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:41.825 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:43.822 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:45.820 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:47.822 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:49.825 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:51.828 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:53.827 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:55.830 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:57.834 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:19:59.836 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:01.838 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:03.840 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:05.819 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:07.832 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:09.833 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:11.838 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:13.834 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:15.830 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:17.837 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:19.832 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:21.838 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:23.851 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:25.843 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:27.832 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:29.843 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:31.841 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:33.848 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:35.839 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:37.855 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:39.852 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:41.858 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:43.848 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:45.861 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:47.853 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:49.851 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:51.847 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:53.851 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:55.862 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:57.860 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:20:59.854 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:01.865 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:03.869 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:05.863 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:07.866 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:09.864 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:11.856 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:13.862 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:15.862 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:17.872 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:19.869 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:21.863 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:23.869 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:25.879 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:27.872 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:29.883 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:31.876 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:33.874 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:35.878 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:37.877 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:39.881 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:41.875 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:43.889 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:45.878 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:47.894 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:49.889 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:51.884 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:53.894 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:55.890 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:57.884 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:21:59.882 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:22:01.894 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+23:22:03.890 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=16896
+=== logger end 2026-11-03T23:22:04.3942499+08:00 ===

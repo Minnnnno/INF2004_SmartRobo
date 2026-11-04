@@ -29,11 +29,12 @@
  *   I2C0: SDA on GP0/4/8/12/16/20/28, SCL on GP1/5/9/13/17/21
  *   I2C1: SDA on GP2/6/10/14/18/22/26, SCL on GP3/7/11/15/19/27
  * Robo Pico: I2C0 = GP4/GP5 (Grove 3), I2C1 = GP2/GP3 (Grove 2, Maker port).
- * GP8/GP9 are its motor 1 pins. */
+ * GP8/GP9 are its motor 1 pins.  This robot wires the IMU to I2C1 on
+ * GP6/GP7; GP2..GP5 carry the wheel encoders. */
 #define	DEVCNF_I2C0_SDA_PIN	8
 #define	DEVCNF_I2C0_SCL_PIN	9
-#define	DEVCNF_I2C1_SDA_PIN	2
-#define	DEVCNF_I2C1_SCL_PIN	3
+#define	DEVCNF_I2C1_SDA_PIN	6
+#define	DEVCNF_I2C1_SCL_PIN	7
 
 /* Register initial value */
 

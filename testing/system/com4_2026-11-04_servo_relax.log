@@ -1,0 +1,1324 @@
+﻿=== logger start 2026-11-04T00:22:31.7361135+08:00 port=COM4 ===
+=== 00:24:05.349 port opened ===
+00:24:05.349 0261103T143131Z-no-s4 hardware_confirmed=1 manual_enabled=0 max_output_percent=25 production=1 subsystem4_enabled=0 subsystem5_enabled=1
+00:24:05.641 [OBSTACLE] ready: servo GP12 at 90 deg, ultrasonic TRIG GP16 / ECHO GP17, slow zone 450 mm, stop at 150 mm
+00:24:07.050 line_pid centre_ir=0 right_ir=0 direction=0 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:07.541 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:08.041 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+=== 00:24:08.418 port lost: Exception calling "ReadLine" with "0" argument(s): "The I/O operation has been aborted because of either a thread exit or an application request.
+" ===
+=== 00:24:40.651 port opened ===
+00:24:40.656 0261103T162422Z-no-s4 hardware_confirmed=1 manual_enabled=0 max_output_percent=25 production=1 subsystem4_enabled=0 subsystem5_enabled=1
+00:24:40.949 [OBSTACLE] ready: servo GP12 at 90 deg, ultrasonic TRIG GP16 / ECHO GP17, slow zone 450 mm, stop at 150 mm
+00:24:42.348 line_pid centre_ir=0 right_ir=0 direction=0 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:42.854 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:43.358 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:43.855 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:44.356 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:44.867 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:45.373 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:45.874 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:46.372 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:46.880 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:47.384 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:47.889 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:48.399 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:48.894 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:49.396 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:49.905 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:50.413 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:50.911 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:51.413 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:51.912 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:52.421 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:52.929 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:53.429 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:53.920 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:54.437 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:54.946 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:55.444 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:55.954 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:56.286 [OBSTACLE] approaching: 237 mm ahead at 0 mm/s
+00:24:56.444 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:24:56.961 line_pid centre_ir=1 right_ir=0 direction=1 sweep=0 request=0 state=2 fault=0 speed_mm_s=45,91 output_permille=70,145
+00:24:57.461 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=0 state=2 fault=0 speed_mm_s=46,83 output_permille=87,226
+00:24:57.969 line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=0 state=2 fault=0 speed_mm_s=66,75 output_permille=144,182
+=== 00:24:58.994 port lost: Exception calling "ReadLine" with "0" argument(s): "The I/O operation has been aborted because of either a thread exit or an application request.
+" ===
+=== 00:24:59.415 port opened ===
+00:24:59.416 code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=17786
+00:25:01.135 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=17786
+00:25:03.143 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=17786
+00:25:05.143 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=17786
+00:25:07.142 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=17786
+=== 00:25:07.347 port lost: Exception calling "ReadLine" with "0" argument(s): "The I/O operation has been aborted because of either a thread exit or an application request.
+" ===
+=== 00:25:09.008 port opened ===
+00:25:09.008 0261103T162422Z-no-s4 hardware_confirmed=1 manual_enabled=0 max_output_percent=25 production=1 subsystem4_enabled=0 subsystem5_enabled=1
+00:25:09.352 [OBSTACLE] ready: servo GP12 at 90 deg, ultrasonic TRIG GP16 / ECHO GP17, slow zone 450 mm, stop at 150 mm
+00:25:09.418 [OBSTACLE] approaching: 273 mm ahead at 0 mm/s
+00:25:10.750 line_pid centre_ir=1 right_ir=0 direction=0 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:25:11.258 line_pid centre_ir=0 right_ir=0 direction=3 sweep=0 request=0 state=2 fault=0 speed_mm_s=41,83 output_permille=86,195
+00:25:11.758 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=0 state=2 fault=0 speed_mm_s=90,45 output_permille=197,110
+00:25:12.266 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=0 state=2 fault=0 speed_mm_s=60,99 output_permille=88,196
+=== 00:25:13.470 port lost: Exception calling "ReadLine" with "0" argument(s): "The I/O operation has been aborted because of either a thread exit or an application request.
+" ===
+=== 00:25:13.891 port opened ===
+00:25:13.891 code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:25:15.611 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:25:17.609 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:25:19.615 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:25:21.617 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:25:23.614 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:25:25.620 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:25:27.623 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:25:29.620 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:25:31.627 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:25:33.629 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:25:35.618 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:25:37.617 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:25:39.624 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:25:41.625 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:25:43.628 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:25:45.624 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:25:47.632 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:25:49.633 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:25:51.636 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:25:53.638 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:25:55.640 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:25:57.629 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:25:59.628 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:26:01.628 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:26:03.636 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:26:05.635 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:26:07.641 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:26:09.642 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:26:11.642 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:26:13.641 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:26:15.649 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:26:17.648 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:26:19.640 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:26:21.639 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:26:23.647 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:26:25.647 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:26:27.646 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:26:29.645 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+00:26:31.653 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=1 last_feed_ms=3856
+=== 00:26:33.004 port lost: Exception calling "ReadLine" with "0" argument(s): "The I/O operation has been aborted because of either a thread exit or an application request.
+" ===
+=== 00:26:34.248 port opened ===
+00:26:34.248 output_percent=25 production=1 subsystem4_enabled=0 subsystem5_enabled=1
+00:26:34.512 [OBSTACLE] ready: servo GP12 at 90 deg, ultrasonic TRIG GP16 / ECHO GP17, slow zone 450 mm, stop at 150 mm
+00:26:34.577 [OBSTACLE] approaching: 261 mm ahead at 0 mm/s
+00:26:35.902 line_pid centre_ir=0 right_ir=1 direction=0 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:26:36.419 line_pid centre_ir=1 right_ir=0 direction=2 sweep=0 request=0 state=2 fault=0 speed_mm_s=66,67 output_permille=130,103
+00:26:36.920 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=0 state=2 fault=0 speed_mm_s=98,53 output_permille=175,86
+00:26:37.429 line_pid centre_ir=0 right_ir=0 direction=3 sweep=0 request=0 state=2 fault=0 speed_mm_s=60,99 output_permille=85,201
+00:26:37.813 [OBSTACLE] STOP: 156 mm ahead at 84 mm/s
+=== 00:26:38.842 port lost: Exception calling "ReadLine" with "0" argument(s): "The I/O operation has been aborted because of either a thread exit or an application request.
+" ===
+=== 00:26:39.257 port opened ===
+00:26:39.259 code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:26:40.984 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:26:42.984 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:26:44.988 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:26:46.990 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:26:48.992 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:26:50.990 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:26:52.990 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:26:54.997 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:26:56.988 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:26:58.988 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:00.987 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:02.995 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:04.995 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:06.994 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:09.001 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:11.001 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:13.000 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:15.000 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:17.009 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:18.999 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:20.999 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:22.998 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:25.006 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:27.005 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:29.005 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:31.012 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:33.012 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:35.011 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:37.011 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:39.019 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:41.010 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:43.009 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:45.015 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:47.017 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:49.016 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:51.016 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:53.024 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:55.023 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:57.025 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:27:59.030 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:01.030 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:03.021 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:05.021 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:07.020 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:09.028 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:11.019 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:13.018 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:15.035 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:17.026 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:19.033 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:21.033 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:23.032 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:25.023 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:27.023 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:29.031 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:31.030 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:33.038 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:35.043 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:37.045 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:39.040 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:41.049 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:43.044 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:45.043 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:47.033 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:49.042 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:51.042 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:53.048 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:55.049 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:57.048 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:28:59.056 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:01.056 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:03.047 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:05.063 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:07.054 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:09.053 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:11.045 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:13.053 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:15.052 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:17.060 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:19.059 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:21.067 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:23.058 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:25.058 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:27.074 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:29.074 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:31.065 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:33.063 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:35.072 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:37.063 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:39.061 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:41.062 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:43.078 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:45.077 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:47.068 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:49.085 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:51.083 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:53.075 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:55.075 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:57.076 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:29:59.084 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:30:01.072 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:30:03.079 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:30:05.081 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:30:07.088 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:30:09.080 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:30:11.095 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:30:13.095 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:30:15.089 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:30:17.089 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:30:19.088 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:30:21.093 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:30:23.097 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:30:25.092 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:30:27.092 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+00:30:29.103 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=4 last_feed_ms=4065
+=== 00:30:30.366 port lost: Exception calling "ReadLine" with "0" argument(s): "The I/O operation has been aborted because of either a thread exit or an application request.
+" ===
+=== 00:30:38.080 port opened ===
+00:30:38.080 0261103T162422Z-no-s4 hardware_confirmed=1 manual_enabled=0 max_output_percent=25 production=1 subsystem4_enabled=0 subsystem5_enabled=1
+00:30:38.372 [OBSTACLE] ready: servo GP12 at 90 deg, ultrasonic TRIG GP16 / ECHO GP17, slow zone 450 mm, stop at 150 mm
+00:30:38.437 [OBSTACLE] approaching: 149 mm ahead at 0 mm/s
+00:30:38.439 [OBSTACLE] STOP: 149 mm ahead at 0 mm/s
+00:30:38.439 [OBSTACLE] scanning 20..160 deg
+00:30:39.780 line_pid centre_ir=0 right_ir=1 direction=0 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:40.272 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:40.781 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:41.288 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:41.788 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:42.296 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:42.787 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:43.296 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:43.804 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:44.312 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:44.820 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:45.312 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:45.820 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:46.328 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:46.828 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:47.337 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:47.828 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:48.336 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:48.848 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:49.352 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:49.852 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:50.352 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:50.860 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:51.362 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:51.873 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:52.379 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:52.870 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:53.379 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:53.888 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:30:54.293 [OBSTACLE] stopped 149 mm from the obstacle (target 150 mm), 5/5 pings agree
+00:30:54.301 [OBSTACLE] coarse sweep, 10 deg steps (obstacle = forward distance within 54 mm of 90 deg)
+00:30:54.301 [OBSTACLE] coarse  20 deg:  935 mm, forward  330 mm,  5/ 5 agree -> clear
+00:30:54.301 [OBSTACLE] coarse  30 deg:  939 mm, forward  484 mm,  5/ 5 agree -> clear
+00:30:54.301 [OBSTACLE] coarse  40 deg:  222 mm, forward  162 mm,  5/ 5 agree -> OBSTACLE
+00:30:54.301 [OBSTACLE] coarse  50 deg:  201 mm, forward  177 mm,  5/ 5 agree -> OBSTACLE
+00:30:54.301 [OBSTACLE] coarse  60 deg:  173 mm, forward  176 mm,  5/ 5 agree -> OBSTACLE
+00:30:54.301 [OBSTACLE] coarse  70 deg:  166 mm, forward  184 mm,  5/ 5 agree -> OBSTACLE
+00:30:54.309 [OBSTACLE] coarse  80 deg:  160 mm, forward  187 mm,  5/ 5 agree -> OBSTACLE
+00:30:54.309 [OBSTACLE] coarse  90 deg:  149 mm, forward  179 mm,  5/ 5 agree -> OBSTACLE
+00:30:54.309 [OBSTACLE] coarse 100 deg:  152 mm, forward  179 mm,  5/ 5 agree -> OBSTACLE
+00:30:54.309 [OBSTACLE] coarse 110 deg:  149 mm, forward  168 mm,  5/ 5 agree -> OBSTACLE
+00:30:54.309 [OBSTACLE] coarse 120 deg:  160 mm, forward  164 mm,  5/ 5 agree -> OBSTACLE
+00:30:54.309 [OBSTACLE] coarse 130 deg:  166 mm, forward  150 mm,  5/ 5 agree -> OBSTACLE
+00:30:54.309 [OBSTACLE] coarse 140 deg:  507 mm, forward  345 mm,  4/ 5 agree -> clear
+00:30:54.309 [OBSTACLE] coarse 150 deg:  993 mm, forward  511 mm,  6/10 agree -> clear
+00:30:54.309 [OBSTACLE] coarse 160 deg:  169 mm, forward   68 mm,  4/ 5 agree -> clear
+00:30:54.317 [OBSTACLE] fine scan, left edge, 1 deg steps (out, then back in)
+00:30:54.317 [OBSTACLE] out     39 deg:  231 mm, forward  164 mm,  5/ 5 agree -> OBSTACLE
+00:30:54.317 [OBSTACLE] out     38 deg:  231 mm, forward  161 mm,  5/ 5 agree -> OBSTACLE
+00:30:54.317 [OBSTACLE] out     37 deg:  233 mm, forward  158 mm,  5/ 5 agree -> OBSTACLE
+00:30:54.326 [OBSTACLE] out     36 deg:  962 mm, forward  583 mm,  3/ 5 agree -> clear
+00:30:54.326 [OBSTACLE] out     35 deg:  956 mm, forward  565 mm,  5/ 5 agree -> clear
+00:30:54.326 [OBSTACLE] in      36 deg:  956 mm, forward  580 mm,  5/ 5 agree -> clear
+00:30:54.326 [OBSTACLE] in      37 deg:  240 mm, forward  163 mm,  5/ 5 agree -> OBSTACLE
+00:30:54.326 [OBSTACLE] in      38 deg:  231 mm, forward  161 mm,  5/ 5 agree -> OBSTACLE
+00:30:54.326 [OBSTACLE] fine scan, right edge, 1 deg steps (out, then back in)
+00:30:54.326 [OBSTACLE] out    131 deg:  166 mm, forward  148 mm,  5/ 5 agree -> OBSTACLE
+00:30:54.326 [OBSTACLE] out    132 deg:  166 mm, forward  146 mm,  5/ 5 agree -> OBSTACLE
+00:30:54.334 [OBSTACLE] out    133 deg:  177 mm, forward  151 mm,  5/ 5 agree -> OBSTACLE
+00:30:54.334 [OBSTACLE] out    134 deg:  176 mm, forward  148 mm,  5/ 5 agree -> OBSTACLE
+00:30:54.334 [OBSTACLE] out    135 deg:  189 mm, forward  155 mm,  5/ 5 agree -> OBSTACLE
+00:30:54.334 [OBSTACLE] out    136 deg:  186 mm, forward  150 mm,  4/ 5 agree -> OBSTACLE
+00:30:54.334 [OBSTACLE] out    137 deg:  173 mm, forward  138 mm,  5/ 5 agree -> OBSTACLE
+00:30:54.334 [OBSTACLE] out    138 deg:  173 mm, forward  136 mm,  5/ 5 agree -> OBSTACLE
+00:30:54.334 [OBSTACLE] out    139 deg:  173 mm, forward  133 mm,  3/ 5 agree -> OBSTACLE
+00:30:54.342 [OBSTACLE] out    140 deg:  507 mm, forward  345 mm,  5/ 5 agree -> clear
+00:30:54.342 [OBSTACLE] out    141 deg:  507 mm, forward  338 mm,  5/ 5 agree -> clear
+00:30:54.342 [OBSTACLE] in     140 deg:  507 mm, forward  345 mm,  5/ 5 agree -> clear
+00:30:54.342 [OBSTACLE] in     139 deg:  196 mm, forward  148 mm,  3/ 5 agree -> OBSTACLE
+00:30:54.342 [OBSTACLE] in     138 deg:  234 mm, forward  177 mm,  5/ 5 agree -> OBSTACLE
+00:30:54.342 [OBSTACLE] left  edge: outward 36.5 deg, inward 36.5 deg -> 58.5 deg, 233 mm away, 110 mm left of centre
+00:30:54.342 [OBSTACLE] right edge: outward 139.5 deg, inward 139.5 deg -> 117.5 deg, 173 mm away, 93 mm right of centre
+00:30:54.342 [OBSTACLE] ===== OBSTACLE WIDTH 203 mm (20.3 cm), 149 mm ahead, centre 8 mm left =====
+00:30:54.351 [OBSTACLE] position: CENTRE (left edge 31.5 deg, right edge 27.5 deg, within 12.0 deg)
+00:30:54.351 [OBSTACLE] ===== PASS ON THE RIGHT (centred: default side) =====
+00:30:54.351 [OBSTACLE]   left : move 225 mm, nearest thing beside it 907 mm out -> room
+00:30:54.351 [OBSTACLE]   right: move 208 mm, nearest thing beside it 411 mm out -> room
+00:30:54.355 [DETOUR] out: back 0 mm, turn -67 deg, diagonal 227 mm -> 208 mm right of the line
+00:30:54.394 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=3 state=2 fault=0 speed_mm_s=0,0 output_permille=55,-55
+00:30:54.909 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=2 fault=0 speed_mm_s=108,-100 output_permille=205,-226
+00:30:55.409 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=2 fault=0 speed_mm_s=41,-25 output_permille=170,-230
+00:30:55.917 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=2 fault=0 speed_mm_s=0,0 output_permille=199,-221
+00:30:55.977 [DETOUR] move 5100 interrupted: hold 1, state 5, fault 4
+00:30:55.978 [DETOUR] gave up at x 0 y 0, heading -65 deg
+00:30:56.226 [OBSTACLE] ===== DETOUR ABANDONED: stopped and holding =====
+00:30:56.417 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:30:56.417 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:30:56.920 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:30:56.926 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:30:57.431 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:30:57.433 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:30:57.927 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:30:57.928 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:30:58.434 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:30:58.435 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:30:58.942 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:30:58.942 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:30:59.448 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:30:59.449 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:30:59.944 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:30:59.945 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:00.449 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:00.449 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:00.956 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:00.957 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:01.463 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:01.464 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:01.969 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:01.969 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:02.463 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:02.465 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:02.969 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:02.969 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:03.474 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:03.474 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:03.983 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:03.984 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:04.478 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:04.478 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:04.985 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:04.985 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:05.492 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:05.493 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:05.998 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:05.999 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:06.504 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:06.506 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:06.999 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:07.000 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:07.501 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:07.507 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:08.012 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:08.015 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:08.517 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:08.517 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:09.015 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:09.016 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:09.522 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:09.522 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:10.026 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:10.026 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:10.534 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:10.535 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:11.039 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:11.041 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:11.535 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:11.538 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:12.042 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:12.043 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:12.548 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:12.550 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:13.055 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:13.056 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:13.554 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:13.554 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:14.055 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:14.056 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:14.562 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:14.563 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:15.069 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:15.070 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:15.573 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:15.574 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:16.079 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:16.081 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:16.575 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:16.577 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:17.079 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:17.079 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:17.588 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:17.590 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:18.093 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:18.097 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:18.601 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:18.602 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:19.095 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:19.096 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:19.598 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:19.604 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:20.108 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:20.109 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:20.614 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:20.614 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:21.119 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:21.119 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:21.617 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:21.618 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:22.122 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:22.122 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:22.629 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:22.631 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:23.136 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:23.137 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:23.630 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:23.630 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:24.138 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:24.139 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:24.644 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:24.646 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:25.150 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:25.152 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:25.652 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:25.652 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:26.151 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:26.151 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:26.659 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:26.661 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:27.159 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:27.167 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:27.673 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:27.674 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:28.168 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:28.169 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:28.670 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:28.675 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:29.180 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:29.181 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:29.686 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:29.688 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:30.193 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:30.194 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:30.686 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:30.686 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:31.194 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:31.195 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:31.700 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:31.701 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:32.200 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:32.208 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:32.712 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:32.713 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:33.207 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:33.208 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:33.708 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:33.708 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:34.219 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:34.221 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:34.724 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:34.724 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:35.232 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:35.233 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:35.727 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:35.728 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:36.232 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:36.232 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:36.740 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:36.741 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:37.240 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:37.240 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:37.752 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:37.754 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:38.248 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:38.249 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:38.753 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:38.754 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:39.259 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:39.260 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:39.764 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:39.766 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:40.268 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:40.272 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:40.767 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:40.768 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:41.274 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:41.275 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:41.778 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:41.781 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:42.285 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:42.287 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:42.788 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:42.788 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:43.283 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:43.288 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:43.788 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:43.788 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:44.299 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:44.300 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:44.805 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:44.806 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:45.307 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:45.313 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:45.804 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:45.804 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:46.313 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:46.315 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:46.819 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:46.821 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:47.325 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:47.326 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:47.828 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:47.828 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:48.321 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:48.328 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:48.828 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:48.835 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:49.339 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:49.341 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:49.845 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:49.847 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:50.346 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:50.354 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:50.845 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:50.845 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:51.354 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:51.354 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:51.861 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:51.861 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:52.361 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:52.369 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:52.861 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:52.861 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:53.369 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:53.369 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:53.870 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:53.878 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:54.378 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:54.378 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:54.885 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:54.885 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:55.377 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:55.385 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:55.885 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:55.885 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:56.393 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:56.393 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:56.902 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:56.902 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:57.410 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:57.410 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:57.904 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:57.904 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:58.410 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:58.410 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:58.918 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:58.918 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:59.412 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:59.412 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:31:59.918 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:31:59.918 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:00.426 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:00.426 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:00.933 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:00.933 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:01.442 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:01.443 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:01.934 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:01.934 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:02.442 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:02.442 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:02.950 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:02.950 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:03.441 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:03.449 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:03.952 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:03.952 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:04.459 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:04.459 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:04.967 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:04.967 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:05.457 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:05.466 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:05.966 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:05.966 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:06.474 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:06.474 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:06.983 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:06.983 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:07.482 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:07.490 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:07.983 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:07.983 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:08.490 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:08.490 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:08.998 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:09.000 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:09.499 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:09.506 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:09.999 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:10.001 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:10.498 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:10.507 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:11.012 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:11.012 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:11.515 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:11.515 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:12.023 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:12.023 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:12.517 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:12.517 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:13.023 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:13.023 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:13.531 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:13.531 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:14.039 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:14.039 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:14.539 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:14.539 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:15.040 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:15.041 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:15.547 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:15.547 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:16.046 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:16.046 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:16.555 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:16.555 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:17.063 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:17.063 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:17.557 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:17.557 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:18.063 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:18.063 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:18.571 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:18.571 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:19.079 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:19.079 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:19.580 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:19.587 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:20.081 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:20.081 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:20.587 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:20.587 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:21.087 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:21.095 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:21.595 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:21.604 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:22.096 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:22.096 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:22.604 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:22.605 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:23.103 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:23.103 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:23.611 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:23.617 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:24.122 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:24.122 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:24.617 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:24.619 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:25.123 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:25.124 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:25.627 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:25.627 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:26.135 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:26.135 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:26.635 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:26.643 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:27.135 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:27.138 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:27.644 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:27.645 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:28.144 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:28.144 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:28.643 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:28.643 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:29.152 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:29.152 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:29.659 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:29.660 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:30.165 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:30.167 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:30.670 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:30.670 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:31.167 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:31.167 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:31.673 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:31.674 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:32.180 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:32.181 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:32.686 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:32.687 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:33.193 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:33.194 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:33.683 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:33.683 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:34.194 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:34.194 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:34.702 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:34.703 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:35.209 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:35.211 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:35.700 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:35.700 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:36.207 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:36.207 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:36.716 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:36.716 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:37.216 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:37.216 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:37.728 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:37.729 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:38.224 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:38.224 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:38.724 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:38.724 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:39.235 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:39.235 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:39.742 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:39.743 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:40.248 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:40.250 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:40.740 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:40.740 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:41.248 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:41.248 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:41.748 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:41.756 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:42.258 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:42.258 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:42.765 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:42.765 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:43.262 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:43.264 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:43.764 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:43.764 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:44.273 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:44.273 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:44.781 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:44.781 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:45.289 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:45.291 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:45.780 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:45.780 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:46.288 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:46.288 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:46.788 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:46.796 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:47.297 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:47.297 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:47.808 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:47.810 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:48.297 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:48.305 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:48.805 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:48.811 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:49.315 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:49.316 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:49.821 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:49.823 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:50.328 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:50.330 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:50.822 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:50.826 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:51.329 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:51.329 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:51.837 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:51.837 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:52.338 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:52.338 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:52.849 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:52.850 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:53.342 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:53.345 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:53.845 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:53.851 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:54.353 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:54.353 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:54.862 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:54.862 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:55.369 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:55.369 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:55.861 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:55.861 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:56.369 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:56.369 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:56.877 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:56.877 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:57.377 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:57.377 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:57.877 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:57.877 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:58.385 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:58.385 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:58.885 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:58.894 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:59.394 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:59.394 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:32:59.903 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:32:59.905 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:00.393 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:00.401 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:00.901 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:00.901 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:01.410 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:01.415 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:01.918 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:01.918 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:02.426 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:02.426 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:02.920 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:02.921 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:03.425 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:03.425 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:03.934 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:03.934 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:04.434 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:04.434 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:04.942 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:04.942 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:05.433 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:05.442 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:05.942 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:05.942 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:06.453 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:06.453 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:06.958 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:06.958 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:07.466 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:07.466 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:07.960 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:07.961 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:08.466 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:08.466 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:08.966 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:08.974 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:09.474 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:09.474 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:09.982 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:09.982 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:10.474 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:10.474 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:10.985 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:10.987 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:11.492 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:11.493 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:11.999 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:11.999 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:12.505 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:12.506 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:12.999 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:13.001 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:13.507 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:13.508 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:14.006 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:14.006 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:14.514 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:14.514 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:15.023 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:15.026 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:15.514 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:15.514 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:16.023 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:16.023 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:16.531 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:16.531 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:17.039 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:17.039 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:17.539 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:17.539 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:18.038 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:18.038 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:18.539 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:18.546 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:19.046 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:19.046 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:19.555 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:19.555 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:20.063 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:20.067 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:20.555 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:20.555 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:21.063 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:21.063 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:21.571 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:21.571 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:22.079 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:22.079 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:22.579 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:22.579 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:23.079 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:23.079 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:23.587 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:23.588 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:24.087 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:24.087 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:24.595 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:24.595 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:25.104 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:25.104 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:25.598 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:25.598 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:26.104 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:26.104 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:26.611 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:26.613 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:27.119 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:27.121 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:27.620 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:27.620 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:28.120 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:28.121 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:28.626 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:28.627 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:29.133 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:29.134 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:29.639 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:29.640 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:30.144 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:30.146 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:30.639 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:30.639 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:31.146 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:31.147 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:31.652 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:31.654 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:32.151 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:32.159 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:32.664 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:32.665 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:33.152 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:33.160 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:33.665 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:33.668 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:34.172 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:34.172 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:34.679 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:34.679 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:35.184 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:35.184 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:35.676 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:35.676 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:36.183 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:36.183 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:36.691 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:36.693 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:37.196 line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:37.196 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:37.703 line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:37.703 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:38.188 line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:38.188 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:38.700 line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:38.700 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:39.212 line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:39.213 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:39.712 line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:39.712 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+00:33:40.216 line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+00:33:40.216 line_fb cause=4 reliable=1 counts=894,4294966620 invalid=0,0 previous_invalid=0,0
+=== 00:33:40.360 port lost: Exception calling "ReadLine" with "0" argument(s): "The I/O operation has been aborted because of either a thread exit or an application request.
+" ===
+=== 00:33:41.418 port opened ===
+00:33:41.421 0261103T162422Z-no-s4 hardware_confirmed=1 manual_enabled=0 max_output_percent=25 production=1 subsystem4_enabled=0 subsystem5_enabled=1
+00:33:41.695 [OBSTACLE] ready: servo GP12 at 90 deg, ultrasonic TRIG GP16 / ECHO GP17, slow zone 450 mm, stop at 150 mm
+00:33:41.760 [OBSTACLE] approaching: 279 mm ahead at 0 mm/s
+00:33:43.092 line_pid centre_ir=1 right_ir=0 direction=0 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:43.599 line_pid centre_ir=0 right_ir=0 direction=3 sweep=0 request=0 state=2 fault=0 speed_mm_s=53,76 output_permille=55,220
+00:33:44.108 line_pid centre_ir=1 right_ir=1 direction=4 sweep=0 request=0 state=2 fault=0 speed_mm_s=91,50 output_permille=197,102
+00:33:44.608 line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=0 state=2 fault=0 speed_mm_s=60,99 output_permille=99,197
+00:33:45.098 line_pid centre_ir=1 right_ir=0 direction=4 sweep=0 request=0 state=2 fault=0 speed_mm_s=100,58 output_permille=206,134
+00:33:45.227 [OBSTACLE] STOP: 152 mm ahead at 84 mm/s
+00:33:45.604 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=3 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:45.669 [OBSTACLE] scanning 20..160 deg
+00:33:46.120 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:46.626 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:47.133 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:47.639 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:48.121 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:48.639 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:49.146 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:49.652 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:50.158 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:50.650 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:51.160 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:51.663 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:52.169 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:52.670 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:53.173 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:53.671 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:54.187 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:54.683 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:55.191 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:55.693 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:56.196 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:56.703 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:57.213 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:57.713 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:58.213 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:58.719 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:59.220 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:33:59.728 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:34:00.238 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:34:00.730 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:34:01.236 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+00:34:01.589 [OBSTACLE] stopped 149 mm from the obstacle (target 150 mm), 5/5 pings agree
+00:34:01.589 [OBSTACLE] coarse sweep, 10 deg steps (obstacle = forward distance within 54 mm of 90 deg)
+00:34:01.589 [OBSTACLE] coarse  20 deg:  675 mm, forward  241 mm,  4/ 5 agree -> clear
+00:34:01.594 [OBSTACLE] coarse  30 deg:  926 mm, forward  478 mm,  3/ 5 agree -> clear
+00:34:01.594 [OBSTACLE] coarse  40 deg:  292 mm, forward  207 mm,  6/10 agree -> OBSTACLE
+00:34:01.594 [OBSTACLE] coarse  50 deg:  209 mm, forward  183 mm,  5/ 5 agree -> OBSTACLE
+00:34:01.594 [OBSTACLE] coarse  60 deg:  166 mm, forward  170 mm,  5/ 5 agree -> OBSTACLE
+00:34:01.594 [OBSTACLE] coarse  70 deg:  163 mm, forward  181 mm,  5/ 5 agree -> OBSTACLE
+00:34:01.599 [OBSTACLE] coarse  80 deg:  156 mm, forward  183 mm,  5/ 5 agree -> OBSTACLE
+00:34:01.599 [OBSTACLE] coarse  90 deg:  149 mm, forward  179 mm,  5/ 5 agree -> OBSTACLE
+00:34:01.599 [OBSTACLE] coarse 100 deg:  149 mm, forward  177 mm,  5/ 5 agree -> OBSTACLE
+00:34:01.602 [OBSTACLE] coarse 110 deg:  153 mm, forward  172 mm,  5/ 5 agree -> OBSTACLE
+00:34:01.602 [OBSTACLE] coarse 120 deg:  149 mm, forward  155 mm,  5/ 5 agree -> OBSTACLE
+00:34:01.602 [OBSTACLE] coarse 130 deg:  160 mm, forward  145 mm,  5/ 5 agree -> OBSTACLE
+00:34:01.602 [OBSTACLE] coarse 140 deg:  166 mm, forward  126 mm,  5/ 5 agree -> OBSTACLE
+00:34:01.602 [OBSTACLE] coarse 150 deg:  507 mm, forward  268 mm,  3/ 5 agree -> clear
+00:34:01.602 [OBSTACLE] coarse 160 deg:  508 mm, forward  184 mm,  3/10 agree -> OBSTACLE
+00:34:01.602 [OBSTACLE] fine scan, left edge, 1 deg steps (out, then back in)
+00:34:01.611 [OBSTACLE] out     39 deg:  419 mm, forward  283 mm,  3/ 5 agree -> clear
+00:34:01.611 [OBSTACLE] out     38 deg:  438 mm, forward  288 mm,  5/ 5 agree -> clear
+00:34:01.611 [OBSTACLE] in      39 deg:  299 mm, forward  207 mm,  7/10 agree -> OBSTACLE
+00:34:01.611 [OBSTACLE] in      40 deg:  945 mm, forward  627 mm,  5/ 5 agree -> clear
+00:34:01.611 [OBSTACLE] in      41 deg:  954 mm, forward  645 mm,  5/10 agree -> clear
+00:34:01.611 [OBSTACLE] in      42 deg:  955 mm, forward  659 mm,  4/10 agree -> clear
+00:34:01.611 [OBSTACLE] in      43 deg: 1029 mm, forward  722 mm,  3/10 agree -> clear
+00:34:01.611 [OBSTACLE] in      44 deg:  738 mm, forward  534 mm,  4/ 5 agree -> clear
+00:34:01.618 [OBSTACLE] in      45 deg:  739 mm, forward  544 mm,  7/10 agree -> clear
+00:34:01.619 [OBSTACLE] in      46 deg:  240 mm, forward  194 mm,  5/ 5 agree -> OBSTACLE
+00:34:01.620 [OBSTACLE] in      47 deg:  218 mm, forward  182 mm,  5/ 5 agree -> OBSTACLE
+00:34:01.622 [OBSTACLE] fine scan, right edge, 1 deg steps (out, then back in)
+00:34:01.622 [OBSTACLE] out    141 deg:  163 mm, forward  121 mm,  5/ 5 agree -> clear
+00:34:01.622 [OBSTACLE] out    142 deg:  163 mm, forward  119 mm,  5/ 5 agree -> clear
+00:34:01.622 [OBSTACLE] in     141 deg:  163 mm, forward  121 mm,  5/ 5 agree -> clear
+00:34:01.622 [OBSTACLE] in     140 deg:  163 mm, forward  124 mm,  5/ 5 agree -> clear
+00:34:01.622 [OBSTACLE] in     139 deg:  163 mm, forward  127 mm,  5/ 5 agree -> OBSTACLE
+00:34:01.627 [OBSTACLE] in     138 deg:  164 mm, forward  130 mm,  5/ 5 agree -> OBSTACLE
+00:34:01.627 [OBSTACLE] left  edge: outward 39.5 deg, inward 45.5 deg -> 64.5 deg, 292 mm away, 85 mm left of centre
+00:34:01.627 [OBSTACLE] right edge: outward 140.5 deg, inward 139.5 deg -> 118.0 deg, 166 mm away, 95 mm right of centre
+00:34:01.627 [OBSTACLE] ===== OBSTACLE WIDTH 181 mm (18.1 cm), 149 mm ahead, centre 5 mm right =====
+00:34:01.627 [OBSTACLE] position: CENTRE (left edge 25.5 deg, right edge 28.0 deg, within 12.0 deg)
+00:34:01.627 [OBSTACLE] ===== PASS ON THE RIGHT (centred: default side) =====
+00:34:01.627 [OBSTACLE]   left : move 200 mm, nearest thing beside it 663 mm out -> room
+00:34:01.636 [OBSTACLE]   right: move 210 mm, nothing beside it -> room
+00:34:01.636 [DETOUR] out: back 0 mm, turn -67 deg, diagonal 229 mm -> 210 mm right of the line
+00:34:01.744 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=2 fault=0 speed_mm_s=0,-8 output_permille=122,-96
+00:34:02.261 line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=3 state=2 fault=0 speed_mm_s=100,-83 output_permille=192,-243
+=== 00:34:03.694 port lost: Exception calling "ReadLine" with "0" argument(s): "The I/O operation has been aborted because of either a thread exit or an application request.
+" ===
+=== 00:34:04.127 port opened ===
+00:34:04.132 code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:05.836 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:07.838 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:09.840 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:11.842 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:13.839 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:15.834 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:17.841 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:19.847 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:21.851 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:23.836 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:25.843 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:27.840 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:29.837 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:31.843 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:33.844 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:35.852 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:37.857 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:39.860 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:41.861 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:43.859 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:45.851 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:47.857 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:49.858 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:51.860 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:53.855 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:55.863 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:57.864 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:34:59.863 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:01.871 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:03.871 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:05.869 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:07.865 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:09.867 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:11.869 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:13.866 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:15.870 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:17.870 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:19.878 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:21.866 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:23.880 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:25.875 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:27.885 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:29.872 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:31.866 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:33.880 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:35.882 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:37.884 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:39.879 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:41.875 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:43.879 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:45.893 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:47.885 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:49.889 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:51.875 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:53.877 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:55.891 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:57.890 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:35:59.887 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:01.884 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:03.895 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:05.897 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:07.900 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:09.896 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:11.906 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:13.885 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:15.896 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:17.890 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:19.895 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:21.897 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:23.908 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:25.896 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:27.908 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:29.902 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:31.912 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:33.910 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:35.901 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:37.906 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:39.914 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:41.912 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:43.917 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:45.912 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:47.907 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:49.918 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:51.913 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:53.915 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:55.921 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:57.909 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:36:59.915 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:01.913 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:03.927 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:05.917 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:07.919 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:09.923 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:11.923 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:13.930 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:15.926 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:17.940 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:19.932 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:21.924 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:23.931 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:25.923 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:27.937 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:29.942 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:31.942 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:33.946 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:35.948 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:37.935 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:39.952 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:41.936 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:43.945 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:45.945 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:47.945 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:49.951 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:51.950 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:53.955 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:55.957 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:57.959 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:37:59.957 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:01.958 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:03.955 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:05.956 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:07.956 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:09.955 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:11.961 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:13.963 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:15.962 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:17.968 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:19.970 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:21.972 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:23.974 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:25.966 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:27.967 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:29.965 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:31.963 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:33.963 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:35.974 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:37.977 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:39.979 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:41.971 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:43.983 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:45.986 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:47.977 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:49.976 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:51.976 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:53.982 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:55.984 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:57.986 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:38:59.983 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:01.990 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:03.989 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:05.988 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:07.996 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:09.982 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:11.989 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:13.991 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:15.993 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:17.995 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:19.986 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:21.986 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:24.001 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:26.000 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:27.999 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:30.008 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:31.999 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:34.000 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:35.992 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:37.996 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:40.006 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:41.994 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:44.002 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:46.004 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:48.014 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:50.014 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:52.006 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:54.006 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:56.010 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:39:57.999 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:00.012 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:02.009 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:04.017 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:06.020 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:08.024 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:10.020 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:12.019 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:14.029 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:16.018 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:18.008 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:20.011 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:22.017 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:24.022 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:26.025 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:28.022 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:30.035 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:32.030 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:34.039 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:36.040 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:38.031 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:40.033 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:42.036 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:44.039 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:46.039 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:48.042 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:50.043 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:52.044 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:54.036 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:56.043 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:40:58.043 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:00.042 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:02.045 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:04.047 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:06.049 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:08.049 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:10.048 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:12.047 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:14.047 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:16.046 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:18.061 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:20.063 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:22.054 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:24.053 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:26.053 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:28.060 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:30.062 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:32.059 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:34.059 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:36.068 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:38.070 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:40.072 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:42.073 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:44.064 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:46.067 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:48.069 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:50.071 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:52.073 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:54.075 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:56.077 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:41:58.077 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:42:00.076 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:42:02.077 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:42:04.085 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:42:06.076 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:42:08.063 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:42:10.080 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:42:12.072 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:42:14.073 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:42:16.082 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:42:18.088 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
+00:42:20.088 LAST CRASH: watchdog timeout, code froze >1 s (motors held; power-cycle to run) motion_stage=4 obstacle_stage=7 last_feed_ms=21736
