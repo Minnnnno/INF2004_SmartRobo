@@ -294,6 +294,11 @@ void cyw43_utk_task(int32_t stacd, void *exinf)
                 tm_printf((UB*)"wifi: link up, ip=%d.%d.%d.%d\n",
                           (int)(ip & 0xff), (int)((ip >> 8) & 0xff),
                           (int)((ip >> 16) & 0xff), (int)((ip >> 24) & 0xff));
+                /* Radio power saving delays replies by hundreds of ms, which
+                 * stalls 10 Hz telemetry. Keep the radio awake. */
+                if(cyw43_wifi_pm(&cyw43_state, CYW43_NO_POWERSAVE_MODE) != 0) {
+                    tm_printf((UB*)"wifi: could not disable power saving\n");
+                }
             } else {
                 tm_printf((UB*)"wifi: link status -> %s (%d)\n",
                           link_status_str(radio_status.link_status),

@@ -65,6 +65,17 @@
 #define TCP_SND_BUF                 (8 * TCP_MSS)
 #define TCP_SND_QUEUELEN            ((4 * (TCP_SND_BUF) + (TCP_MSS - 1)) / (TCP_MSS))
 
+/* lwIP's MQTT output buffer defaults to 256 bytes, about 7 telemetry frames
+ * (0.7 s at 10 Hz). A short WiFi stall filled it and frames were dropped
+ * ("mqtt: publish to robot/frame dropped"). 2 KB holds about 5 s. */
+#define MQTT_OUTPUT_RINGBUF_SIZE    2048
+
+/* lwIP holds one request slot per publish, even QoS 0, until TCP confirms it
+ * was delivered. The default of 4 ran out within ~0.3 s whenever the PC was
+ * slow to acknowledge (Windows delays ACKs by up to 200 ms). Each slot is
+ * about 20 bytes. */
+#define MQTT_REQ_MAX_IN_FLIGHT      32
+
 #define LWIP_NETIF_STATUS_CALLBACK  1
 #define LWIP_NETIF_LINK_CALLBACK    1
 #define LWIP_NETIF_HOSTNAME         1

@@ -29,6 +29,7 @@
 #define MQTT_UTK_TICK_MS        100     /* queue drain period */
 #define MQTT_UTK_HEARTBEAT_TICKS 10     /* heartbeat every 1 s */
 #define MQTT_UTK_TX_PER_TICK    4       /* queued messages published per tick */
+#define MQTT_UTK_DROP_REPORT_TICKS 50   /* report dropped messages every 5 s */
 #define MQTT_UTK_KEEPALIVE_S    10      /* broker reports "offline" ~15 s after loss */
 #define MQTT_UTK_RETRY_MIN_MS   1000    /* reconnect backoff: 1, 2, 4, 8, 10 s */
 #define MQTT_UTK_RETRY_MAX_MS   10000
@@ -123,6 +124,8 @@ static void tick_timeout(void *arg)
 {
 	static unsigned int	count = 0;
 	static u8_t		ticks = 0;
+	static unsigned int	dropped = 0;	/* since the last report */
+	static u8_t		drop_ticks = 0;
 	char			topic[COMMS_TOPIC_MAX];
 	unsigned char		payload[COMMS_PAYLOAD_MAX];
 	int			len, qos, i;
@@ -139,9 +142,18 @@ static void tick_timeout(void *arg)
 					(u8_t)qos, 0 /* retain */,
 					publish_done_cb, NULL) != ERR_OK) {
 				/* Output buffer full: this message is lost,
-				 * leave the rest for the next tick. */
-				tm_printf((UB*)"mqtt: publish to %s dropped\n", topic);
+				 * leave the rest for the next tick. Counted and
+				 * reported every 5 s rather than per message. */
+				dropped++;
 				break;
+			}
+		}
+
+		if(++drop_ticks >= MQTT_UTK_DROP_REPORT_TICKS) {
+			drop_ticks = 0;
+			if(dropped > 0) {
+				tm_printf((UB*)"mqtt: %u messages dropped in last 5 s\n", dropped);
+				dropped = 0;
 			}
 		}
 

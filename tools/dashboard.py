@@ -160,7 +160,7 @@ def listen(args):
         handle = open(args.csv, "w", newline="")
         writer = csv.writer(handle)
         writer.writerow(["recv_time"] + names)
-    state = {"seq": None, "frames": 0, "lost": 0, "bad": 0}
+    state = {"seq": None, "frames": 0, "lost": 0, "bad": 0, "printed_at": 0.0, "since_print": 0}
 
     def on_connect(client, userdata, flags, rc, properties=None):
         client.subscribe([(TOPIC_FRAME, 0), (TOPIC_EVENT, 1), (TOPIC_ACK, 1), (TOPIC_STATUS, 1)])
@@ -181,7 +181,14 @@ def listen(args):
             state["frames"] += 1
             if writer:
                 writer.writerow(["%.3f" % now] + [v[n] for n in names])
-            if not args.quiet:
+            state["since_print"] += 1
+            # Every frame is logged and counted; the console shows one every
+            # --every seconds so it stays readable.
+            if not args.quiet and now - state["printed_at"] >= args.every:
+                state["printed_at"] = now
+                if args.every > 0:
+                    print("[%d frames in last %gs]" % (state["since_print"], args.every), end=" ")
+                state["since_print"] = 0
                 print("seq=%3d t=%6.1fs state=%d fault=%d speed=%+4d,%+4d mm/s centre=%+5d mm "
                       "hdg=%+4d line=%s bc=%s pitch=%+3d hump=%3d obst=%s %dcm lost=%d"
                       % (v["SEQ"], v["UPTIME_DS"] / 10.0, v["M_STATE"], v["M_FAULT"],
@@ -236,6 +243,8 @@ def main():
         if name == "listen":
             s.add_argument("--csv")
             s.add_argument("--quiet", action="store_true")
+            s.add_argument("--every", type=float, default=5.0,
+                           help="seconds between printed frames (0 = print every frame)")
         else:
             s.add_argument("command", choices=sorted(OPCODES))
             s.add_argument("--session", type=int)
