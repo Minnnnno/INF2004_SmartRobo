@@ -1,8 +1,8 @@
 #include "subsystems.h"
 
 /* Opt-in hand-scan test: build the production profile with
- * -DCMAKE_C_FLAGS=-DROBO_BARCODE_TEST=1. Every other image keeps barcode_task idle. */
-#if defined(ROBO_BARCODE_TEST) && defined(ROBO_PRODUCTION_BUILD) && !defined(ROBO_LINE_STEERING)
+ * -DCMAKE_C_FLAGS=-DROBO_BARCODE_TEST=1. Every other image has no barcode_task. */
+#if ROBO_BARCODE_TASK
 #include "../subsystem2/template_hal.h"
 #include <tm/tmonitor.h>
 #include "board_config.h"
@@ -28,17 +28,18 @@
 #define BARCODE_MAX_BARS     ((BARCODE_MAX_ELEMENTS + 1U) / 2U)
 #define BARCODE_MAX_CHARS    ((BARCODE_MAX_ELEMENTS + 1U) / 10U)
 
-/* Code 39: 9 elements (bar, space, ... bar), bit 8 = first element, 1 = wide. */
-static const struct { uint16_t pattern; char symbol; } code39[] = {
-    {0x034, '0'}, {0x121, '1'}, {0x061, '2'}, {0x160, '3'}, {0x031, '4'}, {0x130, '5'},
-    {0x070, '6'}, {0x025, '7'}, {0x124, '8'}, {0x064, '9'}, {0x109, 'A'}, {0x049, 'B'},
-    {0x148, 'C'}, {0x019, 'D'}, {0x118, 'E'}, {0x058, 'F'}, {0x00D, 'G'}, {0x10C, 'H'},
-    {0x04C, 'I'}, {0x01C, 'J'}, {0x103, 'K'}, {0x043, 'L'}, {0x142, 'M'}, {0x013, 'N'},
-    {0x112, 'O'}, {0x052, 'P'}, {0x007, 'Q'}, {0x106, 'R'}, {0x046, 'S'}, {0x016, 'T'},
-    {0x181, 'U'}, {0x0C1, 'V'}, {0x1C0, 'W'}, {0x091, 'X'}, {0x190, 'Y'}, {0x0D0, 'Z'},
-    {0x085, '-'}, {0x184, '.'}, {0x0C4, ' '}, {0x094, '*'}, {0x0A8, '$'}, {0x0A2, '/'},
-    {0x08A, '+'}, {0x02A, '%'},
+/* Code 39: 9 elements (bar, space, ... bar), bit 8 = first element, 1 = wide.
+ * code39_pattern[i] encodes code39_symbol[i]. */
+static const char code39_symbol[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-. *$/+%";
+static const uint16_t code39_pattern[] = {
+    0x034, 0x121, 0x061, 0x160, 0x031, 0x130, 0x070, 0x025, 0x124, 0x064,  /* 0-9 */
+    0x109, 0x049, 0x148, 0x019, 0x118, 0x058, 0x00D, 0x10C, 0x04C, 0x01C,  /* A-J */
+    0x103, 0x043, 0x142, 0x013, 0x112, 0x052, 0x007, 0x106, 0x046, 0x016,  /* K-T */
+    0x181, 0x0C1, 0x1C0, 0x091, 0x190, 0x0D0,                              /* U-Z */
+    0x085, 0x184, 0x0C4, 0x094, 0x0A8, 0x0A2, 0x08A, 0x02A,                /* - . space * $ / + % */
 };
+_Static_assert(sizeof code39_symbol - 1U == sizeof code39_pattern / sizeof code39_pattern[0],
+               "one Code 39 pattern per symbol");
 
 /* Marks the count longest elements among bars (first = 0) or spaces (first = 1). */
 static uint16_t barcode_widest(const uint32_t *d, unsigned first, unsigned count)
@@ -57,8 +58,8 @@ static uint16_t barcode_widest(const uint32_t *d, unsigned first, unsigned count
 
 static char barcode_lookup(uint16_t pattern)
 {
-    for (unsigned i = 0U; i < sizeof code39 / sizeof code39[0]; ++i) {
-        if (code39[i].pattern == pattern) { return code39[i].symbol; }
+    for (unsigned i = 0U; i < sizeof code39_pattern / sizeof code39_pattern[0]; ++i) {
+        if (code39_pattern[i] == pattern) { return code39_symbol[i]; }
     }
     return '\0';
 }
@@ -118,14 +119,25 @@ static unsigned barcode_search(const uint32_t *d, unsigned n, unsigned first, ch
     return 0U;
 }
 
-/* Forward first, then reversed. Elements alternate bar/space from a bar at index 0. */
-static unsigned barcode_read(const uint32_t *d, unsigned n, char *out)
+static void barcode_reverse(uint32_t *d, unsigned n)
 {
-    uint32_t reversed[BARCODE_MAX_ELEMENTS];
+    for (unsigned i = 0U; i < n / 2U; ++i) {
+        uint32_t t = d[i];
+        d[i] = d[n - 1U - i];
+        d[n - 1U - i] = t;
+    }
+}
+
+/* Forward first, then reversed (in place, restored before returning).
+ * Elements alternate bar/space from a bar at index 0. */
+static unsigned barcode_read(uint32_t *d, unsigned n, char *out)
+{
     unsigned chars = barcode_search(d, n, 0U, out);
     if (chars != 0U || n == 0U) { return chars; }
-    for (unsigned i = 0U; i < n; ++i) { reversed[i] = d[n - 1U - i]; }
-    return barcode_search(reversed, n, (n - 1U) % 2U, out);
+    barcode_reverse(d, n);
+    chars = barcode_search(d, n, (n - 1U) % 2U, out);
+    barcode_reverse(d, n);
+    return chars;
 }
 
 static void barcode_adc_init(void)
@@ -173,7 +185,7 @@ static void barcode_capture(uint16_t *s)
 
 /* Black reads higher than white. At the robot's ride height the sensor blurs the
  * bars: narrow ones are faint bumps and wide ones tall, so one threshold misses bars.
- *   1. smooth over 5 samples;
+ *   1. smooth over 5 samples, in place (the raw samples have been printed already);
  *   2. the first 0.5 s is white: its level and average spread (noise);
  *   3. a bar rises a prominence above the lowest point since the last bar and ends
  *      once it falls halfway back to that low point (and half a prominence below its
@@ -184,9 +196,9 @@ static void barcode_capture(uint16_t *s)
  *      prominence above that white), divided by the scan's black-white range,
  *      centred on the area's centre; spaces are the gaps between bars.
  * White before the first bar and after the last is not stored. */
-static unsigned barcode_elements(const uint16_t *s, unsigned count, uint32_t *d)
+static unsigned barcode_elements(uint16_t *m, unsigned count, uint32_t *d)
 {
-    static uint16_t m[BARCODE_SAMPLES];
+    uint16_t raw[BARCODE_SMOOTH] = {0}; /* Unsmoothed values of the last BARCODE_SMOOTH samples. */
     unsigned peak[BARCODE_MAX_BARS], trough[BARCODE_MAX_BARS + 1U]; /* Trough: lowest point before each bar, and after the last. */
     unsigned bars = 0U, n = 0U, low_at = 0U, high_at = 0U;
     uint32_t white = 0U, noise = 0U, prominence, highest = 0U;
@@ -197,7 +209,8 @@ static unsigned barcode_elements(const uint16_t *s, unsigned count, uint32_t *d)
         unsigned from = (i < BARCODE_SMOOTH) ? 0U : i - BARCODE_SMOOTH;
         unsigned to = (i + BARCODE_SMOOTH >= count) ? count - 1U : i + BARCODE_SMOOTH;
         uint32_t sum = 0U;
-        for (unsigned j = from; j <= to; ++j) { sum += s[j]; }
+        for (unsigned j = from; j <= to; ++j) { sum += (j < i) ? raw[j % BARCODE_SMOOTH] : m[j]; }
+        raw[i % BARCODE_SMOOTH] = m[i];
         m[i] = (uint16_t)(sum / (to - from + 1U));
     }
     for (unsigned i = 0U; i < BARCODE_QUIET; ++i) { white += m[i]; }
@@ -287,9 +300,4 @@ void barcode_task(INT code, void *context)
         (void)tk_dly_tsk(2000U);
     }
 }
-
-#else
-/* Placeholder: barcode sensing (GP28, BOARD_BARCODE) and decoding are not implemented. */
-void barcode_task(INT code, void *context)
-{ (void)code; (void)context; for (;;) { (void)tk_slp_tsk(TMO_FEVR); } }
 #endif

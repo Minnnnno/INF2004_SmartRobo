@@ -35,3 +35,7 @@ motor-test-configure.log
 third_party/
 .template-reference/
 __pycache__/
+
+# Claude Code files stay local (settings, plans); CLAUDE.md stays shared
+.claude/
+CLAUDE.local.md

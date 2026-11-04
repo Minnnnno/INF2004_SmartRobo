@@ -456,7 +456,12 @@ INT usermain(void)
 #if ROBO_SUBSYSTEM5
         {(FP)obstacle_task, 4, 8192, "obstacle"},
 #endif
-        {(FP)line_task, 8, 4096, "line"}, {(FP)barcode_task, 8, 4096, "barcode"},
+#if ROBO_LINE_TASK
+        {(FP)line_task, 8, 4096, "line"},
+#endif
+#if ROBO_BARCODE_TASK
+        {(FP)barcode_task, 8, 4096, "barcode"},
+#endif
 #if ROBO_SUBSYSTEM4
         {(FP)terrain_task, 8, 4096, "terrain"},
 #endif
