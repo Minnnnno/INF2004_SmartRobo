@@ -97,11 +97,20 @@ means no measurement, not a zero measurement. Proposed `values[4]` contracts:
 
 | Owner | values[0..3] |
 |---|---|
-| Line | normalised line error, confidence [0,1], junction flag, reserved |
-| Barcode | decoded team command enum, confidence [0,1], reserved, reserved |
-| Terrain | heading rad, pitch rad, hump height m, validity bitmask |
-| Obstacle | nearest distance m, scan angle rad, width m, blocked flag |
+| Line | line error -1/0/+1, trackable (> 0.5), junction flag, reserved |
+| Barcode | `tf_barcode_t` (left, right, straight, U-turn), valid (> 0.5), reserved, reserved |
+| Terrain | heading rad, pitch rad, hump height m, validity bits 0..2 (`TF_TV_*`) plus terrain state << 3 |
+| Obstacle | nearest distance m, scan angle rad, width m, scan flags (`TF_OF_*`, 5 bits) |
 | WiFi | connected flag, publish count, receive count, reserved |
+
+Buddy 1 copies this snapshot every 100 ms and publishes it as the 21-byte binary
+frame defined in `include/telemetry_frame.h` (field ranges, bit widths, signs and
+units are in that one table; the mapping is `app_program/subsystem1/telemetry_map.c`).
+A value reaches the dashboard only through these slots. Out-of-range values are
+clamped, not wrapped. One-off events (hump peak, obstacle, scan done, B5->B3
+handover) are latched with `comms_latch_event(TF_EV_...)` from `comms.h`; motion
+fault, line lost and new barcode are detected by Buddy 1 from the snapshot.
+Commands are 2-byte binary (opcode, session, seq); see the header.
 
 These are interface slots, not implemented algorithms. Agree enum/validity values
 before integration. A magnetometer cannot supply pitch or hump height by itself;

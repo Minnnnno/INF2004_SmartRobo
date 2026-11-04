@@ -11,7 +11,9 @@
 Vehicle Controller: app_program/controller. Startup and seven application tasks:
 app_program/app_main.c. Kernel USB service is an additional template service task.
 Buddy 1's `comms.c` adds its periodic status task (priority 20), telemetry/event
-queues and the command buffer consumed by the Vehicle Controller. Legacy
+queues and the command buffer consumed by the Vehicle Controller. It publishes the
+shared status as a 21-byte binary frame at 10 Hz; every field's range and bit width
+is defined once in include/telemetry_frame.h (decode with tools/dashboard.py). Legacy
 producer/consumer/monitor demos are excluded from the robot build; their originals
 are preserved in docs/template_original/buddy1_demos.
 
@@ -20,7 +22,7 @@ Status is copied under a micro T-Kernel inheritance mutex. Stop/fault/shutdown a
 separate control latches. Motion priority 2, controller/obstacle 4, line/barcode/terrain
 8, WiFi 12. Proposed motion period 10 ms with a 1 ms kernel tick; measure timing.
 
-Pins: motors 8/9 and 10/11; left encoder 2/3, right encoder 4/5; I2C1 6/7; servo 12;
+Pins: motors 8/9 and 10/11; left encoder 2/3, right encoder 4/5; I2C1 6/7; servo 15;
 ultrasonic 16/17; line 26/27; barcode 28. GP23/24/25/29 belong to Pico W radio.
 UART console reserves GP0/GP1 only when enabled.
 

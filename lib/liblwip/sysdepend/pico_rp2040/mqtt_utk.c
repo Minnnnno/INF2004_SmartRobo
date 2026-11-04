@@ -29,6 +29,7 @@
 #define MQTT_UTK_TICK_MS        100     /* queue drain period */
 #define MQTT_UTK_HEARTBEAT_TICKS 10     /* heartbeat every 1 s */
 #define MQTT_UTK_TX_PER_TICK    4       /* queued messages published per tick */
+#define MQTT_UTK_DROP_REPORT_TICKS 50   /* report dropped messages every 5 s */
 #define MQTT_UTK_KEEPALIVE_S    10      /* broker reports "offline" ~15 s after loss */
 #define MQTT_UTK_RETRY_MIN_MS   1000    /* reconnect backoff: 1, 2, 4, 8, 10 s */
 #define MQTT_UTK_RETRY_MAX_MS   10000
@@ -36,8 +37,8 @@
 /* Inbound message staging. A publish arrives as one topic callback followed by
  * one or more data callbacks, so the topic has to be kept until the fragment
  * carrying MQTT_DATA_FLAG_LAST shows up. Both buffers are sized well past the
- * heartbeat this demo publishes; anything longer is truncated and flagged
- * rather than being allowed to run off the end. */
+ * 2-byte binary command; anything longer is truncated and flagged rather
+ * than being allowed to run off the end. */
 #define MQTT_UTK_RX_TOPIC_MAX   64
 #define MQTT_UTK_RX_DATA_MAX    128
 
@@ -75,25 +76,26 @@ static void incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags)
 
 	(void)arg;
 
+	/* Commands are binary (include/telemetry_frame.h): keep the raw
+	 * bytes, and print them as hex so the console is not scrambled. */
 	for(i = 0; i < len; i++) {
-		if(rx_len < (MQTT_UTK_RX_DATA_MAX - 1)) {
-			/* The console is a terminal -- keep raw bytes from a
-			 * payload this demo did not publish from scrambling it. */
-			UB c = data[i];
-			rx_data[rx_len++] = (c >= 0x20 && c < 0x7f)? c: '.';
+		if(rx_len < MQTT_UTK_RX_DATA_MAX) {
+			rx_data[rx_len++] = data[i];
 		} else {
 			rx_truncated = 1;
 		}
 	}
 
 	if((flags & MQTT_DATA_FLAG_LAST) != 0) {
-		rx_data[rx_len] = '\0';
-		tm_printf((UB*)"mqtt: RX [%s] \"%s\"%s\n", rx_topic, rx_data,
-			  rx_truncated? " (truncated)": "");
+		tm_printf((UB*)"mqtt: RX [%s] %d bytes:", rx_topic, (int)rx_len);
+		for(i = 0; i < rx_len && i < 8; i++) {
+			tm_printf((UB*)" %02x", (int)rx_data[i]);
+		}
+		tm_printf((UB*)"%s\n", rx_truncated? " (truncated)": "");
 
 		/* The command topic is the only subscription. A truncated
-		 * message is handed over empty, so it is rejected. */
-		comms_hook_command((const char*)rx_data, rx_truncated? 0: rx_len);
+		 * message is passed with length -1, so it is rejected. */
+		comms_hook_command(rx_data, rx_truncated? -1: (int)rx_len);
 	}
 }
 
@@ -122,8 +124,10 @@ static void tick_timeout(void *arg)
 {
 	static unsigned int	count = 0;
 	static u8_t		ticks = 0;
+	static unsigned int	dropped = 0;	/* since the last report */
+	static u8_t		drop_ticks = 0;
 	char			topic[COMMS_TOPIC_MAX];
-	char			payload[COMMS_PAYLOAD_MAX];
+	unsigned char		payload[COMMS_PAYLOAD_MAX];
 	int			len, qos, i;
 
 	(void)arg;
@@ -138,9 +142,18 @@ static void tick_timeout(void *arg)
 					(u8_t)qos, 0 /* retain */,
 					publish_done_cb, NULL) != ERR_OK) {
 				/* Output buffer full: this message is lost,
-				 * leave the rest for the next tick. */
-				tm_printf((UB*)"mqtt: publish to %s dropped\n", topic);
+				 * leave the rest for the next tick. Counted and
+				 * reported every 5 s rather than per message. */
+				dropped++;
 				break;
+			}
+		}
+
+		if(++drop_ticks >= MQTT_UTK_DROP_REPORT_TICKS) {
+			drop_ticks = 0;
+			if(dropped > 0) {
+				tm_printf((UB*)"mqtt: %u messages dropped in last 5 s\n", dropped);
+				dropped = 0;
 			}
 		}
 

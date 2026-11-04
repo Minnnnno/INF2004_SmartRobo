@@ -1,6 +1,6 @@
 /*
  *	servo.c
- *	Subsystem 5 -- hobby servo on GP7: 50 Hz, 500..2500 us for 0..180 deg.
+ *	Subsystem 5 -- hobby servo on GP15: 50 Hz, 500..2500 us for 0..180 deg.
  *
  *	The ultrasonic sensor rides on the horn, so every move waits long enough
  *	for the horn to arrive AND the sensor to stop swinging before a ping.

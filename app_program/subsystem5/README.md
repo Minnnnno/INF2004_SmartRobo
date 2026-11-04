@@ -12,7 +12,7 @@ to 0 (subsystem5.h) to always stay stopped after the scan.
 
 To isolate subsystem 5 during line-following diagnosis, configure with
 `-DROBO_SUBSYSTEM5=OFF` and rebuild. All subsystem 5 source files are excluded
-from the firmware and no obstacle task is created. GP7/GP16/GP17 are not
+from the firmware and no obstacle task is created. GP15/GP16/GP17 are not
 initialized by this subsystem and it cannot issue motion stops. The production startup
 banner reports `subsystem5_enabled=0`. Restore obstacle detection by
 configuring with `-DROBO_SUBSYSTEM5=ON` and rebuilding (the default is ON).
@@ -21,7 +21,7 @@ configuring with `-DROBO_SUBSYSTEM5=ON` and rebuilding (the default is ON).
 |---|---|---|
 | Ultrasonic sensor | TRIG | GP16 |
 | Ultrasonic sensor | ECHO | GP17 (PWM slice 0 B, used as a hardware pulse timer) |
-| Servo motor | PWM | GP7 (PWM slice 3 B, 50 Hz; subsystem 4 must stay disabled because GP7 is I2C1 SCL) |
+| Servo motor | PWM | GP15 (PWM slice 7 B, 50 Hz) |
 
 The sensor sits on the servo: 20 deg = left, 90 deg = straight ahead,
 160 deg = right (the servo is clamped to 20..160). The task only runs in production builds. Build with
@@ -60,7 +60,7 @@ A 5 V module would need a divider or a level shifter on ECHO.
    It is converted to a sideways position with the front face's forward
    distance. Width = left edge - right edge. The task prints the width, the
    stop distance and the obstacle's centre offset. The same values go to
-   the shared status and, when MQTT is online, to `robot/event`.
+   the shared status and, when MQTT is online, to `robot/telemetry/obstacle`.
 
 7. **Position.** The task compares how far each edge is from straight ahead.
    Left angle = 90° − left edge angle; right angle = right edge angle − 90°.
@@ -102,10 +102,12 @@ A 5 V module would need a divider or a level shifter on ECHO.
   centre (m, + left), `values[2]` = width (m), `values[3]` = `S5_STATE_*`:
   0 clear, 1 held/scanning, 2 pass left, 3 pass right, 4 no way around,
   5 driving round it, 6 detour abandoned (stopped and held).
-- MQTT `robot/event`: two messages, each bounded to the 96-byte queue buffer:
+- MQTT `robot/telemetry/obstacle`: two text diagnostics, each bounded to the 96-byte queue buffer:
   `obstacle width_mm=<w> dist_mm=<d> offset_mm=<o> complete=<0|1> position=<centre|left|right|unknown>`
   and `obstacle avoid=<left|right|none> shift_l_mm=<l> shift_r_mm=<r>`.
   A message that cannot fit is skipped with a console diagnostic.
+  Scan completion also latches `TF_EV_SCAN_DONE` for the binary `robot/event`
+  frame, including when the scan finishes offline.
 - Console:
 
 ```

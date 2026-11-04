@@ -425,17 +425,18 @@ static void report_scan(const s5_scan_t *p_scan)
 		  s5_magnitude(offset), (offset >= 0) ? "left" : "right");
 	print_placement(&p_scan->placement);
 	print_avoid(p_scan);
+	comms_latch_event(TF_EV_SCAN_DONE);
 
 	if (comms_is_online()) {
 		char payload[COMMS_PAYLOAD_MAX];
 		/* The combined report exceeds the queue's 96-byte buffer even for
-		   ordinary readings. Bound each write, and send two small events. */
+		   ordinary readings. Bound each write, and send two text diagnostics. */
 		INT length = tm_snprintf((UB *)payload, (INT)sizeof(payload),
 				(const UB *)"obstacle width_mm=%d dist_mm=%d offset_mm=%d complete=%d position=%s",
 				width, distance, offset, b_complete ? 1 : 0,
 				position_name(p_scan->placement.position));
 		if ((length > 0) && ((size_t)length < sizeof(payload))) {
-			(void)comms_send_event(payload);
+			(void)comms_send_telemetry("obstacle", payload);
 		} else {
 			tm_printf((const UB *)"[OBSTACLE] measurement event too long (%d bytes); skipped\n", length);
 		}
@@ -445,7 +446,7 @@ static void report_scan(const s5_scan_t *p_scan)
 				s5_round(p_scan->avoid.shift_mm[S5_LEFT]),
 				s5_round(p_scan->avoid.shift_mm[S5_RIGHT]));
 		if ((length > 0) && ((size_t)length < sizeof(payload))) {
-			(void)comms_send_event(payload);
+			(void)comms_send_telemetry("obstacle", payload);
 		} else {
 			tm_printf((const UB *)"[OBSTACLE] avoidance event too long (%d bytes); skipped\n", length);
 		}

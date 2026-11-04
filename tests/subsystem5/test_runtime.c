@@ -21,8 +21,10 @@ ER tk_dly_tsk(RELTIM delay);
 
 #define COMMS_H
 #include "../../app_program/subsystem1/comms_hooks.h"
+#include "telemetry_frame.h"
 bool comms_is_online(void);
-ER comms_send_event(const char *payload);
+ER comms_send_telemetry(const char *name, const char *payload);
+void comms_latch_event(UB events);
 #define ROBO_CRASH_LOG_H
 #define CRASH_MARK_OBSTACLE 0U
 enum { CRASH_OBSTACLE_PING, CRASH_OBSTACLE_DECIDE, CRASH_OBSTACLE_STOP,
@@ -45,6 +47,7 @@ static struct {
     bool status_missing, refuse_stop, release_during_servo, release_during_ping;
     bool online, always_busy, lose_status_after_completion, detect_line_on_next_distance;
     unsigned events, oversized_formats;
+    UB latched_events;
     char messages[2][COMMS_PAYLOAD_MAX];
 } rig;
 static jmp_buf task_end;
@@ -176,8 +179,10 @@ s5_us_status_t s5_us_ping(double *range, double *time)
     return rig.angle == S5_ANGLE_CENTRE_DEG ? rig.front_result : rig.side_result;
 }
 bool comms_is_online(void) { return rig.online; }
-ER comms_send_event(const char *payload)
+void comms_latch_event(UB events) { rig.latched_events |= events; }
+ER comms_send_telemetry(const char *name, const char *payload)
 {
+    CHECK(strcmp(name, "obstacle") == 0);
     CHECK(strlen(payload) < COMMS_PAYLOAD_MAX);
     if (rig.events < 2U) {
         (void)snprintf(rig.messages[rig.events], COMMS_PAYLOAD_MAX, "%s", payload);
@@ -228,6 +233,17 @@ static void report_buffer_test(void)
     CHECK(rig.events == 2U);
     CHECK(strstr(rig.messages[0], "width_mm=160") != NULL);
     CHECK(strstr(rig.messages[1], "avoid=right") != NULL);
+    CHECK(rig.latched_events == TF_EV_SCAN_DONE);
+
+    reset_rig(); /* An offline scan still latches the binary event for reconnect. */
+    report_scan(&scan);
+    CHECK(rig.events == 0U);
+    CHECK(rig.latched_events == TF_EV_SCAN_DONE);
+
+    reset_rig();
+    scan.b_valid = false;
+    report_scan(&scan);
+    CHECK(rig.events == 0U && rig.latched_events == 0U);
 }
 
 static const s5_detour_plan_t plan = {

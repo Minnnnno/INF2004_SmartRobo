@@ -1,6 +1,6 @@
 /*
  *	servo.h
- *	Subsystem 5 -- hobby servo on GP7 that carries the ultrasonic sensor.
+ *	Subsystem 5 -- hobby servo on GP15 that carries the ultrasonic sensor.
  *	Task context only.  Owner: obstacle_task.
  */
 
@@ -10,7 +10,7 @@
 #if defined(S5_DIAG) && (S5_DIAG == 6)
 #define S5_SERVO_PIN		14U	/* diagnostic: slice 7 channel A instead */
 #else
-#define S5_SERVO_PIN		7U	/* PWM slice 3 channel B, 50 Hz; conflicts with I2C1 SCL */
+#define S5_SERVO_PIN		15U	/* PWM slice 7 channel B, 50 Hz */
 #endif
 /* 1 if the sweep starts on the RIGHT: reverses the angle-to-pulse mapping */
 #define S5_SERVO_REVERSED	0

@@ -4,7 +4,7 @@
  *	driving round it back to the line.
  *
  *	obstacle_task (include/subsystems.h) is created by usermain at priority 4.
- *	Hardware: ultrasonic TRIG GP16 / ECHO GP17, mounted on the servo on GP7.
+ *	Hardware: ultrasonic TRIG GP16 / ECHO GP17, mounted on the servo on GP15.
  *	Active in production builds only; idle (pins untouched) in calibration
  *	profiles and in ROBO_IR_MONITOR.
  *
@@ -26,7 +26,7 @@
  *	The full decision (side, sideways move needed for each side, room
  *	beside the obstacle): s5_get_avoidance().
  *
- *	Two bounded MQTT events when online (robot/event):
+ *	Two bounded MQTT text diagnostics when online (robot/telemetry/obstacle):
  *	  "obstacle width_mm=<w> dist_mm=<d> offset_mm=<o> complete=<0|1>
  *	   position=<centre|left|right|unknown>"
  *	  "obstacle avoid=<left|right|none> shift_l_mm=<l> shift_r_mm=<r>"

@@ -64,7 +64,7 @@ ctest --test-dir build-host-cmake -R steering_checks --output-on-failure   # sin
 
 **GPIO IRQ 13** has a single shared dispatcher in [app_program/subsystem2/gpio_dispatch.c](app_program/subsystem2/gpio_dispatch.c). Register non-overlapping pin masks via `board_gpio_irq_register` during core-0 init; never call `tk_def_int(13)` directly.
 
-**Pins:** motors 8/9 and 10/11; encoders left A/B 2/3, right A/B 4/5; I2C1 SDA/SCL 6/7; servo 12; ultrasonic 16/17; line right/centre 26/27; barcode 28 (reserved, inactive); calibration buttons 20/21 (optional). GP23/24/25/29 belong to the Pico W radio; GP0/GP1 are reserved when the UART console is on. Encoder pins live in `include/board_config.h`; I2C1 pins in `device/i2c/sysdepend/rp2040/i2c_cnf_sysdep.h`. `board_pins_valid()` and `motor_test_init()` also hardcode the encoder pins, so a remap must update those and the host tests.
+**Pins:** motors 8/9 and 10/11; encoders left A/B 2/3, right A/B 4/5; I2C1 SDA/SCL 6/7; servo 15 (PWM slice 7B; diagnostic `S5_DIAG=6` uses GP14); ultrasonic 16/17; line right/centre 26/27; barcode 28 (reserved, inactive); calibration buttons 20/21 (optional). GP23/24/25/29 belong to the Pico W radio; GP0/GP1 are reserved when the UART console is on. Encoder pins live in `include/board_config.h`; I2C1 pins in `device/i2c/sysdepend/rp2040/i2c_cnf_sysdep.h`. `board_pins_valid()` and `motor_test_init()` also hardcode the encoder pins, so a remap must update those and the host tests.
 
 **Calibration constants** live in [app_program/subsystem2/board_config.c](app_program/subsystem2/board_config.c) (wheel diameter 65 mm, track 115 mm, ~2542/2543 counts/rev). `board_motion_config()` reports `hardware_confirmed=true` only in production; calibration profiles force it false.
 
