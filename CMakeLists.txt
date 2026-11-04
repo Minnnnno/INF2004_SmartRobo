@@ -10,6 +10,7 @@ option(ROBO_LINE_STEERING "Production encoder/PID line following with gentle dig
 option(ROBO_IR_MONITOR "Line-steering image that only prints IR readings; never requests motion" OFF)
 option(ROBO_SUBSYSTEM4 "Enable Buddy 4 IMU/terrain monitoring and its I2C1 driver" OFF)
 option(ROBO_SUBSYSTEM5 "Enable production obstacle detection and servo scanning" ON)
+option(ROBO_MOTION_FAULTS_DISABLED "Firmware: Buddy 2 never enters the latched FAULT state" ON)
 if(ROBO_HOST_TESTS)
     project(smart_robo_tests C)
     set(CMAKE_C_STANDARD 11)
@@ -23,6 +24,16 @@ if(ROBO_HOST_TESTS)
         target_link_libraries(motion_tests m)
     endif()
     add_test(NAME motion_tests COMMAND motion_tests)
+    add_executable(motion_faults_disabled_checks app_program/subsystem2/math.c app_program/subsystem2/motion.c
+        app_program/subsystem2/board_config.c app_program/subsystem2/encoder_capture.c
+        app_program/controller/vehicle_controller.c tests/test_motion_faults_disabled.c)
+    target_include_directories(motion_faults_disabled_checks PRIVATE include)
+    target_compile_definitions(motion_faults_disabled_checks PRIVATE ROBO_MOTION_FAULTS_DISABLED=1)
+    if(NOT MSVC)
+        target_compile_options(motion_faults_disabled_checks PRIVATE -Wall -Wextra -Werror -Wconversion -Wshadow)
+        target_link_libraries(motion_faults_disabled_checks m)
+    endif()
+    add_test(NAME motion_faults_disabled_checks COMMAND motion_faults_disabled_checks)
     add_executable(motor_test_checks app_program/subsystem2/motor_test.c
         app_program/subsystem2/board_config.c tests/test_motor_test.c)
     target_include_directories(motor_test_checks PRIVATE include tests)
@@ -249,6 +260,7 @@ target_compile_definitions(mtkernel_3 PRIVATE
     $<$<BOOL:${ROBO_PRODUCTION_BUILD}>:ROBO_PRODUCTION_BUILD=1>
     $<$<BOOL:${ROBO_LINE_STEERING}>:ROBO_LINE_STEERING=1>
     $<$<BOOL:${ROBO_IR_MONITOR}>:ROBO_IR_MONITOR=1>
+    $<$<BOOL:${ROBO_MOTION_FAULTS_DISABLED}>:ROBO_MOTION_FAULTS_DISABLED=1>
     ROBO_SUBSYSTEM4=$<BOOL:${ROBO_SUBSYSTEM4}>
     ROBO_SUBSYSTEM5=$<BOOL:${ROBO_SUBSYSTEM5}>
     _PICO_RP2040_
