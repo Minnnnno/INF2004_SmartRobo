@@ -517,6 +517,18 @@ static void drive(motion_t *m, double now, double dt, const bool progressed[2])
                                   sqrt(2.0 * m->config.acceleration * fabs(remaining))), remaining);
             }
         }
+        if (command.duration == 0.0) {
+            /* Keep the wheels matched on the way, not only at the end: a move stopped
+             * early never gets an endpoint correction. Half the slower wheel's speed at
+             * most, so neither wheel reverses; none once a wheel is at its goal. */
+            double progress = (command.value == 0.0) ? 1.0 :
+                              fmax(0.0, fmin(1.0, (left + right) / (2.0 * command.value)));
+            double slack = fmin(fabs(desired[0]), fabs(desired[1])) / 2.0;
+            double correction = fmax(-slack, fmin(slack, 2.0 * m->config.straight_gain *
+                ((right - left) - command.angle * m->config.track * progress)));
+            desired[0] += correction;
+            desired[1] -= correction;
+        }
         if (command.duration == 0.0 && reached) {
             motion_flag_set(m, MOTION_GOAL_PENDING, true);
             stopping(m, now);
