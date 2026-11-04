@@ -425,7 +425,7 @@ static void report_scan(const s5_scan_t *p_scan)
 		  s5_magnitude(offset), (offset >= 0) ? "left" : "right");
 	print_placement(&p_scan->placement);
 	print_avoid(p_scan);
-	comms_latch_event(TF_EV_SCAN_DONE);
+	comms_latch_event(TF_EV_OBSTACLE | TF_EV_SCAN_DONE);
 
 	if (comms_is_online()) {
 		char payload[COMMS_PAYLOAD_MAX];

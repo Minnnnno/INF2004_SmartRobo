@@ -106,7 +106,7 @@ A 5 V module would need a divider or a level shifter on ECHO.
   `obstacle width_mm=<w> dist_mm=<d> offset_mm=<o> complete=<0|1> position=<centre|left|right|unknown>`
   and `obstacle avoid=<left|right|none> shift_l_mm=<l> shift_r_mm=<r>`.
   A message that cannot fit is skipped with a console diagnostic.
-  Scan completion also latches `TF_EV_SCAN_DONE` for the binary `robot/event`
+  Scan completion also latches `TF_EV_OBSTACLE | TF_EV_SCAN_DONE` for the binary `robot/event`
   frame, including when the scan finishes offline.
 - Console:
 

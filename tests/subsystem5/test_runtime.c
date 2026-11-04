@@ -23,8 +23,8 @@ ER tk_dly_tsk(RELTIM delay);
 #include "../../app_program/subsystem1/comms_hooks.h"
 #include "telemetry_frame.h"
 bool comms_is_online(void);
-ER comms_send_telemetry(const char *name, const char *payload);
 void comms_latch_event(UB events);
+ER comms_send_telemetry(const char *name, const char *payload);
 #define ROBO_CRASH_LOG_H
 #define CRASH_MARK_OBSTACLE 0U
 enum { CRASH_OBSTACLE_PING, CRASH_OBSTACLE_DECIDE, CRASH_OBSTACLE_STOP,
@@ -47,8 +47,8 @@ static struct {
     bool status_missing, refuse_stop, release_during_servo, release_during_ping;
     bool online, always_busy, lose_status_after_completion, detect_line_on_next_distance;
     unsigned events, oversized_formats;
-    UB latched_events;
     char messages[2][COMMS_PAYLOAD_MAX];
+    UB latched_events;
 } rig;
 static jmp_buf task_end;
 static unsigned checks, failures;
@@ -179,7 +179,7 @@ s5_us_status_t s5_us_ping(double *range, double *time)
     return rig.angle == S5_ANGLE_CENTRE_DEG ? rig.front_result : rig.side_result;
 }
 bool comms_is_online(void) { return rig.online; }
-void comms_latch_event(UB events) { rig.latched_events |= events; }
+void comms_latch_event(UB events) { rig.latched_events = (UB)(rig.latched_events | events); }
 ER comms_send_telemetry(const char *name, const char *payload)
 {
     CHECK(strcmp(name, "obstacle") == 0);
@@ -231,14 +231,14 @@ static void report_buffer_test(void)
     report_scan(&scan);
     CHECK(rig.oversized_formats == 0U);
     CHECK(rig.events == 2U);
+    CHECK(rig.latched_events == (TF_EV_OBSTACLE | TF_EV_SCAN_DONE));
     CHECK(strstr(rig.messages[0], "width_mm=160") != NULL);
     CHECK(strstr(rig.messages[1], "avoid=right") != NULL);
-    CHECK(rig.latched_events == TF_EV_SCAN_DONE);
 
     reset_rig(); /* An offline scan still latches the binary event for reconnect. */
     report_scan(&scan);
     CHECK(rig.events == 0U);
-    CHECK(rig.latched_events == TF_EV_SCAN_DONE);
+    CHECK(rig.latched_events == (TF_EV_OBSTACLE | TF_EV_SCAN_DONE));
 
     reset_rig();
     scan.b_valid = false;
