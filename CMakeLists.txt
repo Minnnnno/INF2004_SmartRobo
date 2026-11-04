@@ -36,6 +36,15 @@ if(ROBO_HOST_TESTS)
         target_compile_options(line_test_checks PRIVATE -Wall -Wextra -Werror -Wconversion -Wshadow)
     endif()
     add_test(NAME line_test_checks COMMAND line_test_checks)
+    # Buddy 1: binary status frame, commands and snapshot mapping.
+    add_executable(buddy1_frame_checks tests/buddy1_frame/test_frame.c
+        app_program/subsystem1/telemetry_frame.c app_program/subsystem1/telemetry_map.c)
+    target_include_directories(buddy1_frame_checks PRIVATE include app_program/subsystem1)
+    if(NOT MSVC)
+        target_compile_options(buddy1_frame_checks PRIVATE -Wall -Wextra -Werror -Wconversion -Wshadow)
+        target_link_libraries(buddy1_frame_checks m)
+    endif()
+    add_test(NAME buddy1_frame_checks COMMAND buddy1_frame_checks)
     add_executable(steering_checks app_program/subsystem2/steering.c
         app_program/subsystem2/board_config.c tests/test_steering.c)
     target_include_directories(steering_checks PRIVATE include)

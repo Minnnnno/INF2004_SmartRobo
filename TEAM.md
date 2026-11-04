@@ -11,7 +11,9 @@
 Vehicle Controller: app_program/controller. Startup and seven application tasks:
 app_program/app_main.c. Kernel USB service is an additional template service task.
 Buddy 1's `comms.c` adds its periodic status task (priority 20), telemetry/event
-queues and the command buffer consumed by the Vehicle Controller. Legacy
+queues and the command buffer consumed by the Vehicle Controller. It publishes the
+shared status as a 21-byte binary frame at 10 Hz; every field's range and bit width
+is defined once in include/telemetry_frame.h (decode with tools/dashboard.py). Legacy
 producer/consumer/monitor demos are excluded from the robot build; their originals
 are preserved in docs/template_original/buddy1_demos.
 

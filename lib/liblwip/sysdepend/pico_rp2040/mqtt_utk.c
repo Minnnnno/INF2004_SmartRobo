@@ -36,8 +36,8 @@
 /* Inbound message staging. A publish arrives as one topic callback followed by
  * one or more data callbacks, so the topic has to be kept until the fragment
  * carrying MQTT_DATA_FLAG_LAST shows up. Both buffers are sized well past the
- * heartbeat this demo publishes; anything longer is truncated and flagged
- * rather than being allowed to run off the end. */
+ * 2-byte binary command; anything longer is truncated and flagged rather
+ * than being allowed to run off the end. */
 #define MQTT_UTK_RX_TOPIC_MAX   64
 #define MQTT_UTK_RX_DATA_MAX    128
 
@@ -75,25 +75,26 @@ static void incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags)
 
 	(void)arg;
 
+	/* Commands are binary (include/telemetry_frame.h): keep the raw
+	 * bytes, and print them as hex so the console is not scrambled. */
 	for(i = 0; i < len; i++) {
-		if(rx_len < (MQTT_UTK_RX_DATA_MAX - 1)) {
-			/* The console is a terminal -- keep raw bytes from a
-			 * payload this demo did not publish from scrambling it. */
-			UB c = data[i];
-			rx_data[rx_len++] = (c >= 0x20 && c < 0x7f)? c: '.';
+		if(rx_len < MQTT_UTK_RX_DATA_MAX) {
+			rx_data[rx_len++] = data[i];
 		} else {
 			rx_truncated = 1;
 		}
 	}
 
 	if((flags & MQTT_DATA_FLAG_LAST) != 0) {
-		rx_data[rx_len] = '\0';
-		tm_printf((UB*)"mqtt: RX [%s] \"%s\"%s\n", rx_topic, rx_data,
-			  rx_truncated? " (truncated)": "");
+		tm_printf((UB*)"mqtt: RX [%s] %d bytes:", rx_topic, (int)rx_len);
+		for(i = 0; i < rx_len && i < 8; i++) {
+			tm_printf((UB*)" %02x", (int)rx_data[i]);
+		}
+		tm_printf((UB*)"%s\n", rx_truncated? " (truncated)": "");
 
 		/* The command topic is the only subscription. A truncated
-		 * message is handed over empty, so it is rejected. */
-		comms_hook_command((const char*)rx_data, rx_truncated? 0: rx_len);
+		 * message is passed with length -1, so it is rejected. */
+		comms_hook_command(rx_data, rx_truncated? -1: (int)rx_len);
 	}
 }
 
@@ -123,7 +124,7 @@ static void tick_timeout(void *arg)
 	static unsigned int	count = 0;
 	static u8_t		ticks = 0;
 	char			topic[COMMS_TOPIC_MAX];
-	char			payload[COMMS_PAYLOAD_MAX];
+	unsigned char		payload[COMMS_PAYLOAD_MAX];
 	int			len, qos, i;
 
 	(void)arg;

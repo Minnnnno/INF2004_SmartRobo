@@ -11,7 +11,6 @@
 #ifndef SUBSYSTEM1_H
 #define SUBSYSTEM1_H
 
-#include "../app.h"
 #include "comms.h"			/* IF-06/07: the communication API */
 
 #define S1_PRI_COMMS	20		/* lowest application task (TEAM.md) */
