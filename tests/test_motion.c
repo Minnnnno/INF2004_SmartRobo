@@ -468,7 +468,7 @@ static void production_line_integration_tests(void)
     memset(&r, 0, sizeof(r));
     motion_config_t config = board_motion_config();
     CHECK(config.hardware_confirmed && !config.manual_enabled);
-    CHECK(config.max_output == 0.25 && motion_config_valid(&config));
+    CHECK(config.max_output == 1.0 && motion_config_valid(&config));
     r.sample.reliable = true;
     motion_init(&r.m, &config, r.sample, 0.0, true);
     CHECK(r.m.status.state == INITIALISING && r.m.status.inhibited);
@@ -495,7 +495,8 @@ static void production_line_integration_tests(void)
         tick(&r, true);
         robot_publish(&bus, &r.m, r.now);
         CHECK(r.m.status.state == DRIVING && r.m.status.fault == F_NONE);
-        CHECK(fabs(r.m.status.output[0]) <= 0.25 && fabs(r.m.status.output[1]) <= 0.25);
+        CHECK(fabs(r.m.status.output[0]) <= config.max_output &&
+              fabs(r.m.status.output[1]) <= config.max_output);
         CHECK(bus.status.owner_valid && bus.status.owner == SOURCE_LINE);
     }
     robot_control(&bus, CONTROL_STOP, false, false);

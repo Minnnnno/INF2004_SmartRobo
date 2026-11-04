@@ -38,7 +38,7 @@ motion_config_t board_motion_config(void)
          * speeds were negative with encoder signs {+1,-1}; invert feedback only. */
         .motor_sign = {1, -1}, .encoder_sign = {-1, 1}, .quadrature = {true, true},
         /* Provisional tuning only; validate on the actual robot. */
-        .max_speed = 0.25, .acceleration = 0.3, .max_output = 0.25,
+        .max_speed = 0.25, .acceleration = 0.3, .max_output = 1.0,
         .period = 0.01, .max_dt = 0.05,
         .distance_tolerance = 0.01, .angle_tolerance = 0.05,
         .stopped_speed = 0.005, .settle_time = 0.3,

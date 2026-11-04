@@ -25,7 +25,7 @@ CMake is the only supported route (the `build_make/` GNU Make files and the `mak
 
 | Option | Purpose | Extra UF2 |
 |---|---|---|
-| (none) | Production: `ROBO_PRODUCTION_BUILD` defined, motion enabled, output capped at 25% | `buddy2_production.uf2` |
+| (none) | Production: `ROBO_PRODUCTION_BUILD` defined, motion enabled, full PWM range | `buddy2_production.uf2` |
 | `ROBO_LINE_STEERING=ON` | Production line following via PID steering | `buddy2_line_steering.uf2` |
 | `ROBO_IR_MONITOR=ON` (+ line steering) | Prints IR readings only, never moves | — |
 | `ROBO_MANUAL_CONSOLE=ON` | Armed serial calibration console | — |
@@ -72,6 +72,6 @@ ctest --test-dir build-host-cmake -R steering_checks --output-on-failure   # sin
 
 ## Safety conventions
 
-- Startup always leaves motors stopped; manual PWM is disabled in production; output cap is 25%. Don't relax these limits or the CMake profile guards without explicit user direction.
+- Startup always leaves motors stopped; manual PWM is disabled in production; production output may use the full PWM range (the 25% cap was removed on 4 November 2026). Don't relax these limits or the CMake profile guards without explicit user direction.
 - Flash with motor power disconnected (hold BOOTSEL, copy UF2 to `RPI-RP2`).
 - Kernel/driver code under `kernel/`, `lib/`, `device/` is imported template code with its own licenses; `docs/template_original/` and `docs/previous_integration/` are archived references, not built.

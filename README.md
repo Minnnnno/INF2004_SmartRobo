@@ -29,8 +29,8 @@ The controller consumes Buddy 1 start/stop/estop messages. WiFi/MQTT radio setup
 still requires an explicit network build and local credentials.
 
 **Production motion is enabled after the user's hardware confirmation.**
-Startup stays stopped, manual PWM remains disabled, and production output is
-capped at 25%. Calibration profiles retain inhibited production control.
+Startup stays stopped, manual PWM remains disabled, and production output can
+use the full 100% PWM range. Calibration profiles retain inhibited production control.
 See [production firmware and subsystem integration](docs/PRODUCTION_INTEGRATION.md).
 Measured encoder counts/revolution are 2542.4 left and 2543.4 right.
 For the separate one-second, 25% motor-test firmware and serial commands, see
