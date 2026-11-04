@@ -118,7 +118,7 @@ bool s5_pass_observe(s5_pass_t *p_pass, const s5_detour_plan_t *p_plan,
 double s5_pass_clear_x(const s5_pass_t *p_pass)
 {
 	return fmax(p_pass->rear_mm, p_pass->end_mm) +
-	       hypot(S5_REAR_MM, S5_ROBOT_HALF_WIDTH_MM) + S5_PASS_MARGIN_MM;
+	       hypot(S5_REAR_MM, S5_ROBOT_HALF_WIDTH_MM) + S5_PASS_MARGIN_MM - S5_PASS_TRIM_MM;
 }
 
 double s5_return_length(double y_mm)

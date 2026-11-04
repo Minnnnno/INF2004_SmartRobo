@@ -534,15 +534,26 @@ static void check_pass(const s5_detour_plan_t *p_plan, double depth_mm, unsigned
 	double		rear_reach = hypot(S5_REAR_MM, S5_ROBOT_HALF_WIDTH_MM);
 	double		end = p_plan->face_mm + depth_mm;
 	double		turn_in;
+	double		past;
+	double		gap = fabs(p_plan->shift_mm - p_plan->edge_mm);
+	double		back = S5_RETURN_DEG * DEG_TO_RAD;
 
 	check(simulate_pass(p_plan, depth_mm, miss_every, far_mm, &pass), p_name);
-	turn_in = s5_pass_clear_x(&pass) - rear_reach - S5_PASS_MARGIN_MM;
-	/* turning in keeps the rear corners the margin past the true end ... */
+	/* the end is never estimated short of the true end ... */
+	turn_in = s5_pass_clear_x(&pass) + S5_PASS_TRIM_MM - rear_reach - S5_PASS_MARGIN_MM;
 	check(turn_in >= end - 1e-9, p_name);
-	/* ... without driving more than a step further than needed */
+	/* ... nor more than a step further than needed */
 	check(turn_in <= end + S5_PASS_STEP_MM + 1e-9, p_name);
-	printf("ok    %-34s end %4.0f mm, estimate %4.0f mm, %u echoes, turn in at x %4.0f\n",
-	       p_name, end, fmax(pass.rear_mm, pass.end_mm), pass.seen, s5_pass_clear_x(&pass));
+	/* Worst case, the diagonal got no further out than planned.  With the
+	   forward trim, what keeps the obstacle's rear corner off the robot is
+	   the sideways gap: the rear corners turning in place ... */
+	past = s5_pass_clear_x(&pass) - end;
+	check(hypot(past, gap) >= rear_reach, p_name);
+	/* ... and the body driving back in along the return heading. */
+	check(past * sin(back) + gap * cos(back) >= S5_ROBOT_HALF_WIDTH_MM, p_name);
+	printf("ok    %-34s end %4.0f mm, estimate %4.0f mm, %u echoes, turn in at x %4.0f, return clears by %3.0f mm\n",
+	       p_name, end, fmax(pass.rear_mm, pass.end_mm), pass.seen, s5_pass_clear_x(&pass),
+	       past * sin(back) + gap * cos(back) - S5_ROBOT_HALF_WIDTH_MM);
 }
 
 static void test_detour_pass(void)

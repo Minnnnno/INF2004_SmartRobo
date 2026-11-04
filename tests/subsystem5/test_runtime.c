@@ -39,13 +39,28 @@ static void crash_mark(UW mark, UW value) { (void)mark; (void)value; }
 
 static struct {
     robot_status_t status;
+    encoder_sample_t encoders;
+    char encoder_log[4096];
+    size_t encoder_log_length;
     double now, stop_at;
     s5_us_status_t side_result, front_result;
+    bool angle_override[181];
+    s5_us_status_t angle_result[181];
+    double angle_range[181];
+    unsigned angle_reads[181], override_after_distance, look_action;
+    double largest_distance, distance_scale;
     unsigned moves, pings, servo_moves, releases, distance_calls, turn_calls;
     unsigned busy_distance_call, busy_turn_call, retry_action;
     int angle;
     bool status_missing, refuse_stop, release_during_servo, release_during_ping;
     bool online, always_busy, lose_status_after_completion, detect_line_on_next_distance;
+    bool lose_line_on_stop, line_back_on_reverse;
+    unsigned both_black_on_distance_call, one_black_on_distance_call;
+    double clear_line_at_s;
+    double drive_left, drive_speed; /* A long move runs in time, not in one call. */
+    double fault_at_s;
+    uint32_t drive_id;
+    unsigned moving_pings, stops;
     unsigned events, oversized_formats;
     char messages[2][COMMS_PAYLOAD_MAX];
     UB latched_events;
@@ -62,9 +77,11 @@ static void reset_rig(void)
     rig.status.motion.hold = true;
     rig.status.motion.stationary = true;
     rig.status.line.available = true;
+    rig.encoders.reliable = true;
     rig.angle = S5_ANGLE_CENTRE_DEG;
     rig.front_result = S5_US_NO_ECHO;
     rig.side_result = S5_US_NO_ECHO;
+    rig.distance_scale = 1.0;
     s5_blocked = false;
     s5_decided = false;
     s5_sensor_ok = false;
@@ -75,6 +92,21 @@ ER tk_dly_tsk(RELTIM delay)
 {
     rig.now += (double)delay / 1000.0;
     rig.status.line.timestamp = rig.now;
+    if (rig.fault_at_s > 0.0 && rig.now >= rig.fault_at_s) { rig.status.motion.fault = F_FEEDBACK; }
+    if (rig.clear_line_at_s > 0.0 && rig.now >= rig.clear_line_at_s) {
+        rig.clear_line_at_s = 0.0;
+        rig.status.line.values[1] = 0.0;
+    }
+    if (rig.drive_left > 0.0) {
+        double step = fmin(rig.drive_left, rig.drive_speed * (double)delay / 1000.0);
+        rig.status.motion.centre += step;
+        rig.drive_left -= step;
+        if (rig.drive_left <= 0.0) {
+            rig.status.last_event = (motion_event_t){EV_COMPLETE, rig.drive_id, 0U, F_NONE};
+            rig.status.motion.state = READY;
+            rig.status.motion.stationary = true;
+        }
+    }
     if (rig.retry_action != 0U && rig.turn_calls == 1U && rig.busy_turn_call == 1U) {
         if (rig.retry_action == 1U) { rig.status.motion.hold = true; }
         if (rig.retry_action == 2U) { ++rig.status.motion.generation; }
@@ -86,6 +118,7 @@ ER tk_dly_tsk(RELTIM delay)
     return 0;
 }
 double motion_hal_time(void) { return rig.now; }
+encoder_sample_t motion_hal_sample(void) { return rig.encoders; }
 bool motion_get_status(robot_status_t *status)
 {
     if (rig.status_missing) { return false; }
@@ -98,9 +131,16 @@ bool motion_get_status(robot_status_t *status)
 }
 void motion_stop(void)
 {
+    ++rig.stops;
+    rig.drive_left = 0.0;
     rig.status.motion.hold = true;
     rig.status.motion.stationary = !rig.refuse_stop;
     rig.status.motion.state = rig.refuse_stop ? STOPPING : STOPPED;
+    if (rig.lose_line_on_stop) {
+        rig.status.line.values[LINE_VALUE_BOTH_BLACK] = 0.0;
+        rig.status.line.values[1] = 0.0;
+        rig.status.motion.centre += 0.015; /* Braked past the line. */
+    }
 }
 void motion_controller_release(bool checks_ok)
 {
@@ -114,17 +154,40 @@ static motion_result_t finish_move(uint32_t id, double metres, double degrees)
 {
     ++rig.moves;
     rig.status.motion.id = id;
-    rig.status.motion.centre += metres;
+    rig.status.motion.centre += metres * rig.distance_scale;
     rig.status.motion.heading += degrees * S5_DEG_TO_RAD;
+    for (unsigned wheel = 0U; wheel < 2U; ++wheel) {
+        double travel = metres * rig.distance_scale + (wheel == 0U ? -1.0 : 1.0) *
+                        degrees * S5_DEG_TO_RAD * 0.115 / 2.0;
+        rig.encoders.count[wheel] += (uint32_t)(int32_t)round(travel * 10000.0);
+    }
     rig.status.last_event = (motion_event_t){EV_COMPLETE, id, 0U, F_NONE};
     return R_OK;
 }
 motion_result_t motion_steer_distance(request_source_t source, uint32_t id,
                                      double metres, double degrees, double speed)
 {
-    (void)source; (void)speed;
+    (void)source;
     ++rig.distance_calls;
+    if (fabs(metres) > rig.largest_distance) { rig.largest_distance = fabs(metres); }
     if (rig.always_busy || rig.distance_calls == rig.busy_distance_call) { return R_BUSY; }
+    if (rig.distance_calls == rig.both_black_on_distance_call) {
+        rig.status.line.values[1] = 1.0;
+        rig.status.line.values[LINE_VALUE_BOTH_BLACK] = 1.0;
+    }
+    if (rig.distance_calls == rig.one_black_on_distance_call) { rig.status.line.values[1] = 1.0; }
+    if (rig.line_back_on_reverse && metres < 0.0) { rig.status.line.values[1] = 1.0; }
+    if ((fabs(metres) >= 0.9) || (rig.distance_calls == rig.one_black_on_distance_call)) {
+        /* Only the pass is this long; crossing a line takes time too. */
+        ++rig.moves;
+        rig.drive_left = fabs(metres);
+        rig.drive_speed = speed;
+        rig.drive_id = id;
+        rig.status.motion.id = id;
+        rig.status.motion.state = DRIVING;
+        rig.status.motion.stationary = false;
+        return R_OK;
+    }
     if (rig.detect_line_on_next_distance) {
         rig.detect_line_on_next_distance = false;
         /* Starting 190 mm to the side at 45 deg, the front IR reaches the
@@ -134,6 +197,7 @@ motion_result_t motion_steer_distance(request_source_t source, uint32_t id,
         rig.status.motion.state = DRIVING;
         rig.status.motion.stationary = false;
         rig.status.line.values[1] = 1.0;
+        rig.status.line.values[LINE_VALUE_BOTH_BLACK] = 1.0;
         return R_OK;
     }
     return finish_move(id, metres, degrees);
@@ -162,12 +226,25 @@ void s5_servo_move(int angle)
         rig.status.motion.stationary = false;
         rig.status.motion.state = DRIVING;
     }
+    if (rig.look_action == 1U) { motion_stop(); }
+    if (rig.look_action == 2U) { ++rig.status.motion.generation; }
+    if (rig.look_action == 3U) { rig.status.motion.stationary = false; }
+    if (rig.look_action == 4U) { rig.status.motion.fault = F_FEEDBACK; }
+    rig.look_action = 0U;
+}
+unsigned s5_servo_aim(int angle)
+{
+    rig.angle = angle;
+    ++rig.servo_moves;
+    return 380U;
 }
 int s5_servo_angle(void) { return rig.angle; }
 bool s5_us_init(void) { return true; }
 s5_us_status_t s5_us_ping(double *range, double *time)
 {
     ++rig.pings;
+    ++rig.angle_reads[rig.angle];
+    if (rig.status.motion.state == DRIVING) { ++rig.moving_pings; }
     (void)tk_dly_tsk(S5_US_CYCLE_MS);
     *time = rig.now;
     *range = 100.0;
@@ -175,6 +252,10 @@ s5_us_status_t s5_us_ping(double *range, double *time)
         rig.status.motion.hold = false;
         rig.status.motion.stationary = false;
         rig.status.motion.state = DRIVING;
+    }
+    if (rig.angle_override[rig.angle] && rig.distance_calls >= rig.override_after_distance) {
+        *range = rig.angle_range[rig.angle];
+        return rig.angle_result[rig.angle];
     }
     return rig.angle == S5_ANGLE_CENTRE_DEG ? rig.front_result : rig.side_result;
 }
@@ -190,7 +271,20 @@ ER comms_send_telemetry(const char *name, const char *payload)
     ++rig.events;
     return 0;
 }
-INT tm_printf(const UB *format, ...) { (void)format; return 0; }
+INT tm_printf(const UB *format, ...)
+{
+    va_list args;
+    int length = 0;
+    if (strstr((const char *)format, " enc ") == NULL) { return 0; }
+    size_t room = sizeof(rig.encoder_log) - rig.encoder_log_length;
+    va_start(args, format);
+    length = vsnprintf(rig.encoder_log + rig.encoder_log_length, room, (const char *)format, args);
+    va_end(args);
+    if (length > 0) {
+        rig.encoder_log_length += (size_t)length < room ? (size_t)length : room - 1U;
+    }
+    return length;
+}
 INT tm_sprintf(UB *buffer, const UB *format, ...)
 {
     int result;
@@ -259,23 +353,157 @@ static void detour_sensor_tests(void)
         reset_rig();
         rig.side_result = faults[i];
         CHECK(!s5_detour_run(&plan));
-        CHECK(rig.moves == 3U); /* No forward step after the failed side look. */
+        CHECK(rig.moves == 1U && rig.distance_calls == 0U); /* Guard fails before diagonal travel. */
 
         reset_rig();
-        rig.side_result = S5_US_OK;
         rig.front_result = faults[i];
         CHECK(!s5_detour_run(&plan));
-        CHECK(rig.moves == 3U); /* No forward step after a failed front look. */
+        CHECK(rig.moves == 1U && rig.distance_calls == 0U);
     }
     reset_rig();
     CHECK(!s5_detour_run(&plan)); /* No line in this rig: return eventually fails. */
     CHECK(rig.moves > 3U);       /* A normal no-echo still permits passing. */
 
     reset_rig();
+    rig.status.motion.hold = false;
+    rig.status.motion.state = READY;
     rig.front_result = S5_US_OK;
     /* Raw 100 mm = 130 mm from the axis. Required room is travel + 90 mm. */
     CHECK(path_clear(39.0));
     CHECK(!path_clear(40.0));
+}
+
+static void ready_rig(void)
+{
+    reset_rig();
+    rig.status.motion.hold = false;
+    rig.status.motion.state = READY;
+    s5_heading0 = s5_x = s5_y = 0.0;
+}
+
+static void echo_at(int angle, double range)
+{
+    rig.angle_override[angle] = true;
+    rig.angle_result[angle] = S5_US_OK;
+    rig.angle_range[angle] = range;
+}
+
+static void encoder_logging_tests(void)
+{
+    ready_rig();
+    s5_move_id = S5_ID_LAST;
+    rig.encoders.count[0] = UINT32_MAX - 4U;
+    rig.encoders.count[1] = 100U;
+    CHECK(straight(10.0, false, NULL) == S5_MOVE_DONE);
+    CHECK(strstr(rig.encoder_log, "phase=move-before id=5100 L=4294967291 R=100") != NULL);
+    CHECK(strstr(rig.encoder_log, "phase=move-after id=5100 L=95 R=200") != NULL);
+    CHECK(strstr(rig.encoder_log, "delta_L=100 delta_R=100 result=done") != NULL);
+
+    ready_rig();
+    rig.distance_scale = 0.0;
+    CHECK(straight(5.0, false, NULL) == S5_MOVE_DONE);
+    CHECK(strstr(rig.encoder_log, "delta_L=0 delta_R=0 result=done") != NULL);
+
+    ready_rig();
+    CHECK(turn_to(-45.0) == S5_MOVE_DONE);
+    CHECK(strstr(rig.encoder_log, "delta_L=452 delta_R=-452 result=done") != NULL);
+
+    ready_rig();
+    rig.always_busy = true;
+    CHECK(straight(50.0, false, NULL) == S5_MOVE_FAILED);
+    CHECK(strstr(rig.encoder_log, "delta_L=0 delta_R=0 result=failed") != NULL);
+
+    ready_rig();
+    (void)s5_log_encoders("scan-before", 0U);
+    (void)s5_log_encoders("scan-after", 0U);
+    CHECK(strstr(rig.encoder_log, "phase=scan-before id=0") != NULL);
+    CHECK(strstr(rig.encoder_log, "phase=scan-after id=0") != NULL);
+}
+
+static void clearance_tests(void)
+{
+    ready_rig();
+    CHECK(clearance_sweep(50.0, "test"));
+    CHECK(rig.moves == 0U);
+    CHECK(rig.angle_reads[60] > 0U && rig.angle_reads[90] > 0U && rig.angle_reads[120] > 0U);
+    CHECK(rig.angle_reads[75] == 0U && rig.angle_reads[105] == 0U);
+
+    /* Centre is clear, but either front corner can still be obstructed. */
+    for (int angle = 60; angle <= 120; angle += 30) {
+        ready_rig();
+        echo_at(angle, 100.0);
+        CHECK(!clearance_sweep(50.0, "corner"));
+        CHECK(rig.moves == 0U);
+    }
+    ready_rig();
+    echo_at(60, 1000.0); /* Distant echoes do not block the next short move. */
+    CHECK(clearance_sweep(50.0, "far"));
+
+    for (unsigned action = 1U; action <= 4U; ++action) {
+        ready_rig();
+        rig.look_action = action;
+        CHECK(!clearance_sweep(50.0, "interrupted"));
+        CHECK(rig.moves == 0U && rig.pings == 0U);
+    }
+    ready_rig();
+    rig.release_during_ping = true;
+    CHECK(!clearance_sweep(50.0, "moved"));
+    CHECK(rig.moves == 0U);
+    ready_rig();
+    rig.status_missing = true;
+    CHECK(!clearance_sweep(50.0, "missing-status"));
+    CHECK(rig.pings == 0U);
+
+    for (unsigned side = 0U; side < 2U; ++side) {
+        s5_detour_plan_t p = plan;
+        int obstacle_angle = side == 0U ? 20 : 160;
+        p.side = side == 0U ? S5_AVOID_RIGHT : S5_AVOID_LEFT;
+        p.turn_deg = side == 0U ? -60.0 : 60.0;
+        p.shift_mm = side == 0U ? -190.0 : 190.0;
+        ready_rig();
+        CHECK(go_out(&p));
+        CHECK(rig.distance_calls == 1U && rig.turn_calls == 2U); /* One leg, no stop on the diagonal. */
+        CHECK(rig.largest_distance <= S5_DIAGONAL_STEP_MM / 1000.0);
+        CHECK(rig.angle_reads[obstacle_angle] > 0U);
+        CHECK(rig.angle_reads[180 - obstacle_angle] == 0U);
+        CHECK(fabs(s5_y - (p.diagonal_mm + S5_DIAGONAL_EXTRA_MM) * sin(p.turn_deg * S5_DEG_TO_RAD)) < 0.01);
+
+        ready_rig();
+        echo_at(90, 100.0);
+        CHECK(!go_out(&p)); /* Blocked immediately after turning: no diagonal travel. */
+        CHECK(rig.turn_calls == 1U && rig.distance_calls == 0U);
+
+        ready_rig();
+        echo_at(90, 40.0);
+        rig.override_after_distance = 1U;
+        p.diagonal_mm = 2.0 * S5_DIAGONAL_STEP_MM; /* Long enough to need a second section. */
+        CHECK(!go_out(&p)); /* A new obstruction stops the next diagonal section. */
+        CHECK(rig.distance_calls == 1U && rig.turn_calls == 1U);
+        p.diagonal_mm = plan.diagonal_mm;
+
+        ready_rig();
+        echo_at(90, 100.0);
+        rig.override_after_distance = 1U;
+        CHECK(!go_out(&p)); /* Parallel sweep refuses forward passing. */
+        CHECK(rig.distance_calls == 1U && rig.turn_calls == 2U);
+
+        ready_rig();
+        echo_at(obstacle_angle, 70.0); /* ~94 mm sideways: less than 80 + 50 mm. */
+        CHECK(!go_out(&p));
+        CHECK(rig.distance_calls == 1U && rig.turn_calls == 2U);
+        ready_rig();
+        echo_at(obstacle_angle, 150.0); /* ~169 mm sideways: enough clearance. */
+        CHECK(go_out(&p));
+
+        ready_rig();
+        rig.distance_scale = 0.9; /* Undershoot is not compensated: same steps as a perfect run. */
+        CHECK(go_out(&p));
+
+        ready_rig();
+        rig.distance_scale = 0.0;
+        CHECK(!go_out(&p));
+        CHECK(rig.distance_calls == 1U && rig.turn_calls == 1U);
+    }
 }
 
 static void scan_tests(void)
@@ -331,6 +559,16 @@ static void scan_tests(void)
     CHECK(rig.status.motion.hold); /* Loss of the front sensor must hold motion. */
 }
 
+static void pass_ready(void)
+{
+    reset_rig();
+    rig.status.motion.hold = false;
+    rig.status.motion.state = READY;
+    s5_heading0 = 0.0;
+    s5_x = 400.0;
+    s5_y = plan.shift_mm;
+}
+
 static void pass_return_transition_tests(void)
 {
     for (unsigned side = 0U; side < 2U; ++side) {
@@ -344,16 +582,57 @@ static void pass_return_transition_tests(void)
         s5_heading0 = 0.0;
         s5_x = 400.0;
         s5_y = p.shift_mm;
-        /* First 50 mm step succeeds; the rear-clearance submission collides
-         * once with the status mutex. No command was queued on R_BUSY. */
-        rig.busy_distance_call = 2U;
+        /* The submission collides once with the status mutex. No command
+         * was queued on R_BUSY. */
+        rig.busy_distance_call = 1U;
         CHECK(pass_obstacle(&p));
-        CHECK(rig.distance_calls == 3U && rig.moves == 2U);
-        CHECK(s5_x > 600.0);
+        CHECK(rig.distance_calls == 2U && rig.moves == 1U);
+        CHECK(s5_x > 400.0 + S5_PASS_STEP_MM);
+        /* One stop, at the end: every look happened on the move. */
+        CHECK(rig.stops == 1U && rig.releases == 1U);
+        CHECK(rig.moving_pings == rig.pings && rig.pings > 0U);
+        CHECK(rig.angle_reads[S5_ANGLE_CENTRE_DEG] > 0U); /* It still looks ahead. */
         /* Same transient collision when starting the inward turn. */
         rig.busy_turn_call = 1U;
         CHECK(turn_to(side == 0U ? S5_RETURN_DEG : -S5_RETURN_DEG) == S5_MOVE_DONE);
-        CHECK(rig.turn_calls == 2U && rig.moves == 3U);
+        CHECK(rig.turn_calls == 2U && rig.moves == 2U);
+
+        /* Something appears ahead: it stops while still moving. */
+        pass_ready();
+        s5_y = p.shift_mm;
+        echo_at(S5_ANGLE_CENTRE_DEG, 100.0);
+        CHECK(!pass_obstacle(&p));
+        CHECK(rig.status.motion.hold && rig.stops == 1U && rig.distance_calls == 1U);
+
+        /* The front sensor dies mid-pass. */
+        pass_ready();
+        s5_y = p.shift_mm;
+        rig.front_result = S5_US_NO_PULSE;
+        CHECK(!pass_obstacle(&p));
+        CHECK(rig.status.motion.hold);
+
+        /* The side sensor dies mid-pass. */
+        pass_ready();
+        s5_y = p.shift_mm;
+        rig.side_result = S5_US_BUSY;
+        CHECK(!pass_obstacle(&p));
+        CHECK(rig.status.motion.hold);
+
+        /* An endless obstacle: gives up after S5_PASS_MAX_MM, stopped. */
+        pass_ready();
+        s5_y = p.shift_mm;
+        rig.side_result = S5_US_OK;
+        CHECK(!pass_obstacle(&p));
+        CHECK(rig.status.motion.hold && s5_x - 400.0 >= S5_PASS_MAX_MM);
+        CHECK(s5_x - 400.0 <= S5_PASS_MAX_MM + 2.0 * S5_PASS_STEP_MM);
+
+        /* A fault while the servo swings is noticed before the next ping. */
+        pass_ready();
+        s5_y = p.shift_mm;
+        rig.side_result = S5_US_OK;
+        rig.fault_at_s = rig.now + 0.1;
+        CHECK(!pass_obstacle(&p));
+        CHECK(rig.pings == 0U);
     }
     reset_rig();
     rig.status.motion.hold = false;
@@ -405,15 +684,135 @@ static void pass_return_transition_tests(void)
         s5_y = side == 0U ? -190.0 : 190.0;
         rig.detect_line_on_next_distance = true;
         CHECK(return_to_line(&p));
-        CHECK(rig.moves == 4U && rig.releases == 1U);
-        CHECK(fabs(s5_y) < 0.1 && fabs(rig.status.motion.heading) < 1e-9);
+        /* Turn in and drive: no drive on and no turn back once the line is found. */
+        CHECK(rig.moves == 2U && rig.releases == 1U && rig.turn_calls == 1U);
+        CHECK(fabs(fabs(rig.status.motion.heading) - S5_RETURN_DEG * S5_DEG_TO_RAD) < 1e-9);
         CHECK(!rig.status.motion.hold && rig.status.motion.state == READY);
     }
 }
 
+static void line_interrupt_tests(void)
+{
+    /* Whole detour: the diagonal is call 1, the pass call 2. */
+    reset_rig();
+    rig.both_black_on_distance_call = 2U;
+    CHECK(s5_detour_run(&plan));
+    CHECK(s5_rejoined && !s5_rejoin_armed);
+    CHECK(rig.distance_calls == 2U);
+    CHECK(rig.turn_calls == 2U); /* Out and parallel: no turn back to the line. */
+    CHECK(!rig.status.motion.hold && rig.status.motion.state == READY);
+
+    /* Not armed on the way out: black on the diagonal does not interrupt it. */
+    reset_rig();
+    rig.status.motion.hold = false;
+    rig.status.motion.state = READY;
+    s5_heading0 = 0.0;
+    s5_x = s5_y = 0.0;
+    rig.status.line.values[LINE_VALUE_BOTH_BLACK] = 1.0;
+    CHECK(go_out(&plan));
+    CHECK(rig.distance_calls == 1U && rig.turn_calls == 2U && rig.releases == 0U);
+
+    /* Armed on the way back: hands over where it is, even far from where odometry
+     * puts the line, without driving on or turning back to the original heading. */
+    pass_ready();
+    s5_x = 650.0;
+    s5_y = -700.0;
+    rig.both_black_on_distance_call = 1U;
+    CHECK(return_to_line(&plan));
+    CHECK(rig.distance_calls == 1U && rig.turn_calls == 1U && rig.stops == 1U && rig.releases == 1U);
+    CHECK(!rig.status.motion.hold && rig.status.motion.state == READY && !s5_rejoin_armed);
+    CHECK(strstr(rig.encoder_log, "result=rejoin") != NULL);
+
+    /* Braked past it on the way back: reverses onto it, then hands over. */
+    pass_ready();
+    s5_x = 650.0;
+    s5_y = -700.0;
+    rig.both_black_on_distance_call = 1U;
+    rig.lose_line_on_stop = true;
+    rig.line_back_on_reverse = true;
+    CHECK(return_to_line(&plan));
+    CHECK(rig.distance_calls == 2U && rig.releases == 1U);
+    CHECK(!rig.status.motion.hold && rig.status.motion.state == READY);
+
+    /* One sensor only is not enough to stop... */
+    pass_ready();
+    s5_x = 650.0;
+    s5_y = 80.0 * sin(45.0 * S5_DEG_TO_RAD) * -1.0 - 30.0; /* Sensors inside the window. */
+    rig.one_black_on_distance_call = 1U;
+    rig.clear_line_at_s = rig.now + 1.0;
+    /* ...until it comes off the line without both ever being black: it backs up. */
+    rig.line_back_on_reverse = true;
+    CHECK(return_to_line(&plan));
+    CHECK(rig.distance_calls == 2U && rig.stops == 1U);
+    CHECK(strstr(rig.encoder_log, "result=line") != NULL);
+
+    /* ...and if the line does not come back, it holds. */
+    pass_ready();
+    s5_x = 650.0;
+    s5_y = 80.0 * sin(45.0 * S5_DEG_TO_RAD) * -1.0 - 30.0;
+    rig.one_black_on_distance_call = 1U;
+    rig.clear_line_at_s = rig.now + 1.0;
+    CHECK(!return_to_line(&plan));
+    CHECK(rig.distance_calls == 2U && rig.status.motion.hold == false);
+
+    /* One sensor far from where odometry puts the line is something else. */
+    pass_ready();
+    s5_x = 650.0;
+    s5_y = -800.0;
+    rig.one_black_on_distance_call = 1U;
+    rig.clear_line_at_s = rig.now + 2.0;
+    CHECK(!return_to_line(&plan));
+    CHECK(rig.distance_calls == 1U && rig.stops == 0U);
+
+    /* Standing on it at the start of the stage: no stop, no look, no move. */
+    pass_ready();
+    rig.status.line.values[LINE_VALUE_BOTH_BLACK] = 1.0;
+    CHECK(pass_obstacle(&plan));
+    CHECK(s5_rejoined && rig.distance_calls == 0U && rig.pings == 0U && rig.releases == 0U);
+
+    /* A stale reading is not the line. */
+    pass_ready();
+    rig.status.line.values[LINE_VALUE_BOTH_BLACK] = 1.0;
+    rig.status.line.timestamp = -1.0;
+    CHECK(!rejoin_while_still());
+
+    /* Publisher gone (a profile without line steering): never fires. */
+    pass_ready();
+    rig.status.line.available = false;
+    rig.status.line.values[LINE_VALUE_BOTH_BLACK] = 1.0;
+    CHECK(!rejoin_while_still());
+
+    /* Braked past it and it stays lost: reverse once, then hold. */
+    pass_ready();
+    rig.both_black_on_distance_call = 1U;
+    rig.lose_line_on_stop = true;
+    CHECK(!pass_obstacle(&plan));
+    CHECK(!s5_rejoined && !s5_rejoin_armed);
+    CHECK(rig.distance_calls == 2U && rig.releases == 1U);
+    CHECK(rig.largest_distance >= S5_PASS_STEP_MM / 1000.0);
+
+    /* Black cannot conceal a rejected command. */
+    pass_ready();
+    s5_rejoin_armed = true;
+    rig.status.motion.id = 5101U;
+    rig.status.last_event = (motion_event_t){EV_REJECTED, 5101U, 0U, F_NONE};
+    rig.status.line.values[LINE_VALUE_BOTH_BLACK] = 1.0;
+    CHECK(wait_move(5101U, 1.0, false, 0.0, NULL) == S5_MOVE_FAILED);
+    s5_rejoin_armed = false;
+
+    /* A pass stopped on purpose is not logged as a failed move. */
+    pass_ready();
+    CHECK(pass_obstacle(&plan));
+    CHECK(strstr(rig.encoder_log, "result=done") != NULL);
+    CHECK(strstr(rig.encoder_log, "result=failed") == NULL);
+}
+
 int main(void)
 {
+    line_interrupt_tests();
     detour_sensor_tests();
+    encoder_logging_tests();
+    clearance_tests();
     scan_tests();
     report_buffer_test();
     pass_return_transition_tests();

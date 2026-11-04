@@ -605,6 +605,7 @@ void obstacle_task(INT code, void *p_context)
 			s5_blocked = true;
 			tm_printf((const UB *)"[OBSTACLE] STOP: %d mm ahead at %d mm/s\n",
 				  s5_round(s5_front_mm), s5_round(speed_mm_s));
+			(void)s5_log_encoders("stop-requested", 0U);
 			crash_mark(CRASH_MARK_OBSTACLE, CRASH_OBSTACLE_SETTLE);
 			if (!s5_wait_still()) {
 				s5_phase = S5_PHASE_FAILED;
@@ -619,12 +620,14 @@ void obstacle_task(INT code, void *p_context)
 					  S5_ANGLE_LEFT_DEG, S5_ANGLE_RIGHT_DEG);
 				crash_mark(CRASH_MARK_OBSTACLE, CRASH_OBSTACLE_SCAN);
 				set_decision(false, NULL);
+				(void)s5_log_encoders("scan-before", 0U);
 				if (s5_scan_run(&s5_scan, scan_measure, NULL)) {
 					set_decision(true, &s5_scan.avoid);
 				} else {
 					motion_stop();
 					s5_phase = S5_PHASE_FAILED;
 				}
+				(void)s5_log_encoders("scan-after", 0U);
 				s5_servo_move(S5_ANGLE_CENTRE_DEG);
 				if (s5_scan.b_valid) {
 					s5_width_m = s5_scan.width_mm / 1000.0;

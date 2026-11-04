@@ -22,8 +22,8 @@ static int	servo_deg = -1;
 
 static void servo_write(int angle_deg)
 {
-	double	trimmed = fmin(fmax((double)(angle_deg + S5_SERVO_TRIM_DEG), 0.0), 180.0);
-	double	position = (S5_SERVO_REVERSED != 0) ? (180.0 - trimmed) : trimmed;
+	double	mapped = (S5_SERVO_REVERSED != 0) ? (180.0 - (double)angle_deg) : (double)angle_deg;
+	double	position = fmin(fmax(mapped + (double)S5_SERVO_TRIM_DEG, 0.0), 180.0);
 	double	pulse = SERVO_US_AT_0 + position * (SERVO_US_AT_180 - SERVO_US_AT_0) / 180.0;
 
 	/* Odd GPIOs use channel B; the alternate diagnostic pin uses channel A. */
@@ -56,18 +56,27 @@ void s5_servo_init(int angle_deg)
 	(void)tk_dly_tsk(SERVO_INIT_SETTLE_MS);
 }
 
-void s5_servo_move(int angle_deg)
+unsigned s5_servo_aim(int angle_deg)
 {
 	int	target = servo_clamp(angle_deg);
 	int	travel = (target > servo_deg) ? (target - servo_deg) : (servo_deg - target);
 
 	if (servo_deg < 0) {
-		s5_servo_init(target);
-		return;
+		s5_servo_init(target);		/* waits for itself */
+		return 0U;
 	}
 	servo_write(target);
 	servo_deg = target;
-	(void)tk_dly_tsk((RELTIM)(SERVO_SETTLE_BASE_MS + (unsigned)travel * SERVO_SETTLE_PER_DEG_MS));
+	return SERVO_SETTLE_BASE_MS + (unsigned)travel * SERVO_SETTLE_PER_DEG_MS;
+}
+
+void s5_servo_move(int angle_deg)
+{
+	unsigned settle_ms = s5_servo_aim(angle_deg);
+
+	if (settle_ms > 0U) {
+		(void)tk_dly_tsk((RELTIM)settle_ms);
+	}
 }
 
 int s5_servo_angle(void)

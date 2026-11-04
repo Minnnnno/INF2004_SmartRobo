@@ -13,8 +13,8 @@
 #define S5_SERVO_PIN		15U	/* PWM slice 7 channel B, 50 Hz */
 #endif
 /* 1 if the sweep starts on the RIGHT: reverses the angle-to-pulse mapping */
-#define S5_SERVO_REVERSED	0
-/* Added to every angle at the pulse so that 90 deg points straight ahead.
+#define S5_SERVO_REVERSED	1 /* confirmed 2026-11-04: increasing pulse points left */
+/* Added AFTER direction reversal at the pulse so that 90 deg points straight ahead.
    Five scans of centred objects put their middle at 90.8 deg on average
    without trim (95, 85.5, 91, 89.5, 93; 2026-11-03). */
 #define S5_SERVO_TRIM_DEG	1
@@ -26,6 +26,8 @@
 void	s5_servo_init(int angle_deg);
 /* Move and block until the sensor on top has stopped swinging */
 void	s5_servo_move(int angle_deg);
+/* Start the same move without waiting; returns the ms to wait before a ping */
+unsigned s5_servo_aim(int angle_deg);
 int	s5_servo_angle(void);
 
 #endif /* S5_SERVO_H */

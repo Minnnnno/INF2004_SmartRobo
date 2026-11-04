@@ -69,7 +69,7 @@
 #define S5_CENTRE_TOLERANCE_DEG	12.0
 
 /* ---- avoidance: which side to pass on ---- */
-#define S5_ROBOT_HALF_WIDTH_MM	65.0	/* robot is 130 mm wide */
+#define S5_ROBOT_HALF_WIDTH_MM	80.0	/* robot is 160 mm wide */
 #define S5_PASS_MARGIN_MM	50.0	/* kept from the obstacle and anything beside it */
 /* Something beside the obstacle blocks that side only if its forward
    distance is within this of the obstacle's face. */
