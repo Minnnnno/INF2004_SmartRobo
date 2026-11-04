@@ -1,13 +1,22 @@
+/* Only images with a working line_loop() build and create line_task
+ * (ROBO_LINE_TASK in subsystems.h; host tests define the same macros). */
+#if defined(ROBO_SAFE_MOTOR_TEST) || defined(ROBO_LINE_STEERING)
 #ifdef ROBO_LINE_TEST_HOST
 #include "line_test_fake_hal.h"
 #else
 #include "subsystems.h"
-#if defined(ROBO_SAFE_MOTOR_TEST) || defined(ROBO_LINE_STEERING)
 #include "../subsystem2/template_hal.h"
 #include <tm/tmonitor.h>
 #endif
-#endif
 #include "board_config.h"
+
+/* Plain digital input, pulls off (the IR modules drive the line). */
+static void line_input_init(unsigned pin)
+{
+    gpio_init(pin);
+    gpio_set_dir(pin, false);
+    gpio_disable_pulls(pin);
+}
 
 /* Each firmware profile supplies its own line_loop(); CMake keeps them exclusive. */
 #if defined(ROBO_SAFE_MOTOR_TEST)
@@ -20,10 +29,9 @@ static void line_loop(void)
 {
     bool sensor_running = false;
     for (;;) {
-        /* Console labels predate the right/centre naming used by line steering. */
-        unsigned left = (unsigned)gpio_get(BOARD_LINE_R);
-        unsigned right = (unsigned)gpio_get(BOARD_LINE_C);
-        bool move = (left == 1U) || (right == 1U);
+        unsigned right = (unsigned)gpio_get(BOARD_LINE_R);
+        unsigned centre = (unsigned)gpio_get(BOARD_LINE_C);
+        bool move = (right == 1U) || (centre == 1U);
         if (!motor_test_active()) { sensor_running = false; }
         if (!move) { sensor_paused = false; }
         if (move && !sensor_paused) {
@@ -32,8 +40,9 @@ static void line_loop(void)
             motor_test_stop();
             sensor_running = false;
         }
+        /* Console labels predate the right/centre naming used by line steering. */
         tm_printf((const UB *)"left_digital=%u right_digital=%u move_condition=%u sensor_forward_active=%u\n",
-                  left, right, (unsigned)move, (unsigned)sensor_running);
+                  right, centre, (unsigned)move, (unsigned)sensor_running);
         (void)tk_dly_tsk(100U);
     }
 }
@@ -43,9 +52,7 @@ static void line_loop(void)
  * Also shows the barcode IR (GP28) so its wiring can be checked; barcode_task stays idle. */
 static void line_loop(void)
 {
-    gpio_init(BOARD_BARCODE);
-    gpio_set_dir(BOARD_BARCODE, false);
-    gpio_disable_pulls(BOARD_BARCODE);
+    line_input_init(BOARD_BARCODE);
     for (;;) {
         unsigned right = (unsigned)gpio_get(BOARD_LINE_R);
         unsigned centre = (unsigned)gpio_get(BOARD_LINE_C);
@@ -155,10 +162,11 @@ static motion_result_t line_follow(line_direction_t drive)
 static void line_publish(line_direction_t direction, double now)
 {
     double error = 0.0;
+    bool on_line = direction != LINE_LOST && direction != LINE_WAIT;
     if (direction == LINE_LEFT) { error = -1.0; }
     else if (direction == LINE_RIGHT) { error = 1.0; }
     subsystem_status_t line_status = {.available = true, .timestamp = now,
-        .values = {error, (direction != LINE_LOST && direction != LINE_WAIT) ? 1.0 : 0.0, 0.0, 0.0}};
+        .values = {error, on_line ? 1.0 : 0.0, 0.0, 0.0}};
     (void)robot_update_subsystem(SOURCE_LINE, &line_status);
 }
 
@@ -235,26 +243,12 @@ static void line_loop(void)
 }
 #endif
 
-#if defined(ROBO_SAFE_MOTOR_TEST) || defined(ROBO_LINE_STEERING)
-static void line_sensors_init(void)
-{
-    static const unsigned pins[] = {BOARD_LINE_R, BOARD_LINE_C};
-    for (unsigned i = 0U; i < 2U; ++i) {
-        gpio_init(pins[i]);
-        gpio_set_dir(pins[i], false);
-        gpio_disable_pulls(pins[i]);
-    }
-}
-#endif
-
 void line_task(INT code, void *context)
 {
     (void)code; (void)context;
-#if defined(ROBO_SAFE_MOTOR_TEST) || defined(ROBO_LINE_STEERING)
-    line_sensors_init();
+    line_input_init(BOARD_LINE_R);
+    line_input_init(BOARD_LINE_C);
     (void)tk_dly_tsk(2000U);
     line_loop();
-#else
-    for (;;) { (void)tk_slp_tsk(TMO_FEVR); }
-#endif
 }
+#endif
