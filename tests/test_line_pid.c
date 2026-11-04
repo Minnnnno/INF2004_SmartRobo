@@ -8,7 +8,8 @@
 typedef enum { NONE, STRAIGHT, LEFT, RIGHT, PIVOT_LEFT, PIVOT_RIGHT, HOLD, BACK } action_t;
 /* centre=GP27, right=GP26 (offset right). extra = seconds added after the row.
  * heading = encoder heading in degrees (+ = left); travel = centre travel in mm.
- * scenario: 0=normal ownership, 1=obstacle owns, 2=fault, 3=controller release. */
+ * scenario: 0=normal ownership, 1=obstacle owns, 2=fault, 3=controller release,
+ * 4=READY while subsystem 5 drives round an obstacle (obstacle values[3]=5). */
 typedef struct { bool centre,right; action_t request; double extra,heading,travel; unsigned scenario; } input_t;
 static const input_t inputs[]={
     {true,true,NONE,0.0,0.0,0.0,0U}, {true,true,STRAIGHT,0.0,0.0,0.0,0U},
@@ -40,7 +41,9 @@ static const input_t inputs[]={
     {true,true,NONE,0.0,-61.0,0.0,2U}, {false,false,NONE,0.0,-61.0,0.0,1U},
     {false,false,NONE,0.0,-61.0,0.0,1U},         /* Cannot cancel obstacle. */
     {true,true,NONE,0.0,-61.0,0.0,3U},           /* READY and lost: never starts a search. */
-    {true,true,STRAIGHT,0.0,-61.0,0.0,0U},
+    {true,true,NONE,0.0,-61.0,0.0,4U},           /* On the line, but subsystem 5 is avoiding. */
+    {true,true,NONE,0.0,-61.0,0.0,4U},
+    {true,true,STRAIGHT,0.0,-61.0,0.0,0U},       /* Avoidance over: following resumes. */
 };
 static unsigned checks,row,reads,pins,directions,pulls,requests;
 static double clock_s=2.0;
@@ -66,10 +69,11 @@ bool motion_get_status(robot_status_t *out)
         status.owner_valid=true; status.owner=SOURCE_OBSTACLE; status.motion.id=5001U;
     } else if (inputs[row].scenario==2U) {
         status.motion.state=FAULT; status.motion.fault=F_TIMING; status.motion.hold=true;
-    } else if (inputs[row].scenario==3U) {
+    } else if ((inputs[row].scenario==3U) || (inputs[row].scenario==4U)) {
         status.motion.state=READY; status.motion.fault=F_NONE; status.motion.hold=false;
         status.owner_valid=false;
     }
+    status.obstacle.values[3]=(inputs[row].scenario==4U) ? 5.0 : 0.0;
     status.motion.heading=inputs[row].heading*0.017453292519943295;
     status.motion.centre=inputs[row].travel/1000.0;
     *out=status; return true;

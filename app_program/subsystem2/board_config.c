@@ -21,6 +21,7 @@ bool board_pins_valid(void)
     for (i = 0; i < 4U; ++i) {
         if (enc[i] > 29U) { return false; }
         if ((enc[i] < 2U) || (enc[i] > 5U)) { return false; }
+        if ((enc[i] == BOARD_I2C_SDA) || (enc[i] == BOARD_I2C_SCL)) { return false; }
         for (j = 0; j < i; ++j) { if (enc[i] == enc[j]) { return false; } }
     }
     return true;
@@ -32,10 +33,10 @@ motion_config_t board_motion_config(void)
         /* Provisional effective diameters from three passive 1000 mm rolls.
          * Validate under power; these include rolling/measurement effects. */
         .counts_per_rev = {2542.4, 2543.4}, .diameter = {0.0675, 0.0679}, .track = 0.115,
-        /* Right motor reversed: user wheel test and commit 5825f0c agree.
-         * Both encoder signs flipped with the GP2..GP5 rewire: each wheel read about
-         * -200 mm/s at +25% output until its sign was inverted. */
-        .motor_sign = {1, -1}, .encoder_sign = {1, -1}, .quadrature = {true, true},
+        /* Motor polarity retains the verified forward drive direction.
+         * 2026-11-04: user confirmed physical forward motion while BOTH measured
+         * speeds were negative with encoder signs {+1,-1}; invert feedback only. */
+        .motor_sign = {1, -1}, .encoder_sign = {-1, 1}, .quadrature = {true, true},
         /* Provisional tuning only; validate on the actual robot. */
         .max_speed = 0.25, .acceleration = 0.3, .max_output = 0.25,
         .period = 0.01, .max_dt = 0.05,

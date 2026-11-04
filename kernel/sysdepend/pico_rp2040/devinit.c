@@ -65,7 +65,7 @@ EXPORT ER knl_start_device( void )
 		if(err < E_OK) return err;
 	#endif
 
-	/* I2C1 "iicb": GY-511 on GP2/GP3. I2C0 stays inactive. */
+	/* Optional Buddy 4 I2C1 "iicb": GY-511 on GP6/GP7. I2C0 stays inactive. */
 	#if DEVCNF_USE_IIC
 		err = dev_init_i2c(1);
 		if(err < E_OK) return err;

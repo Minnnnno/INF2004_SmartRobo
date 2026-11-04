@@ -33,6 +33,7 @@
 
 #if USE_TM_PRINTF
 #include <stdarg.h>
+#include <limits.h>
 
 #if TK_SUPPORT_SMP && TM_CONSOLE_USB_CDC
 #include <tk/smp.h>
@@ -197,7 +198,7 @@ LOCAL	void	tm_vsprintf( OutFn ostr, OutPar *par, const UB *fmt, va_list ap )
 			case 'i':
 			case 'd':
 				if ((W)v < 0) {
-					v = - (W)v;
+					v = 0U - v; /* Unsigned magnitude also handles INT32_MIN. */
 					sign = '-';
 				} else if ((flg & F_PLUS) != 0) {
 					sign = '+';
@@ -391,6 +392,40 @@ EXPORT INT	tm_sprintf( UB *str, const UB *format, ... )
 	return par.len;
 }
 
+typedef struct {
+	OutPar out;
+	INT remaining, length;
+	BOOL overflow;
+} BoundedOutPar;
+
+LOCAL void out_buf_bounded( UB *str, INT len, OutPar *out )
+{
+	BoundedOutPar *par = (BoundedOutPar *)out;
+	INT count;
+	if (len <= 0) return;
+	if (par->length > INT_MAX - len) par->overflow = TRUE;
+	else par->length += len;
+	count = (len < par->remaining) ? len : par->remaining;
+	par->remaining -= count;
+	while (count-- > 0) *(par->out.bufp)++ = *str++;
+}
+
+EXPORT INT tm_snprintf( UB *str, INT capacity, const UB *format, ... )
+{
+	BoundedOutPar par;
+	va_list ap;
+	if (capacity < 0 || format == NULL || (capacity > 0 && str == NULL)) return -1;
+	par.out.bufp = str;
+	par.remaining = (capacity > 0) ? capacity - 1 : 0;
+	par.length = 0;
+	par.overflow = FALSE;
+	va_start(ap, format);
+	tm_vsprintf(out_buf_bounded, &par.out, format, ap);
+	va_end(ap);
+	if (capacity > 0) *par.out.bufp = '\0';
+	return par.overflow ? -1 : par.length;
+}
+
 #else
 EXPORT INT	tm_printf( const UB *format, ... )
 {
@@ -398,6 +433,11 @@ EXPORT INT	tm_printf( const UB *format, ... )
 }
 
 EXPORT INT	tm_sprintf( UB *str, const UB *format, ... )
+{
+	return (-1);
+}
+
+EXPORT INT tm_snprintf( UB *str, INT capacity, const UB *format, ... )
 {
 	return (-1);
 }

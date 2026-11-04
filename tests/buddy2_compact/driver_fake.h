@@ -6,6 +6,8 @@
 #include "../motor_test_fake_hal.h"
 #define IO_BANK0_BASE 0x40014000u
 #define GPIO_IN 0xd0000004u
+#define PWM_BASE 0x40050000u
+#define TIMER_TIMERAWL 0x40054028u
 #define GPIO_CTRL(PIN) (0x40014004u + 8u * (PIN))
 uint32_t in_w(uint32_t address);
 uint32_t irq_reg(unsigned pin, uint32_t base);

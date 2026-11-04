@@ -7,9 +7,12 @@
 #include "hardware/sync.h"
 #include "hardware/structs/io_bank0.h"
 #include "encoder_capture.h"
+#include "board_config.h"
 
 static volatile encoder_capture_t capture;
-static const unsigned pins[2][2] = {{4U, 6U}, {5U, 7U}};
+static const unsigned pins[2][2] = {
+    {BOARD_ENC_L_A, BOARD_ENC_L_B}, {BOARD_ENC_R_A, BOARD_ENC_R_B}
+};
 static const bool quadrature[2] = {true, true};
 static const int signs[2] = {1, 1}; /* Preserve raw direction for calibration. */
 static uint32_t encoder_mask;

@@ -50,11 +50,101 @@ static void zero_output(motion_t *m)
     m->status.inhibited = true;
 }
 
+static int32_t debug_scaled(double value, double scale)
+{
+    double scaled = value * scale;
+    if (!isfinite(scaled)) { return INT32_MIN; }
+    if (scaled >= (double)INT32_MAX) { return INT32_MAX; }
+    if (scaled <= (double)INT32_MIN + 1.0) { return INT32_MIN + 1; }
+    return (int32_t)scaled;
+}
+
+static void record_fault_context(motion_t *m, double now)
+{
+    motion_fault_debug_t *d = &m->status.debug;
+    motion_command_t command;
+    bool decoded;
+    if (d->recorded) { return; }
+    d->state = m->status.state;
+    d->mode = m->status.mode;
+    d->id = m->status.id;
+    d->time_ms = debug_scaled(now, 1000.0);
+    d->dt_us = debug_scaled(m->status.last_dt, 1000000.0);
+    decoded = m->active && motion_config_valid(&m->config) &&
+              motion_compact_decode(&m->command, &m->config, &command);
+    d->finite_goal = decoded && (command.mode == DISTANCE_MOVE ||
+                                  command.mode == ENCODER_TURN || command.mode == ARC_MOVE);
+    for (unsigned w = 0U; w < 2U; ++w) {
+        double target = fabs(m->status.target[w]);
+        double limit = 0.0;
+        d->target_mm_s[w] = debug_scaled(m->status.target[w], 1000.0);
+        d->speed_mm_s[w] = debug_scaled(m->status.speed[w], 1000.0);
+        d->output_permille[w] = debug_scaled(m->status.output[w], 1000.0);
+        d->no_progress_ms[w] = debug_scaled(now - m->last_progress[w], 1000.0);
+        if (target > 1e-9 && m->config.counts_per_rev[w] > 0.0) {
+            double quantum = 3.141592653589793 * m->config.diameter[w] / m->config.counts_per_rev[w];
+            limit = m->config.feedback_timeout + 2.0 * quantum / target;
+        }
+        d->feedback_limit_ms[w] = debug_scaled(limit, 1000.0);
+        if (d->finite_goal) {
+            double goal = command.value;
+            double sign = w == 0U ? -1.0 : 1.0;
+            if (command.mode == ENCODER_TURN) { goal = sign * command.value * m->config.track / 2.0; }
+            if (command.mode == ARC_MOVE) { goal += sign * command.angle * m->config.track / 2.0; }
+            d->remaining_um[w] = debug_scaled(goal - (m->odom.travel[w] - m->start[w]), 1000000.0);
+        }
+    }
+    d->recorded = true;
+}
+
+const char *motion_fault_name(motion_fault_t fault)
+{
+    switch (fault) {
+    case F_NONE: return "NONE";
+    case F_CONFIG: return "CONFIG";
+    case F_SETUP: return "SETUP";
+    case F_TIMING: return "TIMING";
+    case F_FEEDBACK: return "FEEDBACK";
+    case F_DEADLINE: return "DEADLINE";
+    case F_EXPIRED: return "EXPIRED";
+    case F_STOP_TIMEOUT: return "STOP_TIMEOUT";
+    case F_FINAL_GOAL: return "FINAL_GOAL";
+    case F_EVENT_OVERFLOW: return "EVENT_OVERFLOW";
+    case F_SYSTEM: return "SYSTEM";
+    default: return "UNKNOWN";
+    }
+}
+
+const char *motion_feedback_name(motion_feedback_cause_t cause)
+{
+    switch (cause) {
+    case FB_NONE: return "NONE";
+    case FB_UNRELIABLE: return "UNRELIABLE";
+    case FB_INVALID_TRANSITION: return "INVALID_TRANSITION";
+    case FB_ODOMETRY: return "ODOMETRY";
+    case FB_NO_PROGRESS: return "NO_ENCODER_PROGRESS";
+    default: return "UNKNOWN";
+    }
+}
+
+const char *motion_mode_name(motion_mode_t mode)
+{
+    switch (mode) {
+    case DISTANCE_MOVE: return "DISTANCE";
+    case ENCODER_TURN: return "TURN";
+    case WHEEL_SPEED_TRACKING: return "TRACKING";
+    case MANUAL_OUTPUT: return "MANUAL";
+    case ARC_MOVE: return "ARC";
+    default: return "UNKNOWN";
+    }
+}
+
 static void event(motion_t *m, motion_event_type_t type)
 {
     motion_event_t e = {type, m->status.id, m->status.generation, m->status.fault};
     if (motion_queue_count(m) == MOTION_EVENT_CAPACITY) {
         /* Local state remains authoritative even when notifications cannot be delivered. */
+        record_fault_context(m, m->last_time);
         zero_output(m);
         m->active = false;
         m->status.hold = true;
@@ -86,6 +176,7 @@ void motion_raise_fault(motion_t *m, motion_fault_t fault, double now)
 {
     if (m->status.state == SHUTDOWN) { return; }
     motion_fault_record(m, fault);
+    record_fault_context(m, now);
     zero_output(m);
     m->status.hold = true;
     m->active = false;
@@ -336,9 +427,17 @@ static void drive(motion_t *m, double now, double dt, const bool progressed[2])
         (now >= command.expires)) { motion_raise_fault(m, F_EXPIRED, now); return; }
     if (command.mode == ARC_MOVE) {
         double elapsed = now - m->entered;
+        double left = m->odom.travel[0] - m->start[0];
+        double right = m->odom.travel[1] - m->start[1];
         double tolerance = fmin(m->config.distance_tolerance / 2.0,
                                 m->config.angle_tolerance * m->config.track / 4.0);
-        bool reached = true;
+        /* Distance and heading constrain common and differential wheel error
+         * separately. Requiring EACH wheel within the smaller angular-derived
+         * tolerance makes a valid endpoint chase millimetres in reverse until
+         * the no-progress protection trips. Keep half of each configured
+         * tolerance for stopping, then verify both full limits after settling. */
+        bool reached = fabs((left + right) / 2.0 - command.value) <= m->config.distance_tolerance / 2.0 &&
+                       fabs((right - left) / m->config.track - command.angle) <= m->config.angle_tolerance / 2.0;
         if (command.duration > 0.0 && elapsed >= command.duration) {
             motion_flag_set(m, MOTION_GOAL_PENDING, true);
             stopping(m, now); /* Final encoder distance AND heading are checked after settling. */
@@ -348,7 +447,6 @@ static void drive(motion_t *m, double now, double dt, const bool progressed[2])
             double goal = command.value + (w == 0U ? -1.0 : 1.0) * command.angle * m->config.track / 2.0;
             double travelled = m->odom.travel[w] - m->start[w];
             double remaining = goal - travelled;
-            if (fabs(remaining) > tolerance) { reached = false; }
             if (command.duration > 0.0) {
                 double u = fmax(0.0, fmin(1.0, elapsed / command.duration));
                 double progress = u * u * (3.0 - 2.0 * u);
@@ -415,6 +513,7 @@ static void drive(motion_t *m, double now, double dt, const bool progressed[2])
                 encoder_sample_t sample = {{m->odom.previous[0], m->odom.previous[1]},
                                            {m->invalid[0], m->invalid[1]}, true};
                 record_feedback(m, sample, FB_NO_PROGRESS);
+                m->status.debug.stalled_wheels = (uint8_t)(1U << w);
                 motion_raise_fault(m, F_FEEDBACK, now);
                 return;
             }

@@ -1,5 +1,15 @@
 # Subsystem 4: GY-511 background monitoring
 
+Buddy 4 is temporarily disabled by default (`ROBO_SUBSYSTEM4=OFF`). Its sources
+are excluded from the firmware, no terrain task is created, and the I2C1 driver
+is not initialized. GP6/GP7 remain assigned for future IMU use but are not
+configured by this subsystem. Terrain status remains unavailable.
+The production startup banner reports `subsystem4_enabled=0`.
+
+To restore Buddy 4, configure with `-DROBO_SUBSYSTEM4=ON` and rebuild.
+To disable it again, configure with `-DROBO_SUBSYSTEM4=OFF` and rebuild.
+The behavior below applies when Buddy 4 is enabled.
+
 The existing `terrain_task` runs at priority 8 with a 4096-byte stack.
 Motion Control runs at priority 2. Subsystem 4 configures the GY-511 once,
 then samples every 50 ms while the robot is moving or stationary.
@@ -9,6 +19,7 @@ I2C transfers wait on kernel events with a 20 ms per-transfer timeout.
 ## Wiring and mounting
 
 I2C1: SDA = GP6, SCL = GP7 (GPIO numbers, not physical header numbers).
+Move the IMU signal wires from GP2/GP3 to GP6/GP7; GP2/GP3 now serve the left encoder.
 Keep the already tested 3.3 V supply and common ground. I2C0 stays inactive;
 the driver's old default pins overlap motors/encoders. UART and ADC drivers
 remain disabled as in the original production build.

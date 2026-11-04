@@ -21,7 +21,7 @@ supported; every reply includes build ID, reply sequence and uptime. Repeated
 commands must keep replying without resetting uptime or counts. No reset-count
 command exists, so save snapshots and subtract or reboot between trials.
 
-Left encoder A/B stays GP4/GP6; right stays GP5/GP7. Preserve encoder 3.3 V and
+Left encoder A/B uses GP2/GP3; right uses GP4/GP5. Preserve encoder 3.3 V and
 common GND while disconnecting motor power. Raw direction signs remain {1,1};
 negative forward left counts observed previously are not silently inverted.
 Distances/speeds/angle commands and production configuration remain unchanged.

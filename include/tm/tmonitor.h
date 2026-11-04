@@ -35,5 +35,9 @@ IMPORT INT  tm_getline( UB *buff );
 IMPORT INT  tm_putstring( const UB *buff );
 IMPORT INT  tm_printf( const UB *format, ... );
 IMPORT INT  tm_sprintf( UB *str, const UB *format, ... );
+/* NUL-terminate within capacity; return the full length (excluding NUL).
+ * capacity=0 permits a NULL buffer. Negative return means invalid arguments
+ * or output length overflow. Same supported conversions as tm_printf. */
+IMPORT INT  tm_snprintf( UB *str, INT capacity, const UB *format, ... );
 
 #endif /* __TM_TMONITOR_H__ */

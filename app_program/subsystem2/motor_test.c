@@ -133,8 +133,8 @@ bool motor_test_init(void)
     gpio_set_irq_enabled(21U, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, false);
 #endif
     if (!board_pins_valid() || !sample.reliable ||
-        (encoder_pins[0][0] != 2U) || (encoder_pins[0][1] != 3U) ||
-        (encoder_pins[1][0] != 4U) || (encoder_pins[1][1] != 5U)) { return false; }
+        (encoder_pins[0][0] != BOARD_ENC_L_A) || (encoder_pins[0][1] != BOARD_ENC_L_B) ||
+        (encoder_pins[1][0] != BOARD_ENC_R_A) || (encoder_pins[1][1] != BOARD_ENC_R_B)) { return false; }
     if (tk_def_int(3U, &definition) != E_OK) { return false; }
 #ifdef ROBO_BATTERY_FORWARD_TEST
     if (!button_irq_registered) {

@@ -27,7 +27,11 @@
 
 #define DEVCNF_USE_SER		0		// Serial communication device
 #define DEVCNF_USE_ADC		0		// A/D conversion device
-#define DEVCNF_USE_IIC		1		// I2C communication device
-		/* Only I2C1 is initialised at boot, on GP6/GP7. */
+/* Buddy 4 is temporarily disabled by default, including non-CMake builds. */
+#ifndef ROBO_SUBSYSTEM4
+#define ROBO_SUBSYSTEM4 0
+#endif
+#define DEVCNF_USE_IIC		ROBO_SUBSYSTEM4	// I2C communication device
+		/* When enabled, only I2C1 is initialised, on GP6/GP7. */
 
 #endif	/* __DEV_CONFIG_H__ */

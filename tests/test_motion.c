@@ -414,6 +414,50 @@ static void encoder_capture_tests(void)
     }
 }
 
+/* Current physical forward motion was reported negative on BOTH wheels with
+ * signs {+1,-1}. Exercise the corresponding raw A/B cycles through capture
+ * and odometry, rather than only asserting configuration constants. */
+static void board_encoder_polarity_tests(void)
+{
+    const unsigned pins[2][2] = {{BOARD_ENC_L_A, BOARD_ENC_L_B}, {BOARD_ENC_R_A, BOARD_ENC_R_B}};
+    const unsigned positive[5] = {0U, 1U, 3U, 2U, 0U};
+    const unsigned negative[5] = {0U, 2U, 3U, 1U, 0U};
+    motion_config_t config = board_motion_config();
+    for (unsigned direction = 0U; direction < 2U; ++direction) {
+        encoder_capture_t capture;
+        odometry_t odom = {0};
+        encoder_sample_t sample;
+        int expected_sign = direction == 0U ? 1 : -1;
+        encoder_capture_init(&capture, pins, config.quadrature, config.encoder_sign, 0U);
+        for (unsigned cycle = 0U; cycle < 2U; ++cycle) {
+            for (unsigned wheel = 0U; wheel < 2U; ++wheel) {
+                const unsigned *sequence = (wheel == direction) ? negative : positive;
+                for (unsigned step = 1U; step < 5U; ++step) {
+                    unsigned channel = (sequence[step] ^ sequence[step - 1U]) == 2U ? 0U : 1U;
+                    unsigned pin = pins[wheel][channel];
+                    uint32_t levels = ((sequence[step] >> 1U) << pins[wheel][0]) |
+                                      ((sequence[step] & 1U) << pins[wheel][1]);
+                    uint32_t event = ((levels & (1U << pin)) != 0U ? 8U : 4U) << (pin * 4U);
+                    capture_bank0_event(&capture, event, levels);
+                }
+            }
+        }
+        for (unsigned wheel = 0U; wheel < 2U; ++wheel) {
+            sample.count[wheel] = capture.count[wheel];
+            sample.invalid[wheel] = capture.invalid[wheel];
+            CHECK(encoder_delta(sample.count[wheel], 0U) == expected_sign * 8);
+            CHECK(sample.invalid[wheel] == 0U);
+        }
+        sample.reliable = true;
+        CHECK(odometry_step(&odom, &config, &sample, config.period));
+        for (unsigned wheel = 0U; wheel < 2U; ++wheel) {
+            CHECK(odom.speed[wheel] * expected_sign > 0.0);
+            CHECK(odom.travel[wheel] * expected_sign > 0.0);
+        }
+        CHECK(odom.centre * expected_sign > 0.0);
+    }
+}
+
 static void production_line_integration_tests(void)
 {
     rig_t r;
@@ -676,6 +720,140 @@ static void startup_gap_tests(void)
     CHECK(r.m.status.fault==F_TIMING); /* Backwards clocks never qualify as startup gaps. */
 }
 
+/* Seed a measured endpoint to isolate the finish decision from a particular
+ * motor model. Subsequent samples are stationary, as in the supplied log. */
+static void measured_arc_endpoint(rig_t *r, double left, double right)
+{
+    const double travel[2] = {left, right};
+    for (unsigned w = 0U; w < 2U; ++w) {
+        double quantum = 3.141592653589793 * r->m.config.diameter[w] / r->m.config.counts_per_rev[w];
+        r->sample.count[w] = (uint32_t)(int32_t)llround(travel[w] / quantum);
+        r->m.odom.previous[w] = r->sample.count[w];
+        r->m.odom.travel[w] = (double)(int32_t)r->sample.count[w] * quantum;
+    }
+    r->m.odom.centre = (r->m.odom.travel[0] + r->m.odom.travel[1]) / 2.0;
+    r->m.odom.heading = (r->m.odom.travel[1] - r->m.odom.travel[0]) / r->m.config.track;
+}
+
+static void arc_finish_window_tests(void)
+{
+    /* Common distance error does not imply heading error. The old per-wheel
+     * minimum tolerance unnecessarily reversed/faulted at these valid poses. */
+    for (unsigned example = 0U; example < 4U; ++example) {
+        rig_t r;
+        motion_command_t c;
+        motion_event_t e;
+        double sign = example == 1U ? -1.0 : 1.0;
+        double offset_left = example == 2U ? 0.004 : 0.0022;
+        double offset_right = example == 2U ? 0.004 : 0.0011;
+        init(&r);
+        r.m.config = board_motion_config();
+        c = command(&r, ARC_MOVE, sign * 0.230);
+        c.id = 5101U;
+        c.angle = example == 3U ? 0.17453292519943295 : 0.0;
+        for (unsigned w = 0U; w < 2U; ++w) {
+            c.speed[w] = (c.value + (w == 0U ? -1.0 : 1.0) * c.angle * r.m.config.track / 2.0)
+                         * 0.06 / fabs(c.value);
+        }
+        CHECK(motion_accept(&r.m, &c, r.now) == R_OK);
+        measured_arc_endpoint(&r, c.value - c.angle * r.m.config.track / 2.0 + sign * offset_left,
+                                  c.value + c.angle * r.m.config.track / 2.0 + sign * offset_right);
+        for (unsigned i = 0U; i < 100U && r.m.status.state != READY && r.m.status.state != FAULT; ++i) {
+            tick(&r, false);
+        }
+        if (r.m.status.state != READY) {
+            fprintf(stderr, "arc endpoint case %u: state=%u fault=%u feedback=%u\n", example,
+                    (unsigned)r.m.status.state, (unsigned)r.m.status.fault, (unsigned)r.m.status.feedback_cause);
+        }
+        CHECK(r.m.status.state == READY && r.m.status.fault == F_NONE);
+        CHECK(motion_next_event(&r.m, &e) && e.type == EV_COMPLETE && e.id == 5101U);
+        NEAR(r.m.status.centre, c.value, r.m.config.distance_tolerance);
+        NEAR(r.m.status.heading, c.angle, r.m.config.angle_tolerance);
+        CHECK(r.m.status.output[0] == 0.0 && r.m.status.output[1] == 0.0);
+    }
+    /* Coasting outside either final limit after STOPPING must still fault. */
+    for (unsigned example = 0U; example < 2U; ++example) {
+        rig_t r;
+        motion_command_t c;
+        init(&r);
+        r.m.config = board_motion_config();
+        c = command(&r, ARC_MOVE, 0.230);
+        c.speed[0] = c.speed[1] = 0.06;
+        CHECK(motion_accept(&r.m, &c, r.now) == R_OK);
+        measured_arc_endpoint(&r, 0.2322, 0.2311);
+        tick(&r, false);
+        CHECK(r.m.status.state == STOPPING);
+        measured_arc_endpoint(&r, example == 0U ? 0.250 : 0.226,
+                                  example == 0U ? 0.250 : 0.234);
+        for (unsigned i = 0U; i < 50U && r.m.status.state != FAULT; ++i) { tick(&r, false); }
+        CHECK(r.m.status.state == FAULT && r.m.status.fault == F_FINAL_GOAL);
+    }
+    /* Neither correct heading alone nor correct centre distance alone can
+     * complete the move. A genuinely stalled, out-of-tolerance wheel faults. */
+    for (unsigned example = 0U; example < 2U; ++example) {
+        rig_t r;
+        motion_command_t c;
+        init(&r);
+        r.m.config = board_motion_config();
+        c = command(&r, ARC_MOVE, 0.230);
+        c.speed[0] = c.speed[1] = 0.06;
+        CHECK(motion_accept(&r.m, &c, r.now) == R_OK);
+        measured_arc_endpoint(&r, example == 0U ? 0.210 : 0.226,
+                                  example == 0U ? 0.210 : 0.234);
+        for (unsigned i = 0U; i < 100U && r.m.status.state != FAULT; ++i) { tick(&r, false); }
+        CHECK(r.m.status.state == FAULT && r.m.status.fault == F_FEEDBACK);
+        CHECK(r.m.status.feedback_cause == FB_NO_PROGRESS);
+    }
+}
+
+static void fault_context_tests(void)
+{
+    rig_t r;
+    motion_command_t c;
+    motion_fault_debug_t saved;
+    init(&r);
+    c = command(&r, ARC_MOVE, 0.230);
+    c.id = 5101U;
+    c.speed[0] = c.speed[1] = 0.06;
+    CHECK(motion_accept(&r.m, &c, r.now) == R_OK);
+    for (unsigned i = 0U; i < 150U && r.m.status.state != FAULT; ++i) { tick(&r, false); }
+    CHECK(r.m.status.fault == F_FEEDBACK && r.m.status.feedback_cause == FB_NO_PROGRESS);
+    CHECK(r.m.status.debug.recorded && r.m.status.debug.stalled_wheels == 1U);
+    CHECK(r.m.status.debug.id == 5101U && r.m.status.debug.state == DRIVING);
+    CHECK(r.m.status.debug.mode == ARC_MOVE && r.m.status.debug.finite_goal);
+    CHECK(r.m.status.debug.target_mm_s[0] > 0 && r.m.status.debug.output_permille[0] > 0);
+    CHECK(r.m.status.output[0] == 0.0 && r.m.status.target[0] == 0.0);
+    CHECK(r.m.status.debug.no_progress_ms[0] >= r.m.status.debug.feedback_limit_ms[0]);
+    NEAR((double)r.m.status.debug.remaining_um[0], 230000.0, 2.0);
+    CHECK(r.m.status.debug.dt_us > 9000 && r.m.status.debug.dt_us < 11000);
+    saved = r.m.status.debug;
+    r.sample.invalid[1] = 7U;
+    tick(&r, false);
+    CHECK(memcmp(&saved, &r.m.status.debug, sizeof(saved)) == 0);
+    CHECK(motion_reset(&r.m, true, true, r.sample, r.now));
+    CHECK(!r.m.status.debug.recorded && r.m.status.debug.stalled_wheels == 0U);
+
+    init(&r);
+    c = command(&r, WHEEL_SPEED_TRACKING, 0.0);
+    CHECK(motion_accept(&r.m, &c, r.now) == R_OK);
+    for (unsigned i = 0U; i < 150U && r.m.status.state != FAULT; ++i) {
+        ++r.sample.count[0]; /* Left keeps producing edges; right is stalled. */
+        c.expires = r.now + 0.25;
+        CHECK(motion_accept(&r.m, &c, r.now) == R_OK);
+        tick(&r, false);
+    }
+    CHECK(r.m.status.feedback_cause == FB_NO_PROGRESS && r.m.status.debug.stalled_wheels == 2U);
+    CHECK(!r.m.status.debug.finite_goal);
+    CHECK(r.m.status.debug.no_progress_ms[1] >= r.m.status.debug.feedback_limit_ms[1]);
+    CHECK(strcmp(motion_feedback_name(FB_NO_PROGRESS), "NO_ENCODER_PROGRESS") == 0);
+    CHECK(strcmp(motion_fault_name(F_FEEDBACK), "FEEDBACK") == 0);
+    CHECK(strcmp(motion_mode_name(ARC_MOVE), "ARC") == 0);
+
+    init(&r);
+    motion_step(&r.m, r.sample, NAN);
+    CHECK(r.m.status.fault == F_TIMING && r.m.status.debug.time_ms == INT32_MIN);
+}
+
 static void feedback_diagnostic_tests(void)
 {
     rig_t r;
@@ -705,11 +883,14 @@ int main(void)
     math_tests(); movement_tests(); safety_tests(); correction_and_final_tests(); bus_tests(); validation_tests();
     low_speed_feedback_tests();
     encoder_capture_tests();
+    board_encoder_polarity_tests();
     production_line_integration_tests();
     arc_tests();
     startup_sampling_tests();
     startup_gap_tests();
     feedback_diagnostic_tests();
+    arc_finish_window_tests();
+    fault_context_tests();
     printf("PASS: %u checks (synthetic host model; no hardware accuracy claim)\n", checks);
     return 0;
 }

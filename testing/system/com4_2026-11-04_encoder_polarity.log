@@ -1,0 +1,329 @@
+[DEBUG] feed_age_ms=5 nmi_checks=483 usb_dropped=4962 scheduler_guard=1
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=0 state=2 fault=0 speed_mm_s=0,-65 output_permille=0,250
+[OBSTACLE] approaching: 377 mm ahead at -42 mm/s
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=0 state=2 fault=0 speed_mm_s=0,-74 output_permille=0,250
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=0 state=2 fault=0 speed_mm_s=-8,-83 output_permille=79,250
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=0 state=2 fault=0 speed_mm_s=-158,-125 output_permille=250,250
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1844 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=496 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=1008 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=400 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=1888 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1944 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=kernel used=520 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=b2-line-steering-v1-20261104T041249Z-no-s4
+[DEBUG] feed_age_ms=8 nmi_checks=523 usb_dropped=4962 scheduler_guard=1
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=0 state=2 fault=0 speed_mm_s=0,-91 output_permille=0,250
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=0 state=2 fault=0 speed_mm_s=-157,-121 output_permille=250,250
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=0 state=2 fault=0 speed_mm_s=-128,0 output_permille=250,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=0 state=2 fault=0 speed_mm_s=-116,0 output_permille=250,0
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1844 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=496 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=1008 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=400 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=1888 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1944 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=kernel used=520 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=b2-line-steering-v1-20261104T041249Z-no-s4
+[DEBUG] feed_age_ms=1 nmi_checks=563 usb_dropped=4962 scheduler_guard=1
+line_pid centre_ir=1 right_ir=1 direction=2 sweep=0 request=0 state=2 fault=0 speed_mm_s=-108,-83 output_permille=250,250
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=0 state=2 fault=0 speed_mm_s=-129,-102 output_permille=250,250
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=0 state=2 fault=0 speed_mm_s=0,-61 output_permille=0,250
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=0 state=2 fault=0 speed_mm_s=-148,-65 output_permille=250,250
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1844 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=496 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=1008 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=400 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=1888 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1944 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=kernel used=520 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=b2-line-steering-v1-20261104T041249Z-no-s4
+[DEBUG] feed_age_ms=8 nmi_checks=603 usb_dropped=4962 scheduler_guard=1
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=0 state=2 fault=0 speed_mm_s=-18,-55 output_permille=0,250
+[OBSTACLE] approaching: 445 mm ahead at -19 mm/s
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=0 state=2 fault=0 speed_mm_s=0,0 output_permille=0,250
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=4294921550,4294919013 invalid=0,0 previous_invalid=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=4294921550,4294919013 invalid=0,0 previous_invalid=0,0
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1844 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=496 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=1052 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=400 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=1888 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1944 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=kernel used=520 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=b2-line-steering-v1-20261104T041249Z-no-s4
+[DEBUG] feed_age_ms=1 nmi_checks=643 usb_dropped=4962 scheduler_guard=1
+[FAULT] FEEDBACK(4) feedback=NO_ENCODER_PROGRESS(4) id=3001 held=1; firmware running
+[FAULT] captured_ms=31145 mode=TRACKING previous_state=2 dt_us=8997 finite_goal=0
+[FAULT] LEFT stalled=0 target_mm_s=0 speed_mm_s=0 request_permille=0
+[FAULT] LEFT remaining_um=0 no_progress_ms=0 limit_ms=0 count=4294921550 invalid=0
+[FAULT] RIGHT stalled=1 target_mm_s=100 speed_mm_s=0 request_permille=250
+[FAULT] RIGHT remaining_um=0 no_progress_ms=408 limit_ms=401 count=4294919013 invalid=0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=5 fault=4 speed_mm_s=0,0 output_permille=0,0
+line_fb cause=4 reliable=1 counts=4294921550,4294919013 invalid=0,0 previous_invalid=0,0
+---- Closed serial port COM4 due to disconnection from the machine ----
+---- Opened the serial port COM4 ----
+0261104T041249Z-no-s4 hardware_confirmed=1 manual_enabled=0 max_output_percent=25 production=1 subsystem4_enabled=0 subsystem5_enabled=1
+[STACK] idle_capacity=2048 bytes (interrupts share the idle stack)
+[OBSTACLE] ready: servo GP7 at 90 deg, ultrasonic TRIG GP16 / ECHO GP17, slow zone 450 mm, stop at 150 mm
+[OBSTACLE] approaching: 305 mm ahead at 0 mm/s
+line_pid centre_ir=1 right_ir=1 direction=0 sweep=0 request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0
+[STACK] idle_used=200 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1844 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=320 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=1000 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=176 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=1792 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=984 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=kernel used=352 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=b2-line-steering-v1-20261104T041249Z-no-s4
+[DEBUG] feed_age_ms=1 nmi_checks=42 usb_dropped=0 scheduler_guard=1
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=0 state=2 fault=0 speed_mm_s=-157,-74 output_permille=250,250
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=0 state=2 fault=0 speed_mm_s=0,-121 output_permille=0,250
+line_pid centre_ir=1 right_ir=0 direction=3 sweep=0 request=0 state=2 fault=0 speed_mm_s=-7,-61 output_permille=59,250
+[STACK] idle_used=248 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1844 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=384 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=1008 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=376 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=1864 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1624 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=kernel used=448 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=b2-line-steering-v1-20261104T041249Z-no-s4
+[DEBUG] feed_age_ms=4 nmi_checks=82 usb_dropped=0 scheduler_guard=1
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=0 state=2 fault=0 speed_mm_s=-150,-83 output_permille=250,250
+[OBSTACLE] approaching: 302 mm ahead at -37 mm/s
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=0 state=2 fault=0 speed_mm_s=0,-65 output_permille=0,250
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=0 state=2 fault=0 speed_mm_s=0,-75 output_permille=0,250
+[OBSTACLE] approaching: 446 mm ahead at -38 mm/s
+line_pid centre_ir=1 right_ir=0 direction=1 sweep=1 request=0 state=2 fault=0 speed_mm_s=0,-83 output_permille=0,250
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1844 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=384 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=1008 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=376 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=1864 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1624 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=kernel used=448 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=b2-line-steering-v1-20261104T041249Z-no-s4
+[DEBUG] feed_age_ms=8 nmi_checks=122 usb_dropped=0 scheduler_guard=1
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=0 state=2 fault=0 speed_mm_s=-139,-111 output_permille=250,250
+[OBSTACLE] approaching: 437 mm ahead at -61 mm/s
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=0 state=2 fault=0 speed_mm_s=0,-106 output_permille=0,250
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=0 state=2 fault=0 speed_mm[STACK] idle_used=264 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1844 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=496 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=1008 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=400 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=1888 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1944 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=kernel used=448 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=b2-line-steering-v1-20261104T041249Z-no-s4
+[DEBUG] feed_age_ms=2 nmi_checks=403 usb_dropped=8450 scheduler_guard=1
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=0 state=2 fault=0 speed_mm_s=0,-74 output_permille=0,250
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=0 state=2 fault=0 speed_mm_s=0,-83 output_permille=0,250
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=0 request=0 state=2 fault=0 speed_mm_s=-150,-134 output_permille=250,250
+[OBSTACLE] approaching: 440 mm ahead at -47 mm/s
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=0 state=2 fault=0 speed_mm_s=0,-83 output_permille=0,250
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1844 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=496 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=1008 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=400 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=1888 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1944 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=kernel used=464 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=b2-line-steering-v1-20261104T041249Z-no-s4
+[DEBUG] feed_age_ms=8 nmi_checks=443 usb_dropped=8450 scheduler_guard=1
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=0 state=2 fault=0 speed_mm_s=0,-83 output_permille=0,250
+[OBSTACLE] approaching: 366 mm ahead at -42 mm/s
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=0 state=2 fault=0 speed_mm_s=0,-74 output_permille=0,250
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=0 state=2 fault=0 speed_mm_s=-150,-125 output_permille=250,250
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=0 state=2 fault=0 speed_mm_s=0,-106 output_permille=0,250
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1844 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=496 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=1008 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=400 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=1888 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1944 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=kernel used=520 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=b2-line-steering-v1-20261104T041249Z-no-s4
+[DEBUG] feed_age_ms=3 nmi_checks=483 usb_dropped=8450 scheduler_guard=1
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=0 state=2 fault=0 speed_mm_s=0,-91 output_permille=0,250
+line_pid centre_ir=0 right_ir=0 direction=3 sweep=0 request=0 state=2 fault=0 speed_mm_s=-111,-83 output_permille=250,250
+line_pid centre_ir=0 right_ir=1 direction=4 sweep=0 request=0 state=2 fault=0 speed_mm_s=-138,-130 output_permille=250,250
+[OBSTACLE] approaching: 168 mm ahead at -138 mm/s
+[OBSTACLE] STOP: 114 mm ahead at -146 mm/s
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=3 fault=0 speed_mm_s=-129,-111 output_permille=0,0
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1844 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=496 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=1008 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=400 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=2360 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1944 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=kernel used=520 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=b2-line-steering-v1-20261104T041249Z-no-s4
+[DEBUG] feed_age_ms=5 nmi_checks=523 usb_dropped=8450 scheduler_guard=1
+[OBSTACLE] scanning 20..160 deg
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1844 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=496 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=1008 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=400 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=2360 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1944 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=kernel used=520 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=b2-line-steering-v1-20261104T041249Z-no-s4
+[DEBUG] feed_age_ms=8 nmi_checks=563 usb_dropped=8450 scheduler_guard=1
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1844 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=496 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=1008 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=400 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=2360 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1944 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=kernel used=520 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=b2-line-steering-v1-20261104T041249Z-no-s4
+[DEBUG] feed_age_ms=1 nmi_checks=603 usb_dropped=8450 scheduler_guard=1
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1844 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=496 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=1008 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=400 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=2360 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1944 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=kernel used=520 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=b2-line-steering-v1-20261104T041249Z-no-s4
+[DEBUG] feed_age_ms=6 nmi_checks=643 usb_dropped=8450 scheduler_guard=1
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1844 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=496 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=1008 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=400 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=2360 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1944 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=kernel used=520 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=b2-line-steering-v1-20261104T041249Z-no-s4
+[DEBUG] feed_age_ms=2 nmi_checks=683 usb_dropped=8450 scheduler_guard=1
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+[OBSTACLE] hold/still confirmation lost; scan aborted
+[OBSTACLE] no echo straight ahead when the scan began; no width measured
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=8,0 output_permille=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1844 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=496 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=1008 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=400 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=2408 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1944 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=kernel used=520 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=b2-line-steering-v1-20261104T041249Z-no-s4
+[DEBUG] feed_age_ms=8 nmi_checks=723 usb_dropped=8450 scheduler_guard=1
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1844 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=496 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=1008 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=400 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=2408 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1944 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=kernel used=520 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=b2-line-steering-v1-20261104T041249Z-no-s4
+[DEBUG] feed_age_ms=4 nmi_checks=764 usb_dropped=8450 scheduler_guard=1
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1844 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=496 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=1008 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=400 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=2408 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1944 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=kernel used=520 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=b2-line-steering-v1-20261104T041249Z-no-s4
+[DEBUG] feed_age_ms=8 nmi_checks=804 usb_dropped=8450 scheduler_guard=1
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1844 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=496 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=1008 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=400 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=2408 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1944 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=kernel used=520 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=b2-line-steering-v1-20261104T041249Z-no-s4
+[DEBUG] feed_age_ms=1 nmi_checks=844 usb_dropped=8450 scheduler_guard=1
+line_pid centre_ir=0 right_ir=0 direction=1 sweep=1 request=3 state=4 fault=0 speed_mm_s=0,0 output_permille=0,0
+---- Closed serial port COM4 due to disconnection from the machine ----

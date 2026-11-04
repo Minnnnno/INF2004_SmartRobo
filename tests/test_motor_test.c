@@ -223,7 +223,7 @@ int main(int argc, char **argv)
     CHECK(config.counts_per_rev[0] == 2542.4 && config.counts_per_rev[1] == 2543.4);
     CHECK(!config.hardware_confirmed && !config.manual_enabled);
     CHECK(config.motor_sign[0] == 1 && config.motor_sign[1] == -1);
-    CHECK(config.encoder_sign[0] == 1 && config.encoder_sign[1] == -1);
+    CHECK(config.encoder_sign[0] == -1 && config.encoder_sign[1] == 1);
     CHECK(config.diameter[0] == 0.0675 && config.diameter[1] == 0.0679 && config.track == 0.115);
     CHECK(encoder_pins[0][0] == 2U && encoder_pins[0][1] == 3U);
     CHECK(encoder_pins[1][0] == 4U && encoder_pins[1][1] == 5U);

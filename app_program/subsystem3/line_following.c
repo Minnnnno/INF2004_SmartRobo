@@ -79,6 +79,9 @@ static void line_loop(void)
 #define LINE_BACKUP_SPEED   0.075 /* m/s reversing back to where the line was last seen. */
 #define LINE_BACKUP_EXTRA   0.02  /* m reversed beyond the overshoot. */
 #define LINE_SEARCH_TIMEOUT 15.0  /* s backstop before holding still, e.g. if a wheel slips. */
+#define LINE_OBSTACLE_AVOIDING 5.0 /* Obstacle status values[3] while subsystem 5 drives round an
+                                    * obstacle: S5_STATE_AVOIDING in subsystem5.h (not included:
+                                    * it needs the kernel headers the host tests lack). */
 
 /* Numeric order is printed as sweep=%u in the diagnostics. */
 typedef enum { SEARCH_IDLE, SEARCH_FIRST_SIDE, SEARCH_OTHER_SIDE, SEARCH_TURN_BACK,
@@ -162,11 +165,12 @@ static void line_publish(line_direction_t direction, double now)
 static void line_report(unsigned centre, unsigned right, line_direction_t direction,
                         line_search_phase_t phase, motion_result_t result, const motion_status_t *m)
 {
-    tm_printf((const UB *)"line_pid centre_ir=%u right_ir=%u direction=%u sweep=%u request=%u state=%u fault=%u speed_mm_s=%d,%d output_permille=%d,%d\n",
+    tm_printf((const UB *)"line_pid centre_ir=%u right_ir=%u direction=%u sweep=%u request=%u state=%u fault=%u speed_mm_s=%d,%d output_permille=%d,%d target_mm_s=%d,%d\n",
         centre, right, (unsigned)direction, (unsigned)phase, (unsigned)result,
         (unsigned)m->state, (unsigned)m->fault,
         (int)(m->speed[0] * 1000.0), (int)(m->speed[1] * 1000.0),
-        (int)(m->output[0] * 1000.0), (int)(m->output[1] * 1000.0));
+        (int)(m->output[0] * 1000.0), (int)(m->output[1] * 1000.0),
+        (int)(m->target[0] * 1000.0), (int)(m->target[1] * 1000.0));
     if (m->fault == F_FEEDBACK) {
         /* Encoder fault details recorded by Motion Control (see motion.h enums). */
         const encoder_sample_t *f = &m->feedback_fault_sample;
@@ -202,7 +206,10 @@ static void line_loop(void)
         line_publish(direction, now);
         if (motion_get_status(&status)) {
             bool owns = status.owner_valid && status.owner == SOURCE_LINE && status.motion.id == LINE_SESSION;
-            bool usable = !status.motion.hold && status.motion.fault == F_NONE;
+            /* Subsystem 5 drives round obstacles itself; keep off the wheels until it
+             * publishes that it is back on the line. Exact compare: the value is copied. */
+            bool avoiding = status.obstacle.values[3] == LINE_OBSTACLE_AVOIDING;
+            bool usable = !status.motion.hold && status.motion.fault == F_NONE && !avoiding;
             line_direction_t drive = direction;
             if (direction != LINE_LOST) {
                 search.seen_heading = status.motion.heading;

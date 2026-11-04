@@ -20,7 +20,7 @@ simulations with unequal motor response):
 ```
 These host checks do not exercise physical buttons, PWM hardware or native USB.
 
-Pins: left encoder GP4/6; right GP5/7. Encoder signs -1/+1 make forward positive.
+Pins: left encoder GP2/3; right GP4/5. Encoder signs -1/+1 make forward positive.
 Left motor GP8/9, right GP10/11, electrical signs +1/-1. Maximum PWM left24.9%,
 right25%. Version2 uses a shared slowdown toward22% in the final80mm of axle
 centre travel, preserving the24.9:25 trim ratio. Encoder travel difference
