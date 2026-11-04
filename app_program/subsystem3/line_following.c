@@ -67,6 +67,7 @@ static void line_loop(void)
  * and acknowledged handover back from obstacle avoidance. */
 #include "steering.h"
 #include "motion_hal.h"
+#include "line_rejoin.h"
 /* Both IR sensors read black (1) when centred on the line; GP26 sits slightly right of centre. */
 #define DEG_TO_RAD          (0.017453292519943295)
 #define LINE_SESSION        3001U
@@ -151,7 +152,8 @@ static motion_result_t line_follow(line_direction_t drive)
     return motion_steer(SOURCE_LINE, LINE_SESSION, LINE_SPEED, 0.0);
 }
 
-/* Existing line-error/confidence slots; no junction detector. */
+/* Existing line-error/confidence slots, plus both-sensors-black for line_rejoin_seen().
+ * No junction detector. */
 static void line_publish(line_direction_t direction, double now)
 {
     double error = 0.0;
@@ -159,6 +161,7 @@ static void line_publish(line_direction_t direction, double now)
     else if (direction == LINE_RIGHT) { error = 1.0; }
     subsystem_status_t line_status = {.available = true, .timestamp = now,
         .values = {error, (direction != LINE_LOST && direction != LINE_WAIT) ? 1.0 : 0.0, 0.0, 0.0}};
+    line_status.values[LINE_VALUE_BOTH_BLACK] = (direction == LINE_STRAIGHT) ? 1.0 : 0.0;
     (void)robot_update_subsystem(SOURCE_LINE, &line_status);
 }
 

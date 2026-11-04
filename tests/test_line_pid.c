@@ -59,7 +59,11 @@ bool robot_update_subsystem(request_source_t source,const subsystem_status_t *li
     CHECK(source==SOURCE_LINE && line->available && line->timestamp==motion_hal_time());
     CHECK(line->values[0]>=-1.0 && line->values[0]<=1.0);
     CHECK(line->values[1]==0.0 || line->values[1]==1.0);
-    CHECK(line->values[2]==0.0 && line->values[3]==0.0);
+    CHECK(line->values[3]==0.0);
+    /* Both sensors black, debounced: the first sample of a pair does not count. */
+    if (row==0U || row==3U) { CHECK(line->values[2]==0.0); }
+    if (row==1U) { CHECK(line->values[2]==1.0); }
+    CHECK(line->values[2]==0.0 || line->values[2]==1.0);
     return true;
 }
 bool motion_get_status(robot_status_t *out)
