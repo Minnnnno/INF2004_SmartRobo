@@ -90,6 +90,32 @@ A 5 V module would need a divider or a level shifter on ECHO.
    preferred side has no room the other is used; if neither has, the result
    is **no way around**.
 
+   **The face.** The robot can stop tilted to the obstacle, most of all after a
+   curve, since two line sensors give its position but not its angle. A flat
+   face reads the same either side of its perpendicular, and the beam hears a
+   corner at the corner's own range however far past it the beam points. So
+   `s5_face_fit()` takes from the ranges alone: the tilt (the midpoint of where
+   the range rises through one level on each side), the distance D (the shortest
+   range) and each corner's reach along the face, `sqrt(range^2 - D^2)`. Width is
+   the two reaches, and none of this needs the width of the beam. A corner is
+   placed if the range jumps past it, or stops rising at the limit of the sweep;
+   a range still rising there (a wall) leaves that side with no room.
+
+   With a fit, the side and the shifts are measured square to the face, from the
+   axle. A face more than about 20 mm (`S5_FACE_CENTRE_FRACTION` of D) off centre
+   is passed on the side it reaches less; a centred one on the side that was
+   closer when the robot stopped, if tilted by `S5_FACE_TILT_MIN_DEG`. The detour then works
+   in the face's frame, so every turn is measured from square to it, the pass
+   runs parallel to it and the way back aims for the line. This assumes the box
+   sits square to the line; if it does not, the way back is off by that much. If
+   the scan cannot support a fit (a thin post, too little rise, straight ahead
+   being a different object from the nearest), the edge angles decide as above.
+
+   On 200 mm box scans logged on 5 November the fit read 167 to 206 mm, median
+   184. Each scan prints a `face:` line. To calibrate, scan a square-on box a few
+   times and set `S5_FACE_TILT_BIAS_DEG` to the tilt read, sign reversed. The
+   `curve check:` line is only logged now.
+
    "Something beside the obstacle" is any echo outside its edge that is not
    part of it, is more than `S5_SPILL_RANGE_MM` beyond its farthest point
    (nearer off-axis echoes are its own corners), and is no more than
@@ -170,6 +196,10 @@ axle centre.
    Blocked checks, sensor failures, movement and interruptions all stop the
    detour and leave it held. Console messages distinguish `clearance=diagonal`,
    `clearance=parallel`, and `insufficient sideways clearance`.
+   If the diagonal sweep is blocked by an echo (not a sensor fault), the robot
+   first turns further out by `S5_OUT_RETRY_STEP_DEG` and sweeps again, up to
+   `S5_OUT_RETRY_MAX_DEG`, with a shorter diagonal for the same sideways shift,
+   and only gives up if every angle is blocked.
 3. **Past it.** It drives forward in one continuous move, without stopping to
    look. The one sensor alternates between sideways at the obstacle (servo 20
    or 160 deg, 70 deg off straight ahead) and straight ahead (stops if anything
@@ -189,7 +219,8 @@ axle centre.
    came later. Clearing the obstacle now relies on the sideways gap, not on
    driving past it first; `subsystem5_test.c` checks the geometry.
 
-   **Line interrupt (steps 3, 4 and 5).** If Buddy 3's centre and right IR
+   **Line interrupt (from `S5_REJOIN_AFTER_MM`, 20 mm, into step 3, not during
+   a stall escape, and in steps 4 and 5).** If Buddy 3's centre and right IR
    sensors both read black (`line_rejoin_seen()` in
    `subsystem3/line_rejoin.h`, debounced over two samples), the robot stops and
    goes to step 6, wherever odometry puts it. If braking carried it off the
@@ -205,6 +236,7 @@ axle centre.
    hands over as above. One sensor only counts within `S5_LINE_WINDOW_MM` of where
    odometry puts the line. If nothing is found within `S5_RETURN_EXTRA_MM` past
    where the line should be, it stops.
+
 6. **Hand back.** `values[3]` returns to 0 and the line follower takes over from
    wherever the robot is, typically at an angle across the line. Going straight
    loses the line, and the follower's search (up to 60 deg each way) finds it. It
@@ -285,6 +317,11 @@ as clear. Straight ahead, the two are the same.
 | `S5_PASS_LOOKAHEAD_MM` | obstacle_scan.h | How far past the face something can still block a side (300 mm) |
 | `S5_SPILL_RANGE_MM` | obstacle_scan.h | Off-axis echoes nearer than the obstacle's far point + this are its corners (50 mm) |
 | `S5_DEFAULT_AVOID` | obstacle_scan.h | Side for a centred obstacle (right) |
+| `S5_FACE_JUMP_MM`, `S5_FACE_TAIL_MM` | obstacle_scan.h | A bigger step ends the face (45 mm); a last reading this far past the one before is a grazing echo, not the corner (20 mm) |
+| `S5_FACE_CENTRE_FRACTION`, `S5_FACE_TILT_MIN_DEG` | obstacle_scan.h | Off-centre tolerance as a fraction of D (0.11, about 20 mm at the stop); tilt that decides a centred face's side (5°) |
+| `S5_FACE_TILT_BIAS_DEG` | obstacle_scan.h | Added to every tilt: **measure** on a square-on box (0° until then) |
+| `S5_CURVE_MIN_DEG`, `S5_CURVE_WINDOW_MM` | obstacle_scan.h | A curve, for the log only: this heading change within this travel (25°, 300 mm) |
+| `S5_CURVE_HOLD_MM` | obstacle_scan.h | How much further it still counts as after a curve (300 mm) |
 | `S5_SAMPLES_PER_POINT` | obstacle_scan.h | Pings per angle (5) |
 | `S5_SENSOR_OFFSET_MM` | obstacle_scan.h | Servo axis to sensor along the horn arm (30 mm) |
 | `S5_BEAM_CORRECTION_DEG` | obstacle_scan.h | Beam-width correction (22Â°), below |
@@ -295,6 +332,10 @@ as clear. Straight ahead, the two are the same.
 | `S5_TURN_MARGIN_MM` | detour_plan.h | Kept from the face by the front corners while turning out (30 mm) |
 | `S5_OUT_MIN_DEG`, `S5_OUT_MAX_DEG` | detour_plan.h | Outward turn range (45..75Â°) |
 | `S5_BACKUP_MAX_MM` | detour_plan.h | Most reversing before turning out (150 mm) |
+| `S5_OUT_RETRY_STEP_DEG`, `S5_OUT_RETRY_MAX_DEG` | detour_plan.h | If the diagonal sweep finds something in the way, turn this much further out (10°) and look again, up to straight sideways (90°); the diagonal is shortened to keep the same shift |
+| `S5_SQUARE_MIN_DEG`, `S5_SQUARE_TRIES` | subsystem5.c | Tilted by at least this (5 deg): turn on the spot to face the obstacle, up to 2 times, checking the angle with a coarse sweep only. The full scan with the fine edges runs once, after the last turn. The tilt it stopped with is kept for the side choice and the way back to the line |
+| `S5_STILL_MOVE_MM` | detour.c | A scan or stopped look only fails on real movement beyond this (5 mm): one encoder count of wobble clears Motion Control's "stationary" and is ignored |
+| `S5_FACE_EDGE_ECHO_DEG`, `S5_FACE_EDGE_CONFIRM_DEG` | obstacle_scan.h | A reading within 3 deg past the face's end only blocks that side if one within the next 5 deg agrees: it can be the corner's own echo |
 | `S5_DIAGONAL_STEP_MM` | detour_plan.h | Maximum diagonal section between stopped sweeps (400 mm, so normally one section) |
 | `S5_DIAGONAL_EXTRA_MM`, `S5_MIN_DIAGONAL_STEP_MM` | detour_plan.h | Driven beyond the planned diagonal (50 mm); shortest diagonal section, shorter remainders are dropped (10 mm) |
 | `S5_GUARD_SWEEP_DEG`, `S5_GUARD_SWEEP_STEP_DEG` | detour_plan.h | Guard bearings: +/-30 deg in 30-degree steps |

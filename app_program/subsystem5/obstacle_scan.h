@@ -38,6 +38,14 @@
    fixed mm, so the rule is equally strict at any stop distance: 0.3 is
    ~80 mm at 250 mm, ~54 mm at the 150 mm stop. */
 #define S5_EDGE_THRESHOLD_FRACTION	0.3
+/* The forward-distance rule above misses a face that slopes towards the robot
+   (a tilted box, or a robot angled to it after a curve): its forward distance
+   changes along the face, so it looks like a gap.  While walking an edge, a
+   point whose range is within this of the previous point on the obstacle is the
+   same surface.  An edge is the range jumping by more, so a box in front of a
+   distant wall still ends where it does.  Sloping surfaces run on to the limit
+   of the sweep: that edge is "not found" and that side is not passed. */
+#define S5_CONTINUITY_MM	25.0
 
 /* ---- per-angle measurement ---- */
 #define S5_SAMPLES_PER_POINT	5U	/* pings at every angle */
@@ -70,6 +78,7 @@
 
 /* ---- avoidance: which side to pass on ---- */
 #define S5_ROBOT_HALF_WIDTH_MM	80.0	/* robot is 160 mm wide */
+#define S5_SERVO_AHEAD_MM	60.0	/* servo axis ahead of the axle: MEASURE */
 #define S5_PASS_MARGIN_MM	50.0	/* kept from the obstacle and anything beside it */
 /* Something beside the obstacle blocks that side only if its forward
    distance is within this of the obstacle's face. */
@@ -79,6 +88,63 @@
 #define S5_SPILL_RANGE_MM	50.0
 /* Side to pass a centred obstacle on, when both sides have room */
 #define S5_DEFAULT_AVOID	S5_AVOID_RIGHT
+
+/* ---- the face: how the robot is tilted to the obstacle ----
+   Two line sensors give the robot's position, not its angle, so it can stop
+   tilted to the obstacle, most of all just after a curve.  Readings of a flat
+   face depend only on the angle from its perpendicular, so they rise equally
+   either side of it, and the beam hears a corner at that corner's own range
+   however far past it the beam points.  So from the ranges alone:
+     tilt     the midpoint of where the range rises through one level each side
+     distance the shortest range (D)
+     reach    of each corner along the face: sqrt(range^2 - D^2)
+   None of that needs the width of the beam, so unlike the edge angles it needs
+   no S5_BEAM_CORRECTION_DEG, and a corner still heard at the limit of the sweep
+   is still placed. */
+#define S5_FACE_SEARCH_DEG	40	/* the shortest range is this near straight ahead */
+#define S5_FACE_JUMP_MM		45.0	/* a bigger step between neighbours ends the face */
+#define S5_FACE_TAIL_MM		20.0	/* a last reading this far past the one before is a long
+					   grazing echo, not the corner */
+/* ... unless that reading is still on the plane fitted so far: a flat wall's
+   range rises fast between coarse angles.  Between what a beam this wide would
+   read and a little over the ray along its axis. */
+#define S5_FACE_PLANE_BEAM_DEG	25.0
+#define S5_FACE_PLANE_OVER	1.1
+#define S5_FACE_MIN_POINTS	3U
+#define S5_FACE_MIN_RISE_MM	5.0	/* less rise on either side says nothing of the tilt */
+#define S5_FACE_MAX_TILT_DEG	45.0	/* a fit past this is not believed */
+#define S5_FACE_EDGE_AGREE_DEG	10.0	/* with both edges seen, average in their tilt if this close */
+/* A face still at the sweep limit has a corner there if its range has stopped
+   rising; if it is still rising, the corner is beyond the sweep. */
+#define S5_FACE_FLAT_MM		12.0
+#define S5_FACE_FLAT_DEG	20
+/* Centred when the corners' reaches differ by no more than this fraction of
+   D, twice over: about 20 mm off centre at the 150 mm stop. */
+#define S5_FACE_CENTRE_FRACTION	0.11
+/* A centred face is passed on the side that was closer when the robot stopped
+   (it points away from that side), if it was tilted by at least this. */
+#define S5_FACE_TILT_MIN_DEG	5.0
+/* A reading this close past the end of the face can be the corner's own echo:
+   it only blocks that side if a reading further out, within the second angle,
+   puts something at about the same range. */
+#define S5_FACE_EDGE_ECHO_DEG	3
+#define S5_FACE_EDGE_CONFIRM_DEG	5
+/* Added to every tilt.  MEASURE: the tilt a square-on box reads, with the sign
+   reversed.  Logged scans lean one way, which may be servo trim. */
+#ifndef S5_FACE_TILT_BIAS_DEG
+#define S5_FACE_TILT_BIAS_DEG	0.0
+#endif
+
+/* Log only (the "curve check" line): nothing is decided from it. */
+/* A curve is a heading change of S5_CURVE_MIN_DEG within the last
+   S5_CURVE_WINDOW_MM of travel, remembered for S5_CURVE_HOLD_MM more.
+   Above the line follower's zigzag on a straight: tune from the
+   "curve check" line the scan prints. */
+#define S5_CURVE_MIN_DEG	25.0
+#define S5_CURVE_WINDOW_MM	300
+#define S5_CURVE_HOLD_MM	300.0
+#define S5_CURVE_SPACING_MM	20
+#define S5_CURVE_SAMPLES	(S5_CURVE_WINDOW_MM / S5_CURVE_SPACING_MM + 1)
 
 typedef enum {
 	S5_ECHO_OK,		/* a clear majority of pings agree */
@@ -129,6 +195,20 @@ typedef struct {
 	bool		b_bounded;	/* an edge lay beyond the sweep: that angle is a minimum */
 } s5_placement_t;
 
+typedef struct {
+	bool		b_valid;	/* false: too little to go on, the edge angles decide */
+	double		tilt_deg;	/* bearing of the face's perpendicular from straight ahead, + left.
+					   Negative: the robot points left of square to the face */
+	double		distance_mm;	/* servo axis to the face, along the perpendicular */
+	double		left_mm;	/* left corner, along the face from the perpendicular's foot */
+	double		right_mm;	/* right corner, the same way */
+	double		width_mm;
+	double		offset_mm;	/* the face's middle from that foot, + left */
+	bool		b_corner[2];	/* [S5_LEFT], [S5_RIGHT]: that corner has been placed */
+	int		end_deg[2];	/* servo angle where the face was last heard */
+	double		far_mm;		/* longest range on the face */
+} s5_face_t;
+
 typedef enum {
 	S5_AVOID_NONE,		/* nothing ahead, or no side has room */
 	S5_AVOID_LEFT,
@@ -157,9 +237,12 @@ typedef struct {
 	unsigned	fine_count[2];
 	unsigned	fine_outward[2];	/* fine[side][0..this) walked outward, the rest inward */
 	s5_edge_t	edge[2];	/* [S5_LEFT], [S5_RIGHT] */
-	double		width_mm;	/* lower bound unless both edges b_found */
+	double		width_mm;	/* lower bound unless both ends are known */
 	double		offset_mm;	/* obstacle centre, + left */
-	s5_placement_t	placement;	/* centre / left / right from the edge angles */
+	s5_face_t	face;		/* tilt, distance and corners; decides when valid */
+	double		squared_deg;	/* turned before this scan to face it, + left; the caller sets it */
+	s5_placement_t	placement;	/* centre / left / right: from the face when valid,
+					   else the edge angles; its degrees are always the edges' */
 	s5_avoid_t	avoid;		/* which side to pass on */
 } s5_scan_t;
 
@@ -198,11 +281,43 @@ bool	s5_scan_run(s5_scan_t *p_scan, s5_measure_fn measure, void *p_context);
    that it is centred.  s5_scan_run fills p_scan->placement with this. */
 void	s5_placement(const s5_scan_t *p_scan, s5_placement_t *p_out);
 
-/* Pass on the side the obstacle reaches less far to (LEFT position -> pass
-   RIGHT), S5_DEFAULT_AVOID when centred, the other side if the preferred
-   one has no room, NONE if neither has.  A side has room when its edge was
-   found and the nearest echo beside the obstacle leaves the robot
-   S5_PASS_MARGIN_MM.  s5_scan_run fills p_scan->avoid with this. */
+/* Pass on s5_preferred_side(), the other side if that one has no room, NONE
+   if neither has.  A side has room when its end is known and the nearest echo
+   beside the obstacle leaves the robot S5_PASS_MARGIN_MM.  With a valid face
+   all of it is measured square to the face, from the axle.  s5_scan_run fills
+   p_scan->avoid with this. */
 void	s5_avoidance(const s5_scan_t *p_scan, s5_avoid_t *p_out);
+
+/* The side to try first: away from the way the obstacle reaches further; a
+   centred face on the side that was closer at the stop; else S5_DEFAULT_AVOID. */
+s5_avoid_side_t	s5_preferred_side(const s5_scan_t *p_scan);
+/* Just enough to correct the robot's angle: the coarse sweep and the face fit,
+   with no fine scan, width or decision.  s5_scan_run() measures the obstacle.
+   False: the robot moved or the sensor failed. */
+bool	s5_tilt_scan(s5_scan_t *p_scan, s5_measure_fn measure, void *p_context);
+/* The tilt the robot stopped with: what is left, plus what it turned to square up */
+double	s5_start_tilt_deg(const s5_scan_t *p_scan);
+
+/* The face from the coarse sweep and the outward fine walks.  s5_scan_run
+   fills p_scan->face with this. */
+void	s5_face_fit(const s5_scan_t *p_scan, s5_face_t *p_out);
+
+/* Recent heading changes, from Motion Control's path and heading */
+typedef struct {
+	double		path_mm[S5_CURVE_SAMPLES];
+	double		heading_deg[S5_CURVE_SAMPLES];
+	unsigned	count;
+	unsigned	next;
+	double		now_mm;		/* path at the last note */
+	double		until_mm;	/* counts as just after a curve up to this path */
+	double		swing_deg;	/* largest heading change in the window, last note */
+	bool		b_marked;
+} s5_curve_t;
+
+void	s5_curve_reset(s5_curve_t *p_curve);
+void	s5_curve_note(s5_curve_t *p_curve, double path_mm, double heading_deg);
+/* Treat the next S5_CURVE_HOLD_MM as just after a curve, e.g. after a rejoin */
+void	s5_curve_mark(s5_curve_t *p_curve, double path_mm);
+bool	s5_curve_recent(const s5_curve_t *p_curve);
 
 #endif /* S5_OBSTACLE_SCAN_H */

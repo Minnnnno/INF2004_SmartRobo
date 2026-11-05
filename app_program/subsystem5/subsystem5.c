@@ -39,6 +39,11 @@
 #define S5_HISTORY_AGE_S	0.25	/* older pings no longer count */
 #define S5_WARN_PERIOD_S	5.0
 #define S5_PUBLISH_TRIES	10U	/* state changes the line follower must see */
+#define S5_RAD_TO_DEG		57.29577951308232
+#define S5_BACKOFF_TOL_MM	10.0	/* closer than S5_STOP_MM by more than this: reverse */
+#define S5_BACKOFF_TRIES	2U	/* reverse and measure again at most this often */
+#define S5_SQUARE_MIN_DEG	5.0	/* a smaller tilt is not worth turning for */
+#define S5_SQUARE_TRIES		2U	/* turn and scan again at most this often */
 
 typedef struct {
 	double		range_mm[S5_HISTORY];
@@ -48,6 +53,7 @@ typedef struct {
 } s5_history_t;
 
 static s5_scan_t	s5_scan;	/* ~10 KB: kept off the task stack */
+static s5_curve_t	s5_curve;
 static double		s5_front_mm = INFINITY;
 static double		s5_width_m;
 static double		s5_offset_m;
@@ -209,7 +215,7 @@ static bool hold_still(void)
 {
 	robot_status_t status;
 
-	if (s5_status(&status) && status.motion.hold && status.motion.stationary &&
+	if (s5_status(&status) && status.motion.hold && !s5_still_moved(&status) &&
 	    (status.motion.state == STOPPED) && (status.motion.fault == F_NONE)) {
 		return true;
 	}
@@ -222,6 +228,7 @@ static bool scan_measure(void *p_context, int angle_deg, s5_estimate_t *p_estima
 {
 	bool failed = false;
 	(void)p_context;
+	s5_still_mark();
 	if (!hold_still()) { return false; }
 	s5_servo_move(angle_deg);
 	if (!hold_still()) { return false; }
@@ -281,6 +288,12 @@ static const char *avoid_name(s5_avoid_side_t side)
 	return (side == S5_AVOID_LEFT) ? "left" : ((side == S5_AVOID_RIGHT) ? "right" : "none");
 }
 
+/* The end of the obstacle on this side has been placed */
+static bool end_known(const s5_scan_t *p_scan, unsigned side)
+{
+	return p_scan->face.b_valid ? p_scan->face.b_corner[side] : p_scan->edge[side].b_found;
+}
+
 /* "123 mm" or "none" for a side with nothing beside the obstacle */
 static void print_side(const char *p_name, unsigned side, const s5_scan_t *p_scan)
 {
@@ -288,12 +301,12 @@ static void print_side(const char *p_name, unsigned side, const s5_scan_t *p_sca
 
 	if (isfinite(p_avoid->clear_mm[side])) {
 		tm_printf((const UB *)"[OBSTACLE]   %s: move %s%d mm, nearest thing beside it %d mm out -> %s\n",
-			  p_name, p_scan->edge[side].b_found ? "" : ">= ",
+			  p_name, end_known(p_scan, side) ? "" : ">= ",
 			  s5_round(p_avoid->shift_mm[side]), s5_round(p_avoid->clear_mm[side]),
 			  p_avoid->b_room[side] ? "room" : "NO ROOM");
 	} else {
 		tm_printf((const UB *)"[OBSTACLE]   %s: move %s%d mm, nothing beside it -> %s\n",
-			  p_name, p_scan->edge[side].b_found ? "" : ">= ",
+			  p_name, end_known(p_scan, side) ? "" : ">= ",
 			  s5_round(p_avoid->shift_mm[side]),
 			  p_avoid->b_room[side] ? "room" : "NO ROOM (edge beyond the sweep)");
 	}
@@ -306,17 +319,15 @@ static void print_avoid(const s5_scan_t *p_scan)
 	switch (p_scan->avoid.side) {
 	case S5_AVOID_LEFT:
 	case S5_AVOID_RIGHT:
-		p_why = (p_scan->placement.position == S5_POSITION_LEFT) ||
-			(p_scan->placement.position == S5_POSITION_RIGHT) ?
-			"obstacle reaches less far that way" : "centred: default side";
-		if (((p_scan->placement.position == S5_POSITION_LEFT) &&
-		     (p_scan->avoid.side == S5_AVOID_LEFT)) ||
-		    ((p_scan->placement.position == S5_POSITION_RIGHT) &&
-		     (p_scan->avoid.side == S5_AVOID_RIGHT)) ||
-		    ((p_scan->placement.position != S5_POSITION_LEFT) &&
-		     (p_scan->placement.position != S5_POSITION_RIGHT) &&
-		     (p_scan->avoid.side != S5_DEFAULT_AVOID))) {
+		if (p_scan->avoid.side != s5_preferred_side(p_scan)) {
 			p_why = "the other side has no room";
+		} else if ((p_scan->placement.position == S5_POSITION_LEFT) ||
+			   (p_scan->placement.position == S5_POSITION_RIGHT)) {
+			p_why = "obstacle reaches less far that way";
+		} else if (fabs(s5_start_tilt_deg(p_scan)) >= S5_FACE_TILT_MIN_DEG) {
+			p_why = "centred: the side that was closer";
+		} else {
+			p_why = "centred: default side";
 		}
 		tm_printf((const UB *)"[OBSTACLE] ===== PASS ON THE %s (%s) =====\n",
 			  (p_scan->avoid.side == S5_AVOID_LEFT) ? "LEFT" : "RIGHT", p_why);
@@ -379,6 +390,24 @@ static void print_placement(const s5_placement_t *p_placement)
 	}
 }
 
+/* Printed for every scan: square-on scans give S5_FACE_TILT_BIAS_DEG */
+static void print_face(const s5_scan_t *p_scan)
+{
+	const s5_face_t	*p_face = &p_scan->face;
+	int		whole, tenth;
+	int		offset = s5_round(p_face->offset_mm);
+
+	tenths_of(p_face->tilt_deg, &whole, &tenth);
+	tm_printf((const UB *)"[OBSTACLE] face: robot points %d.%d deg %s of square, %d mm from the face; "
+		  "reaches %s%d mm left, %s%d mm right\n",
+		  whole, tenth, (p_face->tilt_deg <= 0.0) ? "left" : "right", s5_round(p_face->distance_mm),
+		  p_face->b_corner[S5_LEFT] ? "" : ">= ", s5_round(p_face->left_mm),
+		  p_face->b_corner[S5_RIGHT] ? "" : ">= ", s5_round(p_face->right_mm));
+	tm_printf((const UB *)"[OBSTACLE] position: %s (middle of the face %d mm %s of the robot, centred within %d mm)\n",
+		  position_name(p_scan->placement.position), s5_magnitude(offset), (offset >= 0) ? "left" : "right",
+		  s5_round(S5_FACE_CENTRE_FRACTION * p_face->distance_mm));
+}
+
 static void report_scan(const s5_scan_t *p_scan)
 {
 	unsigned	i;
@@ -418,12 +447,17 @@ static void report_scan(const s5_scan_t *p_scan)
 
 	width = s5_round(p_scan->width_mm);
 	offset = s5_round(p_scan->offset_mm);
-	b_complete = p_scan->edge[S5_LEFT].b_found && p_scan->edge[S5_RIGHT].b_found;
+	b_complete = end_known(p_scan, S5_LEFT) && end_known(p_scan, S5_RIGHT);
 	tm_printf((const UB *)"[OBSTACLE] ===== OBSTACLE WIDTH %s%d mm (%d.%d cm), %d mm ahead, "
 		  "centre %d mm %s =====\n",
 		  b_complete ? "" : ">= ", width, width / 10, width % 10, distance,
 		  s5_magnitude(offset), (offset >= 0) ? "left" : "right");
-	print_placement(&p_scan->placement);
+	if (p_scan->face.b_valid) {
+		print_face(p_scan);
+	} else {
+		tm_printf((const UB *)"[OBSTACLE] face: no fit, going by the edge angles\n");
+		print_placement(&p_scan->placement);
+	}
 	print_avoid(p_scan);
 	comms_latch_event(TF_EV_OBSTACLE | TF_EV_SCAN_DONE);
 
@@ -452,6 +486,132 @@ static void report_scan(const s5_scan_t *p_scan)
 		}
 	}
 }
+
+/* ---- back off ---- */
+
+#if S5_AVOID_DRIVE
+
+/* Stopped closer than S5_STOP_MM (a thin post, or one that came into the beam
+   late, e.g. mid-curve): reverse in a straight line until the sensor is
+   S5_STOP_MM away, measuring again after each move, so the scan and the detour
+   start from the usual distance.  True: ready to scan (held and still).
+   False: could not be moved or measured; the robot is stopped. */
+static bool back_off_if_close(void)
+{
+	unsigned attempt;
+
+	for (attempt = 0U; attempt < S5_BACKOFF_TRIES; attempt++) {
+		/* At an angle, the nearest part of the face is not straight ahead */
+		static const int angles[] = {90, 70, 110, 50, 130};
+		double		nearest_mm = INFINITY;
+		double		short_mm;
+		bool		b_moved;
+		unsigned	i;
+
+		for (i = 0U; i < (sizeof(angles) / sizeof(angles[0])); i++) {
+			s5_estimate_t estimate;
+
+			if (!scan_measure(NULL, angles[i], &estimate)) {
+				return false;
+			}
+			if (s5_estimate_usable(&estimate)) {
+				nearest_mm = fmin(nearest_mm, estimate.range_mm);
+			}
+		}
+		s5_servo_move(S5_ANGLE_CENTRE_DEG);
+		short_mm = S5_STOP_MM - nearest_mm;	/* nothing readable: the scan decides */
+		if (short_mm <= S5_BACKOFF_TOL_MM) {
+			return hold_still();
+		}
+		tm_printf((const UB *)"[OBSTACLE] too close: nearest %d mm, reversing %d mm to %d mm\n",
+			  s5_round(nearest_mm), s5_round(short_mm), s5_round(S5_STOP_MM));
+		s5_phase = S5_PHASE_AVOIDING;		/* the line follower keeps off while moving */
+		if (!publish_verified()) {
+			s5_phase = S5_PHASE_IDLE;
+			tm_printf((const UB *)"[OBSTACLE] could not tell the line follower to keep off; holding\n");
+			return false;
+		}
+		b_moved = s5_back_off(short_mm);
+		if (!b_moved) {
+			motion_stop();
+		}
+		s5_phase = S5_PHASE_IDLE;
+		(void)publish_verified();
+		if (!b_moved) {
+			tm_printf((const UB *)"[OBSTACLE] could not reverse; holding\n");
+			return false;
+		}
+		s5_still_mark();	/* that move was ours */
+	}
+	return hold_still();		/* still short after the last try: scan from here */
+}
+
+/* Worth turning to face the obstacle, and the front corners clear it doing so?
+   If there is no room the plan still works from the tilt it measured. */
+static bool square_wanted(const s5_scan_t *p_scan)
+{
+	const s5_face_t *p_face = &p_scan->face;
+
+	if (!p_face->b_valid || (fabs(p_face->tilt_deg) < S5_SQUARE_MIN_DEG)) {
+		return false;
+	}
+	if (p_face->distance_mm + S5_SERVO_AHEAD_MM * cos(p_face->tilt_deg / S5_RAD_TO_DEG) <
+	    hypot(S5_FRONT_MM, S5_ROBOT_HALF_WIDTH_MM) + S5_TURN_MARGIN_MM) {
+		tm_printf((const UB *)"[OBSTACLE] too close to turn square; using the measured tilt\n");
+		return false;
+	}
+	return true;
+}
+
+/* True: turned (*p_turned_deg added to) and held still, ready to look again. */
+static bool square_up(double tilt_deg, double *p_turned_deg)
+{
+	double	turned = 0.0;
+	bool	b_ok;
+
+	tm_printf((const UB *)"[OBSTACLE] turning %d deg to face it square\n", s5_round(tilt_deg));
+	s5_phase = S5_PHASE_AVOIDING;		/* the line follower keeps off while moving */
+	if (!publish_verified()) {
+		s5_phase = S5_PHASE_IDLE;
+		tm_printf((const UB *)"[OBSTACLE] could not tell the line follower to keep off; holding\n");
+		return false;
+	}
+	b_ok = s5_square_up(tilt_deg, &turned);
+	if (!b_ok) {
+		motion_stop();
+		tm_printf((const UB *)"[OBSTACLE] could not turn to face it; holding\n");
+	}
+	s5_phase = S5_PHASE_IDLE;
+	(void)publish_verified();
+	*p_turned_deg += turned;
+	return b_ok;
+}
+
+/* Face the obstacle using coarse sweeps only: the fine scan is for the width,
+   and the last turn is followed by that full scan anyway.  True: ready for it. */
+static bool face_obstacle(double *p_squared_deg)
+{
+	unsigned squares;
+
+	for (squares = 0U; ; squares++) {
+		tm_printf((const UB *)"[OBSTACLE] checking the angle, coarse sweep only\n");
+		if (!s5_tilt_scan(&s5_scan, scan_measure, NULL)) {
+			motion_stop();
+			return false;
+		}
+		if ((squares >= S5_SQUARE_TRIES) || !square_wanted(&s5_scan)) {
+			return true;
+		}
+		s5_servo_move(S5_ANGLE_CENTRE_DEG);
+		if (!square_up(s5_scan.face.tilt_deg, p_squared_deg)) {
+			return false;
+		}
+		if (squares + 1U >= S5_SQUARE_TRIES) {
+			return true;	/* no more turns: nothing left to check it for */
+		}
+	}
+}
+#endif
 
 /* ---- detour ---- */
 
@@ -542,6 +702,7 @@ void obstacle_task(INT code, void *p_context)
 #endif
 #endif
 	history_clear(&history);
+	s5_curve_reset(&s5_curve);
 	s5_servo_init(S5_ANGLE_CENTRE_DEG);
 #if !defined(S5_DIAG) || (S5_DIAG != 3)
 	(void)s5_us_init();
@@ -572,6 +733,8 @@ void obstacle_task(INT code, void *p_context)
 		history_add(&history, result == S5_US_OK, range_mm, time_s);
 		now = motion_hal_time();
 		if (s5_status(&status)) {
+			s5_curve_note(&s5_curve, status.motion.path * 1000.0,
+				      status.motion.heading * S5_RAD_TO_DEG);
 			speed_mm_s = 500.0 * (status.motion.speed[0] + status.motion.speed[1]);
 			b_may_move = !status.motion.hold &&
 				     ((status.motion.state == READY) || (status.motion.state == DRIVING));
@@ -616,12 +779,31 @@ void obstacle_task(INT code, void *p_context)
 				continue;
 			}
 			if (!b_scanned) {
+				double		squared_deg = 0.0;
+				bool		b_measured;
+
+#if S5_AVOID_DRIVE
+				if (!back_off_if_close() || !face_obstacle(&squared_deg)) {
+					s5_phase = S5_PHASE_FAILED;
+					set_decision(false, NULL);
+					(void)publish_verified();
+					history_clear(&history);
+					continue;
+				}
+#endif
 				tm_printf((const UB *)"[OBSTACLE] scanning %d..%d deg\n",
 					  S5_ANGLE_LEFT_DEG, S5_ANGLE_RIGHT_DEG);
 				crash_mark(CRASH_MARK_OBSTACLE, CRASH_OBSTACLE_SCAN);
 				set_decision(false, NULL);
 				(void)s5_log_encoders("scan-before", 0U);
-				if (s5_scan_run(&s5_scan, scan_measure, NULL)) {
+				tm_printf((const UB *)"[OBSTACLE] curve check: heading changed %d deg in the last %d mm "
+					  "(curve from %d deg) -> %s\n",
+					  s5_round(s5_curve.swing_deg), S5_CURVE_WINDOW_MM, s5_round(S5_CURVE_MIN_DEG),
+					  s5_curve_recent(&s5_curve) ? "after a curve" : "not after a curve");
+				b_measured = s5_scan_run(&s5_scan, scan_measure, NULL);
+				s5_scan.squared_deg = squared_deg;
+				if (b_measured) {
+					s5_avoidance(&s5_scan, &s5_scan.avoid);	/* knows the tilt it started with now */
 					set_decision(true, &s5_scan.avoid);
 				} else {
 					motion_stop();
@@ -641,6 +823,11 @@ void obstacle_task(INT code, void *p_context)
 				if (drive_round()) {
 					b_scanned = false;	/* passed: arm for the next obstacle */
 					b_announced = false;
+					/* The hand-back leaves the robot at an angle across the
+					   line, just as a curve can. */
+					if (s5_status(&status)) {
+						s5_curve_mark(&s5_curve, status.motion.path * 1000.0);
+					}
 				}
 #endif
 			} else {
