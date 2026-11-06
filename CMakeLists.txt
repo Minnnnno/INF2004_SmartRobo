@@ -76,6 +76,17 @@ if(ROBO_HOST_TESTS)
         target_link_libraries(line_pid_checks m)
     endif()
     add_test(NAME line_pid_checks COMMAND line_pid_checks)
+    # Same line task with Buddy 4 enabled: start-up wait for the IMU tilt reference.
+    add_executable(line_imu_wait_checks
+        app_program/subsystem2/steering.c app_program/subsystem2/board_config.c tests/test_line_imu_wait.c)
+    target_include_directories(line_imu_wait_checks PRIVATE include tests)
+    target_compile_definitions(line_imu_wait_checks PRIVATE
+        ROBO_LINE_STEERING=1 ROBO_LINE_TEST_HOST=1 ROBO_SUBSYSTEM4=1)
+    if(NOT MSVC)
+        target_compile_options(line_imu_wait_checks PRIVATE -Wall -Wextra -Werror -Wconversion -Wshadow)
+        target_link_libraries(line_imu_wait_checks m)
+    endif()
+    add_test(NAME line_imu_wait_checks COMMAND line_imu_wait_checks)
     add_executable(angle_control_checks app_program/subsystem2/angle_control.c
         app_program/subsystem2/math.c app_program/subsystem2/board_config.c tests/test_angle_control.c)
     target_compile_definitions(angle_control_checks PRIVATE ROBO_ANGLE_TEST=1)

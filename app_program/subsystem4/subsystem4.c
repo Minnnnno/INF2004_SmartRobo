@@ -1,152 +1,165 @@
-/* Background GY-511 owner. The Controller owns all motor decisions. */
+/*
+ * Buddy 4 sensor startup using micro T-Kernel's device API.
+ * Register definitions: ST LSM303DLHC datasheet, DocID018771 Rev 2.
+ * Kernel API types are retained at the kernel boundary.
+ */
 #include "subsystem4.h"
-#include "gy511_read.h"
-#include "terrain.h"
-#include "robot.h"
-#include "motion_hal.h"
-#include "../subsystem1/comms.h"
-#include <tm/tmonitor.h>
+#include <stdint.h>
+#include <tk/device.h>
 
-#define S4_SAMPLE_MS (50U)
-#define S4_MAX_AGE_S (0.20)
-#define S4_REPORT_S (0.25)
-#define S4_DEG_TO_RAD (0.017453292519943295)
-#define S4_VALID_PITCH (2U)
+#define GY511_I2C_DEVICE       "iicb"
+#define GY511_ACC_ADDRESS      (0x19U) /* 7-bit address, not shifted. */
+#define GY511_MAG_ADDRESS      (0x1EU)
+#define GY511_MAG_ID_FIRST     (0x0AU)
 
-static void subsystem4_report(gy511_sample_t const *p_sample,
-                              terrain_result_t const *p_result);
+#define GY511_ACC_CTRL1        (0x20U)
+#define GY511_ACC_CTRL4        (0x23U)
+#define GY511_MAG_CRA          (0x00U)
+#define GY511_MAG_CRB          (0x01U)
+#define GY511_MAG_MODE         (0x02U)
 
-void terrain_task(INT code, void *p_context)
+/* 0x57: 100 Hz, normal power mode, X/Y/Z enabled. */
+#define GY511_ACC_RATE_AXES    (0x57U)
+/* 0x88: block data update, little-endian, +/-2 g, high resolution. */
+#define GY511_ACC_FORMAT       (0x88U)
+/* 0x14: temperature disabled, magnetic output rate 30 Hz. */
+#define GY511_MAG_RATE         (0x14U)
+/* 0x20: +/-1.3 gauss magnetic range. * (magnetic field strength,smallest range, give the finest resolution)*/
+#define GY511_MAG_RANGE        (0x20U)
+/* 0x00: continuous magnetic conversion. */
+#define GY511_MAG_CONTINUOUS   (0x00U)
+
+typedef struct
 {
-    terrain_filter_t filter = {0};
-    terrain_result_t result = {0};
-    gy511_sample_t sample = {0};
-    subsystem_status_t status = {0};
-    double last_sample = -1.0;
-    double next_report = 0.0;
-    ER configuration_status = subsystem4_gy511_configure();
-    bool b_ready = terrain_use_fixed_reference(&filter);
+    uint8_t address;
+    uint8_t reg;
+    uint8_t value;
+} gy511_setting_t;
 
-    (void)code;
-    (void)p_context;
-    b_ready = b_ready && (configuration_status == E_OK);
-#ifndef ROBO_IR_MONITOR /* Keep the IR monitor's single console line clean. */
-    tm_printf((UB const *)"[IMU] I2C1 GP6/GP7 init=%d\n",
-              configuration_status);
-#endif
-    for (;;)
+/* Constant hardware configuration, not mutable application state.
+ * Configure acceleration format before enabling acceleration output.
+ * Configure magnetic rate/range before enabling continuous conversion.
+ */
+static gy511_setting_t const g_settings[] =
+{
+    {GY511_ACC_ADDRESS, GY511_ACC_CTRL4, GY511_ACC_FORMAT},
+    {GY511_ACC_ADDRESS, GY511_ACC_CTRL1, GY511_ACC_RATE_AXES},
+    {GY511_MAG_ADDRESS, GY511_MAG_CRA, GY511_MAG_RATE},
+    {GY511_MAG_ADDRESS, GY511_MAG_CRB, GY511_MAG_RANGE},
+    {GY511_MAG_ADDRESS, GY511_MAG_MODE, GY511_MAG_CONTINUOUS}
+};
+
+static ER subsystem4_check_identity(ID h_device);
+static ER subsystem4_apply_setting(ID h_device,
+                                  gy511_setting_t const *p_setting);
+
+/*
+ * Function: subsystem4_init
+ * Purpose: Perform the complete stage-1 sensor startup sequence.
+ * Inputs: None. I2C1 must already be registered by the kernel as "iicb".
+ * Returns: E_OK, E_IO for a mismatched value, or the original driver error.
+ * Behaviour: Open exclusively for read/write, check magnetic identity, apply
+ *            and verify each setting, then close every successfully opened
+ *            handle. Stop on the first failure; do not retry automatically.
+ * Notes: Close releases the bus handle; it does not power down the sensor.
+ *        If both configuration and close fail, preserve the original error.
+ *        The low-level I2C driver provides transfer timeouts. This function
+ *        does not impose a separate overall startup deadline.
+ */
+ER subsystem4_init(void)
+{
+    /*Open the I2C device*/
+    ID h_device = tk_opn_dev((UB const *)GY511_I2C_DEVICE, TD_UPDATE | TD_EXCL);
+    ER status = E_OK; 
+    ER close_status = E_OK;
+
+    /*Leave early if opening of I2c device fail*/
+    if (h_device < E_OK) 
     {
-        ER read_status = E_NOEXS;
-        double now = motion_hal_time();
-
-        if (b_ready)
-        {
-            read_status = gy511_read_sample(&sample);
-        }
-        if (read_status == E_OK)
-        {
-            last_sample = now;
-            (void)terrain_update(&filter, sample.acceleration_x,
-                                 sample.acceleration_y,
-                                 sample.acceleration_z, &result);
-        }
-        else if ((read_status != E_BUSY) || (last_sample < 0.0) ||
-                 ((now - last_sample) >= S4_MAX_AGE_S))
-        {
-            terrain_reset(&filter);
-            result = (terrain_result_t){0};
-            last_sample = -1.0;
-        }
-
-        status.available = last_sample >= 0.0;
-        status.timestamp = status.available ? last_sample : now;
-        /* Preserve the shared API: heading, pitch, height, validity mask.
-         * Heading and height remain invalid until their owners supply them.
-         */
-        status.values[0] = 0.0;
-        status.values[1] = (double)result.pitch_deg * S4_DEG_TO_RAD;
-        status.values[2] = 0.0;
-        status.values[3] = result.b_tilt_valid ? S4_VALID_PITCH : 0U;
-        (void)robot_update_subsystem(SOURCE_TERRAIN, &status);
-#ifndef ROBO_IR_MONITOR
-        if (now >= next_report)
-        {
-            next_report = now + S4_REPORT_S;
-            if ((read_status == E_OK) && status.available)
-            {
-                subsystem4_report(&sample, &result);
-            }
-            else if (!status.available)
-            {
-                tm_printf((UB const *)
-                          "[TERRAIN] Unavailable (error=%d)\n", read_status);
-            }
-        }
-#endif
-        (void)tk_dly_tsk(b_ready ? S4_SAMPLE_MS : 1000U);
+        return (ER)h_device;
     }
+
+    /*Check right chip is connected.*/
+    /* Read the ID registers , wrong chip or wiring problem gives E_IO*/
+    status = subsystem4_check_identity(h_device);
+    for (uint8_t index = 0U;
+        /*Write each setting in*/
+         (E_OK == status) && (index < (sizeof(g_settings) / sizeof(g_settings[0])));
+         index++)
+    {
+        status = subsystem4_apply_setting(h_device, &g_settings[index]);
+    }
+    /*Closing of handle so it bus is not left locked. */
+    close_status = tk_cls_dev(h_device, 0U);
+    if (E_OK == status)
+    {
+        status = close_status;
+    }
+    return status;
 }
 
-static void subsystem4_report(gy511_sample_t const *p_sample,
-                              terrain_result_t const *p_result)
+/*
+ * Function: subsystem4_check_identity
+ * Purpose: Verify the documented magnetic identity bytes before writing.
+ * Input: h_device is the successfully opened I2C1 handle.
+ * Returns: E_OK for "H43", E_IO for a mismatch, or the failed read's error.
+ * Notes: The identity is in the magnetic block at 0x1E; the acceleration
+ *        block at 0x19 is subsequently checked by configuration readbacks.
+ *        Identity is a communication check, not a physical sensor self-test.
+ */
+static ER subsystem4_check_identity(ID h_device)
 {
-    /* Holds even eight full signed 32-bit decimal values plus JSON keys.
-     * The queue's smaller limit is checked before submitting each message.
-     */
-    char payload[160];
-    int length = 0;
+    /* Read magnetometer ID registers*/
+    /*stores the 3 ID bytes the chip is expected to send back.*/
+    static uint8_t const g_expected[] = {0x48U, 0x34U, 0x33U};
+    ER status = E_OK;
+    uint8_t actual = 0U;
 
-    tm_printf((UB const *)
-              "[IMU] ACC x=%d y=%d z=%d | MAG x=%d y=%d z=%d\n",
-              (INT)p_sample->acceleration_x,
-              (INT)p_sample->acceleration_y,
-              (INT)p_sample->acceleration_z,
-              (INT)p_sample->magnetic_x, (INT)p_sample->magnetic_y,
-              (INT)p_sample->magnetic_z);
-    tm_printf((UB const *)
-              "[TERRAIN] pitch=%d roll=%d tilt=%d deg motion=%d mg "
-              "| forward=%s side=%s | %s -> %s (suggested)\n",
-              (INT)p_result->pitch_deg, (INT)p_result->roll_deg,
-              (INT)p_result->tilt_deg, (INT)p_result->motion_mg,
-              terrain_condition_name(p_result->pitch_condition),
-              terrain_condition_name(p_result->roll_condition),
-              terrain_condition_name(p_result->condition),
-              terrain_action_name(p_result->condition));
-    if (!comms_is_online())
+    /* Loop over the 3 iD registers*/
+    for (uint8_t index = 0U; index < sizeof(g_expected); index++)
     {
-        return;
+        status = i2c_read_reg(h_device, GY511_MAG_ADDRESS,
+                              GY511_MAG_ID_FIRST + index, &actual);
+        if (E_OK != status)
+        {
+            break;
+        }
+        /*Stop loop if byte does not match.*/
+        if (g_expected[index] != actual)
+        {
+            status = E_IO;
+            break;
+        }
     }
-    length = tm_sprintf((UB *)payload,
-                       (UB const *)"{\"x\":%d,\"y\":%d,\"z\":%d}",
-                      (int)p_sample->acceleration_x,
-                      (int)p_sample->acceleration_y,
-                      (int)p_sample->acceleration_z);
-    if ((length >= 0) && (length < COMMS_PAYLOAD_MAX))
+    return status;
+}
+
+/*
+ * Function: subsystem4_apply_setting
+ * Purpose: Write one configuration byte and verify that it was retained.
+ * Inputs: Valid open handle and non-NULL pointer into the private settings
+ *         table. The caller guarantees these preconditions.
+ * Returns: E_OK if readback matches; E_IO if not; driver error on transfer
+ *          failure. A failed write is not followed by a read.
+ * Notes: These are readable configuration registers, not data/status flags.
+ */
+static ER subsystem4_apply_setting(ID h_device,
+                                  gy511_setting_t const *p_setting)
+{
+
+    /*Writes the value , read it and check if they it match */
+    uint8_t actual = 0U;
+    ER status = i2c_write_reg(h_device, p_setting->address,
+                              p_setting->reg, p_setting->value);
+
+    if (E_OK == status)
     {
-        (void)comms_send_telemetry("imu_acc", payload);
+        status = i2c_read_reg(h_device, p_setting->address,
+                              p_setting->reg, &actual);
+        if ((E_OK == status) && (p_setting->value != actual))
+        {
+            status = E_IO;
+        }
     }
-    length = tm_sprintf((UB *)payload,
-                       (UB const *)"{\"x\":%d,\"y\":%d,\"z\":%d}",
-                      (int)p_sample->magnetic_x, (int)p_sample->magnetic_y,
-                      (int)p_sample->magnetic_z);
-    if ((length >= 0) && (length < COMMS_PAYLOAD_MAX))
-    {
-        (void)comms_send_telemetry("imu_mag", payload);
-    }
-    /* Integer degrees; direction/overall values use terrain_condition_t.
-     * v is tilt validity. Raw messages are one reporting batch, not atomic.
-     */
-    length = tm_sprintf((UB *)payload,
-                      (UB const *)"{\"p\":%d,\"r\":%d,\"t\":%d,\"m\":%d,"
-                      "\"f\":%d,\"s\":%d,\"c\":%d,\"v\":%d}",
-                      (int)p_result->pitch_deg, (int)p_result->roll_deg,
-                      (int)p_result->tilt_deg, (int)p_result->motion_mg,
-                      (int)p_result->pitch_condition,
-                      (int)p_result->roll_condition,
-                      (int)p_result->condition,
-                      p_result->b_tilt_valid ? 1 : 0);
-    if ((length >= 0) && (length < COMMS_PAYLOAD_MAX))
-    {
-        (void)comms_send_telemetry("terrain", payload);
-    }
+    return status;
 }

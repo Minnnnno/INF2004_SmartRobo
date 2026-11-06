@@ -193,6 +193,38 @@ static void line_report(unsigned centre, unsigned right, line_direction_t direct
     }
 }
 
+#if defined(ROBO_SUBSYSTEM4) && ROBO_SUBSYSTEM4
+/* Buddy 4 captures its tilt reference while the robot is still, about 2 s after
+ * boot; driving earlier makes that capture fail. Terrain slot values[3] holds
+ * validity bits | T_STATE << 3 (docs/API.md): 0 INIT, 4 RECOVERY, others mean the
+ * capture is over (done, or the IMU gave up). */
+#define LINE_IMU_WAIT_MAX       10.0 /* s cap: a missing or faulty IMU never stops the robot. */
+#define LINE_TERRAIN_INIT       0U
+#define LINE_TERRAIN_RECOVERY   4U
+
+static bool line_imu_settled(const robot_status_t *status)
+{
+    unsigned state;
+    if (!status->terrain.available || !(status->terrain.values[3] >= 0.0)) { return false; }
+    state = ((unsigned)status->terrain.values[3] >> 3) & 7U;
+    return (state != LINE_TERRAIN_INIT) && (state != LINE_TERRAIN_RECOVERY);
+}
+
+/* Runs once before the first motion request; nothing is driving yet. */
+static void line_wait_for_imu(void)
+{
+    double start = motion_hal_time();
+    robot_status_t status;
+    bool settled = false;
+    while (!settled && ((motion_hal_time() - start) < LINE_IMU_WAIT_MAX)) {
+        settled = motion_get_status(&status) && line_imu_settled(&status);
+        if (!settled) { (void)tk_dly_tsk(20U); }
+    }
+    tm_printf((const UB *)"line_imu_wait settled=%u waited_ms=%d\n", (unsigned)settled,
+              (int)((motion_hal_time() - start) * 1000.0));
+}
+#endif
+
 static void line_loop(void)
 {
     line_steering_t filter = {0};
@@ -201,6 +233,9 @@ static void line_loop(void)
     line_direction_t follow = LINE_STRAIGHT;    /* Last follow command, repeated during the grace time. */
     double lost_since = 0.0;
     double next_report = 0.0;
+#if defined(ROBO_SUBSYSTEM4) && ROBO_SUBSYSTEM4
+    line_wait_for_imu();
+#endif
     for (;;) {
         unsigned right = (unsigned)gpio_get(BOARD_LINE_R);
         unsigned centre = (unsigned)gpio_get(BOARD_LINE_C);

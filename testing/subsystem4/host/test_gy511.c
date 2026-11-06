@@ -17,9 +17,6 @@ static uint32_t g_mismatch_at;
 static uint32_t g_cases;
 static ER g_open_result;
 static ER g_close_result;
-static ER g_object_failure;
-static uint32_t g_object_calls;
-static ER g_task_result;
 
 static void require(bool b_condition, char const *p_description)
 {
@@ -45,9 +42,6 @@ static void reset_mock(void)
     g_mismatch_at = 0U;
     g_open_result = 7;
     g_close_result = E_OK;
-    g_object_failure = E_OK;
-    g_object_calls = 0U;
-    g_task_result = 9;
 }
 
 ID tk_opn_dev(UB const *p_name, uint32_t mode)
@@ -116,7 +110,7 @@ ER i2c_write_reg(ID h_device, UW address, UW reg, UB value)
 
 static void expect_configuration(ER expected_status)
 {
-    require(subsystem4_gy511_configure() == expected_status,
+    require(subsystem4_init() == expected_status,
             "configuration returns expected status");
     require(g_open_calls == 1U, "one open attempt");
     require(g_close_calls == ((g_open_result < E_OK) ? 0U : 1U),
@@ -177,7 +171,7 @@ int main(void)
     reset_mock();
     expect_configuration(E_OK);
 
-    printf("PASS: %u GY-511 configuration scenarios\n",
+    printf("PASS: %u GY-511 configuration and startup scenarios\n",
            (unsigned int)g_cases);
     return EXIT_SUCCESS;
 }
