@@ -22,10 +22,15 @@ static double side_sign(s5_avoid_side_t side)
 bool s5_detour_plan(const s5_scan_t *p_scan, s5_detour_plan_t *p_plan)
 {
 	unsigned	index;
+	double		sign;
 	double		shift;
+	double		travel;
+	double		heading;
 	double		front_reach;
 	double		room;
+	double		tan_max;
 	double		angle_deg;
+	bool		b_face = p_scan->face.b_valid;
 
 	p_plan->b_ok = false;
 	p_plan->side = S5_AVOID_NONE;
@@ -36,34 +41,54 @@ bool s5_detour_plan(const s5_scan_t *p_scan, s5_detour_plan_t *p_plan)
 	p_plan->turn_deg = 0.0;
 	p_plan->diagonal_mm = 0.0;
 	p_plan->out_x_mm = 0.0;
+	p_plan->tilt_deg = 0.0;
+	p_plan->start_y_mm = 0.0;
 	if (!p_scan->b_valid || (p_scan->avoid.side == S5_AVOID_NONE)) {
 		return false;
 	}
 	index = (p_scan->avoid.side == S5_AVOID_LEFT) ? (unsigned)S5_LEFT : (unsigned)S5_RIGHT;
-	if (!p_scan->avoid.b_room[index] || !p_scan->edge[index].b_found) {
+	if (!p_scan->avoid.b_room[index] ||
+	    !(b_face ? p_scan->face.b_corner[index] : p_scan->edge[index].b_found)) {
 		return false;
 	}
+	sign = side_sign(p_scan->avoid.side);
+	/* The line sensors were on the line, ahead of the axle, at the tilt it stopped
+	   with.  Squaring up turns about the axle, so it does not change this. */
+	p_plan->start_y_mm = S5_IR_AHEAD_MM * sin(s5_start_tilt_deg(p_scan) * DEG_TO_RAD);
 	shift = p_scan->avoid.shift_mm[index];
 	p_plan->side = p_scan->avoid.side;
-	p_plan->shift_mm = side_sign(p_plan->side) * shift;
-	p_plan->edge_mm = p_scan->edge[index].lateral_mm;
-	p_plan->face_mm = p_scan->centre_forward_mm + S5_SERVO_AHEAD_MM;
+	if (b_face) {
+		p_plan->tilt_deg = p_scan->face.tilt_deg;
+		p_plan->edge_mm = p_plan->start_y_mm +
+			sign * (shift - S5_ROBOT_HALF_WIDTH_MM - S5_PASS_MARGIN_MM);
+		p_plan->face_mm = p_scan->face.distance_mm +
+			S5_SERVO_AHEAD_MM * cos(p_plan->tilt_deg * DEG_TO_RAD);
+	} else {
+		p_plan->edge_mm = p_plan->start_y_mm + p_scan->edge[index].lateral_mm;
+		p_plan->face_mm = p_scan->centre_forward_mm + S5_SERVO_AHEAD_MM;
+	}
+	p_plan->shift_mm = p_plan->start_y_mm + sign * shift;
+	heading = -p_plan->tilt_deg * DEG_TO_RAD;
 
 	/* Forward travel the centre may make before the front corners reach
-	   the margin; back up until the steepest turn fits in it. */
+	   the margin; back up (along the robot's own heading, so that changes
+	   the sideways move too) until the steepest turn fits in it. */
 	front_reach = hypot(S5_FRONT_MM, S5_ROBOT_HALF_WIDTH_MM);
 	room = p_plan->face_mm - front_reach - S5_TURN_MARGIN_MM;
-	p_plan->backup_mm = fmax(0.0, shift / tan(S5_OUT_MAX_DEG * DEG_TO_RAD) - room);
+	tan_max = tan(S5_OUT_MAX_DEG * DEG_TO_RAD);
+	p_plan->backup_mm = fmax(0.0, (shift / tan_max - room) /
+				 (cos(heading) - sign * sin(heading) / tan_max));
 	if (p_plan->backup_mm > S5_BACKUP_MAX_MM) {
 		return false;
 	}
-	room += p_plan->backup_mm;
+	room += p_plan->backup_mm * cos(heading);
+	travel = shift + sign * p_plan->backup_mm * sin(heading);
 
-	angle_deg = atan2(shift, room) / DEG_TO_RAD;
+	angle_deg = atan2(travel, room) / DEG_TO_RAD;
 	angle_deg = fmax(S5_OUT_MIN_DEG, fmin(S5_OUT_MAX_DEG, angle_deg));
-	p_plan->turn_deg = side_sign(p_plan->side) * angle_deg;
-	p_plan->diagonal_mm = shift / sin(angle_deg * DEG_TO_RAD);
-	p_plan->out_x_mm = shift / tan(angle_deg * DEG_TO_RAD) - p_plan->backup_mm;
+	p_plan->turn_deg = sign * angle_deg;
+	p_plan->diagonal_mm = travel / sin(angle_deg * DEG_TO_RAD);
+	p_plan->out_x_mm = travel / tan(angle_deg * DEG_TO_RAD) - p_plan->backup_mm * cos(heading);
 	p_plan->b_ok = true;
 	return true;
 }
@@ -118,7 +143,7 @@ bool s5_pass_observe(s5_pass_t *p_pass, const s5_detour_plan_t *p_plan,
 double s5_pass_clear_x(const s5_pass_t *p_pass)
 {
 	return fmax(p_pass->rear_mm, p_pass->end_mm) +
-	       hypot(S5_REAR_MM, S5_ROBOT_HALF_WIDTH_MM) + S5_PASS_MARGIN_MM;
+	       hypot(S5_REAR_MM, S5_ROBOT_HALF_WIDTH_MM) + S5_PASS_MARGIN_MM - S5_PASS_TRIM_MM;
 }
 
 double s5_return_length(double y_mm)

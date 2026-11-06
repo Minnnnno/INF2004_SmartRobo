@@ -8,7 +8,6 @@
 /* Skip app.h's board-specific includes when testing the real subsystem.c. */
 #define APP_H
 #define IMPORT extern
-typedef int32_t BOOL;
 #define EXPORT
 #define E_OK      (0)
 #define E_IO      (-57)
@@ -29,6 +28,7 @@ typedef int32_t INT;
 typedef int32_t PRI;
 typedef int32_t SZ;
 typedef uint32_t UW;
+typedef uint32_t UINT;
 typedef uint8_t UB;
 typedef void (*FP)(void);
 typedef struct { uint32_t flgatr; uint32_t iflgptn; } T_CFLG;
@@ -50,12 +50,5 @@ ER i2c_read_reg(ID h_device, UW address, UW reg, UB *p_data);
 ER i2c_write_reg(ID h_device, UW address, UW reg, UB value);
 ER tk_swri_dev(ID h_device, int32_t start, void const *p_buffer,
                SZ size, SZ *p_actual_size);
-ID tk_cre_flg(T_CFLG const *p_configuration);
-ID tk_cre_mbf(T_CMBF const *p_configuration);
-ID tk_cre_alm(T_CALM const *p_configuration);
-ID app_start_task(FP entry, PRI priority, UW core, char const *p_name);
-ER subsystem4_init(void);
-ER subsystem4_start(void);
 
-ER tk_dly_tsk(UW delay);
 #endif /* HOST_KERNEL_STUB_H */

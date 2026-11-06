@@ -183,10 +183,13 @@ gains and PWM may differ to achieve equal wheel speeds. Configure stopping dista
 low-speed resolution and settling jointly: pulses absent for the settling interval
 cannot prove zero speed below the encoder's measurable resolution.
 
-Subsystem 4 now supplies the Terrain snapshot from its background GY-511 task.
-The validity mask uses bit 1 (value 2) for pitch. Heading and hump-height slots
-remain zero and invalid. Availability indicates raw readings less than 200 ms
-old; the snapshot timestamp is the sample time, not a repeated publish time.
-Separate forward and side classifications and raw axes are queued through
-Buddy 1 when MQTT is online. See app_program/subsystem4/README.md for payloads.
-Terrain action names are suggestions; the monitor does not command motors.
+Subsystem 4 (when `ROBO_SUBSYSTEM4=ON`) supplies the Terrain snapshot every
+20 ms. The validity mask uses bit 1 (value 2) for pitch and bit 2 (value 4) for
+hump height; the heading slot remains zero and invalid at this integration stage.
+`values[2]` is the highest hump peak of the run in metres (1 mm steps), measured
+from the sideways tilt of the axle for humps under one wheel. `values[3]` also carries
+the 3-bit `T_STATE` << 3: 0 INIT, 1 WAITING, 2 CLIMBING, 3 DESCENDING, 4 RECOVERY,
+5 FAULT, 6 STOP. `available` is true once the task runs; the timestamp is the
+last valid tilt sample time. Hump completion latches `TF_EV_HUMP_PEAK`. No MQTT
+text topics are sent. See app_program/subsystem4/README.md. The terrain SLOW
+request is advisory; the monitor does not command motors.

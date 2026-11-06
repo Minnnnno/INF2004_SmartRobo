@@ -135,6 +135,13 @@ LOCAL void i2c_inthdr( UINT intno )
 			*(p_cb->rbuf)++ = in_w(I2C_DATA_CMD(unit)) & I2C_DATA_CMD_DAT;
 			if(--(p_cb->rdat_num)) {
 				cmd = I2C_DATA_CMD_CMD_READ;
+				/* The next command reads the last byte when one remains.
+				 * Multi-byte reads must request STOP there, just as the
+				 * single-byte receive path does in i2c_trans().
+				 */
+				if (p_cb->rdat_num == 1U) {
+					cmd |= I2C_DATA_CMD_STOP;
+				}
 				out_w(I2C_DATA_CMD(unit), cmd);
 			} else {	// Last data
 				clr_w(I2C_INTR_MASK(unit), I2C_INT_RX_FULL);

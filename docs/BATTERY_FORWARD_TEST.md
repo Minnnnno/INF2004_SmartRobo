@@ -81,7 +81,7 @@ If it stays 1, investigate the switch terminals, ground, GPIO connection or
 pressed polarity before powered tests. If it becomes 0 but stopping fails,
 save the full snapshot; poll count should advance between readings.
 
-This profile builds `line_task` as a sleeping loop: it does not read the IR
+This profile does not build `line_task` at all: it does not read the IR
 inputs or issue steering requests. Changes in physical path on a soft mat do
 not establish IR software control. Confirm the flashed profile before drawing
 that conclusion, and compare flat/soft surfaces under otherwise equal conditions.

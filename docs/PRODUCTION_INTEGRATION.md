@@ -8,7 +8,8 @@ the robot build and preserved in docs/template_original/buddy1_demos.
 
 Production motion is enabled by the user's explicit hardware confirmation.
 Normal `board_motion_config()` now returns `hardware_confirmed=true`, with
-`manual_enabled=false` and maximum output 25%. Verified geometry, counts and
+`manual_enabled=false` and maximum output 100%. The user removed the previous
+25% PWM cap on 4 November 2026. Verified geometry, counts and
 polarity remain unchanged. Calibration profiles (including the manual console)
 override confirmation to false and retain inhibited production controllers.
 
@@ -85,7 +86,7 @@ Keep Buddy 1 communications, app_start_task(), the motion/Vehicle Controller
 startup and existing task entry points. Do not restore the producer/consumer
 demo startup or enable SMP. Production confirmation is enabled by the owner.
 Keep the verified values,
-25% output cap, manual_enabled=false and safety checks unchanged.
+100% production output range, manual_enabled=false and safety checks unchanged.
 Implement actual sensor readings, not fabricated values. Build a combined
 production image with all calibration profiles disabled and report its UF2.
 ```

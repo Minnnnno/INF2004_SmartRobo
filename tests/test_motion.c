@@ -23,7 +23,7 @@ static motion_config_t simulation_config(void)
     return c;
 }
 
-typedef struct { motion_t m; encoder_sample_t sample; double now, fractional[2], velocity[2]; } rig_t;
+typedef struct { motion_t m; encoder_sample_t sample; double now, fractional[2], velocity[2], weak_right; } rig_t;
 
 static void tick(rig_t *r, bool plant)
 {
@@ -35,7 +35,8 @@ static void tick(rig_t *r, bool plant)
             double quantum = 3.141592653589793 * r->m.config.diameter[w] / r->m.config.counts_per_rev[w];
             int32_t count;
             /* Deliberately unequal simulated motor gains, first-order inertia. */
-            r->velocity[w] += (output * (w == 0U ? 0.9 : 0.8) - r->velocity[w]) * dt / 0.04;
+            double gain = (w == 0U) ? 0.9 : ((r->weak_right > 0.0) ? r->weak_right : 0.8);
+            r->velocity[w] += (output * gain - r->velocity[w]) * dt / 0.04;
             r->fractional[w] += r->velocity[w] * dt / quantum;
             count = (int32_t)r->fractional[w];
             r->fractional[w] -= count;
@@ -468,7 +469,7 @@ static void production_line_integration_tests(void)
     memset(&r, 0, sizeof(r));
     motion_config_t config = board_motion_config();
     CHECK(config.hardware_confirmed && !config.manual_enabled);
-    CHECK(config.max_output == 0.25 && motion_config_valid(&config));
+    CHECK(config.max_output == 1.0 && motion_config_valid(&config));
     r.sample.reliable = true;
     motion_init(&r.m, &config, r.sample, 0.0, true);
     CHECK(r.m.status.state == INITIALISING && r.m.status.inhibited);
@@ -495,7 +496,8 @@ static void production_line_integration_tests(void)
         tick(&r, true);
         robot_publish(&bus, &r.m, r.now);
         CHECK(r.m.status.state == DRIVING && r.m.status.fault == F_NONE);
-        CHECK(fabs(r.m.status.output[0]) <= 0.25 && fabs(r.m.status.output[1]) <= 0.25);
+        CHECK(fabs(r.m.status.output[0]) <= config.max_output &&
+              fabs(r.m.status.output[1]) <= config.max_output);
         CHECK(bus.status.owner_valid && bus.status.owner == SOURCE_LINE);
     }
     robot_control(&bus, CONTROL_STOP, false, false);
@@ -521,6 +523,36 @@ static void production_line_integration_tests(void)
     config.hardware_confirmed = false;
     motion_init(&r.m, &config, r.sample, r.now, true);
     CHECK(r.m.status.state == FAULT && r.m.status.fault == F_CONFIG && r.m.status.inhibited);
+}
+
+/* A straight finite move stays straight while it runs, not only once it finishes:
+ * subsystem 5 stops long moves early (obstacle passed, line found), so a correction
+ * saved for the end never happens. Hardware: 8.5 and 10.7 deg right in about 200 mm. */
+static void arc_straight_tests(void)
+{
+    for (unsigned direction = 0U; direction < 2U; ++direction) {
+        rig_t r;
+        motion_command_t c;
+        double sign = (direction == 0U) ? 1.0 : -1.0;
+        double worst = 0.0;
+        unsigned i;
+        init(&r);
+        r.weak_right = 0.35;
+        c = command(&r, ARC_MOVE, sign * 1.0);
+        c.speed[0] = c.speed[1] = sign * 0.08;
+        CHECK(motion_accept(&r.m, &c, r.now) == R_OK);
+        for (i = 0U; i < 1500U && fabs(r.m.status.centre) < 0.3; ++i) {
+            tick(&r, true);
+            worst = fmax(worst, fabs(r.m.status.heading));
+        }
+        CHECK(fabs(r.m.status.centre) >= 0.3 && r.m.status.state == DRIVING);
+        printf("arc straight, direction %u: worst heading %.2f deg, final %.2f deg\n",
+               direction, worst * 57.29577951, r.m.status.heading * 57.29577951);
+        CHECK(worst <= 3.0 / 57.29577951);
+        CHECK(fabs(r.m.status.heading) <= 1.0 / 57.29577951);
+        /* Both wheels keep moving forward: no reversing to correct. */
+        CHECK(sign * r.m.status.target[0] > 0.0 && sign * r.m.status.target[1] > 0.0);
+    }
 }
 
 static void arc_tests(void)
@@ -886,6 +918,7 @@ int main(void)
     board_encoder_polarity_tests();
     production_line_integration_tests();
     arc_tests();
+    arc_straight_tests();
     startup_sampling_tests();
     startup_gap_tests();
     feedback_diagnostic_tests();

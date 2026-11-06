@@ -38,7 +38,7 @@ motion_config_t board_motion_config(void)
          * speeds were negative with encoder signs {+1,-1}; invert feedback only. */
         .motor_sign = {1, -1}, .encoder_sign = {-1, 1}, .quadrature = {true, true},
         /* Provisional tuning only; validate on the actual robot. */
-        .max_speed = 0.25, .acceleration = 0.3, .max_output = 0.25,
+        .max_speed = 0.25, .acceleration = 0.3, .max_output = 1.0,
         .period = 0.01, .max_dt = 0.05,
         .distance_tolerance = 0.01, .angle_tolerance = 0.05,
         .stopped_speed = 0.005, .settle_time = 0.3,
@@ -57,14 +57,6 @@ motion_config_t board_motion_config(void)
 #if defined(ROBO_ENCODER_DIAGNOSTICS_ONLY) || defined(ROBO_SAFE_MOTOR_TEST) || defined(ROBO_ANGLE_TEST) || defined(ROBO_MANUAL_CONSOLE)
     /* Calibration images retain their isolated actuator and inhibited controller. */
     config.hardware_confirmed = false;
-#endif
-#if defined(ROBO_LINE_LOSS_TEST)
-    /* Line-loss test image only: the production 25% cap let the reversing wheel stall during the
-     * on-the-spot search spin. The production images keep 25%; the banner prints this value. */
-#ifndef ROBO_LINE_LOSS_CAP
-#define ROBO_LINE_LOSS_CAP 0.25 /* Production cap; a higher value must be asked for explicitly, e.g. -DROBO_LINE_LOSS_CAP=0.40. */
-#endif
-    config.max_output = ROBO_LINE_LOSS_CAP;
 #endif
     return config;
 }

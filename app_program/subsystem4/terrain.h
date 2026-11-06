@@ -1,126 +1,71 @@
-/* Demonstration thresholds; tune on the assembled robot before motor use. */
+/* Hump phases and peak height, nested inside Buddy 4 MONITORING.
+ * Course model: 2 driven wheels + centre caster, each hump under ONE wheel
+ * side. The input is the right-minus-left wheel contact height from the
+ * sideways component of gravity (tilt_side_height_tenths), so body pitch and
+ * the caster do not affect it. A hump under both wheels at once cancels out.
+ */
 #ifndef TERRAIN_H
 #define TERRAIN_H
-
 #include <stdbool.h>
 #include <stdint.h>
-
-#define TERRAIN_SLOPE_DEG       (5.0F)
-/* Direction signs for the user's mounting; change only between +/-1.0F.
- * Pitch labels and roll angle signs can be reversed independently.
+#define TERRAIN_WAITING (0U)
+#define TERRAIN_CLIMBING (1U)
+#define TERRAIN_DESCENDING (2U)
+#define TERRAIN_PHASE_MASK (0x03U)
+#define TERRAIN_VALID (0x04U)
+#define TERRAIN_SLOW (0x08U)
+/* Height thresholds in 0.1 mm and confirmation times. */
+/* Driving on flat floor sways the reading by up to ~3.3 mm (steering, vibration),
+ * so the entry level sits above that; the smallest course hump is ~10 mm. */
+#define TERRAIN_ENTER_TENTHS (50)  /* 5.0 mm wheel height difference starts a hump ... */
+#define TERRAIN_ENTER_HOLD_MS (100U) /* ... once held this long (rejects jolts). */
+#define TERRAIN_DROP_TENTHS (30)   /* Descending: 3.0 mm below the peak, or half */
+                                   /* the peak if that is smaller (small humps). */
+#define TERRAIN_RECLIMB_TENTHS (20) /* DESCENDING -> CLIMBING only 2.0 mm above the peak. */
+#define TERRAIN_SMOOTH_SHIFT (2U)  /* Height smoothing: s += (h - s) / 4 per sample. */
+#define TERRAIN_EXIT_TENTHS (25)   /* Below 2.5 mm (under the entry level) ... */
+#define TERRAIN_EXIT_HOLD_MS (300U) /* ... for this long completes the hump. */
+#define TERRAIN_MAX_GAP_MS (100U)
+/* Peak bytes (CR1: 0..127 mm in 7 bits + one flag bit). */
+#define TERRAIN_PEAK_MM_MASK (0x7FU)
+#define TERRAIN_PEAK_RIGHT (0x80U) /* terrain_last_peak(): hump was under the right wheel. */
+#define TERRAIN_RUN_VALID (0x80U)  /* terrain_run_max(): at least one hump confirmed. */
+/* Status byte: phase bits 0..1, current observation valid bit 2, reduced-speed
+ * request bit 3. Private: bit 4 confirmation pending, bit 5 current hump side,
+ * bit 7 completion event latched until consumed by the owning task.
+ * Invalid status is UNKNOWN, never permission to drive at normal speed.
  */
-/* User's forward/backward movement is along the reference Y axis. */
-#ifndef TERRAIN_FORWARD_AXIS_Y
-#define TERRAIN_FORWARD_AXIS_Y  (1)
+typedef struct
+{
+    uint32_t candidate_since;
+    uint32_t last_sample;
+    int16_t smooth_tenths; /* Smoothed signed height, 0.1 mm; reseeded after gaps. */
+    uint16_t peak_tenths; /* Current hump peak |height|, 0.1 mm (0..3276). */
+    uint8_t flags;
+    uint8_t last_peak;    /* Last completed hump: mm | TERRAIN_PEAK_RIGHT. */
+    uint8_t run_max;      /* Highest peak this run: mm | TERRAIN_RUN_VALID. */
+} terrain_t;
+/* Explicit new-run reset: clears phases, peaks and the run maximum.
+ * Cold initialisation is also a zero-filled context. Completion automatically rearms.
+ */
+void terrain_reset(terrain_t *p_terrain);
+/* Consume a latched completion once, from the owning task. Consume after each
+ * update; multiple events coalesce if ignored. Not an inter-task event queue.
+ */
+bool terrain_take_completed(terrain_t *p_terrain);
+/* One fresh observation per call: valid=false (stale/unsuitable tilt) cancels
+ * pending timing and keeps the confirmed phase, peaks and slow request.
+ * height_tenths: right-minus-left wheel contact height, 0.1 mm (sign = side).
+ * The run maximum follows the live peak, so an up-only ramp still counts.
+ */
+void terrain_step(terrain_t *p_terrain, bool valid, int16_t height_tenths, uint32_t now_ms);
+/* Coherent four-bit status value; copy through a protected interface across tasks.
+ * Internal flags/padding must not be transmitted directly. NULL gives UNKNOWN.
+ */
+uint8_t terrain_status(terrain_t const *p_terrain);
+/* Last completed hump peak byte (mm | TERRAIN_PEAK_RIGHT); 0 before the first. */
+uint8_t terrain_last_peak(terrain_t const *p_terrain);
+/* Highest peak this run (mm | TERRAIN_RUN_VALID); 0 before the first hump. */
+uint8_t terrain_run_max(terrain_t const *p_terrain);
+char const *terrain_phase_name(uint8_t status);
 #endif
-#define TERRAIN_PITCH_SIGN      (1.0F)
-#define TERRAIN_ROLL_SIGN       (1.0F)
-/* +1: positive roll means left side lower. Use -1 to swap left/right.
- * Verify this on the robot; the raw sensor mounting cannot establish it.
- */
-#define TERRAIN_LEFT_ROLL_SIGN  (1.0F)
-#define TERRAIN_STOP_DEG        (30.0F)
-#define TERRAIN_ROUGH_MG        (250.0F)
-#define TERRAIN_CONFIRM_SAMPLES (3U)
-#define TERRAIN_RECOVER_SAMPLES (5U)
-
-/* Mean of 15 complete ACC readings in the user's latest screenshot.
- * Values are raw acceleration counts; negative Z is intentional.
- */
-#define TERRAIN_REFERENCE_X_MG (-61.33F)
-#define TERRAIN_REFERENCE_Y_MG (27.07F)
-#define TERRAIN_REFERENCE_Z_MG (-1039.07F)
-
-#define TERRAIN_CALIBRATION_SAMPLES (40U)
-#define TERRAIN_CALIBRATION_MOTION  (80.0F)
-
-typedef struct
-{
-    float sum_x;
-    float sum_y;
-    float sum_z;
-    float first_x;
-    float first_y;
-    float first_z;
-    uint32_t count;
-} terrain_calibration_t;
-
-typedef enum
-{
-    TERRAIN_UNKNOWN = 0,
-    TERRAIN_LEVEL,
-    TERRAIN_SLOPE,
-    TERRAIN_ROUGH,
-    TERRAIN_EXCESS_TILT,
-    TERRAIN_UPHILL,
-    TERRAIN_DOWNHILL,
-    TERRAIN_SIDE_SLOPE,
-    TERRAIN_SIDE_LEFT,
-    TERRAIN_SIDE_RIGHT
-} terrain_condition_t;
-
-typedef struct
-{
-    uint32_t confirmation_count;
-    terrain_condition_t candidate;
-    terrain_condition_t condition;
-} terrain_axis_state_t;
-
-typedef struct
-{
-    terrain_axis_state_t pitch_axis;
-    terrain_axis_state_t roll_axis;
-    /* Orthonormal axes of the calibrated level reference. */
-    float reference_x[3];
-    float reference_y[3];
-    float reference_z[3];
-    bool b_calibrated;
-    float gravity_x;
-    float gravity_y;
-    float gravity_z;
-    uint32_t confirmation_count;
-    terrain_condition_t candidate;
-    terrain_condition_t condition;
-    bool b_initialized;
-} terrain_filter_t;
-
-typedef struct
-{
-    float pitch_deg;
-    float roll_deg;
-    float tilt_deg;
-    float motion_mg;
-    /* Independent direction reports; UNKNOWN until confirmed/valid. */
-    terrain_condition_t pitch_condition;
-    terrain_condition_t roll_condition;
-    terrain_condition_t condition;
-    bool b_tilt_valid;
-} terrain_result_t;
-
-/* Load the fixed reference above without sampling the current orientation.
- * Returns false for NULL or invalid reference magnitude; output unchanged.
- */
-bool terrain_use_fixed_reference(terrain_filter_t *p_filter);
-
-/* Optional capture API; the standalone main uses the fixed reference.
- * Calibrate on known level ground, motionless, for 40 fresh samples.
- * Motion or invalid acceleration restarts the averaging window.
- * This is a mounting reference, not a full accelerometer bias calibration.
- */
-bool terrain_calibration_add(terrain_calibration_t *p_calibration,
-                             terrain_filter_t *p_filter,
-                             int16_t axis_x, int16_t axis_y, int16_t axis_z);
-/* Call every 50 ms. Reset clears motion history but preserves calibration.
- * Zero-initialize at boot, then load the fixed reference before updates.
- * No motor is driven. Forward/side axes follow TERRAIN_FORWARD_AXIS_Y.
- * Pitch and roll directions are confirmed and reported independently.
- * Overall condition retains dominant tilt, roughness and stop priorities.
- * Generic SLOPE remains available for callers using the older interface.
- */
-void terrain_reset(terrain_filter_t *p_filter);
-bool terrain_update(terrain_filter_t *p_filter, int16_t axis_x, int16_t axis_y,
-                    int16_t axis_z, terrain_result_t *p_result);
-char const *terrain_condition_name(terrain_condition_t condition);
-char const *terrain_action_name(terrain_condition_t condition);
-
-#endif /* TERRAIN_H */

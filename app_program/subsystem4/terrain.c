@@ -1,389 +1,198 @@
-/* Gravity-based tilt and a simple motion heuristic, without sensor fusion. */
 #include "terrain.h"
-#include <math.h>
 #include <stddef.h>
+#define TERRAIN_PENDING (0x10U)
+#define TERRAIN_SIDE_RIGHT (0x20U)
+#define TERRAIN_PUBLIC_MASK (0x0FU)
+#define TERRAIN_COMPLETED_EVENT (0x80U)
+_Static_assert(TERRAIN_EXIT_TENTHS < TERRAIN_ENTER_TENTHS,
+               "completion level must be below the entry level (hysteresis)");
+/* Kept across an invalid observation or a sample gap. */
+#define TERRAIN_RETAIN_MASK (TERRAIN_PHASE_MASK | TERRAIN_SLOW | TERRAIN_SIDE_RIGHT | \
+                             TERRAIN_COMPLETED_EVENT)
 
-#define TERRAIN_FILTER_ALPHA (0.2F)
-#define TERRAIN_RAD_TO_DEG   (57.2957795F)
-#define TERRAIN_MIN_G_MG     (700.0F)
-#define TERRAIN_MAX_G_MG     (1300.0F)
-
-static float terrain_length(float axis_x, float axis_y, float axis_z);
-static void terrain_set_reference(terrain_calibration_t const *p_calibration,
-                                  terrain_filter_t *p_filter);
-static void terrain_report_axes(terrain_filter_t *p_filter,
-                                 terrain_result_t *p_result);
-static void terrain_confirm_axis(terrain_axis_state_t *p_axis,
-                                  terrain_condition_t candidate);
-static void terrain_classify(terrain_filter_t *p_filter,
-                             terrain_result_t const *p_result);
-
-bool terrain_use_fixed_reference(terrain_filter_t *p_filter)
+/* Reset the event, peaks and run maximum only when explicitly starting a new run. */
+void terrain_reset(terrain_t *p_terrain)
 {
-    terrain_calibration_t reference = {0};
-    float magnitude = terrain_length(TERRAIN_REFERENCE_X_MG,
-                                     TERRAIN_REFERENCE_Y_MG,
-                                     TERRAIN_REFERENCE_Z_MG);
+    if (NULL != p_terrain)
+    {
+        *p_terrain = (terrain_t){0};
+    }
+}
 
-    if ((p_filter == NULL) ||
-        !((magnitude >= 850.0F) && (magnitude <= 1150.0F)))
+/* Take the event without disturbing phase, validity or pending confirmation. */
+bool terrain_take_completed(terrain_t *p_terrain)
+{
+    bool completed;
+    if (NULL == p_terrain)
     {
         return false;
     }
-    reference.sum_x = TERRAIN_REFERENCE_X_MG;
-    reference.sum_y = TERRAIN_REFERENCE_Y_MG;
-    reference.sum_z = TERRAIN_REFERENCE_Z_MG;
-    terrain_set_reference(&reference, p_filter);
-    return true;
+    completed = (0U != (p_terrain->flags & TERRAIN_COMPLETED_EVENT));
+    p_terrain->flags &= (uint8_t)~TERRAIN_COMPLETED_EVENT;
+    return completed;
 }
 
-void terrain_reset(terrain_filter_t *p_filter)
+/* Read public phase/validity/request without exposing candidate bookkeeping. */
+uint8_t terrain_status(terrain_t const *p_terrain)
 {
-    if (p_filter != NULL)
+    return (NULL == p_terrain) ? 0U : (p_terrain->flags & TERRAIN_PUBLIC_MASK);
+}
+
+uint8_t terrain_last_peak(terrain_t const *p_terrain)
+{
+    return (NULL == p_terrain) ? 0U : p_terrain->last_peak;
+}
+
+uint8_t terrain_run_max(terrain_t const *p_terrain)
+{
+    return (NULL == p_terrain) ? 0U : p_terrain->run_max;
+}
+
+/* Fixed names for console reports; an invalid observation retains last phase. */
+char const *terrain_phase_name(uint8_t status)
+{
+    switch (status & TERRAIN_PHASE_MASK)
     {
-        p_filter->pitch_axis = (terrain_axis_state_t){0};
-        p_filter->roll_axis = (terrain_axis_state_t){0};
-        p_filter->gravity_x = 0.0F;
-        p_filter->gravity_y = 0.0F;
-        p_filter->gravity_z = 0.0F;
-        p_filter->confirmation_count = 0U;
-        p_filter->candidate = TERRAIN_UNKNOWN;
-        p_filter->condition = TERRAIN_UNKNOWN;
-        p_filter->b_initialized = false;
+        case TERRAIN_WAITING: return "WAITING";
+        case TERRAIN_CLIMBING: return "CLIMBING";
+        case TERRAIN_DESCENDING: return "DESCENDING";
+        default: return "INVALID";
     }
 }
 
-bool terrain_calibration_add(terrain_calibration_t *p_calibration,
-                             terrain_filter_t *p_filter,
-                             int16_t axis_x, int16_t axis_y, int16_t axis_z)
+/* Whole millimetres from 0.1 mm, rounded, limited to the 7-bit field. */
+static uint8_t terrain_mm(uint16_t tenths)
 {
-    float accel_x = (float)axis_x;
-    float accel_y = (float)axis_y;
-    float accel_z = (float)axis_z;
-    float magnitude = terrain_length(accel_x, accel_y, accel_z);
+    uint32_t mm = ((uint32_t)tenths + 5U) / 10U;
+    return (uint8_t)((mm > TERRAIN_PEAK_MM_MASK) ? TERRAIN_PEAK_MM_MASK : mm);
+}
 
-    if ((p_calibration == NULL) || (p_filter == NULL))
+/* Record a new live peak (and its side); the run maximum follows it. */
+static void terrain_raise_peak(terrain_t *p_terrain, uint16_t magnitude, bool right)
+{
+    uint8_t mm;
+    p_terrain->peak_tenths = magnitude;
+    p_terrain->flags = (uint8_t)((p_terrain->flags & (uint8_t)~TERRAIN_SIDE_RIGHT) |
+                                 (right ? TERRAIN_SIDE_RIGHT : 0U));
+    mm = terrain_mm(magnitude);
+    if (mm > (p_terrain->run_max & TERRAIN_PEAK_MM_MASK))
     {
+        p_terrain->run_max = mm;
+    }
+    p_terrain->run_max |= TERRAIN_RUN_VALID;
+}
+
+/* Fall from the peak that counts as descending: 3 mm, or half the peak when
+ * that is smaller, so a hump that peaks below ~3 mm can still complete.
+ * Peaks are at least TERRAIN_ENTER_TENTHS, so the result is always positive.
+ */
+static int32_t terrain_drop(uint16_t peak_tenths)
+{
+    int32_t half = (int32_t)peak_tenths / 2;
+    return (half < TERRAIN_DROP_TENTHS) ? half : TERRAIN_DROP_TENTHS;
+}
+
+/* Start or continue a timed confirmation; true once held for hold_ms. */
+static bool terrain_confirm(terrain_t *p_terrain, uint32_t now_ms, uint32_t hold_ms)
+{
+    if (0U == (p_terrain->flags & TERRAIN_PENDING))
+    {
+        p_terrain->flags |= TERRAIN_PENDING;
+        p_terrain->candidate_since = now_ms;
         return false;
     }
-    if (p_filter->b_calibrated)
-    {
-        return true;
-    }
-    /* Near 1 g and stationary; neither free fall nor a shock is a baseline. */
-    if ((magnitude < 850.0F) || (magnitude > 1150.0F))
-    {
-        *p_calibration = (terrain_calibration_t){0};
-        return false;
-    }
-    if ((p_calibration->count > 0U) &&
-        (terrain_length(accel_x - p_calibration->first_x,
-                        accel_y - p_calibration->first_y,
-                        accel_z - p_calibration->first_z) >
-         TERRAIN_CALIBRATION_MOTION))
-    {
-        *p_calibration = (terrain_calibration_t){0};
-        return false;
-    }
-    if (p_calibration->count == 0U)
-    {
-        p_calibration->first_x = accel_x;
-        p_calibration->first_y = accel_y;
-        p_calibration->first_z = accel_z;
-    }
-    p_calibration->sum_x += accel_x;
-    p_calibration->sum_y += accel_y;
-    p_calibration->sum_z += accel_z;
-    p_calibration->count++;
-    if (p_calibration->count < TERRAIN_CALIBRATION_SAMPLES)
-    {
-        return false;
-    }
-
-    terrain_set_reference(p_calibration, p_filter);
-    return true;
+    return (now_ms - p_terrain->candidate_since) >= hold_ms;
 }
 
-bool terrain_update(terrain_filter_t *p_filter, int16_t axis_x, int16_t axis_y,
-                    int16_t axis_z, terrain_result_t *p_result)
+/* All tests use the smoothed height |h| (seeded from the first sample after a
+ * gap or invalid observation, so no false ramp from zero).
+ * WAITING: |h| >= 5 mm held 100 ms -> CLIMBING. CLIMBING: track the peak;
+ * |h| <= peak - min(3 mm, peak/2) -> DESCENDING. DESCENDING: |h| >= peak + 2 mm
+ * returns to CLIMBING (double hump; smaller rises are noise and do not move the
+ * peak); |h| < 2.5 mm held 300 ms completes: the peak and its
+ * side are stored, an event latches and WAITING rearms. An up-only ramp
+ * stays CLIMBING with the peak (and run maximum) still updated.
+ */
+void terrain_step(terrain_t *p_terrain, bool valid, int16_t height_tenths, uint32_t now_ms)
 {
-    float accel_x = (float)axis_x;
-    float accel_y = (float)axis_y;
-    float accel_z = (float)axis_z;
-    float magnitude = terrain_length(accel_x, accel_y, accel_z);
-    float forward_accel = 0.0F;
-    float sideways_accel = 0.0F;
-    terrain_result_t result = {0};
+    uint8_t phase;
+    uint16_t magnitude;
+    bool right;
 
-    if ((p_filter == NULL) || (p_result == NULL))
+    if (NULL == p_terrain)
     {
-        return false;
+        return;
     }
-
-    if (!p_filter->b_calibrated)
+    if (!valid)
     {
-        *p_result = result;
-        return true;
+        p_terrain->flags &= TERRAIN_RETAIN_MASK;
+        return;
     }
-
-    /* Rotate into the captured level frame, retaining gravity magnitude. */
-    accel_x = ((float)axis_x * p_filter->reference_x[0]) +
-         ((float)axis_y * p_filter->reference_x[1]) +
-         ((float)axis_z * p_filter->reference_x[2]);
-    accel_y = ((float)axis_x * p_filter->reference_y[0]) +
-         ((float)axis_y * p_filter->reference_y[1]) +
-         ((float)axis_z * p_filter->reference_y[2]);
-    accel_z = ((float)axis_x * p_filter->reference_z[0]) +
-         ((float)axis_y * p_filter->reference_z[1]) +
-         ((float)axis_z * p_filter->reference_z[2]);
-
-    /* A small/large total acceleration cannot give reliable gravity tilt. */
-    if ((magnitude < TERRAIN_MIN_G_MG) || (magnitude > TERRAIN_MAX_G_MG))
+    if ((0U == (p_terrain->flags & TERRAIN_VALID)) ||
+        ((now_ms - p_terrain->last_sample) >= TERRAIN_MAX_GAP_MS))
     {
-        terrain_reset(p_filter);
-        result.condition = TERRAIN_UNKNOWN;
-        *p_result = result;
-        return true;
+        p_terrain->flags &= TERRAIN_RETAIN_MASK; /* Restart any timed confirmation. */
+        p_terrain->smooth_tenths = height_tenths;  /* Reseed the smoothing. */
     }
-
-    if (!p_filter->b_initialized)
+    else
     {
-        p_filter->gravity_x = accel_x;
-        p_filter->gravity_y = accel_y;
-        p_filter->gravity_z = accel_z;
-        p_filter->b_initialized = true;
+        /* Rounded integer low-pass; |h| <= 3276 so no overflow in int32. */
+        int32_t step = (int32_t)height_tenths - (int32_t)p_terrain->smooth_tenths;
+        int32_t half = (step >= 0) ? (1 << (TERRAIN_SMOOTH_SHIFT - 1U))
+                                   : -(1 << (TERRAIN_SMOOTH_SHIFT - 1U));
+        p_terrain->smooth_tenths = (int16_t)(p_terrain->smooth_tenths +
+                                             (step + half) / (1 << TERRAIN_SMOOTH_SHIFT));
     }
+    height_tenths = p_terrain->smooth_tenths;
+    p_terrain->last_sample = now_ms;
+    p_terrain->flags |= TERRAIN_VALID;
+    right = (height_tenths > 0);
+    magnitude = (uint16_t)((height_tenths < 0) ? -(int32_t)height_tenths : (int32_t)height_tenths);
+    phase = p_terrain->flags & TERRAIN_PHASE_MASK;
 
-    /* Residual before smoothing: bumps, turns and braking can all raise it. */
-    result.motion_mg = terrain_length(accel_x - p_filter->gravity_x,
-                                     accel_y - p_filter->gravity_y,
-                                     accel_z - p_filter->gravity_z);
-    p_filter->gravity_x += TERRAIN_FILTER_ALPHA *
-                          (accel_x - p_filter->gravity_x);
-    p_filter->gravity_y += TERRAIN_FILTER_ALPHA *
-                          (accel_y - p_filter->gravity_y);
-    p_filter->gravity_z += TERRAIN_FILTER_ALPHA *
-                          (accel_z - p_filter->gravity_z);
-
-#if TERRAIN_FORWARD_AXIS_Y
-    forward_accel = p_filter->gravity_y;
-    sideways_accel = p_filter->gravity_x;
-#else
-    forward_accel = p_filter->gravity_x;
-    sideways_accel = p_filter->gravity_y;
-#endif
-    result.pitch_deg = atan2f(TERRAIN_PITCH_SIGN * forward_accel,
-                             terrain_length(0.0F, sideways_accel,
-                                            p_filter->gravity_z)) *
-                       TERRAIN_RAD_TO_DEG;
-    result.roll_deg = atan2f(TERRAIN_ROLL_SIGN * sideways_accel,
-                            p_filter->gravity_z) * TERRAIN_RAD_TO_DEG;
-    result.tilt_deg = atan2f(terrain_length(p_filter->gravity_x,
-                                          p_filter->gravity_y, 0.0F),
-                            p_filter->gravity_z) * TERRAIN_RAD_TO_DEG;
-    result.b_tilt_valid = true;
-
-    terrain_report_axes(p_filter, &result);
-    terrain_classify(p_filter, &result);
-    result.condition = p_filter->condition;
-    *p_result = result;
-    return true;
-}
-
-char const *terrain_condition_name(terrain_condition_t condition)
-{
-    switch (condition)
+    if (TERRAIN_WAITING == phase)
     {
-        case TERRAIN_LEVEL:
-            return "LEVEL";
-        case TERRAIN_SLOPE:
-            return "SLOPE";
-        case TERRAIN_UPHILL:
-            return "UPHILL";
-        case TERRAIN_DOWNHILL:
-            return "DOWNHILL";
-        case TERRAIN_SIDE_SLOPE:
-            return "SIDE_SLOPE";
-        case TERRAIN_SIDE_LEFT:
-            return "SIDE_LEFT";
-        case TERRAIN_SIDE_RIGHT:
-            return "SIDE_RIGHT";
-        case TERRAIN_ROUGH:
-            return "ROUGH";
-        case TERRAIN_EXCESS_TILT:
-            return "EXCESS_TILT";
-        default:
-            return "UNKNOWN";
-    }
-}
-
-char const *terrain_action_name(terrain_condition_t condition)
-{
-    switch (condition)
-    {
-        case TERRAIN_LEVEL:
-            return "NORMAL";
-        case TERRAIN_SLOPE:
-        case TERRAIN_UPHILL:
-        case TERRAIN_DOWNHILL:
-        case TERRAIN_SIDE_SLOPE:
-        case TERRAIN_SIDE_LEFT:
-        case TERRAIN_SIDE_RIGHT:
-        case TERRAIN_ROUGH:
-            return "SLOW";
-        default:
-            return "STOP";
-    }
-}
-
-static float terrain_length(float axis_x, float axis_y, float axis_z)
-{
-    return sqrtf((axis_x * axis_x) + (axis_y * axis_y) + (axis_z * axis_z));
-}
-
-/* Build the level frame from the stationary gravity average. */
-static void terrain_set_reference(terrain_calibration_t const *p_calibration,
-                                  terrain_filter_t *p_filter)
-{
-    float length = 0.0F;
-    float *p_x = NULL;
-    float *p_y = NULL;
-    float *p_z = NULL;
-    p_x = p_filter->reference_x;
-    p_y = p_filter->reference_y;
-    p_z = p_filter->reference_z;
-    length = terrain_length(p_calibration->sum_x, p_calibration->sum_y,
-                            p_calibration->sum_z);
-    p_z[0] = p_calibration->sum_x / length;
-    p_z[1] = p_calibration->sum_y / length;
-    p_z[2] = p_calibration->sum_z / length;
-    /* Project sensor X onto the calibrated horizontal plane. */
-    p_x[0] = 1.0F - (p_z[0] * p_z[0]);
-    p_x[1] = -p_z[0] * p_z[1];
-    p_x[2] = -p_z[0] * p_z[2];
-    length = terrain_length(p_x[0], p_x[1], p_x[2]);
-    if (length < 0.1F)
-    {
-        /* Sensor X is vertical: use projected Y as the horizontal axis. */
-        p_x[0] = -p_z[1] * p_z[0];
-        p_x[1] = 1.0F - (p_z[1] * p_z[1]);
-        p_x[2] = -p_z[1] * p_z[2];
-        length = terrain_length(p_x[0], p_x[1], p_x[2]);
-    }
-    for (uint32_t index = 0U; index < 3U; index++)
-    {
-        p_x[index] /= length;
-    }
-    /* Y = Z cross X: complete a right-handed reference frame. */
-    p_y[0] = (p_z[1] * p_x[2]) - (p_z[2] * p_x[1]);
-    p_y[1] = (p_z[2] * p_x[0]) - (p_z[0] * p_x[2]);
-    p_y[2] = (p_z[0] * p_x[1]) - (p_z[1] * p_x[0]);
-    terrain_reset(p_filter);
-    p_filter->b_calibrated = true;
-}
-
-/* Confirm terrain changes; excessive tilt remains an immediate decision. */
-static void terrain_classify(terrain_filter_t *p_filter,
-                             terrain_result_t const *p_result)
-{
-    terrain_condition_t candidate = TERRAIN_LEVEL;
-    uint32_t required_count = TERRAIN_CONFIRM_SAMPLES;
-    /* Total tilt catches combined pitch/roll and reference inversion. */
-    if (p_result->tilt_deg >= TERRAIN_STOP_DEG)
-    {
-        candidate = TERRAIN_EXCESS_TILT;
-    }
-    else if (p_result->motion_mg >= TERRAIN_ROUGH_MG)
-    {
-        candidate = TERRAIN_ROUGH;
-    }
-    else if (p_result->tilt_deg >= TERRAIN_SLOPE_DEG)
-    {
-        /* Label the dominant tilt axis; safety still uses total tilt. */
-        if (fabsf(p_result->roll_deg) > fabsf(p_result->pitch_deg))
+        if (magnitude < (uint16_t)TERRAIN_ENTER_TENTHS)
         {
-            if ((p_result->roll_deg * TERRAIN_LEFT_ROLL_SIGN) > 0.0F)
-            {
-                candidate = TERRAIN_SIDE_LEFT;
-            }
-            else
-            {
-                candidate = TERRAIN_SIDE_RIGHT;
-            }
+            p_terrain->flags &= (uint8_t)~TERRAIN_PENDING;
         }
-        else if (p_result->pitch_deg > 0.0F)
+        else if (terrain_confirm(p_terrain, now_ms, TERRAIN_ENTER_HOLD_MS))
         {
-            candidate = TERRAIN_UPHILL;
+            p_terrain->flags = (uint8_t)((p_terrain->flags &
+                                          (TERRAIN_VALID | TERRAIN_COMPLETED_EVENT)) |
+                                         TERRAIN_CLIMBING | TERRAIN_SLOW);
+            terrain_raise_peak(p_terrain, magnitude, right);
         }
-        else
-        {
-            candidate = TERRAIN_DOWNHILL;
-        }
+        return;
     }
-
-    if (candidate != p_filter->candidate)
+    if ((TERRAIN_CLIMBING == phase) && (magnitude > p_terrain->peak_tenths))
     {
-        p_filter->candidate = candidate;
-        p_filter->confirmation_count = 0U;
+        terrain_raise_peak(p_terrain, magnitude, right);
     }
-    if (candidate == TERRAIN_LEVEL)
+    else if ((TERRAIN_DESCENDING == phase) &&
+             ((int32_t)magnitude >= ((int32_t)p_terrain->peak_tenths + TERRAIN_RECLIMB_TENTHS)))
     {
-        required_count = TERRAIN_RECOVER_SAMPLES;
+        terrain_raise_peak(p_terrain, magnitude, right);
+        phase = TERRAIN_CLIMBING;
     }
-    if (p_filter->confirmation_count < required_count)
+    else if ((TERRAIN_CLIMBING == phase) &&
+             (((int32_t)magnitude + terrain_drop(p_terrain->peak_tenths)) <=
+              (int32_t)p_terrain->peak_tenths))
     {
-        p_filter->confirmation_count++;
+        phase = TERRAIN_DESCENDING;
     }
-    /* Excess filtered tilt stops immediately; recovery must be confirmed. */
-    if ((candidate == TERRAIN_EXCESS_TILT) ||
-        (p_filter->confirmation_count >= required_count))
+    p_terrain->flags = (uint8_t)((p_terrain->flags & (uint8_t)~TERRAIN_PHASE_MASK) | phase);
+    if ((TERRAIN_DESCENDING != phase) || (magnitude >= (uint16_t)TERRAIN_EXIT_TENTHS))
     {
-        p_filter->condition = candidate;
+        p_terrain->flags &= (uint8_t)~TERRAIN_PENDING;
+        return;
     }
-}
-
-/* A direction on either axis is independent of the other axis and motion. */
-static void terrain_report_axes(terrain_filter_t *p_filter,
-                                 terrain_result_t *p_result)
-{
-    terrain_condition_t pitch_candidate = TERRAIN_LEVEL;
-    terrain_condition_t roll_candidate = TERRAIN_LEVEL;
-
-    if (fabsf(p_result->pitch_deg) >= TERRAIN_SLOPE_DEG)
+    if (terrain_confirm(p_terrain, now_ms, TERRAIN_EXIT_HOLD_MS))
     {
-        pitch_candidate = (p_result->pitch_deg > 0.0F) ?
-                          TERRAIN_UPHILL : TERRAIN_DOWNHILL;
-    }
-    if (fabsf(p_result->roll_deg) >= TERRAIN_SLOPE_DEG)
-    {
-        roll_candidate = ((p_result->roll_deg * TERRAIN_LEFT_ROLL_SIGN) >
-                          0.0F) ? TERRAIN_SIDE_LEFT : TERRAIN_SIDE_RIGHT;
-    }
-    terrain_confirm_axis(&p_filter->pitch_axis, pitch_candidate);
-    terrain_confirm_axis(&p_filter->roll_axis, roll_candidate);
-    p_result->pitch_condition = p_filter->pitch_axis.condition;
-    p_result->roll_condition = p_filter->roll_axis.condition;
-}
-
-/* Three samples confirm slope direction; five samples confirm level. */
-static void terrain_confirm_axis(terrain_axis_state_t *p_axis,
-                                  terrain_condition_t candidate)
-{
-    uint32_t required_count = (candidate == TERRAIN_LEVEL) ?
-                             TERRAIN_RECOVER_SAMPLES :
-                             TERRAIN_CONFIRM_SAMPLES;
-
-    if (candidate != p_axis->candidate)
-    {
-        p_axis->candidate = candidate;
-        p_axis->confirmation_count = 0U;
-    }
-    if (p_axis->confirmation_count < required_count)
-    {
-        p_axis->confirmation_count++;
-    }
-    if (p_axis->confirmation_count >= required_count)
-    {
-        p_axis->condition = candidate;
+        p_terrain->last_peak = (uint8_t)(terrain_mm(p_terrain->peak_tenths) |
+                                         ((0U != (p_terrain->flags & TERRAIN_SIDE_RIGHT)) ?
+                                          TERRAIN_PEAK_RIGHT : 0U));
+        p_terrain->peak_tenths = 0U;
+        p_terrain->flags = (uint8_t)(TERRAIN_WAITING | TERRAIN_VALID | TERRAIN_COMPLETED_EVENT);
     }
 }

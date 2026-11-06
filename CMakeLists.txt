@@ -76,6 +76,17 @@ if(ROBO_HOST_TESTS)
         target_link_libraries(line_pid_checks m)
     endif()
     add_test(NAME line_pid_checks COMMAND line_pid_checks)
+    # Same line task with Buddy 4 enabled: start-up wait for the IMU tilt reference.
+    add_executable(line_imu_wait_checks
+        app_program/subsystem2/steering.c app_program/subsystem2/board_config.c tests/test_line_imu_wait.c)
+    target_include_directories(line_imu_wait_checks PRIVATE include tests)
+    target_compile_definitions(line_imu_wait_checks PRIVATE
+        ROBO_LINE_STEERING=1 ROBO_LINE_TEST_HOST=1 ROBO_SUBSYSTEM4=1)
+    if(NOT MSVC)
+        target_compile_options(line_imu_wait_checks PRIVATE -Wall -Wextra -Werror -Wconversion -Wshadow)
+        target_link_libraries(line_imu_wait_checks m)
+    endif()
+    add_test(NAME line_imu_wait_checks COMMAND line_imu_wait_checks)
     add_executable(angle_control_checks app_program/subsystem2/angle_control.c
         app_program/subsystem2/math.c app_program/subsystem2/board_config.c tests/test_angle_control.c)
     target_compile_definitions(angle_control_checks PRIVATE ROBO_ANGLE_TEST=1)
@@ -95,10 +106,12 @@ if(ROBO_HOST_TESTS)
         app_program/subsystem5/detour_plan.c app_program/subsystem5/subsystem5_test.c)
     target_compile_definitions(obstacle_geometry_checks PRIVATE S5_BEAM_CORRECTION_DEG=0.0)
     add_executable(obstacle_runtime_checks tests/subsystem5/test_runtime.c
-        app_program/subsystem5/obstacle_scan.c app_program/subsystem5/detour_plan.c)
+        app_program/subsystem5/obstacle_scan.c app_program/subsystem5/detour_plan.c
+        app_program/subsystem2/math.c)
     target_include_directories(obstacle_runtime_checks PRIVATE tests/subsystem5 include)
     target_compile_definitions(obstacle_runtime_checks PRIVATE ROBO_PRODUCTION_BUILD=1 ROBO_SUBSYSTEM5=1)
-    foreach(obstacle_check obstacle_geometry_checks obstacle_runtime_checks)
+    add_executable(obstacle_servo_checks tests/subsystem5/test_servo.c)
+    foreach(obstacle_check obstacle_geometry_checks obstacle_runtime_checks obstacle_servo_checks)
         if(NOT MSVC)
             target_compile_options(${obstacle_check} PRIVATE -Wall -Wextra -Werror -Wconversion -Wshadow)
             target_link_libraries(${obstacle_check} m)

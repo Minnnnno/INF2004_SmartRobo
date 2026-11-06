@@ -95,7 +95,7 @@ int main(void)
     CHECK(motor.applied_permille[0] == 100 && motor.applied_permille[1] == 100);
     CHECK(motor.compare[0][0] == 409U && motor.compare[1][1] == 409U);
     CHECK(motor.configured_top == 4095U && motor.top[0] == 4095U && motor.divider_16[1] == motor.configured_divider_16);
-    CHECK(motor.output_age_ms == 5U && motor.cap_permille == 250);
+    CHECK(motor.output_age_ms == 5U && motor.cap_permille == 1000);
     before_cutoff = motor;
     /* Register interference must appear in diagnostics without changing drive. */
     g_duty[0][0] = 0U;
@@ -124,6 +124,23 @@ int main(void)
     motion_hal_motor_diagnostics(&motor);
     CHECK(motor.inhibited && motor.applied_permille[0] == 0 && motor.applied_permille[1] == 0);
     CHECK(before_cutoff.compare[0][0] == 409U && before_cutoff.applied_permille[0] == 100);
+    /* Production accepts the full PWM range and clamps over-range requests
+     * to 100%, including after direction reversal and during inhibition. */
+    outputs[0] = outputs[1] = 1.2;
+    motion_hal_write(outputs, false, 1.25);
+    CHECK(g_duty[0][0] == 4096U && g_duty[1][1] == 4096U);
+    motion_hal_motor_diagnostics(&motor);
+    CHECK(motor.cap_permille == 1000 && motor.applied_permille[0] == 1000 &&
+          motor.applied_permille[1] == 1000 && motor.mismatch_mask == 0U);
+    outputs[0] = outputs[1] = -1.2;
+    motion_hal_write(outputs, false, 1.26);
+    CHECK(g_duty[0][0] == 0U && g_duty[1][1] == 0U);
+    motion_hal_write(outputs, false, 1.37);
+    CHECK(g_duty[0][1] == 4096U && g_duty[1][0] == 4096U);
+    motion_hal_motor_diagnostics(&motor);
+    CHECK(motor.applied_permille[0] == -1000 && motor.applied_permille[1] == -1000);
+    motion_hal_write(outputs, true, 1.38);
+    CHECK(g_duty[0][1] == 0U && g_duty[1][0] == 0U);
     /* Simultaneous B edges must update each wheel independently, with its
      * own polarity; the returned pair is copied under interrupt exclusion. */
     g_levels = (1u << 3u) | (1u << 5u);
