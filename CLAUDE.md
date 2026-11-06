@@ -32,6 +32,7 @@ CMake is the only supported route (the `build_make/` GNU Make files and the `mak
 | `ROBO_SAFE_MOTOR_TEST=ON` (+ console) | 1 s, 25% motor tests ([docs/SAFE_MOTOR_TEST.md](docs/SAFE_MOTOR_TEST.md)) | `buddy2_safe_motor_test.uf2` |
 | `ROBO_ANGLE_TEST=ON` (+ console) | Encoder 90° turns ([docs/ANGLE_TEST.md](docs/ANGLE_TEST.md)) | `buddy2_angle_test.uf2` |
 | `ROBO_ENCODER_DIAGNOSTICS_ONLY=ON` (+ console) | Read-only encoders, motors compiled out | `buddy2_encoder_diag.uf2` |
+| `ROBO_MAG_CAL=ON` (+ `ROBO_SUBSYSTEM5=OFF`, no line steering) | Buddy 4 magnetometer calibration: pivots 360 deg each way, prints `mag_cal.h` constants | — |
 
 Other options: `SMP` must stay OFF (encoder snapshot/IRQ ownership is single-core). `WIFI=cyw43`, `NET=lwip`, `MQTT=ON` enable Buddy 1 networking; `NET=lwip` requires a local untracked `config/wifi_secrets.h` (copy `wifi_secrets.example.h`). `CONSOLE=uart` uses GP0/GP1 and forces `CRASH_REPORT`.
 

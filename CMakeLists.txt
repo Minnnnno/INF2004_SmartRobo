@@ -8,8 +8,9 @@ option(ROBO_SAFE_MOTOR_TEST "Isolated 25 percent, one-second motor tests" OFF)
 option(ROBO_ANGLE_TEST "Isolated encoder-based 90-degree turns" OFF)
 option(ROBO_LINE_STEERING "Production encoder/PID line following with gentle digital steering" OFF)
 option(ROBO_IR_MONITOR "Line-steering image that only prints IR readings; never requests motion" OFF)
-option(ROBO_SUBSYSTEM4 "Enable Buddy 4 IMU/terrain monitoring and its I2C1 driver" OFF)
+option(ROBO_SUBSYSTEM4 "Enable Buddy 4 IMU/terrain monitoring and its I2C1 driver" ON)
 option(ROBO_SUBSYSTEM5 "Enable production obstacle detection and servo scanning" ON)
+option(ROBO_MAG_CAL "Buddy 4 magnetometer calibration image: robot pivots 360 deg each way, prints constants" OFF)
 option(ROBO_MOTION_FAULTS_DISABLED "Firmware: Buddy 2 never enters the latched FAULT state" ON)
 if(ROBO_HOST_TESTS)
     project(smart_robo_tests C)
@@ -150,6 +151,10 @@ endif()
 if(ROBO_LINE_STEERING AND (ROBO_MANUAL_CONSOLE OR ROBO_SAFE_MOTOR_TEST OR ROBO_ANGLE_TEST OR ROBO_ENCODER_DIAGNOSTICS_ONLY))
     message(FATAL_ERROR "PID line steering is a production profile; disable calibration profiles.")
 endif()
+if(ROBO_MAG_CAL AND (NOT ROBO_SUBSYSTEM4 OR ROBO_SUBSYSTEM5 OR ROBO_LINE_STEERING OR ROBO_IR_MONITOR OR
+                     ROBO_MANUAL_CONSOLE OR ROBO_SAFE_MOTOR_TEST OR ROBO_ANGLE_TEST OR ROBO_ENCODER_DIAGNOSTICS_ONLY))
+    message(FATAL_ERROR "ROBO_MAG_CAL is an exclusive calibration image: needs ROBO_SUBSYSTEM4=ON, ROBO_SUBSYSTEM5=OFF, ROBO_LINE_STEERING=OFF and no console/test profile.")
+endif()
 if(ROBO_IR_MONITOR AND NOT ROBO_LINE_STEERING)
     message(FATAL_ERROR "ROBO_IR_MONITOR requires ROBO_LINE_STEERING=ON.")
 endif()
@@ -282,6 +287,7 @@ target_compile_definitions(mtkernel_3 PRIVATE
     $<$<BOOL:${ROBO_PRODUCTION_BUILD}>:ROBO_PRODUCTION_BUILD=1>
     $<$<BOOL:${ROBO_LINE_STEERING}>:ROBO_LINE_STEERING=1>
     $<$<BOOL:${ROBO_IR_MONITOR}>:ROBO_IR_MONITOR=1>
+    $<$<BOOL:${ROBO_MAG_CAL}>:ROBO_MAG_CAL=1>
     $<$<BOOL:${ROBO_MOTION_FAULTS_DISABLED}>:ROBO_MOTION_FAULTS_DISABLED=1>
     ROBO_SUBSYSTEM4=$<BOOL:${ROBO_SUBSYSTEM4}>
     ROBO_SUBSYSTEM5=$<BOOL:${ROBO_SUBSYSTEM5}>

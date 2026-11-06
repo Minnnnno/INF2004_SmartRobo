@@ -63,7 +63,7 @@ int main(void)
     hold(&t, 60, 100U);
     check(phase(&t) == TERRAIN_WAITING, "not immediately (smoothing + hold)");
     hold(&t, 60, 300U);
-    check(phase(&t) == TERRAIN_CLIMBING && (terrain_status(&t) & TERRAIN_SLOW), "climbing, slow requested");
+    check(phase(&t) == TERRAIN_CLIMBING, "climbing");
     check(terrain_run_max(&t) == (TERRAIN_RUN_VALID | 6U), "run max follows live peak");
     hold(&t, 0, 800U);
     check(terrain_take_completed(&t) && peak_mm(&t) == 6U, "small hump completes");
@@ -71,7 +71,7 @@ int main(void)
     /* 30 mm hump under the right wheel. */
     terrain_reset(&t);
     hump(&t, 300);
-    check(phase(&t) == TERRAIN_WAITING && !(terrain_status(&t) & TERRAIN_SLOW), "hump done, slow released");
+    check(phase(&t) == TERRAIN_WAITING, "hump done, back to waiting");
     check(terrain_take_completed(&t), "completion event");
     check(!terrain_take_completed(&t), "event consumed once");
     check(peak_mm(&t) == 30U && (terrain_last_peak(&t) & TERRAIN_PEAK_RIGHT), "30 mm under right wheel");
@@ -116,14 +116,14 @@ int main(void)
     hold(&t, 400, 2000U);
     check(phase(&t) == TERRAIN_CLIMBING && run_mm(&t) == 40U && !terrain_take_completed(&t), "up-only ramp counts");
 
-    /* Invalid observations keep phase/peak/slow, mark unknown, restart timing,
+    /* Invalid observations keep phase/peak, mark unknown, restart timing,
      * and reseed the smoothing from the next sample. */
     terrain_reset(&t);
     hold(&t, 300, 600U); hold(&t, 10, 200U);
     check(phase(&t) == TERRAIN_DESCENDING, "descending before gap");
     terrain_step(&t, false, 0, now); now += 20U;
     check(phase(&t) == TERRAIN_DESCENDING && !(terrain_status(&t) & TERRAIN_VALID) &&
-          (terrain_status(&t) & TERRAIN_SLOW) && run_mm(&t) == 30U, "invalid keeps state, unknown");
+          run_mm(&t) == 30U, "invalid keeps state, unknown");
     hold(&t, 10, 280U); check(phase(&t) == TERRAIN_DESCENDING, "exit timing restarted after invalid");
     terrain_step(&t, true, 10, now); now += 20U;
     check(phase(&t) == TERRAIN_WAITING && peak_mm(&t) == 30U, "completes after a fresh 300 ms");

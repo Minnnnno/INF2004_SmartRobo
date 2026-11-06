@@ -36,6 +36,10 @@ build_and_run("test_acceleration", STRICT,
               [source_dir / "gy511_read.c", test_dir / "test_acceleration.c"], STUBS)
 build_and_run("test_magnetic", STRICT,
               [source_dir / "gy511_read.c", test_dir / "test_magnetic.c"], STUBS)
+build_and_run("test_motion_class", STRICT,
+              [source_dir / "motion_class.c", test_dir / "test_motion_class.c"])
+build_and_run("test_mag_heading", STRICT,
+              [source_dir / "mag_heading.c", test_dir / "test_mag_heading.c"])
 build_and_run("test_tilt", STRICT,
               [source_dir / "tilt.c", test_dir / "test_tilt.c"])
 build_and_run("test_terrain", STRICT,
@@ -45,7 +49,14 @@ build_and_run("test_buddy4", STRICT,
                test_dir / "test_buddy4.c"], STUBS)
 build_and_run("test_terrain_task", TEAM,
               [source_dir / "buddy4.c", source_dir / "terrain.c", source_dir / "tilt.c",
+               source_dir / "motion_class.c", source_dir / "mag_heading.c",
                test_dir / "test_terrain_task.c"],
+              STUBS + ["-I", str(project_root / "include")])
+
+build_and_run("test_mag_cal_task", TEAM,
+              [source_dir / "buddy4.c", source_dir / "terrain.c", source_dir / "tilt.c",
+               source_dir / "motion_class.c", source_dir / "mag_heading.c",
+               test_dir / "test_mag_cal_task.c"],
               STUBS + ["-I", str(project_root / "include")])
 
 # Exercise the production I2C interrupt receive arm with mocked register accesses.

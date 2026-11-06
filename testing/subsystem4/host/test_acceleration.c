@@ -5,7 +5,7 @@
 #include <string.h>
 
 static ER open_result, read_result, transfer_result, close_result;
-static uint8_t ready, raw[6];
+static uint8_t ready, raw[6], int1_source;
 static unsigned opens, closes, transfers;
 static int short_transfer;
 static void check(int condition, char const *message)
@@ -29,8 +29,8 @@ ER tk_cls_dev(ID handle, uint32_t option)
 }
 ER i2c_read_reg(ID handle, UW address, UW reg, UB *data)
 {
-    check(handle==7 && address==0x19U && reg==0x27U, "acceleration status only");
-    *data=ready; return read_result;
+    check(handle==7 && address==0x19U && (reg==0x27U || reg==0x31U), "status or INT1_SRC only");
+    *data=(reg==0x31U) ? int1_source : ready; return read_result;
 }
 ER tk_swri_dev(ID handle, int32_t start, void const *buffer, SZ size, SZ *actual)
 {
@@ -84,6 +84,21 @@ int main(void)
             check(gy511_acceleration_mg(&sample,axis,&decoded)==E_OK && decoded==expected,"signed XYZ round trip");
         }
     }
-    puts("PASS: acceleration failure paths and 4096 XYZ vectors (12288 axis conversions)");
+    /* Impact latch: INT1_SRC is read once and masked to its 7 defined bits. */
+    {
+        uint8_t source=0x55U;
+        reset(); check(gy511_read_impact(NULL)==E_PAR && opens==0U,"NULL impact read");
+        reset(); int1_source=0xEAU; /* bit 7 is undefined: must be dropped */
+        check(gy511_read_impact(&source)==E_OK && source==0x6AU && closes==1U,"impact source read and masked");
+        check((source&GY511_IMPACT_ACTIVE)!=0U && (source&GY511_IMPACT_ZH)!=0U,"IA and ZH decoded");
+        source=0x55U;
+        reset(); read_result=E_TMOUT;
+        check(gy511_read_impact(&source)==E_TMOUT && source==0x55U && closes==1U,"failed read leaves output, still closes");
+        reset(); close_result=E_IO;
+        check(gy511_read_impact(&source)==E_IO && source==0x55U,"close failure reported");
+        reset(); open_result=E_NOEXS;
+        check(gy511_read_impact(&source)==E_NOEXS && closes==0U,"open failure");
+    }
+    puts("PASS: impact latch read and acceleration failure paths and 4096 XYZ vectors (12288 axis conversions)");
     return 0;
 }

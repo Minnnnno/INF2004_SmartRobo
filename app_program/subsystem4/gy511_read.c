@@ -6,6 +6,7 @@
 #define GY511_ACC_STATUS  (0x27U)
 #define GY511_XYZ_READY   (0x08U)
 #define GY511_ACC_BURST   (0xA8U) /* OUT_X_L=0x28 plus auto-increment bit. */
+#define GY511_ACC_INT1_SRC (0x31U) /* Latched inertial interrupt source. */
 
 /*
  * Read status first, then all six output bytes in one combined I2C transfer.
@@ -82,6 +83,38 @@ ER gy511_read_acceleration(gy511_acceleration_t *p_sample)
         p_sample->bytes[2] = (uint8_t)(y >> 4U);
         p_sample->bytes[3] = (uint8_t)(z & 0xFFU);
         p_sample->bytes[4] = (uint8_t)(z >> 8U);
+    }
+    return status;
+}
+
+/* One-byte read of INT1_SRC_A. Reading it clears the latched event (LIR_INT1),
+ * so every impact since the previous read is reported exactly once.
+ */
+ER gy511_read_impact(uint8_t *p_source)
+{
+    uint8_t source = 0U;
+    ER status = E_OK;
+    ER close_status = E_OK;
+    ID h_device = 0;
+
+    if (NULL == p_source)
+    {
+        return E_PAR;
+    }
+    h_device = tk_opn_dev((UB const *)"iicb", TD_UPDATE | TD_EXCL);
+    if (h_device < E_OK)
+    {
+        return (ER)h_device;
+    }
+    status = i2c_read_reg(h_device, GY511_ACC_ADDRESS, GY511_ACC_INT1_SRC, &source);
+    close_status = tk_cls_dev(h_device, 0U);
+    if ((E_OK == status) && (E_OK != close_status))
+    {
+        status = close_status;
+    }
+    if (E_OK == status)
+    {
+        *p_source = (uint8_t)(source & 0x7FU);
     }
     return status;
 }

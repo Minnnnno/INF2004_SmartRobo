@@ -88,6 +88,11 @@ ER i2c_write_reg(ID h_device, UW address, UW reg, UB value)
     static uint8_t const g_expected[][3] =
     {
         {0x19U, 0x23U, 0x88U},
+        {0x19U, 0x21U, 0x01U}, /* CTRL_REG2_A: HPIS1, high-pass on INT1 only */
+        {0x19U, 0x24U, 0x08U}, /* CTRL_REG5_A: LIR_INT1, latch until read */
+        {0x19U, 0x32U, 0x30U}, /* INT1_THS_A: 48 x 16 mg */
+        {0x19U, 0x33U, 0x00U}, /* INT1_DURATION_A: one sample */
+        {0x19U, 0x30U, 0x2AU}, /* INT1_CFG_A: X/Y/Z high, OR */
         {0x19U, 0x20U, 0x57U},
         {0x1EU, 0x00U, 0x14U},
         {0x1EU, 0x01U, 0x20U},
@@ -95,7 +100,7 @@ ER i2c_write_reg(ID h_device, UW address, UW reg, UB value)
     };
 
     require(h_device == 7, "write uses opened descriptor");
-    require(g_write_calls < 5U, "only five configuration writes");
+    require(g_write_calls < 10U, "only ten configuration writes");
     require(address == g_expected[g_write_calls][0], "correct sensor address");
     require(reg == g_expected[g_write_calls][1], "correct register and order");
     require(value == g_expected[g_write_calls][2], "correct settings");
@@ -122,8 +127,8 @@ int main(void)
 {
     reset_mock();
     expect_configuration(E_OK);
-    require(g_read_calls == 8U && g_write_calls == 5U,
-            "identity plus all five readbacks checked");
+    require(g_read_calls == 13U && g_write_calls == 10U,
+            "identity plus all ten readbacks checked");
 
     reset_mock();
     g_open_result = E_NOEXS;
@@ -131,7 +136,7 @@ int main(void)
     require(g_read_calls == 0U && g_write_calls == 0U,
             "no transfers after open failure");
 
-    for (uint32_t index = 1U; index <= 8U; index++)
+    for (uint32_t index = 1U; index <= 13U; index++)
     {
         reset_mock();
         g_fail_read_at = index;
@@ -148,7 +153,7 @@ int main(void)
                 "no further writes after mismatch");
     }
 
-    for (uint32_t index = 1U; index <= 5U; index++)
+    for (uint32_t index = 1U; index <= 10U; index++)
     {
         reset_mock();
         g_fail_write_at = index;

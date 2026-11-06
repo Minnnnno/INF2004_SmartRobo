@@ -238,6 +238,28 @@ int16_t tilt_side_height_tenths(tilt_context_t const *p_context, uint16_t track_
     return (int16_t)roundf(height); /* |height| <= track * 10 <= INT16_MAX for track <= 3276 mm. */
 }
 
+int16_t tilt_forward_dynamic_mg(tilt_context_t const *p_context, int16_t x, int16_t y, int16_t z)
+{
+    float32_t dynamic[3];
+    float32_t forward;
+
+    if ((NULL == p_context) ||
+        ((TILT_CALIBRATED | TILT_FILTER_READY) !=
+         (p_context->progress & (TILT_CALIBRATED | TILT_FILTER_READY))))
+    {
+        return 0;
+    }
+    dynamic[0] = (float32_t)x - p_context->filtered[0];
+    dynamic[1] = (float32_t)y - p_context->filtered[1];
+    dynamic[2] = (float32_t)z - p_context->filtered[2];
+    forward = tilt_dot(dynamic, p_context->forward);
+    if (!isfinite(forward))
+    {
+        return 0;
+    }
+    return (int16_t)roundf(forward); /* |x|,|y|,|z| <= 2048 mg, so the result fits int16. */
+}
+
 /* Convert packed unsigned offset back to signed tenths. Valid result required. */
 int16_t tilt_angle_tenths(uint32_t result, uint8_t axis)
 {

@@ -17,6 +17,8 @@ static void buddy4_enter(buddy4_t *p_context, uint8_t state,
 static void buddy4_initialise(buddy4_t *p_context, uint8_t inputs, uint32_t now_ms);
 static void buddy4_monitor(buddy4_t *p_context, uint32_t now_ms);
 static void buddy4_recover(buddy4_t *p_context, uint32_t now_ms);
+static void buddy4_poll_impact(buddy4_t *p_context, uint32_t now_ms);
+static void buddy4_poll_magnetic(buddy4_t *p_context, uint32_t now_ms);
 
 /* One bounded logical step; hardware transaction latency is documented.
  * STOP takes precedence over RESET and autonomous recovery. Commands are ignored in states
@@ -297,16 +299,105 @@ static void buddy4_monitor(buddy4_t *p_context, uint32_t now_ms)
     {
         buddy4_enter(p_context, B4_RECOVERY, now_ms, E_TMOUT);
     }
-    else if (E_OK == status)
-    {
-        p_context->last_fresh = now_ms;
-        p_context->error = E_OK;
-        p_context->result = tilt_update(&p_context->tilt, xyz[0], xyz[1], xyz[2]);
-    }
     else
     {
-        p_context->error = E_BUSY;
+        if (E_OK == status)
+        {
+            p_context->last_fresh = now_ms;
+            p_context->error = E_OK;
+            p_context->result = tilt_update(&p_context->tilt, xyz[0], xyz[1], xyz[2]);
+            p_context->forward_mg = (0U != (p_context->result & TILT_RESULT_VALID)) ?
+                tilt_forward_dynamic_mg(&p_context->tilt, xyz[0], xyz[1], xyz[2]) : 0;
+        }
+        else
+        {
+            p_context->error = E_BUSY;
+        }
+        buddy4_poll_impact(p_context, now_ms);
+        if (B4_MONITORING == buddy4_state(p_context))
+        {
+            buddy4_poll_magnetic(p_context, now_ms);
+        }
     }
+}
+/* Read the magnetometer (30 Hz) every MONITORING cycle for the compass
+ * cross-check. Not ready (E_BUSY) keeps the last sample; an out-of-range
+ * reading (E_IO, e.g. a magnet nearby) only invalidates the compass. Other
+ * driver errors are bus failures and start RECOVERY like the accelerometer.
+ */
+static void buddy4_poll_magnetic(buddy4_t *p_context, uint32_t now_ms)
+{
+    gy511_magnetic_t sample = {{0}};
+    ER status = gy511_read_magnetic(&sample);
+
+    if (E_OK == status)
+    {
+        for (uint8_t axis = 0U; (E_OK == status) && (axis < 3U); axis++)
+        {
+            status = gy511_magnetic_counts(&sample, axis, &p_context->mag[axis]);
+        }
+        if (E_OK == status)
+        {
+            p_context->mag_ms = now_ms;
+            p_context->mag_flags |= B4_MAG_HAVE;
+        }
+    }
+    else if (E_IO == status)
+    {
+        p_context->mag_flags &= (uint8_t)~B4_MAG_HAVE;
+    }
+    else if (E_BUSY != status)
+    {
+        buddy4_enter(p_context, B4_RECOVERY, now_ms, status);
+    }
+}
+bool buddy4_magnetic(buddy4_t const *p_context, uint32_t now_ms, uint32_t max_age_ms,
+                     int16_t *p_x, int16_t *p_y)
+{
+    if ((NULL == p_context) || (NULL == p_x) || (NULL == p_y) ||
+        (B4_MONITORING != buddy4_state(p_context)) ||
+        (0U == (p_context->mag_flags & B4_MAG_HAVE)) ||
+        ((now_ms - p_context->mag_ms) > max_age_ms))
+    {
+        return false;
+    }
+    *p_x = p_context->mag[0];
+    *p_y = p_context->mag[1];
+    return true;
+}
+/* Read (and clear) the IMU's latched inertial interrupt every MONITORING cycle,
+ * also when no fresh XYZ sample was ready. A failed read is a bus failure.
+ */
+static void buddy4_poll_impact(buddy4_t *p_context, uint32_t now_ms)
+{
+    uint8_t source = 0U;
+    ER status = gy511_read_impact(&source);
+
+    if (E_OK != status)
+    {
+        buddy4_enter(p_context, B4_RECOVERY, now_ms, status);
+        return;
+    }
+    if ((0U != (source & GY511_IMPACT_ACTIVE)) &&
+        ((now_ms - p_context->phase_started) >= B4_IMPACT_SETTLE_MS))
+    {
+        p_context->control.impact = 1U;
+        p_context->impact_axes = (uint8_t)(source & (GY511_IMPACT_XH | GY511_IMPACT_YH |
+                                                     GY511_IMPACT_ZH));
+    }
+}
+bool buddy4_take_impact(buddy4_t *p_context, uint8_t *p_axes)
+{
+    if ((NULL == p_context) || (0U == p_context->control.impact))
+    {
+        return false;
+    }
+    p_context->control.impact = 0U;
+    if (NULL != p_axes)
+    {
+        *p_axes = p_context->impact_axes;
+    }
+    return true;
 }
 /* Recover the owned sensor automatically, even without motor-status inputs.
  * Never capture a new reference here. Configuration plus a fresh sample proves
@@ -404,3 +495,4 @@ char const *buddy4_state_name(uint8_t state)
             return "INVALID";
     }
 }
+

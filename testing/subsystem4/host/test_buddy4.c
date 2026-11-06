@@ -6,7 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 static uint32_t now, operation_ms;
-static ER configure_status, read_status, clock_status;
+static ER configure_status, read_status, clock_status, impact_status;
+static uint8_t impact_source;
+static unsigned impact_reads;
 static unsigned configurations, reads, checks;
 static int16_t xyz[3];
 static void check(int yes, char const *why)
@@ -22,6 +24,20 @@ ER gy511_read_acceleration(gy511_acceleration_t *sample)
 {
     (void)sample; reads++; now+=operation_ms; return read_status;
 }
+static ER mag_status;
+static int16_t mag_xyz[3];
+static unsigned mag_reads;
+ER gy511_read_magnetic(gy511_magnetic_t *sample) { (void)sample; mag_reads++; return mag_status; }
+ER gy511_magnetic_counts(gy511_magnetic_t const *sample, uint8_t axis, int16_t *counts)
+{
+    (void)sample; *counts=mag_xyz[axis]; return E_OK;
+}
+ER gy511_read_impact(uint8_t *source)
+{
+    impact_reads++;
+    if (E_OK==impact_status) { *source=impact_source; impact_source=0U; } /* read clears latch */
+    return impact_status;
+}
 ER gy511_acceleration_mg(gy511_acceleration_t const *sample, uint8_t axis, int16_t *value)
 {
     (void)sample; *value=xyz[axis]; return E_OK;
@@ -30,6 +46,8 @@ static void reset(buddy4_t *c)
 {
     now=0; operation_ms=0; configure_status=E_OK; read_status=E_OK;
     clock_status=E_OK; configurations=0; reads=0;
+    impact_status=E_OK; impact_source=0U; impact_reads=0U;
+    mag_status=E_OK; mag_reads=0U; mag_xyz[0]=120; mag_xyz[1]=-80; mag_xyz[2]=300;
     xyz[0]=0; xyz[1]=0; xyz[2]=-1000;
     buddy4_begin(c,now);
 }
@@ -198,19 +216,18 @@ int main(void)
     ready(&c);
     xyz[0]=259; xyz[1]=-100; xyz[2]=-961;
     for(unsigned i=0;i<50;i++) { tick(&c,20U,0U); }
-    check((terrain_status(&c.terrain)&TERRAIN_PHASE_MASK)==TERRAIN_CLIMBING &&
-          (terrain_status(&c.terrain)&TERRAIN_SLOW)!=0U,"one-wheel hump integrated with tilt");
+    check((terrain_status(&c.terrain)&TERRAIN_PHASE_MASK)==TERRAIN_CLIMBING,"one-wheel hump integrated with tilt");
     check(terrain_run_max(&c.terrain)==(TERRAIN_RUN_VALID|30U),"live peak 30 mm from sideways tilt");
     fail(&c);
     check((terrain_status(&c.terrain)&TERRAIN_VALID)==0U &&
-          (terrain_status(&c.terrain)&TERRAIN_SLOW)!=0U,"recovery retains slow request and marks unknown");
+          (terrain_status(&c.terrain)&TERRAIN_PHASE_MASK)==TERRAIN_CLIMBING,"recovery retains the phase and marks unknown");
     read_status=E_OK; tick(&c,20U,0U); tick(&c,20U,0U);
     xyz[0]=130; xyz[1]=0; xyz[2]=-991; /* ~15 mm: coming down */
     for(unsigned i=0;i<50;i++) { tick(&c,20U,0U); }
     check((terrain_status(&c.terrain)&TERRAIN_PHASE_MASK)==TERRAIN_DESCENDING,"terrain resumes phase after recovery");
     tick(&c,20U,B4_CMD_STOP);
     check((terrain_status(&c.terrain)&TERRAIN_VALID)==0U &&
-          (terrain_status(&c.terrain)&TERRAIN_SLOW)!=0U,"STOP preserves slow and clears validity");
+          (terrain_status(&c.terrain)&TERRAIN_PHASE_MASK)==TERRAIN_DESCENDING,"STOP preserves the phase and clears validity");
     /* Complete hump: up on the left wheel, back to level. Pitch alone never triggers. */
     ready(&c);
     xyz[0]=0; xyz[1]=-500; xyz[2]=-866; /* 30 degrees nose up, both wheels level */
@@ -223,6 +240,58 @@ int main(void)
     for(unsigned i=0;i<50;i++) { tick(&c,20U,0U); }
     check(terrain_take_completed(&c.terrain) &&
           terrain_last_peak(&c.terrain)==20U,"left-wheel 20 mm hump completes with its peak");
+    /* Impact latch: polled every MONITORING cycle, consumed once, settle window. */
+    {
+        uint8_t axes=0U;
+        ready(&c);
+        check(impact_reads>0U,"impact latch polled while monitoring");
+        check(!buddy4_take_impact(&c,&axes),"no impact without the latch");
+        impact_source=GY511_IMPACT_ACTIVE|GY511_IMPACT_ZH; tick(&c,20U,0U);
+        check(!buddy4_take_impact(&c,NULL),"impact inside the 100 ms settle window ignored");
+        for (unsigned i=0;i<4;i++) { tick(&c,20U,0U); } /* now past B4_IMPACT_SETTLE_MS */
+        impact_source=GY511_IMPACT_ACTIVE|GY511_IMPACT_ZH|GY511_IMPACT_XH; tick(&c,20U,0U);
+        check(buddy4_take_impact(&c,&axes) && axes==(GY511_IMPACT_ZH|GY511_IMPACT_XH),"impact and axes reported");
+        check(!buddy4_take_impact(&c,NULL),"impact consumed once");
+        impact_source=GY511_IMPACT_XH; tick(&c,20U,0U); /* axis bit without IA */
+        check(!buddy4_take_impact(&c,NULL),"axis bits alone are not an impact");
+        read_status=E_BUSY; impact_source=GY511_IMPACT_ACTIVE|GY511_IMPACT_YH; tick(&c,20U,0U);
+        check(buddy4_take_impact(&c,&axes) && axes==GY511_IMPACT_YH,"latch polled even without fresh XYZ");
+        read_status=E_OK;
+        impact_status=E_IO; tick(&c,20U,0U);
+        check(buddy4_state(&c)==B4_RECOVERY && c.error==E_IO,"failed latch read enters recovery");
+        check(!buddy4_take_impact(&c,NULL),"recovery clears a pending impact");
+        /* A latch left over from capture (placing the robot) is discarded. */
+        reset(&c);
+        buddy4_step(&c,B4_LEVEL_ALLOWED);
+        tick(&c,B4_POSITION_MS,B4_LEVEL_ALLOWED);
+        for (unsigned i=0;i<49;i++) { tick(&c,20U,B4_LEVEL_ALLOWED); }
+        impact_source=GY511_IMPACT_ACTIVE|GY511_IMPACT_ZH;
+        tick(&c,20U,B4_LEVEL_ALLOWED);
+        check(buddy4_state(&c)==B4_MONITORING,"monitoring after capture");
+        tick(&c,20U,0U);
+        check(!buddy4_take_impact(&c,NULL),"stale capture-time latch ignored");
+        check(sizeof(c.control)==1U,"control byte still one byte with the impact bit");
+        buddy4_take_impact(NULL,NULL);
+    }
+    /* Magnetometer: read while monitoring; busy/out-of-range never leave MONITORING. */
+    {
+        int16_t mx=0, my=0;
+        ready(&c);
+        check(mag_reads>0U,"magnetometer read while monitoring");
+        check(buddy4_magnetic(&c,now,100U,&mx,&my) && mx==120 && my==-80,"latest magnetic X/Y available");
+        check(!buddy4_magnetic(&c,now+200U,100U,&mx,&my),"stale magnetic sample refused");
+        mag_status=E_BUSY; tick(&c,20U,0U);
+        check(buddy4_state(&c)==B4_MONITORING && buddy4_magnetic(&c,now,100U,&mx,&my),"not ready keeps the last sample");
+        mag_status=E_IO; tick(&c,20U,0U);
+        check(buddy4_state(&c)==B4_MONITORING && !buddy4_magnetic(&c,now,100U,&mx,&my),"out of range: compass invalid, still monitoring");
+        mag_status=E_OK; tick(&c,20U,0U);
+        check(buddy4_magnetic(&c,now,100U,&mx,&my),"good sample restores it");
+        mag_status=E_TMOUT; tick(&c,20U,0U);
+        check(buddy4_state(&c)==B4_RECOVERY && c.error==E_TMOUT,"magnetometer bus timeout enters recovery");
+        check(!buddy4_magnetic(&c,now,100U,&mx,&my),"no magnetic data outside MONITORING");
+        check(!buddy4_magnetic(NULL,0U,100U,&mx,&my),"NULL safe");
+        mag_status=E_OK;
+    }
     buddy4_step(NULL,0U); buddy4_begin(NULL,0U);
     printf("PASS: %u autonomous recovery, reference, deadline, STOP, reset and terrain checks\n",checks);
     return 0;

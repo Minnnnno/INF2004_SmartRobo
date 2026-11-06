@@ -51,6 +51,13 @@ void tilt_discard_history(tilt_context_t *p_context);
  * Zero before calibration. Call only after tilt_update() returned a valid result.
  */
 int16_t tilt_side_height_tenths(tilt_context_t const *p_context, uint16_t track_mm);
+/* Forward dynamic acceleration, mg (+ = speeding up forward): the fresh sample
+ * minus the smoothed gravity vector, projected on the reference forward axis.
+ * A high-passed diagnostic for comparing with encoder acceleration; it is not
+ * used for classification. Zero before calibration/filtering. Call only after
+ * tilt_update() returned a valid result for the same x, y, z.
+ */
+int16_t tilt_forward_dynamic_mg(tilt_context_t const *p_context, int16_t x, int16_t y, int16_t z);
 /* Decode pitch (axis 0) or roll (axis 1); caller requires a valid packed result. */
 int16_t tilt_angle_tenths(uint32_t result, uint8_t axis);
 /* Return display labels for axis 0=pitch or 1=roll; invalid result -> UNAVAILABLE. */
