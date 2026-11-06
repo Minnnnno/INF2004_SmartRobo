@@ -430,6 +430,13 @@ static void report_motion_fault(const motion_status_t *s)
     report_motor_fault(s);
 }
 
+/* The barcode test image prints only barcode output; the periodic memory checks still run. */
+#if defined(ROBO_BARCODE_TEST) && !defined(ROBO_LINE_STEERING)
+#define ROBO_DIAG_QUIET 1
+#else
+#define ROBO_DIAG_QUIET 0
+#endif
+
 static bool report_task_stack(ID id, const char *name)
 {
     stack_debug_t info;
@@ -440,9 +447,11 @@ static bool report_task_stack(ID id, const char *name)
                   (unsigned)id, name, (int)result);
         return false;
     }
+#if !ROBO_DIAG_QUIET
     tm_printf((const UB *)"[STACK] task=%u name=%s used=%u capacity=%u guard_ok=%u saved_sp_ok=%u\n",
               (unsigned)id, name, (unsigned)info.used, (unsigned)info.capacity,
               (unsigned)info.guard_ok, (unsigned)info.saved_sp_ok);
+#endif
     return info.guard_ok && info.saved_sp_ok;
 }
 #endif
@@ -461,6 +470,9 @@ INT usermain(void)
 #endif
 #if ROBO_BARCODE_TASK
         {(FP)barcode_task, 8, 4096, "barcode"},
+#endif
+#if ROBO_SHUTTLE_TASK
+        {(FP)shuttle_task, 8, 4096, "shuttle"},
 #endif
 #if ROBO_SUBSYSTEM4
         {(FP)terrain_task, 8, 4096, "terrain"},
@@ -516,8 +528,10 @@ INT usermain(void)
               (const UB *)ROBO_ENCODER_BUILD_ID, (unsigned)config.hardware_confirmed,
               (unsigned)config.manual_enabled, (unsigned)(config.max_output * 100.0),
               (unsigned)ROBO_SUBSYSTEM4, (unsigned)ROBO_SUBSYSTEM5);
+#if !ROBO_DIAG_QUIET
     tm_printf((const UB *)"[STACK] idle_capacity=%u bytes (interrupts share the idle stack)\n",
               (unsigned)knl_idle_stack_size());
+#endif
 #endif
     status_mutex = tk_cre_mtx(&mutex);
     if (status_mutex <= 0) {
@@ -573,9 +587,11 @@ INT usermain(void)
             tm_printf((const UB *)"[MEMORY] idle stack or scheduler guard damaged; motors shut down\n");
         }
 #ifdef ROBO_PRODUCTION_BUILD
+#if !ROBO_DIAG_QUIET
         tm_printf((const UB *)"[STACK] idle_used=%u capacity=%u guard_ok=%u\n",
                   (unsigned)knl_idle_stack_used(0U), (unsigned)knl_idle_stack_size(),
                   (unsigned)knl_idle_stack_intact(0U));
+#endif
         for (ID id = 1; id <= CNF_MAX_TSKID; ++id) {
             const char *name = id == tk_get_tid() ? "diagnostics" : "kernel";
             for (i = 0U; i < sizeof(tasks) / sizeof(tasks[0]); ++i) {
@@ -593,10 +609,14 @@ INT usermain(void)
             extern volatile UW tm_usb_dropped;
             dropped = tm_usb_dropped;
 #endif
+#if ROBO_DIAG_QUIET
+            (void)dropped;
+#else
             tm_printf((const UB *)"[DEBUG] firmware=%s\n", ROBO_ENCODER_BUILD_ID);
             tm_printf((const UB *)"[DEBUG] feed_age_ms=%u nmi_checks=%u usb_dropped=%u scheduler_guard=%u\n",
                       (unsigned)((in_w(TIMER_TIMERAWL) - last_feed_us) / 1000U),
                       (unsigned)freeze_check_count, (unsigned)dropped, (unsigned)knl_guards_intact());
+#endif
             if (motion_get_status(&status)) { report_motion_fault(&status.motion); }
         }
 #endif

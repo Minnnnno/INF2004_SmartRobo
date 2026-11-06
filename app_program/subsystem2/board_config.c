@@ -58,6 +58,14 @@ motion_config_t board_motion_config(void)
     /* Calibration images retain their isolated actuator and inhibited controller. */
     config.hardware_confirmed = false;
 #endif
+#if defined(ROBO_LINE_LOSS_TEST)
+    /* Line-loss test image only: the production 25% cap let the reversing wheel stall during the
+     * on-the-spot search spin. The production images keep 25%; the banner prints this value. */
+#ifndef ROBO_LINE_LOSS_CAP
+#define ROBO_LINE_LOSS_CAP 0.25 /* Production cap; a higher value must be asked for explicitly, e.g. -DROBO_LINE_LOSS_CAP=0.40. */
+#endif
+    config.max_output = ROBO_LINE_LOSS_CAP;
+#endif
     return config;
 }
 
