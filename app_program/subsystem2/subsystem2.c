@@ -1,5 +1,6 @@
 /*
- *	subsystem2.c
+ *	subsystem2.c -- legacy producer demo, excluded from robot firmware.
+ *  Production Buddy 2 startup/task entry points are in motion_runtime.h.
  *	Subsystem 2 -- Producer: creates its objects and starts its task.
  *
  *	APIs shown: tk_cre_sem, tk_cre_mpf

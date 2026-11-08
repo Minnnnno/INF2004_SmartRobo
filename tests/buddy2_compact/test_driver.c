@@ -159,6 +159,23 @@ int main(void)
     CHECK(diagnostics.motors_inhibited && diagnostics.initialised && diagnostics.irq_registered);
     motion_hal_motor_diagnostics(&motor);
     CHECK(!motor.ready && motor.inhibited && motor.applied_permille[0] == 0 && motor.applied_permille[1] == 0);
+    /* Restart uses the regular driver initialization. Old PWM/counts must not
+     * resume; a fresh command can drive again after initialization succeeds. */
+    CHECK(motion_hal_init(&config));
+    motion_hal_motor_diagnostics(&motor);
+    CHECK(motor.ready && motor.inhibited && motor.mismatch_mask == 0U);
+    CHECK(g_duty[0][0] == 0U && g_duty[0][1] == 0U &&
+          g_duty[1][0] == 0U && g_duty[1][1] == 0U);
+    sample = motion_hal_sample();
+    CHECK(sample.reliable && sample.count[0] == 0U && sample.count[1] == 0U);
+    outputs[0] = outputs[1] = 0.1;
+    motion_hal_write(outputs, true, 2.0);
+    CHECK(g_duty[0][0] == 0U && g_duty[1][1] == 0U);
+    motion_hal_write(outputs, false, 2.01);
+    motion_hal_motor_diagnostics(&motor);
+    CHECK(!motor.inhibited && motor.applied_permille[0] == 100 && motor.applied_permille[1] == 100);
+    CHECK(g_duty[0][0] == 409U && g_duty[1][1] == 409U && motor.mismatch_mask == 0U);
+    motion_hal_emergency_stop();
     (void)printf("Buddy 2 driver: %s (polarity, independent reversal, inhibition, coherent capture, emergency stop)\n",
                  0u == g_failures ? "PASS" : "FAIL");
     return 0u == g_failures ? 0 : 1;

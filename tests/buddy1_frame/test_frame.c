@@ -330,6 +330,23 @@ static void test_edges(void)
 	CHECK(tm_edge_events(&a, &b) == TF_EV_BARCODE, "new instruction reported");
 }
 
+static void test_distinct_motion_faults(void)
+{
+	const motion_fault_t faults[] = { F_SETUP, F_SYSTEM, F_ESTOP, F_SETUP_TIMEOUT };
+	for (unsigned i = 0U; i < sizeof(faults) / sizeof(faults[0]); ++i) {
+		robot_status_t st = {0};
+		tm_frame_info_t info = {0};
+		int32_t values[TF_FIELD_COUNT], decoded[TF_FIELD_COUNT];
+		uint8_t frame[TF_FRAME_BYTES];
+		st.motion.state = FAULT;
+		st.motion.fault = faults[i];
+		tm_fill(&st, &info, values);
+		CHECK(tf_pack(values, frame) == 0U, "fault %u must not clamp", (unsigned)faults[i]);
+		CHECK(tf_unpack(frame, sizeof(frame), decoded), "fault frame decodes");
+		CHECK(decoded[TF_F_M_FAULT] == (int32_t)faults[i], "fault reason survives telemetry");
+	}
+}
+
 /* Tribunal follow-up: "measure JSON vs packed size". */
 static void report_json_size(void)
 {
@@ -346,7 +363,7 @@ static void report_json_size(void)
 	n += snprintf(&json[n], sizeof(json) - (size_t)n, "}");
 	printf("size: JSON %d bytes, packed %d bytes (%d bits used, %d spare), %.1f%% of JSON\n",
 	       n, TF_FRAME_BYTES, TF_FRAME_BITS, TF_SPARE_BITS,
-	       100.0 * TF_FRAME_BYTES / n);
+               100.0 * (double)TF_FRAME_BYTES / n);
 	CHECK(TF_FRAME_BYTES < n, "packed frame is smaller than JSON");
 }
 
@@ -360,6 +377,7 @@ int main(void)
 	test_commands();
 	test_mapping();
 	test_edges();
+	test_distinct_motion_faults();
 	report_json_size();
 	printf("%s: %u checks, %u failed\n", failures ? "FAIL" : "PASS", checks, failures);
 	return failures ? 1 : 0;

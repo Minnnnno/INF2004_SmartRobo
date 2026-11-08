@@ -4,7 +4,7 @@
 
 typedef enum { SOURCE_MANUAL, SOURCE_LINE, SOURCE_BARCODE, SOURCE_OBSTACLE, SOURCE_WIFI, SOURCE_TERRAIN } request_source_t;
 typedef enum { CONTROL_STOP = 1U, CONTROL_RELEASE = 2U, CONTROL_RESET = 4U,
-               CONTROL_FAULT = 8U, CONTROL_SHUTDOWN = 16U } robot_control_t;
+               CONTROL_FAULT = 8U, CONTROL_SHUTDOWN = 16U, CONTROL_ESTOP = 32U } robot_control_t;
 typedef enum { REMOTE_START = 1, REMOTE_STOP, REMOTE_ESTOP } robot_remote_command_t;
 typedef struct { request_source_t source; motion_command_t command; } robot_request_t;
 typedef struct {

@@ -287,7 +287,7 @@ static void validation_tests(void)
     motion_init(&r.m, &config, r.sample, r.now, false); CHECK(r.m.status.fault == F_SETUP);
     motion_init(&r.m, &config, r.sample, r.now, true);
     for (i = 0; i < 210U; ++i) { r.sample.count[0] += 2U; tick(&r, false); }
-    CHECK(r.m.status.fault == F_SETUP);
+    CHECK(r.m.status.fault == F_SETUP_TIMEOUT);
     init(&r); c = command(&r, ENCODER_TURN, 0.0);
     CHECK(motion_accept(&r.m, &c, r.now) == R_OK);
     for (i = 0; i < 50U; ++i) { tick(&r, false); }
@@ -517,7 +517,7 @@ static void production_line_integration_tests(void)
     CHECK(vehicle_controller_remote_command(&bus, REMOTE_START) == R_HELD);
     CHECK(vehicle_controller_remote_command(&bus, REMOTE_ESTOP) == R_OK);
     robot_motion_inputs(&bus, &r.m, r.sample, r.now);
-    CHECK(r.m.status.state == FAULT && r.m.status.fault == F_SYSTEM && r.m.status.inhibited);
+    CHECK(r.m.status.state == FAULT && r.m.status.fault == F_ESTOP && r.m.status.inhibited);
     robot_publish(&bus, &r.m, r.now);
     CHECK(vehicle_controller_remote_command(&bus, REMOTE_START) == R_HELD);
     config.hardware_confirmed = false;
@@ -736,7 +736,7 @@ static void startup_gap_tests(void)
 
     motion_init(&r.m,&c,r.sample,0.0,true);
     for(unsigned i=1U;i<=15U;++i) { r.now=(double)i*0.15; motion_step(&r.m,r.sample,r.now); }
-    CHECK(r.m.status.fault==F_SETUP && r.m.status.inhibited);
+    CHECK(r.m.status.fault==F_SETUP_TIMEOUT && r.m.status.inhibited);
     CHECK(r.m.entered>=2.0); /* Fault time; no indefinite initialization grace. */
 
     motion_init(&r.m,&c,r.sample,0.0,true);
@@ -850,12 +850,15 @@ static void fault_context_tests(void)
     CHECK(motion_accept(&r.m, &c, r.now) == R_OK);
     for (unsigned i = 0U; i < 150U && r.m.status.state != FAULT; ++i) { tick(&r, false); }
     CHECK(r.m.status.fault == F_FEEDBACK && r.m.status.feedback_cause == FB_NO_PROGRESS);
-    CHECK(r.m.status.debug.recorded && r.m.status.debug.stalled_wheels == 1U);
+    CHECK(r.m.status.debug.recorded && r.m.status.debug.stalled_wheels == 3U);
     CHECK(r.m.status.debug.id == 5101U && r.m.status.debug.state == DRIVING);
     CHECK(r.m.status.debug.mode == ARC_MOVE && r.m.status.debug.finite_goal);
     CHECK(r.m.status.debug.target_mm_s[0] > 0 && r.m.status.debug.output_permille[0] > 0);
+    CHECK(r.m.status.debug.target_mm_s[1] > 0 && r.m.status.debug.output_permille[1] > 0);
     CHECK(r.m.status.output[0] == 0.0 && r.m.status.target[0] == 0.0);
+    CHECK(r.m.status.output[1] == 0.0 && r.m.status.target[1] == 0.0 && r.m.status.hold);
     CHECK(r.m.status.debug.no_progress_ms[0] >= r.m.status.debug.feedback_limit_ms[0]);
+    CHECK(r.m.status.debug.no_progress_ms[1] >= r.m.status.debug.feedback_limit_ms[1]);
     NEAR((double)r.m.status.debug.remaining_um[0], 230000.0, 2.0);
     CHECK(r.m.status.debug.dt_us > 9000 && r.m.status.debug.dt_us < 11000);
     saved = r.m.status.debug;
@@ -910,6 +913,110 @@ static void feedback_diagnostic_tests(void)
     CHECK(!r.m.status.feedback_fault_sample.reliable && r.m.status.inhibited);
 }
 
+static void stalled_wheel_mask_tests(void)
+{
+    for (unsigned stalled = 0U; stalled < 2U; ++stalled) {
+        rig_t r;
+        init(&r);
+        motion_command_t c = command(&r, WHEEL_SPEED_TRACKING, 0.0);
+        CHECK(motion_accept(&r.m, &c, r.now) == R_OK);
+        for (unsigned i = 0U; i < 150U && r.m.status.state != FAULT; ++i) {
+            ++r.sample.count[1U - stalled];
+            c.expires = r.now + 0.25;
+            CHECK(motion_accept(&r.m, &c, r.now) == R_OK);
+            tick(&r, false);
+        }
+        CHECK(r.m.status.fault == F_FEEDBACK && r.m.status.feedback_cause == FB_NO_PROGRESS);
+        CHECK(r.m.status.debug.stalled_wheels == (1U << stalled));
+        CHECK(r.m.status.output[0] == 0.0 && r.m.status.output[1] == 0.0 && r.m.status.hold);
+    }
+
+    /* A wheel deliberately commanded to remain still must not be called stalled. */
+    rig_t r;
+    init(&r);
+    motion_command_t c = command(&r, WHEEL_SPEED_TRACKING, 0.0);
+    c.speed[0] = 0.0;
+    CHECK(motion_accept(&r.m, &c, r.now) == R_OK);
+    for (unsigned i = 0U; i < 150U && r.m.status.state != FAULT; ++i) {
+        c.expires = r.now + 0.25;
+        CHECK(motion_accept(&r.m, &c, r.now) == R_OK);
+        tick(&r, false);
+    }
+    CHECK(r.m.status.debug.stalled_wheels == 2U);
+    CHECK(r.m.status.debug.target_mm_s[0] == 0 && r.m.status.debug.output_permille[0] == 0);
+}
+
+static void fault_reason_tests(void)
+{
+    /* Existing on-wire codes remain stable; additions fit packed four-bit fields. */
+    CHECK(F_SETUP == 2 && F_SYSTEM == 10 && F_ESTOP == 11 && F_SETUP_TIMEOUT == 12);
+    CHECK(strcmp(motion_fault_name(F_ESTOP), "ESTOP") == 0);
+    CHECK(strcmp(motion_fault_name(F_SETUP_TIMEOUT), "SETUP_TIMEOUT") == 0);
+    for (unsigned system_first = 0U; system_first < 2U; ++system_first) {
+        rig_t r;
+        robot_bus_t b;
+        motion_event_t e;
+        init(&r);
+        robot_bus_init(&b, &r.m.status);
+        robot_request_t request = {SOURCE_LINE, command(&r, DISTANCE_MOVE, 0.2)};
+        CHECK(robot_request(&b, &request) == R_OK);
+        vehicle_controller_cycle(&b, r.now);
+        CHECK(b.approved_valid);
+        if (system_first != 0U) { robot_control(&b, CONTROL_FAULT, false, false); }
+        CHECK(vehicle_controller_remote_command(&b, REMOTE_ESTOP) == R_OK);
+        if (system_first == 0U) { robot_control(&b, CONTROL_FAULT, false, false); }
+        CHECK(!b.approved_valid && b.count == 0U && b.status.motion.hold);
+        /* A queued release must not override either stop cause. */
+        robot_control(&b, CONTROL_RELEASE, true, true);
+        robot_motion_inputs(&b, &r.m, r.sample, r.now);
+        CHECK(r.m.status.state == FAULT && r.m.status.fault == F_ESTOP && r.m.status.hold);
+        CHECK(r.m.status.output[0] == 0.0 && r.m.status.output[1] == 0.0 && !r.m.active);
+        CHECK((r.m.fault_flags & (1U << ((unsigned)F_ESTOP - 1U))) != 0U);
+        CHECK((r.m.fault_flags & (1U << ((unsigned)F_SYSTEM - 1U))) != 0U);
+        CHECK(motion_next_event(&r.m, &e) && e.type == EV_FAULT && e.fault == F_ESTOP);
+        CHECK(!motion_next_event(&r.m, &e));
+        robot_publish(&b, &r.m, r.now);
+        CHECK(robot_request(&b, &request) == R_STALE);
+        CHECK(vehicle_controller_remote_command(&b, REMOTE_START) == R_HELD);
+    }
+
+    rig_t r;
+    init(&r);
+    motion_raise_fault(&r.m, F_SETUP_TIMEOUT, r.now);
+    CHECK((r.m.fault_flags & (1U << ((unsigned)F_SETUP_TIMEOUT - 1U))) != 0U);
+    motion_event_t e;
+    CHECK(motion_next_event(&r.m, &e) && e.fault == F_SETUP_TIMEOUT);
+}
+
+static void live_encoder_snapshot_tests(void)
+{
+    rig_t r;
+    robot_bus_t b;
+    init(&r);
+    r.sample.count[0] = UINT32_MAX;
+    r.sample.count[1] = 12U;
+    motion_config_t config = r.m.config;
+    motion_init(&r.m, &config, r.sample, r.now, true);
+    CHECK(r.m.status.encoder.count[0] == UINT32_MAX);
+    CHECK(r.m.status.encoder.count[1] == 12U);
+    motion_raise_fault(&r.m, F_ESTOP, r.now);
+    robot_bus_init(&b, &r.m.status);
+    r.sample.count[0] = 0U; /* Forward rollover. */
+    r.sample.count[1] = 11U; /* Reverse movement. */
+    r.sample.invalid[1] = 1U;
+    r.sample.reliable = false;
+    r.now += 0.01;
+    motion_step(&r.m, r.sample, r.now);
+    robot_publish(&b, &r.m, r.now);
+    CHECK(b.status.motion.encoder.count[0] == 0U);
+    CHECK(b.status.motion.encoder.count[1] == 11U);
+    CHECK(b.status.motion.encoder.invalid[1] == 1U);
+    CHECK(!b.status.motion.encoder.reliable);
+    CHECK(b.status.motion.encoder_sample_time == r.now);
+    CHECK(b.status.motion.state == FAULT);
+    CHECK(b.status.motion.output[0] == 0.0 && b.status.motion.output[1] == 0.0);
+}
+
 int main(void)
 {
     math_tests(); movement_tests(); safety_tests(); correction_and_final_tests(); bus_tests(); validation_tests();
@@ -924,6 +1031,9 @@ int main(void)
     feedback_diagnostic_tests();
     arc_finish_window_tests();
     fault_context_tests();
+    stalled_wheel_mask_tests();
+    fault_reason_tests();
+    live_encoder_snapshot_tests();
     printf("PASS: %u checks (synthetic host model; no hardware accuracy claim)\n", checks);
     return 0;
 }

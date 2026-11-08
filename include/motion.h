@@ -8,14 +8,19 @@
 /* All distances metres, speeds m/s, angles radians, times seconds. */
 typedef enum { INITIALISING, READY, DRIVING, STOPPING, STOPPED, FAULT, SHUTDOWN } motion_state_t;
 typedef enum { DISTANCE_MOVE, ENCODER_TURN, WHEEL_SPEED_TRACKING, MANUAL_OUTPUT, ARC_MOVE } motion_mode_t;
+/* Append new causes to preserve existing telemetry codes. F_SETUP means hardware
+ * initialization failed; F_SETUP_TIMEOUT means startup exceeded its time limit. */
 typedef enum { F_NONE, F_CONFIG, F_SETUP, F_TIMING, F_FEEDBACK, F_DEADLINE,
-               F_EXPIRED, F_STOP_TIMEOUT, F_FINAL_GOAL, F_EVENT_OVERFLOW, F_SYSTEM } motion_fault_t;
+               F_EXPIRED, F_STOP_TIMEOUT, F_FINAL_GOAL, F_EVENT_OVERFLOW, F_SYSTEM,
+               F_ESTOP, F_SETUP_TIMEOUT } motion_fault_t;
 typedef enum { R_OK, R_INVALID, R_BUSY, R_HELD, R_STALE, R_FULL } motion_result_t;
-typedef enum { FB_NONE, FB_UNRELIABLE, FB_INVALID_TRANSITION, FB_ODOMETRY, FB_NO_PROGRESS } motion_feedback_cause_t;
+typedef enum { FB_NONE, FB_UNRELIABLE, FB_INVALID_TRANSITION, FB_ODOMETRY, FB_NO_PROGRESS,
+               FB_RESTART_LATCH } motion_feedback_cause_t;
 typedef enum { EV_COMPLETE, EV_CANCELLED, EV_FAULT, EV_STOPPED, EV_REJECTED } motion_event_type_t;
 
-_Static_assert((SHUTDOWN <= 7) && (ARC_MOVE <= 7) && (F_SYSTEM <= 15) &&
-               (EV_REJECTED <= 7), "Update Buddy 2 packed field widths for new enum values");
+_Static_assert((SHUTDOWN <= 7) && (ARC_MOVE <= 7) && (F_SETUP_TIMEOUT <= 15) &&
+               (EV_REJECTED <= 7) && (FB_RESTART_LATCH <= 7),
+               "Update Buddy 2 packed field widths for new enum values");
 typedef struct { double kp, ki, kd, derivative_tau; } pid_config_t;
 typedef struct { double integral, previous, derivative; bool seeded; } pid_t;
 typedef struct {
@@ -68,6 +73,10 @@ typedef struct {
     motion_fault_t fault;
     uint32_t id, generation;
     double speed[2], travel[2], output[2], target[2], centre, path, heading, sample_time;
+    /* Latest raw sample, including while faulted; [0] left, [1] right.
+     * Counts are modulo 2^32, not fault-time snapshots or distance units. */
+    encoder_sample_t encoder;
+    double encoder_sample_time;
     bool stationary, feedback_trusted, inhibited, hold;
     /* First timing failure is retained until init/reset; never print in ISR. */
     double last_dt, max_observed_dt, timing_fault_dt;
@@ -93,7 +102,7 @@ typedef struct {
      * Other owner-only booleans and independent fault causes are packed. */
     bool active;
     uint8_t runtime_flags;
-    uint16_t fault_flags; /* F_CONFIG..F_SYSTEM: bit(fault-1), reset by init. */
+    uint16_t fault_flags; /* F_CONFIG..F_SETUP_TIMEOUT: bit(fault-1), reset by init. */
     motion_storage_events_t events;
     uint8_t event_queue; /* head:3 bits, occupancy:4 bits, reserved:1 bit. */
 } motion_t;
@@ -114,6 +123,8 @@ void motion_step(motion_t *motion, encoder_sample_t sample, double now);
 motion_result_t motion_accept(motion_t *motion, const motion_command_t *command, double now);
 void motion_cancel(motion_t *motion, double now);
 void motion_raise_fault(motion_t *motion, motion_fault_t fault, double now);
+/* Restore a known pre-reboot encoder fault; a quiet startup cannot clear it. */
+void motion_restore_encoder_fault(motion_t *motion, encoder_sample_t sample, double now);
 bool motion_release(motion_t *motion, bool checks_ok);
 bool motion_reset(motion_t *motion, bool cause_cleared, bool externally_verified_rest,
                   encoder_sample_t sample, double now);

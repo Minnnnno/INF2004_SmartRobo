@@ -46,7 +46,7 @@
 	X(UPTIME_DS,   0,     65535,  16, B1, "uptime in 0.1 s, wraps every 109 min") \
 	X(M_STATE,     0,     6,      3,  B2, "motion_state_t") \
 	X(M_MODE,      0,     4,      3,  B2, "motion_mode_t") \
-	X(M_FAULT,     0,     10,     4,  B2, "motion_fault_t (primary cause)") \
+	X(M_FAULT,     0,     12,     4,  B2, "motion_fault_t (primary cause)") \
 	X(M_FLAGS,     0,     15,     4,  B2, "bit0 stationary, bit1 feedback trusted, bit2 inhibited, bit3 hold") \
 	X(OWNER,       0,     7,      3,  B2, "request_source_t owning motion; 7 = no owner") \
 	X(CMD_ID,      0,     255,    8,  B2, "active command id, low 8 bits") \

@@ -81,7 +81,7 @@ Do not infer firmware memory from host sizeof values.
 | Motion state | enum, ARM8bits | INITIALISING..SHUTDOWN, seven values | logical3; public snapshot stays ABI-compatible |
 | Mode | enum, ARM8bits | five values | private3 implemented; public enum retained |
 | Primary fault | enum, ARM8bits | NONE plus eleven causes | logical4; packed4 in private event metadata; public primary cause retained |
-| Independent fault causes | previously only first primary cause | eleven independently seen causes |11 in uint16_t `fault_flags`; no mutually exclusive encoding |
+| Independent fault causes | previously only first primary cause | twelve independently seen causes |12 in uint16_t `fault_flags`; no mutually exclusive encoding |
 | Event type | enum, ARM8bits | five values |3, packed beside4-bit primary fault |
 | Event IDs/generation | uint32_t each | full32bit identity | retain32; event adapters reconstruct public events |
 | Event head / occupancy | unsigned each | head0..7; occupancy0..8 |3+4 in one uint8_t; full and empty stay distinct |

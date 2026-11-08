@@ -28,7 +28,7 @@
 #define TASK_STACK_SIZE		2048	/* bytes; tm_printf needs ~1 KB */
 
 /* Create and start a task.  prc = TP_PRC1 (core 0), TP_PRC2 (core 1), or
-   0 for "any core".  Defined in app_main.c. */
+   0 for "any core".  Defined in system/app_tasks.c. */
 IMPORT ID app_start_task(FP entry, PRI pri, UW prc, const char *name);
 
 /* ---------------------------------------------------------------------

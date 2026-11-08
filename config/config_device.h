@@ -27,7 +27,7 @@
 
 #define DEVCNF_USE_SER		0		// Serial communication device
 #define DEVCNF_USE_ADC		0		// A/D conversion device
-/* Buddy 4 is temporarily disabled by default, including non-CMake builds. */
+/* CMake enables Buddy 4 for normal firmware. Non-CMake builds must opt in. */
 #ifndef ROBO_SUBSYSTEM4
 #define ROBO_SUBSYSTEM4 0
 #endif

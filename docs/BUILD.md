@@ -12,6 +12,12 @@ use the standard build directory. The output is build/mtkernel_3.uf2 and the
 compile database is build/compile_commands.json. The task configures before building.
 The optional debugger configuration requires an SWD debug probe; it stops at usermain.
 
+The normal profile includes IR line following, Buddy 4 IMU/terrain and ultrasonic
+obstacle handling together, with motion fault latching. VS Code passes the three
+enable flags explicitly so an older CMake cache cannot silently disable them.
+The combined image is also named `build/smartrobo_integrated.uf2`; see
+[integrated firmware](INTEGRATED_FIRMWARE.md) for exact flags and startup behavior.
+
 The explicit build-template commands below remain available for terminal builds.
 
 Use CMake for this integration. The supplied CMakeLists.txt is the basis of the

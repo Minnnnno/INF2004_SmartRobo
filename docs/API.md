@@ -91,6 +91,26 @@ sensor processing or delays.
 
 ## Snapshot for other buddies
 
+Buddy 2 exposes live encoder data through `motion_get_status(&status)`:
+`status.motion.encoder.count[0/1]` are left/right raw `uint32_t` counts,
+`encoder.invalid[0/1]` are cumulative invalid quadrature-transition totals,
+and `encoder.reliable` is the acquisition reliability flag. Use
+`status.motion.feedback_trusted` for the controller's qualified feedback health;
+raw acquisition reliability alone does not prove that an encoder works.
+`status.motion.encoder_sample_time` is the sampling time in seconds; consumers
+must check freshness and finite timestamps. Counts update on each motion sample,
+including in FAULT, independently of the preserved `feedback_fault_sample`.
+Counts wrap modulo 2^32 and may decrease for reverse rotation; compare modular
+deltas, not unsigned greater-than tests. A stationary wheel legitimately has an
+unchanging count. These are raw counts, not reset-relative distance accumulators;
+reboot/reinitialization can restart their baseline.
+
+Buddy 1 can read these fields from the existing copied snapshot at 100 ms
+intervals. They are not yet encoded in the 21-byte MQTT frame: the Wi-Fi owner
+must add a documented message or coordinate a versioned frame extension to
+display them. Never read encoder hardware or perform network I/O in the motion
+loop for telemetry.
+
 `motion_get_status` copies a snapshot; publish after releasing all application
 locks. `robot_update_subsystem` copies a genuine owner sample. `available=false`
 means no measurement, not a zero measurement. Proposed `values[4]` contracts:
@@ -119,6 +139,14 @@ status payloads return false. Epoch timestamp is monotonic seconds.
 
 ## State and fault policy
 
+Production runtime ownership: `app_program/subsystem2/motion_runtime.c` owns
+the motion instance, periodic task and motor fault diagnostics.
+`app_program/controller/robot_runtime.c` owns the request bus, its mutex,
+submission/status APIs and controller task. `app_program/system/system_runtime.c`
+owns watchdog/crash handling and system supervision. `app_main.c` initializes
+these components and creates/starts the same RTOS tasks; public APIs below remain
+declared in `include/robot.h`, `include/motion.h` and `include/steering.h`.
+
 INITIALISING keeps outputs stopped, verifies configuration/setup and requires a
 fresh settling interval. READY accepts commands. DRIVING has distance, encoder
 turn, continuous-speed and explicitly enabled manual modes. Finite motion slows
@@ -136,11 +164,18 @@ the stop deadline. Recovery is stop/hold followed by explicit checks/release.
 FAULT stops outputs, invalidates motion and never restarts automatically. Fault
 beats simultaneous cancellation; shutdown is terminal but retains any fault cause.
 `robot_system_fault` is the sensor/controller route to the fault latch.
+Remote ESTOP uses `F_ESTOP` (11); internal failures use `F_SYSTEM` (10).
+Hardware initialization failure uses `F_SETUP` (2); startup timeout uses
+`F_SETUP_TIMEOUT` (12). Existing codes and four-bit telemetry layout are preserved;
+M_FAULT receivers must accept codes through 12. See [fault diagnostics and recovery](MOTION_FAULT_DIAGNOSTICS.md).
 Reset requires explicit cause-cleared confirmation and rest. A feedback/timing
 fault invalidates stationarity: missing pulses cannot clear it. An operator or
 independent trusted sensor must verify rest, repair/check feedback, and pass the
 external-rest flag. Reset reinitialises into a hold; wait for STOPPED and explicitly
 release. Configuration/setup changes require rebuilding/restarting the target.
+Known encoder faults also survive watchdog/hard-fault restarts and restore
+`F_FEEDBACK` until an accepted checked reset. Startup silence is not proof of repair.
+This latch is held in watchdog scratch storage and clears on removal of power.
 Shutdown prevents release/reset/new motion for the remainder of the boot session.
 
 Corrections to supplied statechart: the shared recovery arrow must not erase a

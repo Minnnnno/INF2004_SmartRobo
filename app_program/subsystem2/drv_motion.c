@@ -5,6 +5,7 @@
 #include "motor_test.h"
 #include "angle_test.h"
 #include <math.h>
+#include <stddef.h>
 
 static motion_motor_storage_t g_motor_config;
 static volatile encoder_capture_t capture;
