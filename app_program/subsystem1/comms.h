@@ -5,8 +5,8 @@
  *
  *	Dashboard data is NOT sent through this API.  Subsystem 1 copies the
  *	shared robot status (robot_update_subsystem / motion_get_status) every
- *	100 ms, packs it into the 21-byte frame in include/telemetry_frame.h
- *	and publishes it.  To get a value onto the dashboard, write it to your
+ *	100 ms, packs it into the 21-byte status frame and the 26-byte encoder
+ *	frame in include/telemetry_frame.h and publishes them.  To get a value onto the dashboard, write it to your
  *	subsystem_status_t slot as described in docs/API.md and
  *	app_program/subsystem1/telemetry_map.c.
  *
@@ -53,6 +53,7 @@ IMPORT ID	mbf_comms_cmd;
    taken while running may mix two updates. */
 typedef struct {
 	UW	frames;		/* status frames queued */
+	UW	enc_frames;	/* encoder frames queued */
 	UW	skipped;	/* periods skipped because the bus mutex was busy */
 	UW	clamped;	/* frames with at least one clamped field */
 	UW	events;		/* event frames queued */

@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SmartRobo Dashboard</title>
+<style>
+:root {
+  --bg: #f4f5f7; --card: #ffffff; --ink: #1b1f24; --muted: #5d6673; --line: #dde1e6;
+  --ok: #1a7f37; --ok-bg: #dcf3e2; --warn: #9a6700; --warn-bg: #fdf0cf;
+  --bad: #c62828; --bad-bg: #fde2e1; --off: #8a939e; --off-bg: #eceef1;
+  --accent: #2557c7; --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111418; --card: #1a1f25; --ink: #e6e9ed; --muted: #98a2ae; --line: #2c333b;
+    --ok: #4ac26b; --ok-bg: #173523; --warn: #e3b341; --warn-bg: #3a2f12;
+    --bad: #ff6b63; --bad-bg: #3d1a1a; --off: #7d8590; --off-bg: #23292f; --accent: #6d9cff;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+       font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+         padding: 12px 16px; background: var(--card); border-bottom: 1px solid var(--line);
+         position: sticky; top: 0; z-index: 2; }
+h1 { font-size: 17px; margin: 0 8px 0 0; }
+.pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.pill { padding: 2px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 600;
+        background: var(--off-bg); color: var(--off); white-space: nowrap; }
+.ok { color: var(--ok); } .warn { color: var(--warn); } .bad { color: var(--bad); } .off { color: var(--off); }
+.pill.ok { background: var(--ok-bg); } .pill.warn { background: var(--warn-bg); }
+.pill.bad { background: var(--bad-bg); } .pill.off { background: var(--off-bg); }
+main { max-width: 1400px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+            background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+button { font: inherit; font-weight: 700; border: 0; border-radius: 8px; padding: 10px 20px;
+         cursor: pointer; color: #fff; min-width: 96px; }
+button:disabled { opacity: .4; cursor: not-allowed; }
+#b-start { background: #1a7f37; } #b-stop { background: #b26b00; } #b-estop { background: #c62828; }
+.ctl-note { color: var(--muted); font-size: 13px; flex: 1 1 260px; }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; min-width: 0; }
+.card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted);
+           margin: 0 0 8px; display: flex; justify-content: space-between; gap: 8px; }
+.card h2 small { text-transform: none; letter-spacing: 0; font-weight: 500; }
+.big { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+dl { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; margin: 0; }
+dt { color: var(--muted); } dd { margin: 0; font-family: var(--mono); font-size: 13px; overflow-wrap: anywhere; }
+.stale .big, .stale dd { opacity: .45; }
+.flags span { display: inline-block; margin: 0 4px 2px 0; padding: 0 6px; border-radius: 4px;
+              font-size: 12px; background: var(--off-bg); color: var(--off); font-family: system-ui, sans-serif; }
+.flags span.on { background: var(--ok-bg); color: var(--ok); }
+.flags span.alert { background: var(--bad-bg); color: var(--bad); }
+.linebar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin: 4px 0 8px; }
+.linebar div { text-align: center; padding: 6px 0; border-radius: 6px; background: var(--off-bg);
+               color: var(--off); font-size: 12px; font-weight: 600; }
+.linebar div.on { background: var(--accent); color: #fff; }
+.help { margin-top: 8px; padding: 8px 10px; border-radius: 6px; background: var(--bad-bg); font-size: 13px; }
+.help:empty { display: none; }
+#checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+#checks li { display: grid; grid-template-columns: 14px 1fr; gap: 8px; align-items: start; }
+#checks .dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; background: var(--off); }
+#checks .dot.ok { background: var(--ok); } #checks .dot.warn { background: var(--warn); }
+#checks .dot.bad { background: var(--bad); }
+#checks b { font-weight: 600; } #checks .why { color: var(--muted); font-size: 13px; }
+.logbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+.logbar select, .logbar input { font: inherit; padding: 5px 8px; border-radius: 6px;
+       border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+.logbar input[type=search] { flex: 1 1 180px; min-width: 0; }
+.logbar a, .logbar label { color: var(--muted); font-size: 13px; }
+.logbar a { color: var(--accent); }
+#log { height: 360px; overflow: auto; font-family: var(--mono); font-size: 12.5px;
+       border: 1px solid var(--line); border-radius: 6px; background: var(--bg); padding: 6px 0; }
+#log div { display: grid; grid-template-columns: 92px 56px 1fr; gap: 8px; padding: 1px 10px; }
+#log div:hover { background: var(--card); }
+#log .t { color: var(--muted); } #log .s { color: var(--muted); }
+#log .error { color: var(--bad); } #log .warn { color: var(--warn); } #log .debug { color: var(--muted); }
+#log .you { font-weight: 700; }
+#lost-conn { display: none; background: var(--bad); color: #fff; padding: 8px 16px; font-weight: 600; }
+@media (max-width: 520px) {
+  #log div { grid-template-columns: 70px 1fr; } #log .s { display: none; }
+  button { flex: 1 1 30%; min-width: 0; padding: 12px 8px; }
+}
+</style>
+</head>
+<body>
+<div id="lost-conn">This page lost contact with the dashboard server (tools/web_dashboard.py). Is it still running?</div>
+<header>
+  <h1>SmartRobo</h1>
+  <div class="pills">
+    <span class="pill" id="p-broker">broker ?</span>
+    <span class="pill" id="p-robot">robot ?</span>
+    <span class="pill" id="p-telemetry">telemetry ?</span>
+    <span class="pill" id="p-motion">motion ?</span>
+  </div>
+</header>
+
+<main>
+  <section class="controls" aria-label="Robot control">
+    <button id="b-start" data-cmd="start">START</button>
+    <button id="b-stop" data-cmd="stop">STOP</button>
+    <button id="b-estop" data-cmd="estop">E-STOP</button>
+    <div class="ctl-note" id="ctl-note">STOP halts the motors and holds the robot; START releases it.
+      Neither powers the Pico off, so the robot stays connected.</div>
+  </section>
+
+  <div class="grid">
+    <section class="card" id="c-check">
+      <h2>Troubleshooting <small id="check-sum"></small></h2>
+      <ul id="checks"></ul>
+    </section>
+
+    <section class="card" id="c-motion">
+      <h2>Motion <small>Buddy 2</small></h2>
+      <div class="big" id="m-state">-</div>
+      <dl>
+        <dt>Fault</dt><dd id="m-fault">-</dd>
+        <dt>Mode</dt><dd id="m-mode">-</dd>
+        <dt>Owner</dt><dd id="m-owner">-</dd>
+        <dt>Wheel speed</dt><dd id="m-speed">-</dd>
+        <dt>Distance</dt><dd id="m-centre">-</dd>
+        <dt>Heading</dt><dd id="m-heading">-</dd>
+        <dt>Uptime</dt><dd id="m-uptime">-</dd>
+      </dl>
+      <div class="flags" id="m-flags" style="margin-top:8px"></div>
+      <div class="help" id="m-help"></div>
+    </section>
+
+    <section class="card" id="c-enc">
+      <h2>Encoders <small>Buddy 2</small></h2>
+      <dl>
+        <dt>Counts L / R</dt><dd id="e-count">-</dd>
+        <dt>Change / 100 ms</dt><dd id="e-delta">-</dd>
+        <dt>Invalid L / R</dt><dd id="e-invalid">-</dd>
+        <dt>Sample age</dt><dd id="e-age">-</dd>
+        <dt>Cause</dt><dd id="e-cause">-</dd>
+      </dl>
+      <div class="flags" id="e-flags" style="margin-top:8px"></div>
+    </section>
+
+    <section class="card" id="c-line">
+      <h2>Line &amp; barcode <small>Buddy 3</small></h2>
+      <div class="linebar"><div id="l-l">left</div><div id="l-c">centred</div><div id="l-r">right</div></div>
+      <dl>
+        <dt>Line sensor</dt><dd id="l-avail">-</dd>
+        <dt>On the line</dt><dd id="l-track">-</dd>
+        <dt>Barcode</dt><dd id="l-bc">-</dd>
+      </dl>
+    </section>
+
+    <section class="card" id="c-terrain">
+      <h2>IMU &amp; terrain <small>Buddy 4</small></h2>
+      <div class="big" id="t-state">-</div>
+      <dl>
+        <dt>Pitch</dt><dd id="t-pitch">-</dd>
+        <dt>Highest hump</dt><dd id="t-hump">-</dd>
+        <dt>Motion class</dt><dd id="t-class">-</dd>
+        <dt>Turn rate</dt><dd id="t-turn">-</dd>
+      </dl>
+    </section>
+
+    <section class="card" id="c-obst">
+      <h2>Obstacle <small>Buddy 5</small></h2>
+      <div class="big" id="o-state">-</div>
+      <dl>
+        <dt>Ultrasonic</dt><dd id="o-avail">-</dd>
+        <dt>Distance ahead</dt><dd id="o-dist">-</dd>
+        <dt>Width</dt><dd id="o-width">-</dd>
+        <dt>Last scan</dt><dd id="o-scan">-</dd>
+        <dt>Pass side</dt><dd id="o-avoid">-</dd>
+      </dl>
+    </section>
+
+    <section class="card" id="c-comms">
+      <h2>Link <small>Buddy 1</small></h2>
+      <dl>
+        <dt>Broker</dt><dd id="k-broker">-</dd>
+        <dt>Heartbeat</dt><dd id="k-hb">-</dd>
+        <dt>Status frames</dt><dd id="k-frames">-</dd>
+        <dt>Encoder frames</dt><dd id="k-enc">-</dd>
+        <dt>Lost / bad</dt><dd id="k-lost">-</dd>
+        <dt>Frame layout</dt><dd id="k-layout">-</dd>
+      </dl>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>Log <small id="log-count"></small></h2>
+    <div class="logbar">
+      <select id="f-level" aria-label="Level">
+        <option value="debug">everything</option>
+        <option value="info" selected>info and up</option>
+        <option value="warn">warnings and errors</option>
+        <option value="error">errors only</option>
+      </select>
+      <select id="f-src" aria-label="Source">
+        <option value="">all sources</option>
+        <option>B1</option><option>B2</option><option>B3</option><option>B4</option>
+        <option>B5</option><option>ctrl</option><option>robot</option><option>broker</option><option>you</option>
+      </select>
+      <input type="search" id="f-text" placeholder="Search the log" aria-label="Search">
+      <label><input type="checkbox" id="f-follow" checked> follow</label>
+      <a href="/api/log.txt">download</a>
+    </div>
+    <div id="log" role="log"></div>
+  </section>
+</main>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const LEVELS = { debug: 0, info: 1, warn: 2, error: 3 };
+let meta = null, boot = "", since = 0, last = null, entries = [];
+
+function set(id, text, cls) {
+  const el = $(id);
+  el.textContent = text;
+  el.className = el.className.replace(/\b(ok|warn|bad|off)\b/g, "").trim();
+  if (cls) el.classList.add(cls);
+}
+const sign = v => (v > 0 ? "+" : "") + v;
+const ageText = a => a == null ? "never" : a < 1 ? Math.round(a * 1000) + " ms ago" : a.toFixed(1) + " s ago";
+function flags(id, list) {
+  $(id).innerHTML = "";
+  for (const [label, on, alert] of list) {
+    const s = document.createElement("span");
+    s.textContent = label;
+    if (on) s.className = alert ? "alert" : "on";
+    $(id).appendChild(s);
+  }
+}
+
+function render(s) {
+  const f = s.frame, e = s.enc, M = meta;
+  const live = f && s.frame_age != null && s.frame_age < 1;
+  const encLive = e && s.enc_age != null && s.enc_age < 1;
+
+  set("p-broker", s.broker === "connected" ? "broker connected" : "broker " + s.broker,
+      s.broker === "connected" ? "ok" : "bad");
+  set("p-robot", "robot " + s.robot, s.robot === "online" ? "ok" : s.robot === "offline" ? "bad" : "off");
+  set("p-telemetry", live ? "telemetry live" : f ? "telemetry stale " + s.frame_age.toFixed(0) + " s" : "no telemetry",
+      live ? "ok" : f ? "warn" : "off");
+  for (const id of ["c-motion", "c-line", "c-terrain", "c-obst"]) $(id).classList.toggle("stale", !live);
+  $("c-enc").classList.toggle("stale", !encLive);
+
+  // Motion
+  if (f) {
+    const st = M.states[f.M_STATE], fault = M.faults[f.M_FAULT], held = (f.M_FLAGS & 8) !== 0;
+    set("p-motion", st + (held && st !== "FAULT" ? " (held)" : ""),
+        st === "FAULT" ? "bad" : held || st === "STOPPED" ? "warn" : "ok");
+    set("m-state", st, st === "FAULT" ? "bad" : st === "DRIVING" ? "ok" : "");
+    set("m-fault", fault, f.M_FAULT ? "bad" : "");
+    set("m-mode", M.modes[f.M_MODE] || f.M_MODE);
+    set("m-owner", M.owners[f.OWNER] || f.OWNER);
+    set("m-speed", sign(f.SPEED_L) + " / " + sign(f.SPEED_R) + " mm/s");
+    set("m-centre", sign(f.CENTRE_MM) + " mm");
+    set("m-heading", sign(f.HEADING) + "°");
+    set("m-uptime", (f.UPTIME_DS / 10).toFixed(1) + " s");
+    flags("m-flags", [["stationary", f.M_FLAGS & 1], ["feedback trusted", f.M_FLAGS & 2],
+                      ["inhibited", f.M_FLAGS & 4, true], ["held", f.M_FLAGS & 8, true]]);
+    $("m-help").textContent = f.M_FAULT ? M.fault_help[fault] || "" : "";
+
+    // Line and barcode
+    const track = f.LINE_AVAIL && f.LINE_TRACK;
+    $("l-l").className = track && f.LINE_ERR < 0 ? "on" : "";
+    $("l-c").className = track && f.LINE_ERR === 0 ? "on" : "";
+    $("l-r").className = track && f.LINE_ERR > 0 ? "on" : "";
+    set("l-avail", f.LINE_AVAIL ? "publishing" : "not publishing", f.LINE_AVAIL ? "ok" : "warn");
+    set("l-track", !f.LINE_AVAIL ? "-" : f.LINE_TRACK ? "yes" : "no (line lost)", f.LINE_TRACK ? "ok" : "warn");
+    set("l-bc", f.BC_VALID ? M.barcodes[f.BC_CMD] : "none");
+
+    // Terrain
+    const ts = M.t_states[f.T_STATE];
+    set("t-state", ts, ts === "FAULT" ? "bad" : "");
+    set("t-pitch", f.T_VALID & 2 ? sign(f.PITCH) + "° (+ nose up)" : "not valid");
+    set("t-hump", f.T_VALID & 4 ? f.HUMP_MM + " mm" : "none yet");
+    if ("M_CLASS" in f) {
+      set("t-class", f.T_VALID & 1 ? M.m_classes[f.M_CLASS] : "not valid");
+      set("t-turn", f.T_VALID & 1 ? sign(f.TURN_RATE) + " °/s (+ left)" : "not valid");
+    } else {
+      set("t-class", "needs frame layout v2", "off");
+      set("t-turn", "needs frame layout v2", "off");
+    }
+
+    // Obstacle: O_FLAGS currently carries Buddy 5's S5_STATE code.
+    const os = M.s5_states[f.O_FLAGS];
+    set("o-state", os || "code " + f.O_FLAGS, f.O_FLAGS === 4 || f.O_FLAGS === 6 ? "bad" : f.O_FLAGS ? "warn" : "");
+    set("o-avail", f.O_AVAIL ? "OK" : "NOT OK", f.O_AVAIL ? "ok" : "bad");
+    set("o-dist", f.O_AVAIL ? (f.O_DIST_CM >= 400 ? "clear (≥ 400 cm)" : f.O_DIST_CM + " cm") : "-");
+    set("o-width", f.O_FLAGS >= 2 ? f.O_WIDTH_CM + " cm" : "-");
+  }
+  const ot = s.obstacle_text || {};
+  set("o-scan", ot.width_mm ? `${ot.width_mm} mm wide, ${ot.dist_mm} mm away, ${ot.position || "?"} (offset ${ot.offset_mm} mm)` : "none yet");
+  set("o-avoid", ot.avoid ? `${ot.avoid} (shift L ${ot.shift_l_mm} / R ${ot.shift_r_mm} mm)` : "-");
+
+  // Encoders
+  if (e) {
+    set("e-count", e.count_l + " / " + e.count_r);
+    set("e-delta", s.enc_delta ? sign(s.enc_delta[0]) + " / " + sign(s.enc_delta[1]) : "-");
+    set("e-invalid", e.invalid_l + " / " + e.invalid_r, e.invalid_l + e.invalid_r ? "warn" : "");
+    set("e-age", e.age_ms === 65535 ? "unknown / old" : e.age_ms + " ms", e.fresh ? "" : "warn");
+    const cause = M.fb[e.cause];
+    set("e-cause", cause === "none" ? "none" : cause + ": " + (M.fb_help[cause] || ""), cause === "none" ? "" : "warn");
+    flags("e-flags", [["reliable", e.reliable], ["trusted", e.trusted], ["fresh", e.fresh]]);
+  }
+
+  // Link
+  const c = s.counts;
+  set("k-broker", s.broker_name + " (" + s.broker + ")", s.broker === "connected" ? "" : "bad");
+  set("k-hb", (s.hb || "none") + ", " + ageText(s.hb_age), s.hb_age != null && s.hb_age < 3 ? "" : "warn");
+  set("k-frames", c.frames + ", last " + ageText(s.frame_age));
+  set("k-enc", c.enc_frames + ", last " + ageText(s.enc_age));
+  set("k-lost", c.lost + " lost / " + (c.bad + c.enc_bad) + " bad", c.bad + c.enc_bad ? "bad" : c.lost ? "warn" : "");
+  set("k-layout", "v" + M.layout + (s.last_bad && /version/.test(s.last_bad.msg) ? " — robot sends a different version!" : ""),
+      s.last_bad && /version/.test(s.last_bad.msg) ? "bad" : "");
+
+  renderButtons(s, live);
+  renderChecks(s, live, encLive);
+}
+
+function renderButtons(s, live) {
+  const f = s.frame, connected = s.broker === "connected";
+  const startOk = connected && live && f && meta.states[f.M_STATE] === "STOPPED" && !f.M_FAULT &&
+                  (f.M_FLAGS & 1) && (f.M_FLAGS & 2);
+  $("b-start").disabled = !startOk;
+  $("b-stop").disabled = !connected;
+  $("b-estop").disabled = !connected;
+  let note = "STOP halts the motors and holds the robot; START releases it. Neither powers the Pico off.";
+  if (!connected) note = "Not connected to the broker, so commands cannot be sent.";
+  else if (f && f.M_FAULT === meta.faults.indexOf("ESTOP")) note = "E-STOP is latched. START cannot clear it: do the checked reset/release on the robot.";
+  else if (f && f.M_FAULT) note = "Robot is in FAULT. Fix the cause, then do the checked reset/release on the robot.";
+  else if (!startOk && f && live) note = "START is available once the robot is STOPPED, stationary, with trusted encoder feedback. Press STOP first.";
+  $("ctl-note").textContent = note;
+}
+
+function renderChecks(s, live, encLive) {
+  const f = s.frame, e = s.enc, M = meta, out = [];
+  const add = (level, title, why) => out.push([level, title, why]);
+  if (s.broker === "connected") add("ok", "Dashboard connected to the MQTT broker", s.broker_name);
+  else add("bad", "Dashboard cannot reach the MQTT broker",
+           `Is Mosquitto running on ${s.broker_name} with tools/mosquitto_robot.conf? Is this laptop on the robot's network?`);
+  if (s.robot === "online") add("ok", "Robot is online", "");
+  else if (s.robot === "offline") add("bad", "Robot went offline",
+           "The broker sent the robot's last will: Wi-Fi dropped, or the Pico reset or lost power. Check the battery and USB console.");
+  else add("warn", "Robot has never connected to this broker",
+           "Flash a Wi-Fi build (WIFI=cyw43 NET=lwip MQTT=ON) and check the broker IP in config/wifi_secrets.h.");
+  if (s.hb_age != null && s.hb_age < 3) add("ok", "Heartbeat arriving", "");
+  else if (s.robot === "online") add("warn", "No heartbeat", "Robot says online but no heartbeat in 3 s: Wi-Fi weak or the robot froze.");
+  if (live) add("ok", "Telemetry is live", s.counts.frames + " frames");
+  else if (f) add("warn", "Telemetry stopped " + s.frame_age.toFixed(0) + " s ago", "Values shown are the last ones received.");
+  if (s.last_bad && s.last_bad.age < 30)
+    add("bad", "Robot frames rejected", s.last_bad.msg + (/version/.test(s.last_bad.msg)
+        ? ". The robot's firmware and this checkout use different include/telemetry_frame.h: run the dashboard from the same commit as the flashed firmware." : ""));
+  if (s.counts.frames > 50 && s.counts.lost / (s.counts.frames + s.counts.lost) > 0.05)
+    add("warn", "Losing more than 5% of frames", "Weak Wi-Fi or a busy broker. Move the hotspot closer.");
+  if (f) {
+    const fault = M.faults[f.M_FAULT];
+    if (f.M_FAULT) add("bad", "Motion fault: " + fault, M.fault_help[fault] || "");
+    else add("ok", "No motion fault", "");
+    if (f.M_FLAGS & 8) add("warn", "Movement is held", "The robot will not drive until START (or the checked release).");
+    if (!f.LINE_AVAIL) add("warn", "Line sensor not publishing", "Line task is off in this firmware profile, or it has stalled.");
+    if (M.t_states[f.T_STATE] === "FAULT") add("bad", "IMU fault (Buddy 4)", "Check the GY-511 on I2C1 (GP6 SDA, GP7 SCL) and its power.");
+    else if (!(f.T_VALID & 2)) add("warn", "No valid pitch from the IMU", "Buddy 4 is still starting, or the GY-511 is not answering.");
+    if (!f.O_AVAIL) add("bad", "Ultrasonic sensor not OK (Buddy 5)", "Check the sensor on GP16/GP17 and its 5 V supply.");
+    if (f.O_FLAGS === 4) add("warn", "Obstacle: no way around", "Neither side has room. The robot stays held.");
+    if (f.O_FLAGS === 6) add("warn", "Obstacle detour abandoned", "The robot stopped and is held.");
+  }
+  if (e) {
+    if (!e.reliable) add("bad", "Encoder readings unreliable", M.fb_help.unreliable);
+    else if (!e.trusted) add("warn", "Encoder feedback not trusted", M.fb_help[M.fb[e.cause]] || "");
+    if (!e.fresh && encLive) add("warn", "Encoder sample is old", "The motion task may be running late.");
+    if (e.invalid_l + e.invalid_r > 0) add("warn", "Invalid encoder transitions seen",
+        `Left ${e.invalid_l}, right ${e.invalid_r} since boot. Rising counts mean loose wiring or noise.`);
+  }
+  const order = { bad: 0, warn: 1, ok: 2 };
+  out.sort((a, b) => order[a[0]] - order[b[0]]);
+  const ul = $("checks");
+  ul.innerHTML = "";
+  for (const [level, title, why] of out) {
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="dot ${level}"></span><div><b></b><div class="why"></div></div>`;
+    li.querySelector("b").textContent = title;
+    li.querySelector(".why").textContent = why;
+    ul.appendChild(li);
+  }
+  const bad = out.filter(c => c[0] === "bad").length, warn = out.filter(c => c[0] === "warn").length;
+  set("check-sum", bad ? bad + " problem" + (bad > 1 ? "s" : "") : warn ? warn + " warning" + (warn > 1 ? "s" : "") : "all good",
+      bad ? "bad" : warn ? "warn" : "ok");
+}
+
+// ---- log ----
+function visible(x) {
+  const lvl = $("f-level").value, src = $("f-src").value, q = $("f-text").value.toLowerCase();
+  return LEVELS[x.level] >= LEVELS[lvl] && (!src || x.src === src) &&
+         (!q || (x.msg + " " + x.src).toLowerCase().includes(q));
+}
+function row(x) {
+  const div = document.createElement("div");
+  div.className = x.level + (x.src === "you" ? " you" : "");
+  for (const [cls, text] of [["t", x.t], ["s", x.src], ["m", x.msg]]) {
+    const span = document.createElement("span");
+    span.className = cls; span.textContent = text; div.appendChild(span);
+  }
+  return div;
+}
+function redrawLog() {
+  const box = $("log");
+  box.innerHTML = "";
+  for (const x of entries) if (visible(x)) box.appendChild(row(x));
+  box.scrollTop = box.scrollHeight;
+}
+function appendLog(list) {
+  const box = $("log"), follow = $("f-follow").checked;
+  for (const x of list) {
+    entries.push(x);
+    if (visible(x)) box.appendChild(row(x));
+  }
+  if (entries.length > 3000) { entries = entries.slice(-2000); redrawLog(); }
+  while (box.childNodes.length > 2000) box.removeChild(box.firstChild);
+  if (follow && list.length) box.scrollTop = box.scrollHeight;
+  $("log-count").textContent = entries.length + " entries";
+}
+for (const id of ["f-level", "f-src", "f-text"]) $(id).addEventListener("input", redrawLog);
+
+// ---- commands ----
+async function send(cmd) {
+  if (cmd === "estop" && !confirm("Emergency stop?\n\nThis latches a fault. START will NOT clear it: someone must do the checked reset/release on the robot."))
+    return;
+  try {
+    const r = await fetch("/api/cmd", { method: "POST", headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({ command: cmd }) });
+    const j = await r.json();
+    if (!j.ok) alert("Not sent: " + j.error);
+  } catch (err) { alert("Not sent: dashboard server unreachable"); }
+}
+document.querySelectorAll("button[data-cmd]").forEach(b => b.addEventListener("click", () => send(b.dataset.cmd)));
+
+// ---- polling ----
+async function poll() {
+  try {
+    const r = await fetch(`/api/state?since=${since}&boot=${boot}`);
+    const s = await r.json();
+    if (s.meta) meta = s.meta;
+    if (s.reset_log) { entries = []; $("log").innerHTML = ""; }
+    boot = s.boot; since = s.log_last; last = s;
+    $("lost-conn").style.display = "none";
+    appendLog(s.log);
+    render(s);
+  } catch (err) {
+    $("lost-conn").style.display = "block";
+  }
+  setTimeout(poll, 400);
+}
+poll();
+</script>
+</body>
+</html>

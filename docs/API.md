@@ -105,11 +105,14 @@ deltas, not unsigned greater-than tests. A stationary wheel legitimately has an
 unchanging count. These are raw counts, not reset-relative distance accumulators;
 reboot/reinitialization can restart their baseline.
 
-Buddy 1 can read these fields from the existing copied snapshot at 100 ms
-intervals. They are not yet encoded in the 21-byte MQTT frame: the Wi-Fi owner
-must add a documented message or coordinate a versioned frame extension to
-display them. Never read encoder hardware or perform network I/O in the motion
-loop for telemetry.
+Buddy 1 reads these fields from the existing copied snapshot every 100 ms and
+publishes them as the separate 26-byte encoder frame on `robot/encoder` (QoS 0),
+straight after the status frame with the same SEQ. It carries both raw 32-bit
+counts and invalid totals unclamped, plus encoder-reliable, feedback-trusted and
+fresh flags, the feedback cause, motion state and fault, the sample time in ms
+and its age on the robot's clock. The layout is in `include/telemetry_frame.h`
+("Encoder frame"); the 21-byte status frame is unchanged. Never read encoder
+hardware or perform network I/O in the motion loop for telemetry.
 
 `motion_get_status` copies a snapshot; publish after releasing all application
 locks. `robot_update_subsystem` copies a genuine owner sample. `available=false`

@@ -104,6 +104,30 @@ successfully executed it; use subsequent status to show the actual outcome.
 - [Existing telemetry mapper](../app_program/subsystem1/telemetry_map.c)
 
 The encoder snapshot addition passed all 16 host test suites and the integrated
-firmware build. It has not been flashed or verified on hardware. MQTT encoding
-and dashboard display of the new encoder fields remain Buddy 1's integration
-work.
+firmware build. It has not been flashed or verified on hardware.
+
+## Buddy 1 status (10 November 2026)
+
+Items 1-5 are implemented; not yet verified on hardware.
+
+- **Message:** 26-byte binary encoder frame on `robot/encoder`, QoS 0, every
+  100 ms, published right after the status frame of the same period and
+  carrying the same SEQ. Layout, units and validity rules: "Encoder frame" in
+  [telemetry_frame.h](../include/telemetry_frame.h). The 21-byte status frame
+  and its layout version are unchanged.
+- **Contents:** left/right raw counts and invalid totals (full 32 bits, never
+  clamped), encoder-reliable, feedback-trusted and sample-fresh flags, feedback
+  cause, motion state and fault, sample time (ms, robot clock) and sample age.
+- **Freshness:** judged on the robot: `fresh` is set only when the sample time
+  is finite and at most 100 ms old when copied; otherwise age is 65535
+  (unknown/old). The dashboard separately warns `STALE` when no status or
+  encoder frame has arrived for 1 s on its own clock, and shows the retained
+  `robot/status` online/offline message.
+- **Dashboard:** `python tools/dashboard.py listen --host <broker> --encoder-csv enc.csv`
+  prints counts with modular per-frame deltas, invalid totals, state, fault,
+  feedback cause and health, and logs every encoder frame to CSV. Command
+  acks are labelled "queued, not executed".
+- **Tests:** `buddy1_frame_checks` (golden frame, 32-bit extremes, every
+  state/fault/cause code, clamping, malformed frames, freshness and wrap
+  mapping) and `python tools/dashboard.py selftest` share the same golden
+  encoder frame.
