@@ -50,6 +50,50 @@ static void line_loop(void)
 #elif defined(ROBO_IR_MONITOR)
 /* Sensor-only image: no motion requests; '\r' rewrites one console line.
  * Also shows the barcode IR (GP28) so its wiring can be checked; barcode_task stays idle. */
+#if defined(ROBO_IR_MONITOR_ANALOG) && ROBO_IR_MONITOR_ANALOG
+/* Analog variant (-DCMAKE_C_FLAGS=-DROBO_IR_MONITOR_ANALOG=1): also reads the ADC on every IR pin, to see
+ * which module output (DO or AO) each pin is wired to and what the potentiometer changes. The line pins stay
+ * digital inputs (the ADC still reads them); the barcode pin is set up for analog only, as barcode.c does.
+ * ADC channel = pin - 26: GP26 = ADC0, GP27 = ADC1, GP28 = ADC2. */
+#define IRMON_ADC_BASE    0x4004C000U
+#define IRMON_ADC_CS      (IRMON_ADC_BASE + 0x00U)
+#define IRMON_ADC_RESULT  (IRMON_ADC_BASE + 0x04U)
+#define IRMON_ADC_EN      (1UL << 0U)
+#define IRMON_ADC_START   (1UL << 2U)
+#define IRMON_ADC_READY   (1UL << 8U)
+#define IRMON_ADC_AVERAGE 16U
+
+static unsigned irmon_adc(unsigned pin)
+{
+    uint32_t sum = 0U, input = (uint32_t)(pin - 26U) << 12U;
+    for (unsigned i = 0U; i < IRMON_ADC_AVERAGE; ++i) {
+        out_w(IRMON_ADC_CS, IRMON_ADC_EN | input | IRMON_ADC_START);
+        while ((in_w(IRMON_ADC_CS) & IRMON_ADC_READY) == 0U) { }
+        sum += in_w(IRMON_ADC_RESULT) & 0xFFFU;
+    }
+    return (unsigned)(sum / IRMON_ADC_AVERAGE);
+}
+
+static void line_loop(void)
+{
+    clr_w(RESETS_RESET, RESETS_RESET_ADC);
+    while ((in_w(RESETS_RESET_DONE) & RESETS_RESET_ADC) == 0U) { }
+    out_w(GPIO_CTRL(BOARD_BARCODE), GPIO_CTRL_FUNCSEL_NULL);
+    out_w(GPIO(BOARD_BARCODE), GPIO_OD); /* Digital input and pulls off for analog use. */
+    out_w(IRMON_ADC_CS, IRMON_ADC_EN);
+    while ((in_w(IRMON_ADC_CS) & IRMON_ADC_READY) == 0U) { }
+    tm_printf((const UB *)"ir_monitor_analog: ADC 0..4095 (3.3 V); d = digital read of the same pin\n");
+    for (;;) {
+        unsigned right = (unsigned)gpio_get(BOARD_LINE_R);
+        unsigned centre = (unsigned)gpio_get(BOARD_LINE_C);
+        tm_printf((const UB *)"centre GP%u d=%u a=%4u | right GP%u d=%u a=%4u | barcode GP%u a=%4u\n",
+                  (unsigned)BOARD_LINE_C, centre, irmon_adc(BOARD_LINE_C),
+                  (unsigned)BOARD_LINE_R, right, irmon_adc(BOARD_LINE_R),
+                  (unsigned)BOARD_BARCODE, irmon_adc(BOARD_BARCODE));
+        (void)tk_dly_tsk(200U);
+    }
+}
+#else
 static void line_loop(void)
 {
     line_input_init(BOARD_BARCODE);
@@ -61,6 +105,7 @@ static void line_loop(void)
         (void)tk_dly_tsk(50U);
     }
 }
+#endif
 
 #elif defined(ROBO_LINE_STEERING)
 /* Line-tracking states (project brief / Week 6 statechart):
@@ -78,8 +123,10 @@ static void line_loop(void)
 /* Both IR sensors read black (1) when centred on the line; GP26 sits slightly right of centre. */
 #define DEG_TO_RAD          (0.017453292519943295)
 #define LINE_SESSION        3001U
-#define LINE_SPEED          0.1   /* m/s forward while following. */
-#define LINE_CORRECTION     0.0375 /* m/s per wheel when one sensor is off the line. */
+#define LINE_SPEED          0.05  /* m/s forward while following. Halved from 0.1 so the barcode sensor gets
+                                   * about 7 samples (0.42 mm each) across a 3 mm bar of the small barcode. */
+#define LINE_CORRECTION     (LINE_SPEED * 0.375) /* m/s per wheel when one sensor is off the line: the same
+                                   * inner/outer wheel ratio as 0.0375 at 0.1 m/s. */
 #define LINE_SEARCH_SPEED   0.1   /* m/s outer wheel while pivoting on the stopped inner wheel.
                                    * Spinning in place stalled the reversing wheel. */
 #define LINE_GRACE_TIME     0.2   /* s to keep the last command after a loss (gaps, flicker). */
@@ -87,6 +134,20 @@ static void line_loop(void)
 #define LINE_BACKUP_SPEED   0.075 /* m/s reversing back to where the line was last seen. */
 #define LINE_BACKUP_EXTRA   0.02  /* m reversed beyond the overshoot. */
 #define LINE_SEARCH_TIMEOUT 15.0  /* s backstop before holding still, e.g. if a wheel slips. */
+/* Barcode window: while the barcode task reads a pass (barcode_code_pass()), the car steers more gently
+ * (LINE_BC_CORRECTION), and a loss first holds the heading of the last on-line sample at line speed for up to LINE_BC_HOLD_LOST before the normal grace and
+ * search take over. Both end as soon as the heading has turned LINE_BC_MAX_TURN from the pass start
+ * (a bend), and after LINE_BC_HOLD_MAX. */
+#define LINE_BC_HOLD_MAX    0.35  /* m from the start of the pass (big code 26 cm plus margins). */
+#define LINE_BC_HOLD_LOST   0.05  /* m driven while lost before the hold gives way to the search. */
+#define LINE_BC_MAX_TURN    0.15  /* rad (~8.6 deg) of heading change during the pass: a bend, steer normally.
+                                   * Straight-line wiggle over the codes stayed under 0.10 rad in every logged pass. */
+#define LINE_BC_HOLD_GAIN   100.0 /* deg/s of turn per rad of heading error. */
+#define LINE_BC_HOLD_RATE   20.0  /* deg/s turn limit while holding. */
+#define LINE_BC_CORRECTION  (LINE_CORRECTION * 0.4) /* m/s per wheel while a pass is read: a gentler wiggle,
+                                   * because the barcode sensor sits ~6 cm to the side (every turn speeds it up or
+                                   * slows it down against the centre distance the decoder uses) and ~18 cm ahead
+                                   * (the chassis rocking moves it up and down). Same window as the hold. */
 #define LINE_OBSTACLE_AVOIDING 5.0 /* Obstacle status values[3] while subsystem 5 drives round an
                                     * obstacle: S5_STATE_AVOIDING in subsystem5.h (not included:
                                     * it needs the kernel headers the host tests lack). */
@@ -188,10 +249,10 @@ static motion_result_t line_search_step(line_search_t *s, const motion_status_t 
     return line_pivot(s->dir);
 }
 
-static motion_result_t line_follow(line_direction_t drive)
+static motion_result_t line_follow(line_direction_t drive, double correction)
 {
-    if (drive == LINE_LEFT) { return motion_steer_left(SOURCE_LINE, LINE_SESSION, LINE_SPEED, LINE_CORRECTION); }
-    if (drive == LINE_RIGHT) { return motion_steer_right(SOURCE_LINE, LINE_SESSION, LINE_SPEED, LINE_CORRECTION); }
+    if (drive == LINE_LEFT) { return motion_steer_left(SOURCE_LINE, LINE_SESSION, LINE_SPEED, correction); }
+    if (drive == LINE_RIGHT) { return motion_steer_right(SOURCE_LINE, LINE_SESSION, LINE_SPEED, correction); }
     return motion_steer(SOURCE_LINE, LINE_SESSION, LINE_SPEED, 0.0);
 }
 
@@ -232,162 +293,9 @@ static void line_report(unsigned centre, unsigned right, line_direction_t direct
     }
 }
 
-/* ---- Junction turn: the barcode task reports the first black after a valid read (barcode.c,
- * SOURCE_BARCODE values[2] counts them). For 'Z' the car brakes, drives on ROUTE_ADVANCE_M, then pivots
- * left on its stopped left wheel until a line IR sees black again, and the line follower takes over. Done here because this task owns the motion
- * session: the Vehicle Controller rejects any other command until the session has ended. ---- */
-#define ROUTE_LETTER_LEFT     'Z'
-#define ROUTE_ADVANCE_M       0.15  /* The car drives this far past the junction trigger (the barcode sensor seeing the
-                                     * black), coasting included, before turning. Line IRs are 15 cm ahead of the axle
-                                     * and the barcode sensor 3 cm ahead of them. 0 = turn where it was seen. */
-#define ROUTE_PIVOT_MIN       (45.0 * DEG_TO_RAD)  /* Black only counts once the pivot has turned this far ... */
-#define ROUTE_PIVOT_MAX       (150.0 * DEG_TO_RAD) /* ... and the old line comes back near 220 deg: give up here. */
-#define ROUTE_PIVOT_TIMEOUT   8.0   /* s backstop for the pivot (a stalled wheel). */
-#define ROUTE_STILL_SPEED     0.005 /* m/s per wheel counted as stopped. */
-#define ROUTE_BRAKE_TIMEOUT   1.5   /* s of zero-speed refreshes before giving up. */
-#define ROUTE_RELEASE_TIMEOUT 1.5   /* s for the session to expire after the refreshes stop. */
-#define ROUTE_MOVE_TIMEOUT    8.0   /* s for the advance or the turn. */
-#define ROUTE_ID_FIRST        3100U /* Own id range (not LINE_SESSION 3001, not detour 5100+); the id wraps every 50 moves. */
-#define ROUTE_ID_COUNT        100U
-
-static double route_abs(double x) { return (x < 0.0) ? -x : x; }
-
-/* Zero-speed refreshes keep the session (no expiry) until both wheels are nearly still. */
-static bool route_brake(void)
-{
-    double start = motion_hal_time();
-    static robot_status_t status; /* Static: the line task stack is nearly full. */
-    while (motion_hal_time() - start < ROUTE_BRAKE_TIMEOUT) {
-        (void)motion_steer(SOURCE_LINE, LINE_SESSION, 0.0, 0.0);
-        (void)tk_dly_tsk(20U);
-        if (!motion_get_status(&status) || status.motion.hold || status.motion.fault != F_NONE) { return false; }
-        if (route_abs(status.motion.speed[0]) < ROUTE_STILL_SPEED &&
-            route_abs(status.motion.speed[1]) < ROUTE_STILL_SPEED) { return true; }
-    }
-    return false;
-}
-
-/* Stop refreshing: the tracking command expires (0.3 s), Motion Control settles to READY and the
- * Vehicle Controller drops the owner. A hold (an obstacle stop) or a fault is a failure. */
-static bool route_release(void)
-{
-    double start = motion_hal_time();
-    static robot_status_t status; /* Static: the line task stack is nearly full. */
-    while (motion_hal_time() - start < ROUTE_RELEASE_TIMEOUT) {
-        (void)tk_dly_tsk(20U);
-        if (!motion_get_status(&status) || status.motion.hold || status.motion.fault != F_NONE) { return false; }
-        if (status.motion.state == READY && !status.owner_valid) { return true; }
-    }
-    return false;
-}
-
-/* Waits for the finite move 'id'; true only if it completed without a fault. */
-static bool route_wait(uint32_t id)
-{
-    double start = motion_hal_time();
-    static robot_status_t status; /* Static: the line task stack is nearly full. */
-    while (motion_hal_time() - start < ROUTE_MOVE_TIMEOUT) {
-        (void)tk_dly_tsk(20U);
-        if (!motion_get_status(&status) || status.motion.hold || status.motion.fault != F_NONE) { return false; }
-        if (status.last_event.id == id) {
-            return status.last_event.type == EV_COMPLETE && status.last_event.fault == F_NONE;
-        }
-    }
-    return false;
-}
-
-static bool route_advance(uint32_t id, double metres)
-{
-    motion_result_t r = R_BUSY;
-    for (unsigned tries = 0U; tries < 10U && r == R_BUSY; ++tries) {
-        r = motion_steer_distance(SOURCE_LINE, id, metres, 0.0, LINE_SPEED);
-        if (r == R_BUSY) { (void)tk_dly_tsk(20U); }
-    }
-    if (r == R_OK && route_wait(id)) { return true; }
-    motion_stop(); /* A finite move cannot be stopped by zero-speed refreshes: latch a hold (operator releases). */
-    return false;
-}
-
-/* Line status with values[3] = 1 while the route pivots: subsystem 5 then skips its 150 mm stop.
- * line_publish() writes 0 on every pass of the line loop, so the flag clears itself once following resumes. */
-static void route_flag(bool pivoting, bool black)
-{
-    subsystem_status_t line_status = {.available = true, .timestamp = motion_hal_time(),
-        .values = {0.0, black ? 1.0 : 0.0, 0.0, pivoting ? 1.0 : 0.0}};
-    (void)robot_update_subsystem(SOURCE_LINE, &line_status);
-}
-
-/* Pivots left on the stopped left wheel (the line search's own pivot, on the line session 3001) until a line
- * IR sees black, having first left the old line and turned at least ROUTE_PIVOT_MIN. Returns at once on the
- * black, without braking, so the line loop takes over the same session immediately. */
-static bool route_pivot(void)
-{
-    static robot_status_t status;
-    double heading0, turned = 0.0, start = motion_hal_time();
-    bool left_line = false;
-    unsigned seen = 0U, rejected = 0U;
-    if (!motion_get_status(&status)) { return false; }
-    heading0 = status.motion.heading;
-    while (motion_hal_time() - start < ROUTE_PIVOT_TIMEOUT) {
-        unsigned right = (unsigned)gpio_get(BOARD_LINE_R);
-        unsigned centre = (unsigned)gpio_get(BOARD_LINE_C);
-        bool black = right == 1U || centre == 1U;
-        route_flag(true, black);
-        if (!motion_get_status(&status) || status.motion.hold || status.motion.fault != F_NONE) { break; }
-        turned = status.motion.heading - heading0;
-        if (!black) { left_line = true; }
-        seen = (left_line && black && turned >= ROUTE_PIVOT_MIN) ? seen + 1U : 0U;
-        if (seen >= 2U) { /* Two samples in a row, as the follower's own debounce: one glitch is not the line. */
-            tm_printf((const UB *)"route: line found after pivoting %d deg (centre_ir=%u right_ir=%u)\n",
-                      (int)(turned / DEG_TO_RAD), centre, right);
-            return true;
-        }
-        if (turned >= ROUTE_PIVOT_MAX) { break; }
-        /* Not accepted for 0.5 s (held, or still settling after the advance): give up rather than wait 8 s. */
-        rejected = (line_pivot(1.0) == R_OK) ? 0U : rejected + 1U;
-        if (rejected >= 25U) { break; }
-        (void)tk_dly_tsk(20U);
-    }
-    route_flag(false, false);
-    tm_printf((const UB *)"route: no line found while pivoting (turned %d deg)\n", (int)(turned / DEG_TO_RAD));
-    return false;
-}
-
-/* The whole maneuver. Returns true when following can resume; *pivoted says the car turned left. */
-static bool route_junction(char letter, double path_seen, bool *pivoted)
-{
-    static unsigned moves;
-    static robot_status_t status; /* Static: the line task stack is nearly full. */
-    double advance;
-    uint32_t id = ROUTE_ID_FIRST + 2U * (moves % (ROUTE_ID_COUNT / 2U));
-    ++moves;
-    tm_printf((const UB *)"route: junction after %c, path %d mm\n", letter, (int)(path_seen * 1000.0));
-    if (letter != ROUTE_LETTER_LEFT) {
-        tm_printf((const UB *)"route: no action for this letter, following on\n");
-        *pivoted = false;
-        return true; /* Nothing was interrupted. */
-    }
-    if (!route_brake()) { tm_printf((const UB *)"route: FAILED while braking\n"); return false; }
-    if (!route_release()) { tm_printf((const UB *)"route: FAILED waiting for the session to end\n"); return false; }
-    if (!motion_get_status(&status)) { return false; }
-    /* Distance still to drive past the trigger, minus what the car coasted. With ROUTE_ADVANCE_M = 0 the car
-     * turns where it stopped (never reverses); the line follower takes over once the IRs see the black. */
-    advance = (ROUTE_ADVANCE_M > 0.0) ? ROUTE_ADVANCE_M - (status.motion.path - path_seen) : 0.0;
-    tm_printf((const UB *)"route: stopped, coasted %d mm, advancing %d mm\n",
-              (int)((status.motion.path - path_seen) * 1000.0), (int)(advance * 1000.0));
-    if (route_abs(advance) > 0.005) {
-        double before = status.motion.path;
-        if (!route_advance(id, advance) || !motion_get_status(&status) ||
-            (status.motion.path - before) < 0.8 * route_abs(advance)) { /* Faults off: complete can mean missed. */
-            tm_printf((const UB *)"route: FAILED during the advance\n");
-            motion_stop();
-            return false;
-        }
-    }
-    if (!route_pivot()) { tm_printf((const UB *)"route: FAILED during the pivot\n"); return false; }
-    *pivoted = true;
-    return true;
-}
+/* ---- Junction: the barcode task reports the first black after a valid read (barcode.c,
+ * SOURCE_BARCODE values[2] counts them). The line task only logs it and keeps following; the route
+ * action for each letter is not implemented yet. ---- */
 
 #if defined(ROBO_SUBSYSTEM4) && ROBO_SUBSYSTEM4
 /* Buddy 4 captures its tilt reference while the robot is still, about 2 s after
@@ -431,6 +339,11 @@ static void line_loop(void)
     line_direction_t follow = LINE_STRAIGHT;    /* Last follow command, repeated during the grace time. */
     double lost_since = 0.0;
     double next_report = 0.0;
+#if defined(ROBO_BARCODE_TASK) && ROBO_BARCODE_TASK
+    double bc_hold_from = -1.0;                       /* Path (m) where the barcode pass began, see LINE_BC_*. */
+    double bc_lost_from = -1.0;                       /* Path (m) where the line was lost during that pass. */
+    double bc_heading_from = 0.0;                     /* Heading (rad) at the start of that pass. */
+#endif
 #ifdef ROBO_LINE_RUN_LIMIT_S
     double run_start = -1.0; /* First follow command; the car is held still ROBO_LINE_RUN_LIMIT_S later. */
     bool run_done = false;
@@ -490,37 +403,8 @@ static void line_loop(void)
                 continue;
             } else if (junctions != seen_junctions) {
                 seen_junctions = junctions;
-                if (search.phase != SEARCH_IDLE) {
-                    /* A spin or sweep carries the barcode sensor in an arc, possibly back over the code. */
-                    tm_printf((const UB *)"route: junction seen while searching for the line, ignored\n");
-                } else if (owns && !status.motion.hold && status.motion.fault == F_NONE &&
-                    status.obstacle.values[3] != LINE_OBSTACLE_AVOIDING) {
-                    bool pivoted = false;
-                    if (!route_junction((char)(unsigned)status.barcode.values[0], status.motion.path, &pivoted)) {
-                        route_flag(false, false);
-                        tm_printf((const UB *)"route: holding still after the failure\n");
-                        for (;;) { /* As SEARCH_HOLD: zero-speed refreshes, no latched hold. */
-                            route_flag(false, false); /* Every pass: a lost clear must not keep subsystem 5 off. */
-                            (void)motion_steer(SOURCE_LINE, LINE_SESSION, 0.0, 0.0);
-                            (void)tk_dly_tsk(20U);
-                        }
-                    }
-                    /* The maneuver took the loop away: forget everything it was tracking. */
-                    filter = (line_steering_t){0};
-                    search = (line_search_t){0};
-                    /* After a left pivot an overshoot leaves the line to the right: grace and search go right. */
-                    last_side = pivoted ? LINE_RIGHT : LINE_STRAIGHT;
-                    follow = pivoted ? LINE_RIGHT : LINE_STRAIGHT;
-                    lost_since = motion_hal_time();
-#ifdef ROBO_LINE_LOSS_TEST
-                    on_line_since = -1.0;
-                    search_began = -1.0;
-#endif
-                    (void)tk_dly_tsk(20U);
-                    continue;
-                } else {
-                    tm_printf((const UB *)"route: junction seen but not driving the line, ignored\n");
-                }
+                tm_printf((const UB *)"route: junction after %c, path %d mm (no action, following on)\n",
+                          (char)(unsigned)status.barcode.values[0], (int)(status.motion.path * 1000.0));
             }
             /* Subsystem 5 drives round obstacles itself; keep off the wheels until it
              * publishes that it is back on the line. Exact compare: the value is copied. */
@@ -528,6 +412,27 @@ static void line_loop(void)
             bool usable = !status.motion.hold && status.motion.fault == F_NONE && !avoiding;
             line_direction_t drive = direction;
             bool grace_ok = true;
+            bool bc_hold = false;
+            double correction = LINE_CORRECTION;
+#if defined(ROBO_BARCODE_TASK) && ROBO_BARCODE_TASK
+            if (barcode_code_pass()) {
+                if (bc_hold_from < 0.0) {
+                    bc_hold_from = status.motion.path;
+                    bc_heading_from = status.motion.heading;
+                }
+            } else {
+                bc_hold_from = -1.0; /* Pass over, or tape / big code seen: steer normally at once. */
+            }
+            bc_hold = bc_hold_from >= 0.0 &&
+                      (status.motion.path - bc_hold_from) < LINE_BC_HOLD_MAX && search.phase == SEARCH_IDLE &&
+                      status.motion.heading - bc_heading_from < LINE_BC_MAX_TURN &&
+                      bc_heading_from - status.motion.heading < LINE_BC_MAX_TURN;
+            if (bc_hold) { correction = LINE_BC_CORRECTION; }
+            if (direction != LINE_LOST) { bc_lost_from = -1.0; }
+            else if (bc_hold && bc_lost_from < 0.0) { bc_lost_from = status.motion.path; }
+            bc_hold = bc_hold && direction == LINE_LOST &&
+                      (status.motion.path - bc_lost_from) < LINE_BC_HOLD_LOST;
+#endif
 #ifdef ROBO_LINE_LOSS_TEST
             /* A glimpse of tape during a search is not "found": keep the 360 deg budget and the
              * search clock, and stand still until the tape has stayed in view for
@@ -546,7 +451,7 @@ static void line_loop(void)
                 search.backed = false;
                 lstate = LS_FOLLOWING;
             }
-            else if (direction == LINE_LOST && grace_ok && owns && (now - lost_since) < LINE_GRACE_TIME) {
+            else if (direction == LINE_LOST && grace_ok && !bc_hold && owns && (now - lost_since) < LINE_GRACE_TIME) {
                 drive = follow; /* Bridge short dropouts. */
                 lstate = LS_LOST;
             }
@@ -575,7 +480,14 @@ static void line_loop(void)
                 lstate = LS_SEARCHING;
             } else
 #endif
-            if (drive == LINE_LOST && owns && usable && status.motion.state == DRIVING) {
+            if (bc_hold && drive == LINE_LOST && owns && usable && status.motion.state == DRIVING) {
+                double turn = LINE_BC_HOLD_GAIN * (search.seen_heading - status.motion.heading);
+                if (turn > LINE_BC_HOLD_RATE) { turn = LINE_BC_HOLD_RATE; }
+                if (turn < -LINE_BC_HOLD_RATE) { turn = -LINE_BC_HOLD_RATE; }
+                result = motion_steer(SOURCE_LINE, LINE_SESSION, LINE_SPEED, turn);
+                lost_since = now; /* Grace and search start afresh if the line is still gone after the hold. */
+                lstate = LS_LOST;
+            } else if (drive == LINE_LOST && owns && usable && status.motion.state == DRIVING) {
                 double lost_for = now - lost_since;
 #ifdef ROBO_LINE_LOSS_TEST
                 if (search.phase == SEARCH_IDLE) { search_began = lost_since; }
@@ -587,7 +499,7 @@ static void line_loop(void)
             } else if (drive != LINE_WAIT && drive != LINE_LOST && usable &&
                        (status.motion.state == READY || (status.motion.state == DRIVING && owns))) {
                 follow = drive;
-                result = line_follow(drive);
+                result = line_follow(drive, correction);
 #ifdef ROBO_LINE_RUN_LIMIT_S
                 if (run_start < 0.0) { run_start = now; }
 #endif
