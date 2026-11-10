@@ -12,7 +12,7 @@
 
 #define SHUTTLE_TRIPS       20U    /* Forward-and-back round trips. */
 #define SHUTTLE_DISTANCE_M  0.40   /* One way: the 26 cm code plus a few cm of floor each side. */
-#define SHUTTLE_SPEED       0.10   /* m/s, the line following speed. */
+#define SHUTTLE_SPEED       0.05   /* m/s, the line following speed (LINE_SPEED). */
 #define SHUTTLE_PAUSE_MS    1500U  /* Standing still after each leg: ends the reader's pass. */
 #define SHUTTLE_LEG_TIMEOUT 15.0   /* s. */
 #define SHUTTLE_IDLE_S      2.0    /* Abort if the car has not moved 5 mm this long after the command. */
@@ -65,11 +65,12 @@ void shuttle_task(INT code, void *context)
             if (!shuttle_leg(++id, back ? -SHUTTLE_DISTANCE_M : SHUTTLE_DISTANCE_M)) {
                 motion_stop();
                 tm_printf((const UB *)"shuttle: leg failed, car stopped\n");
-                return;
+                for (;;) { (void)tk_dly_tsk(1000U); } /* A task must never return (pc=0 hard fault). */
             }
             (void)tk_dly_tsk(SHUTTLE_PAUSE_MS);
         }
     }
     tm_printf((const UB *)"shuttle: done\n");
+    for (;;) { (void)tk_dly_tsk(1000U); } /* A task must never return (pc=0 hard fault). */
 }
 #endif

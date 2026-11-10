@@ -1,6 +1,7 @@
 #ifndef ROBO_SUBSYSTEMS_H
 #define ROBO_SUBSYSTEMS_H
 #include "robot_rtos.h"
+#include <stdbool.h>
 
 /* Subsystem 3 tasks exist only in images where they do something; elsewhere
  * usermain does not create them, so they cost no stack. */
@@ -34,6 +35,7 @@ void line_forward_pause(void); /* Serial stop blocks restart until sensor condit
 #endif
 #if ROBO_BARCODE_TASK
 void barcode_task(INT code, void *context);
+bool barcode_code_pass(void); /* A barcode pass is being captured (barcode.c). */
 #endif
 #if ROBO_SHUTTLE_TASK
 void shuttle_task(INT code, void *context);
