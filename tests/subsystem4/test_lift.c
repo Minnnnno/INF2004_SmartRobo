@@ -81,24 +81,38 @@ int main(void)
     for (unsigned i = 0U; i < 11U; i++) { (void)rolled(90.0, 1000.0); }
     check(LIFT_OVERTURNED == lift_state(&g_lift), "on its side is OVERTURNED");
 
-    /* 45 deg: LIFTED (by one end), not overturned; 25 deg (beyond any hump): nothing. */
+    /* Tilting to one side is never a lift (35 deg rule removed): 45 deg held
+     * 2 s stops nothing, but pauses hump measurement. */
     start(1000);
-    for (unsigned i = 0U; i < 11U; i++) { (void)rolled(45.0, 1000.0); }
-    check(LIFT_LIFTED == lift_state(&g_lift), "45 deg held 200 ms: LIFTED");
+    for (unsigned i = 0U; i < 100U; i++) { check(LIFT_NONE == rolled(45.0, 1000.0), "45 deg held 2 s: NONE"); }
+    check(lift_suspect(&g_lift), "45 deg pauses hump measurement");
+
+    /* Overturn boundary: 59 deg never, 61 deg after 200 ms. */
+    start(1000);
+    for (unsigned i = 0U; i < 100U; i++) { check(LIFT_NONE == rolled(59.0, 1000.0), "59 deg held 2 s: NONE"); }
+    start(1000);
+    {
+        unsigned n = 0U;
+        while ((n < 50U) && (LIFT_NONE == rolled(61.0, 1000.0))) { n++; }
+        check(10U == n && LIFT_OVERTURNED == lift_state(&g_lift), "61 deg: OVERTURNED after 200 ms");
+    }
     start(1000);
     for (unsigned i = 0U; i < 200U; i++) { check(LIFT_NONE == rolled(25.0, 1000.0), "25 deg stays NONE"); }
     check(!lift_suspect(&g_lift), "25 deg is not suspect (hump measurement continues)");
 
-    /* A 45 deg tilt shorter than 200 ms does not latch, but is suspect meanwhile. */
+    /* The hump pause lasts ~0.5 s after the robot is level again (tilt filter settles). */
     start(1000);
     for (unsigned i = 0U; i < 9U; i++) { check(LIFT_NONE == rolled(45.0, 1000.0), "short tilt"); }
-    check(lift_suspect(&g_lift), "steep tilt suspends hump measurement while timed");
-    for (unsigned i = 0U; i < 50U; i++) { check(LIFT_NONE == rolled(0.0, 1000.0), "short tilt never latches"); }
-    check(!lift_suspect(&g_lift), "level again: not suspect");
+    check(lift_suspect(&g_lift), "steep tilt suspends hump measurement");
+    for (unsigned i = 0U; i < 24U; i++)
+    {
+        check(LIFT_NONE == rolled(0.0, 1000.0) && lift_suspect(&g_lift), "pause held while the filter settles");
+    }
+    check(LIFT_NONE == rolled(0.0, 1000.0) && !lift_suspect(&g_lift), "pause ends 25 samples after level");
 
-    /* Turning more than 60 deg from 45 deg: LIFTED upgrades to OVERTURNED. */
+    /* Picked up, then tipped past 60 deg: LIFTED upgrades to OVERTURNED. */
     start(1000);
-    for (unsigned i = 0U; i < 11U; i++) { (void)rolled(45.0, 1000.0); }
+    for (unsigned i = 0U; i < 4U; i++) { (void)sample(0, 0, -1300); }
     check(LIFT_LIFTED == lift_state(&g_lift), "lifted first");
     for (unsigned i = 0U; i < 11U; i++) { (void)rolled(120.0, 1000.0); }
     check(LIFT_OVERTURNED == lift_state(&g_lift), "then tipped over: OVERTURNED");

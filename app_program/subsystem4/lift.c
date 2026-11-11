@@ -5,10 +5,9 @@
 
 #define LIFT_STATE_MASK  (0x03U)
 #define LIFT_F_OVER      (0x04U)
-#define LIFT_F_TILT      (0x08U)
 #define LIFT_F_CLEAR     (0x10U)
 #define LIFT_F_SEEN      (0x20U)
-#define LIFT_F_TIMERS    (LIFT_F_OVER | LIFT_F_TILT | LIFT_F_CLEAR)
+#define LIFT_F_TIMERS    (LIFT_F_OVER | LIFT_F_CLEAR)
 
 void lift_reset(lift_t *p_lift)
 {
@@ -88,6 +87,16 @@ uint8_t lift_step(lift_t *p_lift, tilt_context_t const *p_tilt,
         if (upright < -1.0F) { upright = -1.0F; }
     }
     p_lift->upright_pct = (int8_t)lroundf(upright * 100.0F);
+    /* Steep tilt only pauses hump measurement (until the tilt filter has
+     * settled after it); it never latches a stop. */
+    if (oriented && (p_lift->upright_pct < LIFT_SUSPECT_UPRIGHT_PCT))
+    {
+        p_lift->steep_hold = (uint8_t)LIFT_SUSPECT_SAMPLES;
+    }
+    else if (p_lift->steep_hold > 0U)
+    {
+        p_lift->steep_hold--;
+    }
     p_lift->vertical_mg = lift_clamp16(up_mg - p_tilt->gravity);
     if (p_lift->vertical_mg >= LIFT_VERTICAL_MG)
     {
@@ -110,14 +119,11 @@ uint8_t lift_step(lift_t *p_lift, tilt_context_t const *p_tilt,
         bool over = lift_timer(p_lift, LIFT_F_OVER, &p_lift->over_since,
                                oriented && (p_lift->upright_pct < LIFT_OVERTURN_UPRIGHT_PCT),
                                now_ms, LIFT_HOLD_MS);
-        bool tilted = lift_timer(p_lift, LIFT_F_TILT, &p_lift->tilt_since,
-                                 oriented && (p_lift->upright_pct < LIFT_TILT_UPRIGHT_PCT),
-                                 now_ms, LIFT_HOLD_MS);
         bool raised = (p_lift->vertical_count >= LIFT_VERTICAL_SAMPLES);
 
         if (LIFT_NONE == condition)
         {
-            if (over || tilted || raised)
+            if (over || raised)
             {
                 condition = over ? LIFT_OVERTURNED : LIFT_LIFTED;
                 p_lift->trigger_mg = p_lift->vertical_mg;
@@ -156,7 +162,7 @@ bool lift_suspect(lift_t const *p_lift)
 {
     return (NULL != p_lift) &&
            ((LIFT_NONE != (p_lift->flags & LIFT_STATE_MASK)) ||
-            (0U != (p_lift->flags & (LIFT_F_OVER | LIFT_F_TILT))));
+            (0U != (p_lift->flags & LIFT_F_OVER)) || (0U != p_lift->steep_hold));
 }
 
 int16_t lift_vertical_mg(lift_t const *p_lift)

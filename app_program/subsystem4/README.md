@@ -170,17 +170,22 @@ level, 0 % on its side, negative upside down.
 | Condition | Rule (thresholds are `#define`s in `lift.h`) | Reported as |
 |---|---|---|
 | OVERTURNED | upright < 50 % (more than 60 deg from upright, on its side or upside down) for 200 ms | motion class 7 OVERTURNED |
-| LIFTED (tilted) | upright < 82 % (more than ~35 deg; lifted by one end) for 200 ms | T_STATE 7 LIFTED |
-| LIFTED (raised) | upward acceleration >= +200 mg above gravity on 4 consecutive samples (~80 ms) | T_STATE 7 LIFTED |
+| LIFTED | upward acceleration >= +200 mg above gravity on 4 consecutive samples (~80 ms) | T_STATE 7 LIFTED |
 
-Margins: one-wheel humps tilt the robot about 20 deg at most (asin(40/115)),
-and hump landings or knocks are shorter than 80 ms. A lifted robot that then
+Tilting to one side is **not** a lift: below 60 deg from upright the robot
+keeps driving (the earlier "tilted > 35 deg = LIFTED" rule was removed, since
+the clarified brief only asks that lifting at the end of the demo stops the
+motors). Margins: one-wheel humps tilt the robot about 20 deg at most
+(asin(40/115)), and hump landings or knocks are shorter than 80 ms. A lifted robot that then
 tips past 60 deg becomes OVERTURNED. Detection is armed 100 ms after entering
 MONITORING (`B4_LIFT_SETTLE_MS`), so the hand placing the robot during capture
 is ignored. Samples below 300 mg (near free fall) have no direction and never
-count as overturned. While a steep tilt is being timed or the latch is set,
-hump measurement is suspended, so lifting the robot by one end does not record
-a fake hump (a hump rising before the 35 deg is reached may still show).
+count as overturned. Hump measurement is paused while the latch is set, while
+the overturned pose is being timed, and while the robot is tilted more than
+~35 deg (`LIFT_SUSPECT_UPRIGHT_PCT`) plus 0.5 s after (`LIFT_SUSPECT_SAMPLES`,
+while the tilt filter settles), so lifting the robot by one end does not record
+a fake hump. This tilt check only pauses hump measurement; it never stops the
+robot. A hump rising before 35 deg is reached may still show.
 
 **Action.** On a new latch, `terrain_task` calls `motion_stop()` once
 (controlled STOP: Buddy 2 brakes and holds; the Vehicle Controller rejects all
@@ -197,10 +202,12 @@ trusted encoders). No reboot is needed (the level reference is kept).
 
 **Limits.** Lift detection runs only in MONITORING: during sensor RECOVERY or
 after SENSOR_FAULT it is unavailable and any latch is cleared (sensor faults
-still never stop the motors). The GY-511 has no gyroscope, so a perfectly
-level lift with very gentle acceleration (under +200 mg) is only caught once
-the robot tilts past 35 deg. **Tune the thresholds** with hand lifts, overturns
-and hump runs (S4-H01..S4-H05): humps must never stop the robot.
+still never stop the motors). The GY-511 has no gyroscope, so a lift is only
+seen as an upward push: a slow or careful lift (under +200 mg), or lifting by
+one end without that push, is caught only once the robot passes 60 deg
+(OVERTURNED). **In the demonstration, lift the robot briskly.** Tune the
+thresholds with hand lifts, overturns and hump runs (S4-H01..S4-H06): humps
+and tilts to one side must never stop the robot.
 
 The old INT1 inertial interrupt registers (CTRL_REG2_A, CTRL_REG5_A,
 INT1_CFG_A) are written back to their reset value 0x00 at every configuration,

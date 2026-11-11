@@ -291,6 +291,39 @@ static void lift_script(uint32_t t)
     }
 }
 
+/* Tilt to one side while driving (S4-H06): 45 deg for 2 s is neither a lift
+ * nor an overturn, stops nothing and records no hump. */
+static unsigned g_tstep;
+static void tilt_script(uint32_t t)
+{
+    if ((0U == g_tstep) && (t >= 4000U))
+    {
+        g_motion = MOTION_DRIVING; g_speed[0] = 0.100; g_speed[1] = 0.100;
+        g_tstep = 1U;
+    }
+    else if ((1U == g_tstep) && (t >= 5000U))
+    {
+        g_xyz[0] = -707; g_xyz[1] = 0; g_xyz[2] = -707; /* 45 deg to one side */
+        g_tstep = 2U;
+    }
+    else if ((2U == g_tstep) && (t >= 7000U))
+    {
+        check(0U == g_stops && !g_hold, "45 deg tilt for 2 s: no motion_stop()");
+        check(S4_TS_LIFTED != code_of(), "45 deg tilt is not T_STATE LIFTED");
+        check(TERRAIN_MC_OVERTURNED != class_of(), "45 deg tilt is not OVERTURNED");
+        level();
+        g_tstep = 3U;
+    }
+    else if ((3U == g_tstep) && (t >= 9000U))
+    {
+        check(0U == g_stops, "still no stop after setting it level");
+        check(0U == g_events, "no hump event from the tilt");
+        check(0U == (valid_of() & TF_TV_HUMP), "no hump height recorded from the tilt");
+        check(S4_TS_WAITING == code_of() && TERRAIN_MC_MOVING == class_of(), "back to WAITING and MOVING");
+        g_tstep = 4U;
+    }
+}
+
 /* Compass n/a reason: turn 1 has a good compass; then, driving straight, the
  * field goes bad for a while ("field") and recovers; during turn 2 the
  * magnetometer reads out of range ("no data"). Turn 2 must say "no data":
@@ -333,6 +366,12 @@ int main(void)
     run(MOTION_STILL, 7000U, lift_script);
     check(7U == g_lstep, "all lift checkpoints reached");
     check(3U == g_stops, "exactly three stops (overturn, release in the air, lift)");
+
+    /* Tilting to one side never stops the robot (35 deg rule removed). */
+    g_tstep = 0U;
+    run(MOTION_STILL, 9100U, tilt_script);
+    check(4U == g_tstep, "all tilt checkpoints reached");
+    check(0U == g_stops, "no stop during the whole tilt run");
     check(1U == g_turn_lines, "one [TURN] line printed when the pivot ends");
 
     /* n/a reason comes from the turn itself, not a stale earlier reason. */

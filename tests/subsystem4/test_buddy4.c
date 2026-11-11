@@ -266,11 +266,12 @@ int main(void)
         for (unsigned i=0;i<20;i++) { tick(&c,20U,0U); }
         check(buddy4_lift(&c)==LIFT_NONE,"60 ms bump is not a lift");
 
-        /* Lifted by one end, 45 deg sideways: LIFTED, and no fake hump recorded. */
+        /* Tilted 45 deg sideways (e.g. lifted by one end): no stop (the 35 deg
+         * rule was removed), and no fake hump recorded. */
         ready(&c);
         xyz[0]=-707; xyz[1]=0; xyz[2]=-707;
         for (unsigned i=0;i<30;i++) { tick(&c,20U,0U); }
-        check(buddy4_lift(&c)==LIFT_LIFTED,"45 deg tilt held: LIFTED (not overturned)");
+        check(buddy4_lift(&c)==LIFT_NONE,"45 deg tilt held: not a lift");
         check(terrain_run_max(&c.terrain)==0U,"steep tilt suspended hump measurement");
         xyz[0]=0; xyz[2]=-1000;
         for (unsigned i=0;i<40;i++) { tick(&c,20U,0U); }
