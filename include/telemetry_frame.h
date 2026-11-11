@@ -60,7 +60,7 @@
 	X(BC_VALID,    0,     1,      1,  B3, "barcode instruction valid") \
 	X(BC_CMD,      0,     3,      2,  B3, "tf_barcode_t: left, right, straight, U-turn") \
 	X(T_VALID,     0,     7,      3,  B4, "bit0 heading, bit1 pitch, bit2 hump height valid") \
-	X(T_STATE,     0,     6,      3,  B4, "terrain state (7 states, B4 statechart)") \
+	X(T_STATE,     0,     7,      3,  B4, "terrain state (8 states, B4 statechart; 7 = LIFTED)") \
 	X(PITCH,       -90,   90,     8,  B4, "pitch, degrees, + nose up") \
 	X(T_HEADING,   0,     359,    9,  B4, "magnetic heading, degrees") \
 	X(HUMP_MM,     0,     255,    8,  B4, "peak hump height, mm") \

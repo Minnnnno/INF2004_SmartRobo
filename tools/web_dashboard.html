@@ -272,11 +272,13 @@ function render(s) {
 
     // Terrain
     const ts = M.t_states[f.T_STATE];
-    set("t-state", ts, ts === "FAULT" ? "bad" : "");
+    set("t-state", ts === "LIFTED" ? "LIFTED (motors stopped)" : ts,
+        ts === "FAULT" ? "bad" : ts === "LIFTED" ? "warn" : "");
     set("t-pitch", f.T_VALID & 2 ? sign(f.PITCH) + "° (+ nose up)" : "not valid");
     set("t-hump", f.T_VALID & 4 ? f.HUMP_MM + " mm" : "none yet");
     if ("M_CLASS" in f) {
-      set("t-class", f.T_VALID & 1 ? M.m_classes[f.M_CLASS] : "not valid");
+      const mc = f.T_VALID & 1 ? M.m_classes[f.M_CLASS] : "not valid";
+      set("t-class", mc === "OVERTURNED" ? "OVERTURNED (motors stopped)" : mc, mc === "OVERTURNED" ? "warn" : "");
       set("t-turn", f.T_VALID & 1 ? sign(f.TURN_RATE) + " °/s (+ left)" : "not valid");
     } else {
       set("t-class", "needs frame layout v2", "off");
@@ -360,6 +362,8 @@ function renderChecks(s, live, encLive) {
     else add("ok", "No motion fault", "");
     if (f.M_FLAGS & 8) add("warn", "Movement is held", "The robot will not drive until START (or the checked release).");
     if (!f.LINE_AVAIL) add("warn", "Line sensor not publishing", "Line task is off in this firmware profile, or it has stalled.");
+    if (M.t_states[f.T_STATE] === "LIFTED") add("warn", "Robot lifted (Buddy 4)", "Buddy 4 stopped the motors. Set the robot down level and still for 0.5 s, then START resumes it.");
+    if ("M_CLASS" in f && (f.T_VALID & 1) && M.m_classes[f.M_CLASS] === "OVERTURNED") add("warn", "Robot overturned (Buddy 4)", "Buddy 4 stopped the motors. Set the robot upright, level and still for 0.5 s, then START resumes it.");
     if (M.t_states[f.T_STATE] === "FAULT") add("bad", "IMU fault (Buddy 4)", "Check the GY-511 on I2C1 (GP6 SDA, GP7 SCL) and its power.");
     else if (!(f.T_VALID & 2)) add("warn", "No valid pitch from the IMU", "Buddy 4 is still starting, or the GY-511 is not answering.");
     if (!f.O_AVAIL) add("bad", "Ultrasonic sensor not OK (Buddy 5)", "Check the sensor on GP16/GP17 and its 5 V supply.");

@@ -11,7 +11,7 @@ Define a test here before running it. Test IDs never change.
 | ID | What is tested | Requirement / interface | Method | Steps / how | Expected result |
 |---|---|---|---|---|---|
 | INT-01 | samples flow from S2 to S3 (≥ 5 in 2 s) | IF-01, IF-02 | auto | `subsystem3_test.c` | `[TEST] INT-01 PASS` |
-| INT-02 | summary lines flow from S3 to S4 (≥ 2 in 3.5 s) | IF-03 | auto | `subsystem4_test.c` | `[TEST] INT-02 PASS` |
+| INT-02 | **Dropped 2026-11-11** (ID not reused): summary lines flow from S3 to S4 (≥ 2 in 3.5 s) | IF-03 | auto | `subsystem4_test.c` (template demo test, deleted) | n/a |
 
 *Method:* **auto** = `TEST_CHECK` in code, result printed on the console;
 **manual** = a person observes the result (LED, scope, meter, phone app…).

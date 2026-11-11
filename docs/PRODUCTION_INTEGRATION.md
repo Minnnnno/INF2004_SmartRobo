@@ -68,6 +68,11 @@ release after its checks. Do not repeatedly reset/release from the sensor task.
 Expired continuous requests also stop and hold motion. Never write motor GPIO
 or PWM directly and never use calibration actuators in the sensor task.
 
+Buddy 4 (IMU) calls `motion_stop()` when the robot is lifted or overturned
+(lifting the robot ends the run in the demonstration), and again if the robot
+is released while still lifted. Other tasks therefore see a hold they did not
+request: treat it like any other hold and wait for START.
+
 ## Prompt for your teammate's Codex
 
 ```text

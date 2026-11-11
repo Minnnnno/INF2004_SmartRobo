@@ -4,7 +4,6 @@
 #include <stddef.h>
 
 #define MC_FLAG_VALID   (0x01U)
-#define MC_FLAG_HOLD    (0x02U)
 #define MC_FLAG_SEEDED  (0x04U)
 #define MC_FLAG_TURN    (0x08U)
 #define MC_FLAG_TURN_DONE (0x10U)
@@ -144,7 +143,7 @@ static void mc_record_compass(motion_class_t *p_context, motion_class_input_t co
 }
 
 /* Track one turn from the heading condition itself, independent of which
- * class is shown on top, so a knock or a hump during a turn does not split it.
+ * class is shown on top, so a hump during a turn does not split it.
  * Start and end use the same 3-cycle debounce as the class. The start is
  * backdated to the window start; the result is latched when the turn ends. */
 static void mc_track_turn(motion_class_t *p_context, motion_class_input_t const *p_input,
@@ -216,10 +215,9 @@ static void mc_track_turn(motion_class_t *p_context, motion_class_input_t const 
 static uint8_t mc_raw_class(motion_class_t const *p_context, motion_class_input_t const *p_input,
                             int16_t centre_mm_s, bool window_full, int32_t net_ddeg)
 {
-
-    if (0U != (p_context->flags & MC_FLAG_HOLD))
+    if (p_input->overturned)
     {
-        return MC_IMPACT;
+        return MC_OVERTURNED;
     }
     if (TERRAIN_CLIMBING == p_input->terrain_phase)
     {
@@ -306,17 +304,6 @@ void motion_class_step(motion_class_t *p_context, motion_class_input_t const *p_
     window_full = mc_heading_window(p_context, p_input, now_ms, &net_ddeg, &oldest_ddeg);
     p_context->last_ms = now_ms;
 
-    if (p_input->impact)
-    {
-        p_context->impact_since = now_ms;
-        p_context->flags |= MC_FLAG_HOLD;
-    }
-    else if ((0U != (p_context->flags & MC_FLAG_HOLD)) &&
-             ((now_ms - p_context->impact_since) >= MC_IMPACT_HOLD_MS))
-    {
-        p_context->flags &= (uint8_t)~MC_FLAG_HOLD;
-    }
-
     reported = p_context->packed & MC_CLASS_MASK;
     candidate = (uint8_t)((p_context->packed >> MC_CANDIDATE_SHIFT) & MC_CLASS_MASK);
     count = (uint8_t)((p_context->packed >> MC_COUNT_SHIFT) & MC_COUNT_MASK);
@@ -327,9 +314,9 @@ void motion_class_step(motion_class_t *p_context, motion_class_input_t const *p_
         /* First valid observation is reported directly (nothing to debounce against). */
         reported = raw; candidate = raw; count = 0U;
     }
-    else if ((raw == reported) || (MC_IMPACT == raw))
+    else if ((raw == reported) || (MC_OVERTURNED == raw))
     {
-        reported = raw; candidate = raw; count = 0U; /* IMPACT is never delayed. */
+        reported = raw; candidate = raw; count = 0U; /* OVERTURNED is never delayed. */
     }
     else if (raw == candidate)
     {
@@ -404,7 +391,7 @@ char const *motion_class_name(uint8_t motion_class)
     static char const *const g_names[] =
     {
         "STATIONARY", "MOVING", "ACCELERATING", "REVERSING",
-        "TURNING", "CLIMBING", "DESCENDING", "IMPACT"
+        "TURNING", "CLIMBING", "DESCENDING", "OVERTURNED"
     };
     return g_names[motion_class & MC_CLASS_MASK];
 }

@@ -1,5 +1,5 @@
 /* Exercise the real read/packing code with simulated kernel transfers. */
-#include "../../../../app_program/subsystem4/gy511_read.h"
+#include "../../app_program/subsystem4/gy511_read.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -1,7 +1,7 @@
 /* Height-based hump detection: one wheel of a 2-wheel + caster robot climbs.
  * Input is the right-minus-left wheel contact height in 0.1 mm; the detector
  * smooths it (s += (h - s) / 4) and reseeds after gaps/invalid samples. */
-#include "../../../app_program/subsystem4/terrain.h"
+#include "../../app_program/subsystem4/terrain.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -36,11 +36,13 @@ CMake is the only supported route (the `build_make/` GNU Make files and the `mak
 
 Other options: `SMP` must stay OFF (encoder snapshot/IRQ ownership is single-core). `WIFI=cyw43`, `NET=lwip`, `MQTT=ON` enable Buddy 1 networking; `NET=lwip` requires a local untracked `config/wifi_secrets.h` (copy `wifi_secrets.example.h`). `CONSOLE=uart` uses GP0/GP1 and forces `CRASH_REPORT`.
 
+Feature toggles (not profiles): `ROBO_SUBSYSTEM4` (default ON; Buddy 4 IMU/terrain + its I2C1 driver), `ROBO_SUBSYSTEM5` (default ON; obstacle detection + servo scanning), `ROBO_MOTION_FAULTS_DISABLED` (default OFF; Buddy 2 never enters the latched FAULT state — has its own host test).
+
 Each build writes a build ID (`firmware-build-id.txt`) that the USB banner prints at startup.
 
 ## Host tests
 
-Portable logic (motion, controller, steering, line sensor, motor/angle test state machines) is unit-tested natively:
+Portable logic (motion, faults, steering, line sensor/PID, motor/angle test state machines, obstacle runtime/servo, Buddy 1 telemetry frames, crash restart, tmonitor formatting) is unit-tested natively:
 
 ```sh
 cmake -S . -B build-host-cmake -G Ninja -DROBO_HOST_TESTS=ON
@@ -49,7 +51,11 @@ ctest --test-dir build-host-cmake --output-on-failure
 ctest --test-dir build-host-cmake -R steering_checks --output-on-failure   # single test
 ```
 
-`ROBO_HOST_TESTS=ON` builds only the host test project (no Pico SDK), so it needs its own build directory and a native C compiler. Host tests compile with `-Wall -Wextra -Werror -Wconversion -Wshadow` (non-MSVC); firmware code shared with them must stay warning-clean under those flags. Hardware is faked via `ROBO_*_HOST` defines and fake HAL headers in [tests/](tests/) (e.g. `motor_test_fake_hal.h`, `line_test_fake_hal.h`). Additional standalone suites: [tests/buddy2_compact/CMakeLists.txt](tests/buddy2_compact/CMakeLists.txt) and `python tests/forward_console/run_tests.py` (uses clang). Test records/logs for hardware tests live under [testing/](testing/) with IDs like `S2-U01`, `INT-01`, `SYS-01` that are never reused.
+`ROBO_HOST_TESTS=ON` builds only the host test project (no Pico SDK), so it needs its own build directory and a native C compiler. Host tests compile with `-Wall -Wextra -Werror -Wconversion -Wshadow` (non-MSVC); firmware code shared with them must stay warning-clean under those flags. Hardware is faked via `ROBO_*_HOST` defines and fake HAL headers in [tests/](tests/) (e.g. `motor_test_fake_hal.h`, `line_test_fake_hal.h`). Additional standalone suites: [tests/buddy2_compact/CMakeLists.txt](tests/buddy2_compact/CMakeLists.txt) `python tests/forward_console/run_tests.py` (uses clang), and the Buddy 4 IMU suite `python tests/subsystem4/run_tests.py` (native gcc; set `CC` for another compiler). Test records/logs for hardware tests live under [testing/](testing/) with IDs like `S2-U01`, `INT-01`, `SYS-01` that are never reused.
+
+## Host-side tools (Buddy 1 telemetry)
+
+[tools/dashboard.py](tools/dashboard.py) parses the `TF_FIELDS` X-macro in [include/telemetry_frame.h](include/telemetry_frame.h) at runtime, so changing frame fields there changes the decoder too. Keep `python tools/dashboard.py selftest` and the `buddy1_frame_checks` host test (shared golden frames) passing. `python tools/web_dashboard.py --demo` runs the browser dashboard with no broker; real use needs `paho-mqtt` and `--host <broker>`.
 
 ## Architecture
 
@@ -57,7 +63,7 @@ ctest --test-dir build-host-cmake -R steering_checks --output-on-failure   # sin
 
 **Ownership** ([TEAM.md](TEAM.md)): subsystem1 = WiFi/MQTT (Buddy 1), subsystem2 = motion/motors/encoders/PID/odometry (Buddy 2), subsystem3 = line + barcode, subsystem4 = IMU heading/terrain (GY-511 on I2C1 GP6/GP7), subsystem5 = obstacle avoidance. `app_program/controller/` is the Vehicle Controller.
 
-**Request flow:** sensor subsystems never touch motor GPIO. They call `robot_submit(...)` / `motion_*` from [include/robot.h](include/robot.h) (non-blocking; `R_OK` means queued, not approved or completed). The Vehicle Controller arbitrates sources into one approved `motion_command_t`; the Motion Control task (subsystem2 `motion.c` + HAL `drv_motion.c`) executes it. Stop/fault/shutdown are separate control latches that bypass the request queue and invalidate stale commands. Continuous commands (e.g. `WHEEL_SPEED_TRACKING`) must be refreshed with the same source+ID before expiry (≈300 ms). See [docs/API.md](docs/API.md) and [docs/PRODUCTION_INTEGRATION.md](docs/PRODUCTION_INTEGRATION.md).
+**Request flow:** sensor subsystems never touch motor GPIO. They call `robot_submit(...)` / `motion_*` from [include/robot.h](include/robot.h) (non-blocking; `R_OK` means queued, not approved or completed). The Vehicle Controller arbitrates sources into one approved `motion_command_t`; the Motion Control task (subsystem2 `motion.c` + HAL `drv_motion.c`) executes it. Stop/fault/shutdown are separate control latches that bypass the request queue and invalidate stale commands. Buddy 4 calls `motion_stop()` when the IMU detects the robot lifted or overturned (`subsystem4/lift.c`; this replaced IMU collision detection, which was dropped from the brief). Continuous commands (e.g. `WHEEL_SPEED_TRACKING`) must be refreshed with the same source+ID before expiry (≈300 ms). See [docs/API.md](docs/API.md) and [docs/PRODUCTION_INTEGRATION.md](docs/PRODUCTION_INTEGRATION.md).
 
 **Shared state:** the `robot_bus_t` is protected by a T-Kernel `TA_INHERIT` mutex created in `usermain`; bus operations assume the caller holds it, copy payloads by value, and heavy computation happens outside the lock.
 

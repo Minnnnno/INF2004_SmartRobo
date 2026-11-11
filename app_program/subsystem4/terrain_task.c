@@ -1,9 +1,12 @@
 /* Buddy 4 terrain task: sole owner of the GY-511 and of the buddy4_t context.
- * Acceleration, tilt, hump phases and peak height, impact latch, motion
- * classification with turn rate (from Buddy 2 wheel speeds; no gyroscope),
- * and a calibrated compass whose angle is shown next to each turn's encoder angle.
- * This task never commands motion, except the self-pivot of the dedicated
- * magnetometer calibration build (ROBO_MAG_CAL), through the Controller.
+ * Acceleration, tilt, hump phases and peak height, lift/overturn detection,
+ * motion classification with turn rate (from Buddy 2 wheel speeds; no
+ * gyroscope), and a calibrated compass whose angle is shown next to each
+ * turn's encoder angle.
+ * Motion commands: only motion_stop() when the robot is lifted or overturned
+ * (Change Requirement: replaces IMU collision detection; lifting the robot
+ * ends the run), and the self-pivot of the dedicated magnetometer
+ * calibration build (ROBO_MAG_CAL), both through the Controller.
  */
 #include "robot_rtos.h" /* Standard size_t before the kernel headers. */
 #include "robot.h"
@@ -63,6 +66,7 @@ static s4_compass_t s_compass; /* Task-owned. */
 #define S4_TS_RECOVERY   TERRAIN_TS_RECOVERY
 #define S4_TS_FAULT      TERRAIN_TS_FAULT
 #define S4_TS_STOP       TERRAIN_TS_STOP
+#define S4_TS_LIFTED     TERRAIN_TS_LIFTED     /* MONITORING + lift latch (not overturned) */
 
 /* The few Buddy 2 facts Buddy 4 uses, copied once per cycle (the full
  * robot_status_t is large; it is only held briefly on the stack). */
@@ -71,6 +75,7 @@ typedef struct
     bool available;
     bool stationary;
     motion_state_t state;
+    bool hold;            /* Controller holds the robot (STOP/fault): no motion until START. */
     int16_t speed_mm_s[2];
     bool heading_valid;
     int32_t heading_ddeg; /* Buddy 2 odometry heading, unwrapped, 0.1 deg, + = left. */
@@ -81,6 +86,8 @@ static void terrain_read_motion(s4_motion_t *p_motion);
 static uint8_t terrain_inputs(uint8_t state, s4_motion_t const *p_motion);
 static void terrain_classify(buddy4_t *p_context, motion_class_t *p_class,
                              s4_motion_t const *p_motion);
+static void terrain_lift(buddy4_t const *p_context, s4_motion_t const *p_motion,
+                         uint8_t *p_previous);
 static uint8_t terrain_state_code(buddy4_t const *p_context);
 static void terrain_publish(buddy4_t const *p_context, motion_class_t const *p_class,
                             double *p_sample_time);
@@ -107,6 +114,7 @@ void terrain_task(INT code, void *p_context)
     uint8_t previous_state = B4_INIT;
     uint8_t previous_phase = TERRAIN_WAITING;
     uint8_t previous_class = MC_STATIONARY;
+    uint8_t previous_lift = LIFT_NONE;
     bool previous_class_valid = false;
 
     (void)code;
@@ -136,6 +144,7 @@ void terrain_task(INT code, void *p_context)
 
         terrain_read_motion(&motion);
         buddy4_step(&s_context, terrain_inputs(state, &motion));
+        terrain_lift(&s_context, &motion, &previous_lift);
         terrain_classify(&s_context, &s_class, &motion);
         terrain_publish(&s_context, &s_class, &sample_time);
 #if defined(ROBO_MAG_CAL)
@@ -250,6 +259,7 @@ static void terrain_read_motion(s4_motion_t *p_motion)
     p_motion->available = true;
     p_motion->stationary = status.motion.stationary;
     p_motion->state = status.motion.state;
+    p_motion->hold = status.motion.hold;
     for (uint8_t wheel = 0U; wheel < 2U; wheel++)
     {
         double mm_s = status.motion.speed[wheel] * 1000.0;
@@ -269,16 +279,59 @@ static void terrain_read_motion(s4_motion_t *p_motion)
     }
 }
 
-/* Motion class from the IMU (impact latch, hump phase) and Buddy 2 (stationary,
- * wheel speeds). Valid only while MONITORING with motion status available.
- * The impact latch is always consumed so an old event is never replayed. */
+/* Lift/overturn stop (Change Requirement: replaces IMU collision detection).
+ * On a new LIFTED or OVERTURNED latch: motion_stop() at once (controlled
+ * STOP: Buddy 2 brakes and holds). While still latched, if the robot is no
+ * longer held (START was pressed in the air), stop it again, so the wheels
+ * never drive while lifted. After the latch clears (upright and still for
+ * 0.5 s) nothing restarts automatically: START resumes the run.
+ * Lift detection needs Buddy 4 MONITORING: while the IMU recovers or has
+ * faulted it is unavailable (sensor faults still never stop the motors).
+ */
+static void terrain_lift(buddy4_t const *p_context, s4_motion_t const *p_motion,
+                         uint8_t *p_previous)
+{
+    uint8_t lift = buddy4_lift(p_context);
+    lift_t const *p_lift = &p_context->lift;
+
+    (void)p_lift; /* Only the console lines use it. */
+    if (lift != *p_previous)
+    {
+        if (LIFT_NONE != lift)
+        {
+            motion_stop();
+#ifndef ROBO_IR_MONITOR
+            tm_printf((UB const *)"[LIFT] %s (upright=%d%% vertical=%d mg) -> motors stopped; set it down level, then START\n",
+                      (UB const *)lift_name(lift), (INT)lift_upright_pct(p_lift),
+                      (INT)lift_trigger_mg(p_lift));
+#endif
+        }
+#ifndef ROBO_IR_MONITOR
+        else if (B4_MONITORING == buddy4_state(p_context))
+        {
+            tm_printf((UB const *)"[LIFT] cleared: upright and still; motors stay stopped until START\n");
+        }
+#endif
+        *p_previous = lift;
+    }
+    else if ((LIFT_NONE != lift) && p_motion->available && !p_motion->hold)
+    {
+        motion_stop(); /* The robot was released while still lifted. */
+#ifndef ROBO_IR_MONITOR
+        tm_printf((UB const *)"[LIFT] still %s: motors stopped again\n", (UB const *)lift_name(lift));
+#endif
+    }
+}
+
+/* Motion class from the IMU (overturned latch, hump phase) and Buddy 2
+ * (stationary, wheel speeds). Valid only while MONITORING with motion status
+ * available. */
 static void terrain_classify(buddy4_t *p_context, motion_class_t *p_class,
                              s4_motion_t const *p_motion)
 {
     motion_class_input_t input = {0};
-    uint8_t axes = 0U;
 
-    input.impact = buddy4_take_impact(p_context, &axes);
+    input.overturned = (LIFT_OVERTURNED == buddy4_lift(p_context));
     input.valid = (B4_MONITORING == buddy4_state(p_context)) && p_motion->available;
     input.stationary = p_motion->stationary;
     input.speed_mm_s[0] = p_motion->speed_mm_s[0];
@@ -325,16 +378,6 @@ static void terrain_classify(buddy4_t *p_context, motion_class_t *p_class,
             s_compass.turn_reason = s_compass.reason;
         }
     }
-#ifndef ROBO_IR_MONITOR
-    if (input.impact && input.valid)
-    {
-        tm_printf((UB const *)"[IMPACT] sudden impact axes=%s%s%s imu_fwd=%d mg\n",
-                  (0U != (axes & GY511_IMPACT_XH)) ? "X" : "",
-                  (0U != (axes & GY511_IMPACT_YH)) ? "Y" : "",
-                  (0U != (axes & GY511_IMPACT_ZH)) ? "Z" : "",
-                  (INT)p_context->forward_mg);
-    }
-#endif
 }
 
 /* Lifecycle state and terrain phase combined into one 3-bit code. */
@@ -347,6 +390,10 @@ static uint8_t terrain_state_code(buddy4_t const *p_context)
         case B4_INIT:
             return S4_TS_INIT;
         case B4_MONITORING:
+            if (LIFT_LIFTED == buddy4_lift(p_context))
+            {
+                return S4_TS_LIFTED; /* OVERTURNED is reported as motion class 7. */
+            }
             if (TERRAIN_CLIMBING == phase)
             {
                 return S4_TS_CLIMBING;
@@ -361,8 +408,8 @@ static uint8_t terrain_state_code(buddy4_t const *p_context)
     }
 }
 
-/* Publish the shared Terrain slot (docs/API.md): values[0] heading rad
- * (invalid at this stage), [1] pitch rad, [2] highest hump peak this run, m,
+/* Publish the shared Terrain slot (docs/API.md): values[0] turn rate rad/s
+ * (when motion-valid), [1] pitch rad, [2] highest hump peak this run, m,
  * [3] validity bits (TF_TV_*) | state code << 3. The state itself is
  * genuine data, so the slot is available even while pitch is invalid.
  * The timestamp is the time of the last valid tilt sample, not publish time.
@@ -427,7 +474,7 @@ static void terrain_report(buddy4_t const *p_context, motion_class_t const *p_cl
         if (height < 0) { height = -height; }
         if (S4_MAG_OK == s_compass.reason)
         {
-            tm_printf((UB const *)"[TILT] pitch=%s%d.%d roll=%s%d.%d deg | %s, %s | height=%d.%d mm %s | terrain=%s run_max=%d mm | class=%s yaw=%d deg/s | compass=%d.%d deg field=%d\n",
+            tm_printf((UB const *)"[TILT] pitch=%s%d.%d roll=%s%d.%d deg | %s, %s | height=%d.%d mm %s | terrain=%s run_max=%d mm | class=%s yaw=%d deg/s | compass=%d.%d deg field=%d | lift=%s\n",
                       pitch_sign, pitch / 10, pitch % 10, roll_sign, roll / 10, roll % 10,
                       tilt_condition_name(p_context->result, 0U),
                       tilt_condition_name(p_context->result, 1U),
@@ -437,11 +484,11 @@ static void terrain_report(buddy4_t const *p_context, motion_class_t const *p_cl
                       motion_class_valid(p_class) ? motion_class_name(motion_class_get(p_class)) : "-",
                       (INT)motion_class_yaw_deg_s(p_class),
                       (INT)(s_compass.heading / 10), (INT)(s_compass.heading % 10),
-                      (INT)s_compass.field);
+                      (INT)s_compass.field, (UB const *)lift_name(buddy4_lift(p_context)));
         }
         else
         {
-            tm_printf((UB const *)"[TILT] pitch=%s%d.%d roll=%s%d.%d deg | %s, %s | height=%d.%d mm %s | terrain=%s run_max=%d mm | class=%s yaw=%d deg/s | compass n/a (%s) field=%d\n",
+            tm_printf((UB const *)"[TILT] pitch=%s%d.%d roll=%s%d.%d deg | %s, %s | height=%d.%d mm %s | terrain=%s run_max=%d mm | class=%s yaw=%d deg/s | compass n/a (%s) field=%d | lift=%s\n",
                       pitch_sign, pitch / 10, pitch % 10, roll_sign, roll / 10, roll % 10,
                       tilt_condition_name(p_context->result, 0U),
                       tilt_condition_name(p_context->result, 1U),
@@ -450,13 +497,17 @@ static void terrain_report(buddy4_t const *p_context, motion_class_t const *p_cl
                       (INT)(terrain_run_max(&p_context->terrain) & TERRAIN_PEAK_MM_MASK),
                       motion_class_valid(p_class) ? motion_class_name(motion_class_get(p_class)) : "-",
                       (INT)motion_class_yaw_deg_s(p_class),
-                      terrain_mag_reason(s_compass.reason), (INT)s_compass.field);
+                      terrain_mag_reason(s_compass.reason), (INT)s_compass.field,
+                      (UB const *)lift_name(buddy4_lift(p_context)));
         }
     }
     else if (B4_MONITORING == state)
     {
-        tm_printf((UB const *)"[TILT] UNAVAILABLE (stale or unsuitable sample) | terrain last=%s\n",
-                  terrain_phase_name(terrain));
+        /* Overturned or tilted past 75 deg lands here: tilt cannot measure it,
+         * the lift detector can. */
+        tm_printf((UB const *)"[TILT] UNAVAILABLE (stale or unsuitable sample) | terrain last=%s | lift=%s upright=%d%% vertical=%d mg\n",
+                  terrain_phase_name(terrain), (UB const *)lift_name(buddy4_lift(p_context)),
+                  (INT)lift_upright_pct(&p_context->lift), (INT)lift_vertical_mg(&p_context->lift));
     }
     else
     {

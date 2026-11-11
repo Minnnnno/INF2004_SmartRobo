@@ -66,7 +66,7 @@ motor direction, distance, current, cutoff timing or scheduling jitter was measu
 Repeat checks with native gcc/clang on PATH:
 
 ```text
-python testing/subsystem4/host/run_tests.py
+python tests/subsystem4/run_tests.py
 python tests/forward_console/run_tests.py
 ctest --test-dir build-host-imu-clang --output-on-failure
 ```

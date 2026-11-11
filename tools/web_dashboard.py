@@ -50,10 +50,10 @@ MODES = ["DISTANCE_MOVE", "ENCODER_TURN", "WHEEL_SPEED_TRACKING", "MANUAL_OUTPUT
 OWNERS = ["manual", "line", "barcode", "obstacle", "wifi", "terrain", "?", "none"]
 BARCODES = ["left", "right", "straight", "U-turn"]
 # Buddy 4: T_STATE codes (app_program/subsystem4/README.md, "Interfaces").
-T_STATES = ["INIT", "WAITING", "CLIMBING", "DESCENDING", "RECOVERY", "FAULT", "STOP"]
+T_STATES = ["INIT", "WAITING", "CLIMBING", "DESCENDING", "RECOVERY", "FAULT", "STOP", "LIFTED"]
 # Buddy 4: M_CLASS codes, only sent once the layout v2 change request is applied.
 M_CLASSES = ["STATIONARY", "MOVING", "ACCELERATING", "REVERSING", "TURNING",
-             "CLIMBING", "DESCENDING", "IMPACT"]
+             "CLIMBING", "DESCENDING", "OVERTURNED"]
 # Buddy 5 publishes S5_STATE_* (subsystem5.h) in obstacle values[3]; the
 # frame mapper copies that into O_FLAGS, so O_FLAGS currently holds this state.
 S5_STATES = ["clear", "held / scanning", "pass left", "pass right", "no way around",
@@ -248,12 +248,19 @@ class Hub:
         if v["LINE_TRACK"] and not p["LINE_TRACK"]:
             self._add("info", "B3", "line found")
         if v["T_STATE"] != p["T_STATE"]:
-            self._add("error" if T_STATES[v["T_STATE"]] == "FAULT" else "info", "B4",
-                      "terrain %s -> %s" % (T_STATES[p["T_STATE"]], T_STATES[v["T_STATE"]]))
+            new_state = T_STATES[v["T_STATE"]]
+            if new_state == "LIFTED":
+                self._add("warn", "B4", "robot LIFTED: Buddy 4 stopped the motors (end of run)")
+            else:
+                self._add("error" if new_state == "FAULT" else "info", "B4",
+                          "terrain %s -> %s" % (T_STATES[p["T_STATE"]], new_state))
         if v["HUMP_MM"] > p["HUMP_MM"]:
             self._add("info", "B4", "highest hump this run: %d mm" % v["HUMP_MM"])
         if "M_CLASS" in v and v["T_VALID"] & 1 and v["M_CLASS"] != p.get("M_CLASS"):
-            self._add("debug", "B4", "motion class %s" % M_CLASSES[v["M_CLASS"]])
+            if M_CLASSES[v["M_CLASS"]] == "OVERTURNED":
+                self._add("warn", "B4", "robot OVERTURNED: Buddy 4 stopped the motors")
+            else:
+                self._add("debug", "B4", "motion class %s" % M_CLASSES[v["M_CLASS"]])
         if v["O_AVAIL"] != p["O_AVAIL"]:
             self._add("info" if v["O_AVAIL"] else "warn", "B5",
                       "ultrasonic %s" % ("OK" if v["O_AVAIL"] else "NOT OK"))
@@ -444,7 +451,8 @@ def start_mqtt(hub, args):
 
 class Simulator(threading.Thread):
     """A fake robot for --demo: drives the line, meets a hump and an obstacle,
-    and obeys START / STOP / E-STOP like the real controller."""
+    is lifted (Buddy 4 stops it; START resumes once set down), and obeys
+    START / STOP / E-STOP like the real controller."""
 
     def __init__(self, hub):
         super().__init__(daemon=True)
@@ -453,6 +461,7 @@ class Simulator(threading.Thread):
         self.t = 0.0
         self.state, self.fault, self.hold = "DRIVING", 0, False
         self.stop_at = None
+        self.lifted_until = -1.0
         self.count = [0, 0]
         self.invalid = [0, 0]
         self.seq = 0
@@ -500,7 +509,8 @@ class Simulator(threading.Thread):
     def send_frames(self):
         t = self.t
         driving = self.state == "DRIVING"
-        cycle = t % 40.0                         # 40 s loop: hump at 10 s, obstacle at 25 s
+        cycle = t % 40.0                         # 40 s loop: hump at 10 s, obstacle at 25 s,
+                                                 # lifted at 37 s (held, set down after 3 s)
         obstacle = 0
         if driving and 25.0 <= cycle < 34.0:
             obstacle = 1 if cycle < 28.0 else (3 if cycle < 29.0 else 5)
@@ -513,7 +523,10 @@ class Simulator(threading.Thread):
             self.send(TOPIC_TEXT + "obstacle", b"obstacle avoid=right shift_l_mm=230 shift_r_mm=172")
         if driving and abs(cycle - 34.0) < 0.05:
             self.event(0x40)
-        terrain = 1
+        if driving and abs(cycle - 37.0) < 0.05:
+            self.hold, self.state, self.stop_at = True, "STOPPING", t   # Buddy 4 motion_stop()
+            self.lifted_until = t + 3.0
+        terrain = 7 if t < self.lifted_until else 1
         if driving and 10.0 <= cycle < 13.0:
             terrain = 2 if cycle < 11.5 else 3
             if abs(cycle - 12.9) < 0.05:

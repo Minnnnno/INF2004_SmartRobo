@@ -2,7 +2,7 @@
  * unequal axis gains and noise; the robot turning left by phi rotates the
  * field in the sensor frame by -phi (the world field stays put).
  */
-#include "../../../app_program/subsystem4/mag_heading.h"
+#include "../../app_program/subsystem4/mag_heading.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

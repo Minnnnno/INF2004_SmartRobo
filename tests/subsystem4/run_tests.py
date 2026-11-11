@@ -1,6 +1,6 @@
 """Compile and run Buddy 4 with mocked kernel/I2C calls.
 
-Usage: python testing/subsystem4/host/run_tests.py. CC may select GCC, Clang or Zig cc.
+Usage: python tests/subsystem4/run_tests.py. CC may select GCC, Clang or Zig cc.
 """
 
 from pathlib import Path
@@ -10,7 +10,7 @@ import os
 import shlex
 
 test_dir = Path(__file__).resolve().parent
-project_root = test_dir.parents[2]
+project_root = test_dir.parents[1]
 source_dir = project_root / "app_program/subsystem4"
 output_dir = project_root / "build" / "gy511-host"
 output_dir.mkdir(parents=True, exist_ok=True)
@@ -44,19 +44,21 @@ build_and_run("test_mag_heading", STRICT,
               [source_dir / "mag_heading.c", test_dir / "test_mag_heading.c"])
 build_and_run("test_tilt", STRICT,
               [source_dir / "tilt.c", test_dir / "test_tilt.c"])
+build_and_run("test_lift", STRICT,
+              [source_dir / "lift.c", source_dir / "tilt.c", test_dir / "test_lift.c"])
 build_and_run("test_terrain", STRICT,
               [source_dir / "terrain.c", source_dir / "tilt.c", test_dir / "test_terrain.c"])
 build_and_run("test_buddy4", STRICT,
-              [source_dir / "buddy4.c", source_dir / "terrain.c", source_dir / "tilt.c",
+              [source_dir / "buddy4.c", source_dir / "terrain.c", source_dir / "tilt.c", source_dir / "lift.c",
                test_dir / "test_buddy4.c"], STUBS)
 build_and_run("test_terrain_task", TEAM,
-              [source_dir / "buddy4.c", source_dir / "terrain.c", source_dir / "tilt.c",
+              [source_dir / "buddy4.c", source_dir / "terrain.c", source_dir / "tilt.c", source_dir / "lift.c",
                source_dir / "motion_class.c", source_dir / "mag_heading.c",
                test_dir / "test_terrain_task.c"],
               STUBS + ["-I", str(project_root / "include")])
 
 build_and_run("test_mag_cal_task", TEAM,
-              [source_dir / "buddy4.c", source_dir / "terrain.c", source_dir / "tilt.c",
+              [source_dir / "buddy4.c", source_dir / "terrain.c", source_dir / "tilt.c", source_dir / "lift.c",
                source_dir / "motion_class.c", source_dir / "mag_heading.c",
                test_dir / "test_mag_cal_task.c"],
               STUBS + ["-I", str(project_root / "include")])
