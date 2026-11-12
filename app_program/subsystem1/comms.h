@@ -23,7 +23,7 @@
 #include "telemetry_frame.h"	/* TF_EV_* event bits, binary formats */
 
 /* Commands forwarded to the Vehicle Controller.  Values equal tf_opcode_t
-   and robot_remote_command_t (checked in comms.c and app_main.c). */
+   and robot_remote_command_t (checked in comms.c and controller/robot_runtime.c). */
 typedef enum {
 	COMMS_CMD_START = 1,
 	COMMS_CMD_STOP,

@@ -20,6 +20,12 @@
                 "-DROBO_SAFE_MOTOR_TEST=OFF",
                 "-DROBO_ENCODER_DIAGNOSTICS_ONLY=OFF",
                 "-DROBO_MANUAL_CONSOLE=OFF",
+                "-DROBO_LINE_STEERING=ON",
+                "-DROBO_SUBSYSTEM4=ON",
+                "-DROBO_SUBSYSTEM5=ON",
+                "-DROBO_IR_MONITOR=OFF",
+                "-DROBO_MAG_CAL=OFF",
+                "-DROBO_MOTION_FAULTS_DISABLED=OFF",
                 "-DPython3_EXECUTABLE=${command:raspberry-pi-pico.getPythonPath}"
             ],
             "problemMatcher": [],

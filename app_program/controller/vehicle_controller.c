@@ -40,7 +40,8 @@ motion_result_t robot_request(robot_bus_t *b, const robot_request_t *r)
 void robot_control(robot_bus_t *b, robot_control_t control, bool checks_ok, bool external_rest)
 {
     b->controls |= (uint32_t)control;
-    if ((control == CONTROL_STOP) || (control == CONTROL_FAULT) || (control == CONTROL_SHUTDOWN)) {
+    if ((control == CONTROL_STOP) || (control == CONTROL_FAULT) ||
+        (control == CONTROL_ESTOP) || (control == CONTROL_SHUTDOWN)) {
         ++b->generation;
         b->count = 0U;
         b->approved_valid = false;
@@ -90,7 +91,7 @@ void vehicle_controller_cycle(robot_bus_t *b, double now)
 motion_result_t vehicle_controller_remote_command(robot_bus_t *b, robot_remote_command_t command)
 {
     if (command == REMOTE_STOP) { robot_control(b, CONTROL_STOP, false, false); return R_OK; }
-    if (command == REMOTE_ESTOP) { robot_control(b, CONTROL_FAULT, false, false); return R_OK; }
+    if (command == REMOTE_ESTOP) { robot_control(b, CONTROL_ESTOP, false, false); return R_OK; }
     if (command != REMOTE_START) { return R_INVALID; }
     if (b->shutdown_latched || b->controls != 0U || b->status.motion.state != STOPPED ||
         b->status.motion.fault != F_NONE || !b->status.motion.stationary ||
@@ -103,11 +104,13 @@ void robot_motion_inputs(robot_bus_t *b, motion_t *m, encoder_sample_t sample, d
 {
     uint32_t controls = b->controls;
     b->controls = 0U;
-    /* Fault wins over cancellation; shutdown is terminal and retains any fault. */
+    /* Emergency stop wins a simultaneous system fault; record both causes.
+     * Faults win over cancellation; shutdown is terminal and retains the cause. */
+    if ((controls & CONTROL_ESTOP) != 0U) { motion_raise_fault(m, F_ESTOP, now); }
     if ((controls & CONTROL_FAULT) != 0U) { motion_raise_fault(m, F_SYSTEM, now); }
     if (b->shutdown_latched) { motion_shutdown(m, now); }
     else if ((controls & CONTROL_STOP) != 0U) { motion_cancel(m, now); }
-    else if ((controls & CONTROL_FAULT) == 0U) {
+    else if ((controls & (CONTROL_FAULT | CONTROL_ESTOP)) == 0U) {
         if ((controls & CONTROL_RESET) != 0U) {
             (void)motion_reset(m, b->checks_ok, b->external_rest, sample, now);
         } else if ((controls & CONTROL_RELEASE) != 0U) { (void)motion_release(m, b->checks_ok); }

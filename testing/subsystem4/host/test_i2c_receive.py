@@ -6,6 +6,8 @@ it does not emulate electrical STOP timing or the full driver state machine.
 """
 from pathlib import Path
 import subprocess
+import os
+import shlex
 
 root = Path(__file__).resolve().parents[3]
 source = (root / "device/i2c/sysdepend/rp2040/i2c_rp2040.c").read_text()
@@ -70,6 +72,6 @@ suffix = r'''
 harness = output / "test_i2c_receive.c"
 harness.write_text(prefix + arm + suffix)
 exe = output / "test_i2c_receive.exe"
-subprocess.run(["gcc", "-std=c11", "-Wall", "-Wextra", "-Werror", "-Wconversion",
+subprocess.run(shlex.split(os.environ.get("CC", "gcc")) + ["-std=c11", "-Wall", "-Wextra", "-Werror", "-Wconversion",
                 str(harness), "-o", str(exe)], check=True)
 subprocess.run([str(exe)], check=True)

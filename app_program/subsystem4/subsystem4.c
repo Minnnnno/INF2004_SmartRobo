@@ -13,7 +13,12 @@
 #define GY511_MAG_ID_FIRST     (0x0AU)
 
 #define GY511_ACC_CTRL1        (0x20U)
+#define GY511_ACC_CTRL2        (0x21U)
 #define GY511_ACC_CTRL4        (0x23U)
+#define GY511_ACC_CTRL5        (0x24U)
+#define GY511_ACC_INT1_CFG     (0x30U)
+#define GY511_ACC_INT1_THS     (0x32U)
+#define GY511_ACC_INT1_DUR     (0x33U)
 #define GY511_MAG_CRA          (0x00U)
 #define GY511_MAG_CRB          (0x01U)
 #define GY511_MAG_MODE         (0x02U)
@@ -22,6 +27,20 @@
 #define GY511_ACC_RATE_AXES    (0x57U)
 /* 0x88: block data update, little-endian, +/-2 g, high resolution. */
 #define GY511_ACC_FORMAT       (0x88U)
+/* Impact detection: the accelerometer's own inertial interrupt generator 1,
+ * read by polling INT1_SRC (no interrupt pin is wired).
+ * 0x01 (CTRL_REG2_A HPIS1): high-pass filter on the INT1 path only, so gravity
+ *      and tilt never trigger it; the X/Y/Z output data stay unfiltered.
+ * 0x08 (CTRL_REG5_A LIR_INT1): the event stays latched until INT1_SRC is read,
+ *      so a short spike between the 20 ms polls is not missed. */
+#define GY511_ACC_HP_INT1      (0x01U)
+#define GY511_ACC_LATCH_INT1   (0x08U)
+/* INT1_THS_A: 1 LSB = 16 mg at +/-2 g. 0x30 = 48 x 16 = 768 mg (starting
+ * value; tune with bench taps and hump runs). DURATION 0: one sample suffices. */
+#define GY511_ACC_IMPACT_THS   (0x30U)
+#define GY511_ACC_IMPACT_DUR   (0x00U)
+/* INT1_CFG_A 0x2A: OR combination of the X, Y and Z high events. */
+#define GY511_ACC_IMPACT_AXES  (0x2AU)
 /* 0x14: temperature disabled, magnetic output rate 30 Hz. */
 #define GY511_MAG_RATE         (0x14U)
 /* 0x20: +/-1.3 gauss magnetic range. * (magnetic field strength,smallest range, give the finest resolution)*/
@@ -43,6 +62,11 @@ typedef struct
 static gy511_setting_t const g_settings[] =
 {
     {GY511_ACC_ADDRESS, GY511_ACC_CTRL4, GY511_ACC_FORMAT},
+    {GY511_ACC_ADDRESS, GY511_ACC_CTRL2, GY511_ACC_HP_INT1},
+    {GY511_ACC_ADDRESS, GY511_ACC_CTRL5, GY511_ACC_LATCH_INT1},
+    {GY511_ACC_ADDRESS, GY511_ACC_INT1_THS, GY511_ACC_IMPACT_THS},
+    {GY511_ACC_ADDRESS, GY511_ACC_INT1_DUR, GY511_ACC_IMPACT_DUR},
+    {GY511_ACC_ADDRESS, GY511_ACC_INT1_CFG, GY511_ACC_IMPACT_AXES},
     {GY511_ACC_ADDRESS, GY511_ACC_CTRL1, GY511_ACC_RATE_AXES},
     {GY511_MAG_ADDRESS, GY511_MAG_CRA, GY511_MAG_RATE},
     {GY511_MAG_ADDRESS, GY511_MAG_CRB, GY511_MAG_RANGE},

@@ -1,5 +1,6 @@
 /*
- *	subsystem2.h
+ *	subsystem2.h -- legacy producer demo, excluded from robot firmware.
+ *  Production Buddy 2 startup/task entry points are in motion_runtime.h.
  *	Subsystem 2 -- Producer (sample source).  Student ID: <student ID>.
  *
  *	Public interface of subsystem 2.  Other subsystems include it as

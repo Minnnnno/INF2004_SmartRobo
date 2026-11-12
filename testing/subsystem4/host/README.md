@@ -1,7 +1,10 @@
 # Buddy 4 host verification
 
 Run `python testing/subsystem4/host/run_tests.py` from the project root.
-Requires Python and GCC. All suites use warnings as errors.
+Requires Python and a native C compiler (GCC by default). Set `CC` to select
+another command such as `clang` or `zig cc`; quote compiler paths containing
+spaces. The I2C receive child test uses the same selection. All suites use
+warnings as errors.
 
 - test_gy511.c: configuration success and fault injection (27 scenarios).
 - test_acceleration.c: status/burst/close failures, unchanged output on error,

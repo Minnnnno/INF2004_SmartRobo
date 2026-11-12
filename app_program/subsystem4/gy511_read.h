@@ -27,6 +27,19 @@ ER gy511_read_acceleration(gy511_acceleration_t *p_sample);
 ER gy511_acceleration_mg(gy511_acceleration_t const *p_sample,
                        uint8_t axis, int16_t *p_mg);
 
+/* INT1_SRC_A bits (DocID018771 table 59): IA = an inertial event latched
+ * since the last read; XH/YH/ZH = the axes that exceeded INT1_THS. */
+#define GY511_IMPACT_ACTIVE (0x40U)
+#define GY511_IMPACT_ZH     (0x20U)
+#define GY511_IMPACT_YH     (0x08U)
+#define GY511_IMPACT_XH     (0x02U)
+
+/* Read (and so clear) the latched high-pass inertial interrupt source.
+ * Requires subsystem4_init(). Output is INT1_SRC & 0x7F, unchanged on failure.
+ * Driver and close errors propagate. Task context; opens/closes I2C1.
+ */
+ER gy511_read_impact(uint8_t *p_source);
+
 /* Magnetic counts use the same 36-bit XYZ packing, but different units.
  * Valid output range is -2048..2047 per axis (datasheet table 75).
  * Out-of-range sensor words are rejected, not truncated into plausible data.

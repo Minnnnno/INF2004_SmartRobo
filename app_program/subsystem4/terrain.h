@@ -13,7 +13,6 @@
 #define TERRAIN_DESCENDING (2U)
 #define TERRAIN_PHASE_MASK (0x03U)
 #define TERRAIN_VALID (0x04U)
-#define TERRAIN_SLOW (0x08U)
 /* Height thresholds in 0.1 mm and confirmation times. */
 /* Driving on flat floor sways the reading by up to ~3.3 mm (steering, vibration),
  * so the entry level sits above that; the smallest course hump is ~10 mm. */
@@ -30,8 +29,8 @@
 #define TERRAIN_PEAK_MM_MASK (0x7FU)
 #define TERRAIN_PEAK_RIGHT (0x80U) /* terrain_last_peak(): hump was under the right wheel. */
 #define TERRAIN_RUN_VALID (0x80U)  /* terrain_run_max(): at least one hump confirmed. */
-/* Status byte: phase bits 0..1, current observation valid bit 2, reduced-speed
- * request bit 3. Private: bit 4 confirmation pending, bit 5 current hump side,
+/* Status byte: phase bits 0..1, current observation valid bit 2 (bit 3 unused).
+ * Private: bit 4 confirmation pending, bit 5 current hump side,
  * bit 7 completion event latched until consumed by the owning task.
  * Invalid status is UNKNOWN, never permission to drive at normal speed.
  */
@@ -54,12 +53,12 @@ void terrain_reset(terrain_t *p_terrain);
  */
 bool terrain_take_completed(terrain_t *p_terrain);
 /* One fresh observation per call: valid=false (stale/unsuitable tilt) cancels
- * pending timing and keeps the confirmed phase, peaks and slow request.
+ * pending timing and keeps the confirmed phase and peaks.
  * height_tenths: right-minus-left wheel contact height, 0.1 mm (sign = side).
  * The run maximum follows the live peak, so an up-only ramp still counts.
  */
 void terrain_step(terrain_t *p_terrain, bool valid, int16_t height_tenths, uint32_t now_ms);
-/* Coherent four-bit status value; copy through a protected interface across tasks.
+/* Coherent three-bit status value; copy through a protected interface across tasks.
  * Internal flags/padding must not be transmitted directly. NULL gives UNKNOWN.
  */
 uint8_t terrain_status(terrain_t const *p_terrain);

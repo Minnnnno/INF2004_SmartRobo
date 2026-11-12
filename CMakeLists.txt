@@ -6,11 +6,18 @@ option(ROBO_MANUAL_CONSOLE "Enable deliberately armed motion calibration console
 option(ROBO_ENCODER_DIAGNOSTICS_ONLY "Read-only encoder/USB diagnostics; compile out motor activation" OFF)
 option(ROBO_SAFE_MOTOR_TEST "Isolated 25 percent, one-second motor tests" OFF)
 option(ROBO_ANGLE_TEST "Isolated encoder-based 90-degree turns" OFF)
-option(ROBO_LINE_STEERING "Production encoder/PID line following with gentle digital steering" OFF)
+option(ROBO_MAG_CAL "Buddy 4 magnetometer calibration image: robot pivots 360 deg each way, prints constants" OFF)
+# Normal firmware includes the IR line task. Fresh calibration profiles retain
+# their isolated behavior; an explicit cached value still takes precedence.
+set(ROBO_DEFAULT_LINE_STEERING ON)
+if(ROBO_MANUAL_CONSOLE OR ROBO_ENCODER_DIAGNOSTICS_ONLY OR ROBO_SAFE_MOTOR_TEST OR ROBO_ANGLE_TEST OR ROBO_MAG_CAL)
+    set(ROBO_DEFAULT_LINE_STEERING OFF)
+endif()
+option(ROBO_LINE_STEERING "Production encoder/PID line following with gentle digital steering" ${ROBO_DEFAULT_LINE_STEERING})
 option(ROBO_IR_MONITOR "Line-steering image that only prints IR readings; never requests motion" OFF)
-option(ROBO_SUBSYSTEM4 "Enable Buddy 4 IMU/terrain monitoring and its I2C1 driver" OFF)
+option(ROBO_SUBSYSTEM4 "Enable Buddy 4 IMU/terrain monitoring and its I2C1 driver" ON)
 option(ROBO_SUBSYSTEM5 "Enable production obstacle detection and servo scanning" ON)
-option(ROBO_MOTION_FAULTS_DISABLED "Firmware: Buddy 2 never enters the latched FAULT state" ON)
+option(ROBO_MOTION_FAULTS_DISABLED "Firmware: Buddy 2 never enters the latched FAULT state" OFF)
 if(ROBO_HOST_TESTS)
     project(smart_robo_tests C)
     set(CMAKE_C_STANDARD 11)
@@ -130,6 +137,16 @@ if(ROBO_HOST_TESTS)
     endif()
     add_test(NAME barcode_decode_checks
         COMMAND barcode_decode_checks ${CMAKE_CURRENT_SOURCE_DIR}/tests/barcode/replay.txt)
+    add_executable(crash_restart_checks tests/test_crash_restart.c
+        app_program/subsystem2/motion.c app_program/subsystem2/math.c
+        app_program/subsystem2/board_config.c app_program/subsystem2/encoder_capture.c
+        app_program/controller/vehicle_controller.c)
+    target_include_directories(crash_restart_checks PRIVATE tests/tmonitor include)
+    if(NOT MSVC)
+        target_compile_options(crash_restart_checks PRIVATE -Wall -Wextra -Werror -Wconversion -Wshadow)
+        target_link_libraries(crash_restart_checks m)
+    endif()
+    add_test(NAME crash_restart_checks COMMAND crash_restart_checks)
     add_executable(motor_driver_diagnostics_checks tests/buddy2_compact/test_driver.c
         app_program/subsystem2/drv_motion.c app_program/subsystem2/math.c
         app_program/subsystem2/board_config.c app_program/subsystem2/encoder_capture.c)
@@ -159,12 +176,20 @@ endif()
 if(ROBO_LINE_STEERING AND (ROBO_MANUAL_CONSOLE OR ROBO_SAFE_MOTOR_TEST OR ROBO_ANGLE_TEST OR ROBO_ENCODER_DIAGNOSTICS_ONLY))
     message(FATAL_ERROR "PID line steering is a production profile; disable calibration profiles.")
 endif()
+if(ROBO_MAG_CAL AND (NOT ROBO_SUBSYSTEM4 OR ROBO_SUBSYSTEM5 OR ROBO_LINE_STEERING OR ROBO_IR_MONITOR OR
+                     ROBO_MANUAL_CONSOLE OR ROBO_SAFE_MOTOR_TEST OR ROBO_ANGLE_TEST OR ROBO_ENCODER_DIAGNOSTICS_ONLY))
+    message(FATAL_ERROR "ROBO_MAG_CAL is an exclusive calibration image: needs ROBO_SUBSYSTEM4=ON, ROBO_SUBSYSTEM5=OFF, ROBO_LINE_STEERING=OFF and no console/test profile.")
+endif()
 if(ROBO_IR_MONITOR AND NOT ROBO_LINE_STEERING)
     message(FATAL_ERROR "ROBO_IR_MONITOR requires ROBO_LINE_STEERING=ON.")
 endif()
 set(ROBO_PRODUCTION_BUILD OFF)
 if(NOT ROBO_MANUAL_CONSOLE AND NOT ROBO_ENCODER_DIAGNOSTICS_ONLY AND NOT ROBO_SAFE_MOTOR_TEST AND NOT ROBO_ANGLE_TEST)
     set(ROBO_PRODUCTION_BUILD ON)
+endif()
+set(ROBO_INTEGRATED_BUILD OFF)
+if(ROBO_PRODUCTION_BUILD AND ROBO_LINE_STEERING AND ROBO_SUBSYSTEM4 AND ROBO_SUBSYSTEM5 AND NOT ROBO_IR_MONITOR)
+    set(ROBO_INTEGRATED_BUILD ON)
 endif()
 
 set(CMAKE_C_STANDARD 11)
@@ -291,6 +316,7 @@ target_compile_definitions(mtkernel_3 PRIVATE
     $<$<BOOL:${ROBO_PRODUCTION_BUILD}>:ROBO_PRODUCTION_BUILD=1>
     $<$<BOOL:${ROBO_LINE_STEERING}>:ROBO_LINE_STEERING=1>
     $<$<BOOL:${ROBO_IR_MONITOR}>:ROBO_IR_MONITOR=1>
+    $<$<BOOL:${ROBO_MAG_CAL}>:ROBO_MAG_CAL=1>
     $<$<BOOL:${ROBO_MOTION_FAULTS_DISABLED}>:ROBO_MOTION_FAULTS_DISABLED=1>
     ROBO_SUBSYSTEM4=$<BOOL:${ROBO_SUBSYSTEM4}>
     ROBO_SUBSYSTEM5=$<BOOL:${ROBO_SUBSYSTEM5}>
@@ -306,7 +332,9 @@ target_compile_definitions(mtkernel_3 PRIVATE
 )
 if(ROBO_ENCODER_DIAGNOSTICS_ONLY OR ROBO_SAFE_MOTOR_TEST OR ROBO_ANGLE_TEST OR ROBO_PRODUCTION_BUILD)
     string(TIMESTAMP encoder_build_stamp "%Y%m%dT%H%M%SZ" UTC)
-    if(ROBO_LINE_STEERING)
+    if(ROBO_INTEGRATED_BUILD)
+        set(encoder_build_id "smartrobo-integrated-v1-${encoder_build_stamp}")
+    elseif(ROBO_LINE_STEERING)
         set(encoder_build_id "b2-line-steering-v1-${encoder_build_stamp}")
     elseif(ROBO_ANGLE_TEST)
         set(encoder_build_id "b2-angle-test-v1-${encoder_build_stamp}")
@@ -482,6 +510,12 @@ if(ROBO_ENCODER_DIAGNOSTICS_ONLY)
         "${CMAKE_CURRENT_BINARY_DIR}/buddy2_encoder_diag.uf2")
 endif()
 target_link_libraries(mtkernel_3 PRIVATE m)
+if(ROBO_INTEGRATED_BUILD)
+    add_custom_command(TARGET mtkernel_3 POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_CURRENT_BINARY_DIR}/mtkernel_3.uf2"
+        "${CMAKE_CURRENT_BINARY_DIR}/smartrobo_integrated.uf2")
+endif()
 if(ROBO_LINE_STEERING)
     add_custom_command(TARGET mtkernel_3 POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different

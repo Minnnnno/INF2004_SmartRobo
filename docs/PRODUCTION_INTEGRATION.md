@@ -1,9 +1,9 @@
-# Production motion and Buddy 3 integration
+# Integrated motor, IR, IMU and obstacle firmware
 
-Buddy 1 communications and Buddy 2 production motion are now merged on `main`.
 Startup initializes Buddy 1's queues and starts its status task alongside the
-Vehicle Controller and Motion Control tasks. The real line-sensing task is still
-to be implemented. Imported producer/consumer/monitor demos are excluded from
+Vehicle Controller, Motion Control, IR line-following, Buddy 4 IMU/terrain and
+ultrasonic obstacle tasks. The normal CMake profile and VS Code build enable all
+three sensor subsystems. Imported producer/consumer/monitor demos are excluded from
 the robot build and preserved in docs/template_original/buddy1_demos.
 
 Production motion is enabled by the user's explicit hardware confirmation.
@@ -19,21 +19,20 @@ feedback, command expiry, ownership and deadline checks remain active.
 
 ## Production UF2
 
-Flash `build-production/buddy2_production.uf2` from the project directory.
-`build-production/production-build-manifest.json` records the exact absolute
-path, size, SHA256 and build ID. The USB startup banner reports the build ID,
-hardware/manual flags and output cap. Normal builds also produce the same bytes
-as `mtkernel_3.uf2`. There is no calibration serial command parser in this image.
+The standard VS Code build produces `build/smartrobo_integrated.uf2`, with the
+same bytes as `build/mtkernel_3.uf2`. The USB startup banner reports the build ID,
+enabled line/IMU/obstacle tasks, hardware/manual flags and output cap. There is no
+calibration serial command parser in this image. See [integrated firmware](INTEGRATED_FIRMWARE.md).
 
 ```powershell
-cmake -S . -B build-production -G Ninja -DROBO_ANGLE_TEST=OFF -DROBO_SAFE_MOTOR_TEST=OFF -DROBO_ENCODER_DIAGNOSTICS_ONLY=OFF -DROBO_MANUAL_CONSOLE=OFF -DSMP=OFF -DWIFI=none -DNET=none -DCONSOLE=usb_cdc -DPython3_EXECUTABLE=C:/Users/mervy/.pico-sdk/python/3.13.7/python.exe
+cmake -S . -B build-production -G Ninja -DROBO_LINE_STEERING=ON -DROBO_SUBSYSTEM4=ON -DROBO_SUBSYSTEM5=ON -DROBO_IR_MONITOR=OFF -DROBO_MAG_CAL=OFF -DROBO_MOTION_FAULTS_DISABLED=OFF -DROBO_ANGLE_TEST=OFF -DROBO_SAFE_MOTOR_TEST=OFF -DROBO_ENCODER_DIAGNOSTICS_ONLY=OFF -DROBO_MANUAL_CONSOLE=OFF -DSMP=OFF -DWIFI=none -DNET=none -DCONSOLE=usb_cdc -DPython3_EXECUTABLE=C:/Users/mervy/.pico-sdk/python/3.13.7/python.exe
 cmake --build build-production -j 8
 ```
 
-The current line task is an inactive placeholder. Your friend must merge his
-real sensing code into this project and rebuild one combined production image.
-Flashing the current image alone does not implement line following. Existing
-PID gains and physical line-tracking performance still require robot testing.
+The line task reads GP26/GP27, waits for the IMU's startup reference (with the
+existing bounded fallback), and submits steering through the controller. It
+publishes line status during obstacle detours and yields motor ownership to
+Buddy 5. Existing PID gains and physical tracking/avoidance still require robot testing.
 
 ## Function to call
 

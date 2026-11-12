@@ -2,12 +2,12 @@
 #include <stddef.h>
 #define TERRAIN_PENDING (0x10U)
 #define TERRAIN_SIDE_RIGHT (0x20U)
-#define TERRAIN_PUBLIC_MASK (0x0FU)
+#define TERRAIN_PUBLIC_MASK (0x07U)
 #define TERRAIN_COMPLETED_EVENT (0x80U)
 _Static_assert(TERRAIN_EXIT_TENTHS < TERRAIN_ENTER_TENTHS,
                "completion level must be below the entry level (hysteresis)");
 /* Kept across an invalid observation or a sample gap. */
-#define TERRAIN_RETAIN_MASK (TERRAIN_PHASE_MASK | TERRAIN_SLOW | TERRAIN_SIDE_RIGHT | \
+#define TERRAIN_RETAIN_MASK (TERRAIN_PHASE_MASK | TERRAIN_SIDE_RIGHT | \
                              TERRAIN_COMPLETED_EVENT)
 
 /* Reset the event, peaks and run maximum only when explicitly starting a new run. */
@@ -160,7 +160,7 @@ void terrain_step(terrain_t *p_terrain, bool valid, int16_t height_tenths, uint3
         {
             p_terrain->flags = (uint8_t)((p_terrain->flags &
                                           (TERRAIN_VALID | TERRAIN_COMPLETED_EVENT)) |
-                                         TERRAIN_CLIMBING | TERRAIN_SLOW);
+                                         TERRAIN_CLIMBING);
             terrain_raise_peak(p_terrain, magnitude, right);
         }
         return;

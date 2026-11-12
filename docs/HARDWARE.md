@@ -27,7 +27,7 @@ signal can connect directly to Pico GPIO. Confirm the ultrasonic echo interface 
 | Right motor M2A/M2B | 10/11, fixed board driver links |
 | Left encoder A/B | GP2/GP3 |
 | Right encoder A/B | GP4/GP5 |
-| Magnetometer/IMU | GP6/GP7 (SDA/SCL), **I2C1**; subsystem 4 temporarily disabled by default |
+| Magnetometer/IMU | GP6/GP7 (SDA/SCL), **I2C1**; subsystem 4 enabled by default |
 | Servo | GP15; PWM slice 7B, 50 Hz, when subsystem 5 is enabled |
 | Ultrasonic | GP16/GP17, TRIG/ECHO, when subsystem 5 is enabled |
 | Line sensors | GP26 right / GP27 centre, digital inputs in line-steering firmware |
@@ -58,7 +58,7 @@ with the previous signs. See [encoder polarity evidence and correction](ENCODER_
 
 Motors use PWM slices 4 and 5; encoder signals are digital inputs, not PWM. ADC
 use on 26/27 does not claim PWM slice 5. The I2C1 driver on GP6/GP7 is only
-initialized when `ROBO_SUBSYSTEM4=ON` (currently OFF by default). The subsystem 5
+initialized when `ROBO_SUBSYSTEM4=ON` (ON by default). The subsystem 5
 servo uses GP15 on PWM slice 7B, separate from I2C1, the motor PWM slices and
 the ultrasonic ECHO timer on slice 0B. Diagnostic mode `S5_DIAG=6` instead
 uses GP14 on slice 7A.

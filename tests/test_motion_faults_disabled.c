@@ -161,6 +161,8 @@ static void estop_still_holds(void)
     robot_motion_inputs(&b, &r.m, r.sample, r.now);
     check_never_faulted(&r);
     CHECK(r.m.status.state == STOPPING && r.m.status.hold);
+    CHECK((r.m.fault_flags & (1U << ((unsigned)F_ESTOP - 1U))) != 0U);
+    CHECK((r.m.fault_flags & (1U << ((unsigned)F_SYSTEM - 1U))) == 0U);
     CHECK(r.m.status.output[0] == 0.0 && r.m.status.inhibited);
     run_quiet(&r, 50U);
     CHECK(r.m.status.state == STOPPED && r.m.status.hold);
