@@ -762,7 +762,11 @@ void obstacle_task(INT code, void *p_context)
 				  s5_round(s5_front_mm), s5_round(speed_mm_s));
 		}
 
-		if (b_may_move && should_stop(s5_front_mm, speed_mm_s)) {
+		/* The line task's junction pivot (it publishes line values[3] = 1 while pivoting) is not cancelled
+		   by a wall ahead. Braking, the advance and normal following still stop. */
+		if (b_may_move && should_stop(s5_front_mm, speed_mm_s) &&
+		    !((status.line.values[3] > 0.5) && status.owner_valid && (status.owner == SOURCE_LINE) &&
+		      (status.motion.state == DRIVING))) {
 			crash_mark(CRASH_MARK_OBSTACLE, CRASH_OBSTACLE_STOP);
 			motion_stop();
 			s5_blocked = true;

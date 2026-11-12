@@ -22,6 +22,9 @@ INT usermain(void)
 #if ROBO_BARCODE_TASK
         {(FP)barcode_task, 8, 4096, "barcode"},
 #endif
+#if ROBO_SHUTTLE_TASK
+        {(FP)shuttle_task, 8, 4096, "shuttle"},
+#endif
 #if ROBO_SUBSYSTEM4
         {(FP)terrain_task, 8, 4096, "terrain"},
 #endif

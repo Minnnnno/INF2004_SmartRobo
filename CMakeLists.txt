@@ -128,6 +128,26 @@ if(ROBO_HOST_TESTS)
     add_executable(tmonitor_format_checks lib/libtm/libtm_printf.c tests/tmonitor/test_format.c)
     target_include_directories(tmonitor_format_checks PRIVATE tests/tmonitor include)
     add_test(NAME tmonitor_format_checks COMMAND tmonitor_format_checks)
+    # Barcode decoder: synthetic passes at 0.05/0.10 m/s plus recorded shuttle runs replayed through it.
+    add_executable(barcode_decode_checks app_program/subsystem3/barcode_decode.c tests/test_barcode_decode.c)
+    target_include_directories(barcode_decode_checks PRIVATE app_program/subsystem3)
+    if(NOT MSVC)
+        target_compile_options(barcode_decode_checks PRIVATE -Wall -Wextra -Werror -Wconversion -Wshadow)
+        target_link_libraries(barcode_decode_checks m)
+    endif()
+    add_test(NAME barcode_decode_checks
+        COMMAND barcode_decode_checks ${CMAKE_CURRENT_SOURCE_DIR}/tests/barcode/replay.txt)
+    # The firmware's route letters: best fit may add reads but never a wrong letter.
+    add_test(NAME barcode_decode_letters_checks
+        COMMAND barcode_decode_checks --letters AZ ${CMAKE_CURRENT_SOURCE_DIR}/tests/barcode/replay.txt)
+    # Only 'A' allowed: every Z pass must be rejected, not best-fitted to A.
+    add_test(NAME barcode_decode_reject_checks
+        COMMAND barcode_decode_checks --letters A ${CMAKE_CURRENT_SOURCE_DIR}/tests/barcode/replay.txt)
+    # The robot's sensitivity ladder: no wrong letter, and Z passes still rejected when only A is allowed.
+    add_test(NAME barcode_decode_ladder_checks
+        COMMAND barcode_decode_checks --letters AZ --ladder ${CMAKE_CURRENT_SOURCE_DIR}/tests/barcode/replay.txt)
+    add_test(NAME barcode_decode_ladder_reject_checks
+        COMMAND barcode_decode_checks --letters A --ladder ${CMAKE_CURRENT_SOURCE_DIR}/tests/barcode/replay.txt)
     add_executable(crash_restart_checks tests/test_crash_restart.c
         app_program/subsystem2/motion.c app_program/subsystem2/math.c
         app_program/subsystem2/board_config.c app_program/subsystem2/encoder_capture.c

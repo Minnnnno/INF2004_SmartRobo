@@ -6,6 +6,9 @@ typedef enum { SOURCE_MANUAL, SOURCE_LINE, SOURCE_BARCODE, SOURCE_OBSTACLE, SOUR
 typedef enum { CONTROL_STOP = 1U, CONTROL_RELEASE = 2U, CONTROL_RESET = 4U,
                CONTROL_FAULT = 8U, CONTROL_SHUTDOWN = 16U, CONTROL_ESTOP = 32U } robot_control_t;
 typedef enum { REMOTE_START = 1, REMOTE_STOP, REMOTE_ESTOP } robot_remote_command_t;
+/* SOURCE_BARCODE status values (barcode.c): [0] letter (ASCII), [1] valid read counter,
+ * [2] junction counter (the first black after a valid read, line images only), [3] failed-read counter
+ * (a long pass that did not decode, not counting the junction's own bar; line images stop the car on it). */
 typedef struct { request_source_t source; motion_command_t command; } robot_request_t;
 typedef struct {
     bool available; /* false until owner supplies genuine data */

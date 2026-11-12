@@ -335,13 +335,21 @@ LOCAL	void	out_cons( UB *str, INT len,  OutPar *par )
 #endif
 }
 
+#ifdef ROBO_BARCODE_LOG_ONLY
+IMPORT BOOL	robo_log_allowed( const UB *format );	/* app_program/subsystem3/log_filter.c */
+#endif
+
 EXPORT INT	tm_printf( const UB *format, ... )
 {
 	va_list	ap;
 	INT	result;
 #if TK_SUPPORT_SMP && TM_CONSOLE_USB_CDC
 	UINT	intsts;
-
+#endif
+#ifdef ROBO_BARCODE_LOG_ONLY
+	if (!robo_log_allowed(format)) return 0;	/* Barcode-only log image. */
+#endif
+#if TK_SUPPORT_SMP && TM_CONSOLE_USB_CDC
 	tm_printf_lock(&intsts);
 #endif
 
