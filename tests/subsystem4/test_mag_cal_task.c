@@ -5,7 +5,7 @@
  * failure paths. Each scenario ends by long-jumping out of tk_dly_tsk().
  */
 #define ROBO_MAG_CAL 1
-#include "../../../app_program/subsystem4/terrain_task.c"
+#include "../../app_program/subsystem4/terrain_task.c"
 #include <math.h>
 #include <setjmp.h>
 #include <stdarg.h>
@@ -45,7 +45,6 @@ ER gy511_acceleration_mg(gy511_acceleration_t const *p_sample, uint8_t axis, int
 {
     (void)p_sample; *p_mg = (2U == axis) ? (int16_t)-1000 : (int16_t)0; return E_OK; /* level */
 }
-ER gy511_read_impact(uint8_t *p_source) { *p_source = 0U; return E_OK; }
 ER gy511_read_magnetic(gy511_magnetic_t *p_sample) { (void)p_sample; return E_OK; }
 ER gy511_magnetic_counts(gy511_magnetic_t const *p_sample, uint8_t axis, int16_t *p_counts)
 {

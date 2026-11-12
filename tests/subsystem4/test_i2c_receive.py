@@ -9,7 +9,7 @@ import subprocess
 import os
 import shlex
 
-root = Path(__file__).resolve().parents[3]
+root = Path(__file__).resolve().parents[2]
 source = (root / "device/i2c/sysdepend/rp2040/i2c_rp2040.c").read_text()
 start = source.index("case I2C_STS_RECV:")
 end = source.index("\n\tdefault:", start)

@@ -2,7 +2,7 @@
  * code. Faked: clock, delay, sensor transfers, motion status, shared bus and
  * comms latch. Each scenario ends by long-jumping out of tk_dly_tsk().
  */
-#include "../../../app_program/subsystem4/terrain_task.c"
+#include "../../app_program/subsystem4/terrain_task.c"
 #include <math.h>
 #include <setjmp.h>
 #include <stdarg.h>
@@ -20,7 +20,8 @@ static ER g_read_status;
 static motion_mode_fake_t g_motion;
 static double g_speed[2]; /* m/s, reported while DRIVING */
 static double g_heading_rad; /* Fake odometry: integrates the speed difference per call. */
-static uint8_t g_impact_source;
+static bool g_hold;      /* Controller hold as Buddy 2 reports it. */
+static unsigned g_stops; /* motion_stop() calls from the lift detector. */
 static unsigned g_status_calls, g_published, g_events, g_reads;
 static uint32_t g_read_time[2048];
 static subsystem_status_t g_last;
@@ -59,11 +60,6 @@ ER gy511_magnetic_counts(gy511_magnetic_t const *p_sample, uint8_t axis, int16_t
 {
     (void)p_sample; *p_counts = g_mag[axis]; return E_OK;
 }
-ER gy511_read_impact(uint8_t *p_source)
-{
-    *p_source = g_impact_source; g_impact_source = 0U; /* reading clears the latch */
-    return E_OK;
-}
 ER gy511_acceleration_mg(gy511_acceleration_t const *p_sample, uint8_t axis, int16_t *p_mg)
 {
     (void)p_sample; *p_mg = g_xyz[axis]; return E_OK;
@@ -80,6 +76,7 @@ bool motion_get_status(robot_status_t *p_status)
         g_heading_rad += (g_speed[1] - g_speed[0]) / 0.115 * 0.020; /* one 20 ms cycle */
     }
     p_status->motion.heading = g_heading_rad;
+    p_status->motion.hold = g_hold;
     p_status->motion.state = (MOTION_DRIVING == g_motion) ? DRIVING :
                              ((MOTION_BOOTING == g_motion) ? INITIALISING :
                              ((MOTION_SHUTDOWN == g_motion) ? SHUTDOWN : READY));
@@ -91,6 +88,8 @@ bool robot_update_subsystem(request_source_t source, const subsystem_status_t *p
     g_last = *p_status; g_published++;
     return true;
 }
+/* Controlled STOP: the controller holds the robot until START. */
+void motion_stop(void) { g_stops++; g_hold = true; }
 void comms_latch_event(UB events) { g_event_bits |= events; g_events++; }
 double motion_hal_time(void) { return (double)g_clock / 1000.0; }
 static unsigned g_turn_lines;
@@ -132,7 +131,7 @@ static void run(motion_mode_fake_t motion, uint32_t end_ms, void (*script)(uint3
 {
     g_clock = 1000U; g_start = g_clock; g_end = end_ms;
     g_motion = motion; g_script = script; g_read_status = E_OK;
-    g_speed[0] = 0.0; g_speed[1] = 0.0; g_impact_source = 0U; g_heading_rad = 0.0;
+    g_speed[0] = 0.0; g_speed[1] = 0.0; g_hold = false; g_stops = 0U; g_heading_rad = 0.0;
     g_mag_status = E_OK; g_mag[0] = 200; g_mag[1] = 0; g_turn_reason[0] = '\0';
     g_status_calls = 0U; g_published = 0U; g_events = 0U; g_reads = 0U; g_event_bits = 0U;
     g_last = (subsystem_status_t){0};
@@ -163,8 +162,8 @@ static void hump_script(uint32_t t)
         check(S4_TS_CLIMBING == code_of(), "one-wheel hump publishes CLIMBING");
         check(!faulted_of(), "climbing is not a fault");
         check(fabs(pitch_deg() - 5.7) < 0.5, "pitch published in radians, + nose up");
-        check((TF_TV_PITCH | TF_TV_HUMP) == valid_of(), "hump height valid once climbing");
-        check(fabs(g_last.values[2] - 0.030) < 0.0005, "live peak 30 mm published in metres");
+        check(TF_TV_PITCH == valid_of(), "hump height not published while climbing");
+        check(0.0 == g_last.values[2], "run maximum waits for the hump to complete");
         check(0U == g_events, "no hump event while climbing");
         g_xyz[0] = 130; g_xyz[1] = 0; g_xyz[2] = -991; /* ~15 mm: coming down */
         g_step = 2U;
@@ -203,9 +202,9 @@ static int class_of(void)
 }
 static double yaw_deg(void) { return g_last.values[0] * 180.0 / 3.14159265358979323846; }
 
-/* Level boot, then drive: turning, an impact, and the hold expiring. */
+/* Level boot, then drive: turning, then straighten so the turn completes. */
 static unsigned g_mstep;
-static uint32_t g_impact_at;
+static uint32_t g_turn_at;
 static void motion_script(uint32_t t)
 {
     if ((0U == g_mstep) && (t >= 4000U))
@@ -221,25 +220,107 @@ static void motion_script(uint32_t t)
         check(TERRAIN_MC_TURNING == class_of(), "a real heading change publishes TURNING");
         check(fabs(yaw_deg() - 50.0) < 0.6, "turn rate 50 deg/s in values[0], + = left");
         check(TF_TV_PITCH == valid_of(), "frame validity bits unchanged (heading bit stays clear)");
-        g_impact_source = GY511_IMPACT_ACTIVE | GY511_IMPACT_YH;
-        g_impact_at = t;
-        g_mstep = 2U;
-    }
-    else if ((2U == g_mstep) && (t >= (g_impact_at + 40U)))
-    {
-        check(TERRAIN_MC_IMPACT == class_of(), "impact latch publishes IMPACT at once");
-        g_mstep = 3U;
-    }
-    else if ((3U == g_mstep) && (t >= (g_impact_at + 260U)))
-    {
-        check(TERRAIN_MC_IMPACT == class_of(), "IMPACT still published within the hold");
+        g_turn_at = t;
         g_mstep = 4U;
     }
-    else if ((4U == g_mstep) && (t >= (g_impact_at + 500U)))
+    else if ((4U == g_mstep) && (t >= (g_turn_at + 500U)))
     {
-        check(TERRAIN_MC_TURNING == class_of(), "back to TURNING after the hold");
+        check(TERRAIN_MC_TURNING == class_of(), "still TURNING half a second later");
+        check(0U == g_stops, "driving never triggers the lift stop");
         g_speed[0] = 0.100; g_speed[1] = 0.100; /* straighten: the turn completes */
         g_mstep = 5U;
+    }
+}
+
+/* Lift/overturn stop: drive straight, overturn, START pressed in the air,
+ * set down, then lift straight up. */
+static unsigned g_lstep;
+static uint32_t g_lift_at;
+static void lift_script(uint32_t t)
+{
+    if ((0U == g_lstep) && (t >= 4000U))
+    {
+        check(S4_TS_WAITING == code_of() && 0U == g_stops, "monitoring, nothing stopped yet");
+        g_motion = MOTION_DRIVING; g_speed[0] = 0.100; g_speed[1] = 0.100;
+        g_lstep = 1U;
+    }
+    else if ((1U == g_lstep) && (t >= 5000U))
+    {
+        check(TERRAIN_MC_MOVING == class_of() && 0U == g_stops, "driving straight: MOVING, no stop");
+        g_xyz[0] = 0; g_xyz[1] = 0; g_xyz[2] = 1000; /* rolled upside down */
+        g_lift_at = t;
+        g_lstep = 2U;
+    }
+    else if ((2U == g_lstep) && (t >= (g_lift_at + 160U)))
+    {
+        check(0U == g_stops, "not before 200 ms overturned");
+        g_lstep = 3U;
+    }
+    else if ((3U == g_lstep) && (t >= (g_lift_at + 260U)))
+    {
+        check(1U == g_stops && g_hold, "overturned: one motion_stop()");
+        check(TERRAIN_MC_OVERTURNED == class_of(), "overturned publishes motion class 7");
+        check(S4_TS_LIFTED != code_of() && !faulted_of(), "overturned is not T_STATE LIFTED and not a fault");
+        g_hold = false; /* START pressed while still upside down */
+        g_lstep = 4U;
+    }
+    else if ((4U == g_lstep) && (t >= (g_lift_at + 320U)))
+    {
+        check(2U == g_stops && g_hold, "released while overturned: stopped again");
+        level();
+        g_lift_at = t;
+        g_lstep = 5U;
+    }
+    else if ((5U == g_lstep) && (t >= (g_lift_at + 700U)))
+    {
+        check(2U == g_stops && g_hold, "set down: latch clears, no new stop, still held");
+        check(TERRAIN_MC_OVERTURNED != class_of(), "class leaves OVERTURNED");
+        g_hold = false; /* START: driving again */
+        g_xyz[2] = -1300; /* picked straight up: +300 mg */
+        g_lift_at = t;
+        g_lstep = 6U;
+    }
+    else if ((6U == g_lstep) && (t >= (g_lift_at + 100U)))
+    {
+        check(3U == g_stops && g_hold, "picked up: stopped within ~80 ms");
+        check(S4_TS_LIFTED == code_of() && TERRAIN_TS_LIFTED == terrain_published_state(&g_last),
+              "lifted publishes T_STATE 7");
+        check(TERRAIN_MC_OVERTURNED != class_of(), "lifted is not OVERTURNED");
+        g_xyz[2] = -1000; /* held still and level in the air or set down */
+        g_lstep = 7U;
+    }
+}
+
+/* Tilt to one side while driving (S4-H06): 45 deg for 2 s is neither a lift
+ * nor an overturn, stops nothing and records no hump. */
+static unsigned g_tstep;
+static void tilt_script(uint32_t t)
+{
+    if ((0U == g_tstep) && (t >= 4000U))
+    {
+        g_motion = MOTION_DRIVING; g_speed[0] = 0.100; g_speed[1] = 0.100;
+        g_tstep = 1U;
+    }
+    else if ((1U == g_tstep) && (t >= 5000U))
+    {
+        g_xyz[0] = -707; g_xyz[1] = 0; g_xyz[2] = -707; /* 45 deg to one side */
+        g_tstep = 2U;
+    }
+    else if ((2U == g_tstep) && (t >= 7000U))
+    {
+        check(0U == g_stops && !g_hold, "45 deg tilt for 2 s: no motion_stop()");
+        check(S4_TS_LIFTED != code_of(), "45 deg tilt is not T_STATE LIFTED");
+        check(TERRAIN_MC_OVERTURNED != class_of(), "45 deg tilt is not OVERTURNED");
+        level();
+        g_tstep = 3U;
+    }
+    else if ((3U == g_tstep) && (t >= 9000U))
+    {
+        check(0U == g_stops, "still no stop after setting it level");
+        check(0U == g_events, "no hump event from the tilt");
+        check(0U == (valid_of() & TF_TV_HUMP), "no hump height recorded from the tilt");
+        check(S4_TS_WAITING == code_of() && TERRAIN_MC_MOVING == class_of(), "back to WAITING and MOVING");
+        g_tstep = 4U;
     }
 }
 
@@ -279,6 +360,18 @@ int main(void)
     g_turn_lines = 0U;
     run(MOTION_STILL, 6500U, motion_script);
     check(5U == g_mstep, "all motion checkpoints reached");
+
+    /* Lift / overturn: motors stopped, re-stopped if released in the air. */
+    g_lstep = 0U;
+    run(MOTION_STILL, 7000U, lift_script);
+    check(7U == g_lstep, "all lift checkpoints reached");
+    check(3U == g_stops, "exactly three stops (overturn, release in the air, lift)");
+
+    /* Tilting to one side never stops the robot (35 deg rule removed). */
+    g_tstep = 0U;
+    run(MOTION_STILL, 9100U, tilt_script);
+    check(4U == g_tstep, "all tilt checkpoints reached");
+    check(0U == g_stops, "no stop during the whole tilt run");
     check(1U == g_turn_lines, "one [TURN] line printed when the pivot ends");
 
     /* n/a reason comes from the turn itself, not a stale earlier reason. */
@@ -332,12 +425,12 @@ int main(void)
         slot.values[3] = NAN;
         check(TERRAIN_TS_UNKNOWN == terrain_published_state(&slot), "NaN word is UNKNOWN");
         status.terrain.available = true;
-        for (unsigned code = 0U; code < 7U; code++)
+        for (unsigned code = 0U; code < 8U; code++)
         {
             status.terrain.values[3] = (double)((code << 3U) | TF_TV_PITCH | TF_TV_HUMP);
             check(code == terrain_published_state(&status.terrain), "every code decodes");
             check(terrain_imu_faulted(&status) == (TERRAIN_TS_FAULT == code),
-                  "fault only for T_STATE 5");
+                  "fault only for T_STATE 5 (LIFTED 7 is not a fault)");
         }
     }
 
@@ -362,7 +455,7 @@ int main(void)
         check(!terrain_imu_faulted(&status), "unavailable slot is not a fault");
     }
 
-    printf("PASS: %u terrain task checks (snapshot, state codes, hump event, level gating, timing)\n",
+    printf("PASS: %u terrain task checks (snapshot, state codes, hump event, level gating, timing, lift stop)\n",
            g_checks);
     return 0;
 }

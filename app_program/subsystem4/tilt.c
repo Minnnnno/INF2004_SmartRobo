@@ -106,6 +106,9 @@ bool tilt_capture(tilt_context_t *p_context, int16_t x, int16_t y, int16_t z)
     {
         p_context->up[i] = p_context->sum[i] / (float32_t)TILT_CAPTURE_SAMPLES;
     }
+    /* Keep the reference gravity size: lift detection measures vertical
+     * acceleration against it (sensor scale error cancels out). */
+    p_context->gravity = sqrtf(tilt_dot(p_context->up, p_context->up));
     //normalize it to scale it to length 1, so only direction of gravity is kept
     if (!tilt_normalise(p_context->up))
     {

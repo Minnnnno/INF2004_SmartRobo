@@ -17,6 +17,7 @@
 #define COMMS_TOPIC_STATUS	"robot/status"		/* retained text: online/offline */
 #define COMMS_TOPIC_HEARTBEAT	"robot/heartbeat"
 #define COMMS_TOPIC_FRAME	"robot/frame"		/* 21-byte status frame, QoS 0 */
+#define COMMS_TOPIC_ENCODER	"robot/encoder"		/* 26-byte encoder frame, QoS 0 */
 #define COMMS_TOPIC_TELEMETRY	"robot/telemetry/"	/* + name; text diagnostics only */
 #define COMMS_TOPIC_EVENT	"robot/event"		/* 2-byte event frame, QoS 1 */
 #define COMMS_TOPIC_CMD		"robot/cmd"		/* 2-byte command, QoS 1 */

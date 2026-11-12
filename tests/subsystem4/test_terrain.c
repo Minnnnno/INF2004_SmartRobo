@@ -1,7 +1,7 @@
 /* Height-based hump detection: one wheel of a 2-wheel + caster robot climbs.
  * Input is the right-minus-left wheel contact height in 0.1 mm; the detector
  * smooths it (s += (h - s) / 4) and reseeds after gaps/invalid samples. */
-#include "../../../app_program/subsystem4/terrain.h"
+#include "../../app_program/subsystem4/terrain.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -64,9 +64,10 @@ int main(void)
     check(phase(&t) == TERRAIN_WAITING, "not immediately (smoothing + hold)");
     hold(&t, 60, 300U);
     check(phase(&t) == TERRAIN_CLIMBING, "climbing");
-    check(terrain_run_max(&t) == (TERRAIN_RUN_VALID | 6U), "run max follows live peak");
+    check(terrain_run_max(&t) == 0U, "run max waits for completion");
     hold(&t, 0, 800U);
     check(terrain_take_completed(&t) && peak_mm(&t) == 6U, "small hump completes");
+    check(terrain_run_max(&t) == (TERRAIN_RUN_VALID | 6U), "run max set on completion");
 
     /* 30 mm hump under the right wheel. */
     terrain_reset(&t);
@@ -98,23 +99,25 @@ int main(void)
     /* Phase sequence, re-climb margin and exit hold (levels settled each step). */
     terrain_reset(&t);
     hold(&t, 100, 600U); check(phase(&t) == TERRAIN_CLIMBING, "climbing");
-    hold(&t, 300, 600U); check(phase(&t) == TERRAIN_CLIMBING && run_mm(&t) == 30U, "rising stays climbing");
+    hold(&t, 300, 600U); check(phase(&t) == TERRAIN_CLIMBING && run_mm(&t) == 0U, "rising stays climbing, run max not live");
     hold(&t, 280, 600U); check(phase(&t) == TERRAIN_CLIMBING, "2 mm below peak still climbing (crest)");
     hold(&t, 265, 600U); check(phase(&t) == TERRAIN_DESCENDING, "3 mm below peak descends");
     hold(&t, 310, 600U);
-    check(phase(&t) == TERRAIN_DESCENDING && run_mm(&t) == 30U, "rise of under 2 mm is noise, no re-climb");
+    check(phase(&t) == TERRAIN_DESCENDING, "rise of under 2 mm is noise, no re-climb");
     hold(&t, 330, 600U);
-    check(phase(&t) == TERRAIN_CLIMBING && run_mm(&t) == 33U, "rise of 2 mm+ re-climbs (double hump)");
+    check(phase(&t) == TERRAIN_CLIMBING, "rise of 2 mm+ re-climbs (double hump)");
     hold(&t, 100, 600U); check(phase(&t) == TERRAIN_DESCENDING, "descending again");
     hold(&t, 30, 600U); check(phase(&t) == TERRAIN_DESCENDING, "3.0 mm is not done (exit < 2.5 mm)");
     hold(&t, 20, 300U); check(phase(&t) == TERRAIN_DESCENDING, "exit needs 300 ms below 2.5 mm");
     hold(&t, 20, 100U);
-    check(phase(&t) == TERRAIN_WAITING && terrain_take_completed(&t) && peak_mm(&t) == 33U, "completes");
+    check(phase(&t) == TERRAIN_WAITING && terrain_take_completed(&t) && peak_mm(&t) == 33U && run_mm(&t) == 33U,
+          "completes with the re-climbed peak");
 
-    /* Up-only ramp under one wheel: stays climbing, run max still reported. */
+    /* Up-only ramp under one wheel: stays climbing, not counted until it completes. */
     terrain_reset(&t);
     hold(&t, 400, 2000U);
-    check(phase(&t) == TERRAIN_CLIMBING && run_mm(&t) == 40U && !terrain_take_completed(&t), "up-only ramp counts");
+    check(phase(&t) == TERRAIN_CLIMBING && terrain_run_max(&t) == 0U && !terrain_take_completed(&t),
+          "up-only ramp not counted");
 
     /* Invalid observations keep phase/peak, mark unknown, restart timing,
      * and reseed the smoothing from the next sample. */
@@ -123,10 +126,10 @@ int main(void)
     check(phase(&t) == TERRAIN_DESCENDING, "descending before gap");
     terrain_step(&t, false, 0, now); now += 20U;
     check(phase(&t) == TERRAIN_DESCENDING && !(terrain_status(&t) & TERRAIN_VALID) &&
-          run_mm(&t) == 30U, "invalid keeps state, unknown");
+          run_mm(&t) == 0U, "invalid keeps state, unknown");
     hold(&t, 10, 280U); check(phase(&t) == TERRAIN_DESCENDING, "exit timing restarted after invalid");
     terrain_step(&t, true, 10, now); now += 20U;
-    check(phase(&t) == TERRAIN_WAITING && peak_mm(&t) == 30U, "completes after a fresh 300 ms");
+    check(phase(&t) == TERRAIN_WAITING && peak_mm(&t) == 30U && run_mm(&t) == 30U, "completes after a fresh 300 ms");
     check(terrain_take_completed(&t), "event after invalid gap");
 
     /* Unconsumed event survives valid and invalid observations. */
@@ -141,10 +144,34 @@ int main(void)
     hold(&t, 60, 60U); check(phase(&t) == TERRAIN_WAITING, "gap restarts entry hold");
     terrain_step(&t, true, 60, now); now += 20U; check(phase(&t) == TERRAIN_CLIMBING, "entry after fresh hold");
 
+    /* Lift discards the hump in progress: no event, run max and last peak
+     * unchanged; repeated discards are harmless; real humps afterwards count. */
+    terrain_reset(&t);
+    hump(&t, 200);
+    check(terrain_take_completed(&t) && peak_mm(&t) == 20U && run_mm(&t) == 20U, "real hump before lift");
+    hold(&t, 360, 600U);
+    check(phase(&t) == TERRAIN_CLIMBING && run_mm(&t) == 20U, "lift tilt starts a fake hump, run max untouched");
+    terrain_discard(&t);
+    check(phase(&t) == TERRAIN_WAITING && !(terrain_status(&t) & TERRAIN_VALID), "discard -> WAITING, unknown");
+    check(run_mm(&t) == 20U && peak_mm(&t) == 20U, "discard keeps run max and last peak");
+    hold(&t, 360, 200U); terrain_discard(&t); terrain_discard(&t);
+    check(phase(&t) == TERRAIN_WAITING && run_mm(&t) == 20U, "repeated discard while latched is harmless");
+    hold(&t, 0, 800U);
+    check(!terrain_take_completed(&t) && phase(&t) == TERRAIN_WAITING, "discarded hump never completes");
+    hump(&t, -300);
+    check(terrain_take_completed(&t) && peak_mm(&t) == 30U && run_mm(&t) == 30U, "hump after the lift counts");
+    hump(&t, 150); terrain_discard(&t);
+    check(terrain_take_completed(&t) && peak_mm(&t) == 15U, "unconsumed event survives a discard");
+    terrain_reset(&t); hold(&t, 300, 600U); terrain_discard(&t); hold(&t, 0, 800U);
+    check(terrain_run_max(&t) == 0U && !terrain_take_completed(&t), "discarded first hump leaves no run max");
+    terrain_discard(NULL);
+
     /* Clock wrap and saturation of the 7-bit field. */
     terrain_reset(&t); now = UINT32_MAX - 100U;
     hold(&t, 2000, 200U);
-    check(phase(&t) == TERRAIN_CLIMBING && run_mm(&t) == 127U, "wrap; peak saturates at 127 mm");
+    check(phase(&t) == TERRAIN_CLIMBING, "climbing across the clock wrap");
+    hold(&t, 0, 800U);
+    check(terrain_take_completed(&t) && peak_mm(&t) == 127U && run_mm(&t) == 127U, "wrap; peak saturates at 127 mm");
     check((terrain_status(&t) & 0xF0U) == 0U, "private bits not exposed");
 
     check(strcmp(terrain_phase_name(TERRAIN_DESCENDING), "DESCENDING") == 0, "names");

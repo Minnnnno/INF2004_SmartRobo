@@ -1,6 +1,7 @@
-/* Buddy 4 motion classification (brief: motion classification, collision
- * detection, turn-rate monitoring, motion event reporting).
- * Fusion by design: the IMU supplies what only it can sense (impact latch,
+/* Buddy 4 motion classification (brief: motion classification, turn-rate
+ * monitoring, motion event reporting; collision detection was replaced by
+ * lift/overturn detection, see lift.h).
+ * Fusion by design: the IMU supplies what only it can sense (overturned pose,
  * one-wheel hump phase from sideways tilt); Buddy 2's encoder status supplies
  * movement (stationary, speed change, yaw rate). The GY-511 has no gyroscope,
  * and the robot's ~0.03 g acceleration sits in the accelerometer's vibration
@@ -20,11 +21,10 @@
 #define MC_TURNING      (4U)
 #define MC_CLIMBING     (5U)
 #define MC_DESCENDING   (6U)
-#define MC_IMPACT       (7U)
+#define MC_OVERTURNED   (7U) /* IMU: robot overturned (lift.h); motors stopped. */
 #define MC_CLASS_MASK   (0x07U)
 
 /* Thresholds (tune from robot logs). */
-#define MC_IMPACT_HOLD_MS  (300U) /* IMPACT stays reported this long (frame is 100 ms). */
 /* TURNING = the robot's heading really changed: |net heading change over the
  * last ~0.5 s| >= 15 deg (an average of ~30 deg/s held). Line-following
  * corrections flip left/right and net close to 0, so they stay MOVING. */
@@ -46,7 +46,7 @@ typedef struct
 {
     bool valid;          /* Buddy 4 MONITORING and motion status available. */
     bool stationary;     /* Buddy 2 encoders report the robot at rest. */
-    bool impact;         /* IMU inertial latch fired since the previous step. */
+    bool overturned;     /* Buddy 4 lift detector: robot overturned (latched). */
     uint8_t terrain_phase; /* TERRAIN_WAITING/CLIMBING/DESCENDING (terrain.h). */
     int16_t speed_mm_s[2]; /* Buddy 2 wheel speeds, left then right. */
     uint16_t track_mm;   /* Wheel track for the yaw rate (B4_TRACK_MM). */
@@ -57,14 +57,13 @@ typedef struct
 } motion_class_input_t;
 
 /* Packed byte: reported class bits 0..2, candidate class bits 3..5,
- * candidate repeat count bits 6..7 (0..3). Flags: bit 0 valid, bit 1 impact
- * hold active, bit 2 speed window seeded, bit 3 turn in progress, bit 4
+ * candidate repeat count bits 6..7 (0..3). Flags: bit 0 valid, bit 1 unused,
+ * bit 2 speed window seeded, bit 3 turn in progress, bit 4
  * completed turn waiting. ring: write index bits 0..2, filled count bits 3..5,
  * turn start/end debounce count bits 6..7.
  */
 typedef struct
 {
-    uint32_t impact_since;  /* Start of the current impact hold. */
     uint32_t last_ms;       /* Time of the previous valid step. */
     uint32_t window_ms;     /* Start of the current speed-change window. */
     int16_t window_mm_s;    /* Centre speed at the window start. */
@@ -93,7 +92,7 @@ typedef struct
 
 void motion_class_reset(motion_class_t *p_context);
 /* One step per task cycle. Invalid input publishes STATIONARY with the valid
- * flag clear and discards the speed window and any impact hold.
+ * flag clear and discards the speed window.
  */
 void motion_class_step(motion_class_t *p_context, motion_class_input_t const *p_input,
                        uint32_t now_ms);

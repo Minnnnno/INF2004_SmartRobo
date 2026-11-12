@@ -29,6 +29,7 @@ _Static_assert((int)COMMS_CMD_START == (int)TF_OP_START &&
 	       (int)COMMS_CMD_ESTOP == (int)TF_OP_ESTOP,
 	       "COMMS_CMD must equal the binary opcodes");
 _Static_assert(TF_FRAME_BYTES <= COMMS_PAYLOAD_MAX, "frame does not fit a message");
+_Static_assert(TF_ENC_BYTES <= COMMS_PAYLOAD_MAX, "encoder frame does not fit a message");
 
 typedef struct {
 	UB	qos;
@@ -259,6 +260,8 @@ LOCAL void comms_task(INT stacd, void *exinf)
 	tm_frame_info_t	info = {0};
 	int32_t		values[TF_FIELD_COUNT];
 	UB		frame[TF_FRAME_BYTES];
+	tf_encoder_t	enc;
+	UB		enc_frame[TF_ENC_BYTES];
 	BOOL		have_prev = FALSE;
 	UW		base_rejected = 0, base_drops = 0;
 	double		t0, t1, t2;
@@ -301,6 +304,10 @@ LOCAL void comms_task(INT stacd, void *exinf)
 		if (tf_pack(values, frame) != 0U) {
 			stats.clamped++;
 		}
+		tm_fill_encoder(&snap, info.seq, t1, &enc);
+		if (tf_enc_pack(&enc, enc_frame)) {
+			stats.clamped++;
+		}
 		t2 = motion_hal_time();
 		us = elapsed_us(t1, t2);
 		if (us > stats.pack_us_max) {
@@ -313,10 +320,16 @@ LOCAL void comms_task(INT stacd, void *exinf)
 			stats.frames++;
 			base_rejected = snap.rejected_requests;
 			base_drops = comms_drops;
+			/* Sent only after its status frame, so a SEQ always
+			   pairs the two.  A failure counts in comms_drops. */
+			if (queue_message(mbf_comms_tlm, 0, COMMS_TOPIC_ENCODER, NULL,
+					  enc_frame, TF_ENC_BYTES) == E_OK) {
+				stats.enc_frames++;
+			}
 			if ((stats.frames % COMMS_REPORT_FRAMES) == 0U) {
-				tm_printf((UB*)"comms: frames=%u skipped=%u clamped=%u "
+				tm_printf((UB*)"comms: frames=%u enc=%u skipped=%u clamped=%u "
 					  "dropped=%u copy_us_max=%u pack_us_max=%u\n",
-					  stats.frames, stats.skipped, stats.clamped,
+					  stats.frames, stats.enc_frames, stats.skipped, stats.clamped,
 					  comms_drops, stats.copy_us_max, stats.pack_us_max);
 			}
 		}

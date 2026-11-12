@@ -20,6 +20,7 @@ typedef struct
     float32_t forward[3];
     float32_t side[3];
     float32_t filtered[3];
+    float32_t gravity;  /* Magnitude of the captured level reference, mg (~1000). */
     /* Bits 0..5 capture count (0..50), bit 6 calibrated, bit 7 filter ready. */
     uint8_t progress;
     /* Pitch condition bits 0..1, roll bits 2..3: 0 level, 1 positive, 2 negative. */

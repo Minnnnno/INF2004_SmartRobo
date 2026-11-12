@@ -1,6 +1,7 @@
 /* Buddy 4 terrain slot decoder for other subsystems (owner: Buddy 4).
  * Read-only: these helpers only interpret the published Terrain snapshot;
- * they never command motion. The task that drives decides what to do.
+ * they never command motion. (Buddy 4 itself stops the motors when the robot
+ * is lifted or overturned; see app_program/subsystem4/lift.h.)
  * Header-only, so callers link it whether or not ROBO_SUBSYSTEM4 is built:
  * without Buddy 4 the slot stays unavailable and every query says "no".
  *
@@ -14,7 +15,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-/* T_STATE codes (3 bits). 7 is never published and means UNKNOWN here. */
+/* T_STATE codes (3 bits, all 8 published). */
 #define TERRAIN_TS_INIT       (0U)
 #define TERRAIN_TS_WAITING    (1U) /* Monitoring, level ground. */
 #define TERRAIN_TS_CLIMBING   (2U) /* Monitoring, one wheel going up a hump. */
@@ -22,7 +23,10 @@
 #define TERRAIN_TS_RECOVERY   (4U)
 #define TERRAIN_TS_FAULT      (5U)
 #define TERRAIN_TS_STOP       (6U)
-#define TERRAIN_TS_UNKNOWN    (7U) /* Slot unavailable or malformed. */
+#define TERRAIN_TS_LIFTED     (7U) /* Monitoring, robot lifted: motors stopped by Buddy 4.
+                                      (Overturned is motion class 7 instead.) */
+#define TERRAIN_TS_UNKNOWN    (0xFFU) /* Decoder only, never published: slot unavailable
+                                         or malformed. Outside the 3-bit range. */
 
 /* Published T_STATE, or TERRAIN_TS_UNKNOWN when the slot holds no usable data. */
 static inline uint8_t terrain_published_state(subsystem_status_t const *p_terrain)
@@ -51,7 +55,7 @@ static inline uint8_t terrain_published_state(subsystem_status_t const *p_terrai
 #define TERRAIN_MC_TURNING      (4U)
 #define TERRAIN_MC_CLIMBING     (5U)
 #define TERRAIN_MC_DESCENDING   (6U)
-#define TERRAIN_MC_IMPACT       (7U)
+#define TERRAIN_MC_OVERTURNED   (7U) /* Robot overturned: motors stopped by Buddy 4. */
 #define TERRAIN_MC_SHIFT        (6U)
 #define TERRAIN_MOTION_VALID    (0x200U)
 

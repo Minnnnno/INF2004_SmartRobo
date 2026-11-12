@@ -28,13 +28,14 @@ Frame: 161 → **163 of 168 bits** (+3 `M_CLASS`, −1 `HUMP_MM`), 5 spare bits.
 | Project write-up, Buddy 4 tasks | "Turn-rate monitoring", "Motion event reporting" | `TURN_RATE`, `M_CLASS` |
 | Week 6 FR9 | "identify stationary, accelerating, turning, climbing, descending and sudden-impact events and **provide yaw-rate measurements**" | `M_CLASS`, `TURN_RATE` |
 | Change Requirement 1 | minimum bits per field | dead `T_HEADING` bits reused; `HUMP_MM` trimmed to its real range |
+| Change Requirement, 11 November 2026 | sudden-impact (collision) detection removed; the IMU detects **lifted or overturned** and the motors stop | lifted = `T_STATE` 7 (already in the v1 frame); overturned = `M_CLASS` 7, so it reaches the dashboard only once `M_CLASS` is added |
 
 ## Field changes (Buddy 4 part of `TF_FIELDS`)
 
 | Field | v1 | v2 | Range | Meaning |
 |---|---|---|---|---|
 | `T_VALID` | 3 | 3 | 0..7 | bit0 **motion class + turn rate valid** (was heading), bit1 pitch, bit2 hump |
-| `T_STATE` | 3 | 3 | 0..6 | unchanged |
+| `T_STATE` | 3 | 3 | 0..7 | 7 = LIFTED (Change Requirement, 11 November 2026) |
 | **`M_CLASS`** | — | **3** | 0..7 | **new**, see codes below |
 | `PITCH` | 8 | 8 | −90..90 | unchanged |
 | `T_HEADING` → **`TURN_RATE`** | 9 | 9 | **−256..255** | turn rate, **deg/s, + = left (anticlockwise), − = right** |
@@ -47,7 +48,7 @@ Frame: 161 → **163 of 168 bits** (+3 `M_CLASS`, −1 `HUMP_MM`), 5 spare bits.
 | 0 | STATIONARY | 4 | TURNING |
 | 1 | MOVING | 5 | CLIMBING |
 | 2 | ACCELERATING (speed changing, braking included) | 6 | DESCENDING |
-| 3 | REVERSING | 7 | IMPACT (held 300 ms after a knock) |
+| 3 | REVERSING | 7 | OVERTURNED (robot overturned; Buddy 4 has stopped the motors) |
 
 **Why 9 bits for `TURN_RATE`:** the fastest possible pivot is both wheels at
 the 250 mm/s limit in opposite directions: 500 / 115 mm = 4.35 rad/s ≈ 249 deg/s.
@@ -62,8 +63,8 @@ fastest seen on the robot so far is −100 deg/s.
 #define TF_LAYOUT_VERSION	2U
 ...
 	X(T_VALID,     0,     7,      3,  B4, "bit0 motion class+turn rate, bit1 pitch, bit2 hump height valid") \
-	X(T_STATE,     0,     6,      3,  B4, "terrain state (7 states, B4 statechart)") \
-	X(M_CLASS,     0,     7,      3,  B4, "motion class: 0 still 1 moving 2 accel 3 reverse 4 turn 5 climb 6 descend 7 impact") \
+	X(T_STATE,     0,     7,      3,  B4, "terrain state (8 states, B4 statechart; 7 = LIFTED)") \
+	X(M_CLASS,     0,     7,      3,  B4, "motion class: 0 still 1 moving 2 accel 3 reverse 4 turn 5 climb 6 descend 7 overturned") \
 	X(PITCH,       -90,   90,     8,  B4, "pitch, degrees, + nose up") \
 	X(TURN_RATE,   -256,  255,    9,  B4, "turn rate from wheel speeds, deg/s, + left") \
 	X(HUMP_MM,     0,     127,    7,  B4, "peak hump height this run, mm") \
@@ -127,7 +128,7 @@ please add the Buddy 4 fields to it, e.g.:
 ... pitch=+1 hump= 11 terrain=CLIMBING motion=TURNING turn=-46 ...
 ```
 
-- `terrain=`: name from `T_STATE` (INIT, WAITING, CLIMBING, DESCENDING, RECOVERY, FAULT, STOP)
+- `terrain=`: name from `T_STATE` (INIT, WAITING, CLIMBING, DESCENDING, RECOVERY, FAULT, STOP, LIFTED)
 - `motion=`: name from `M_CLASS`, only when `T_VALID` bit 0 is set, otherwise `-`
 - `turn=`: `TURN_RATE` deg/s, only when `T_VALID` bit 0 is set
 
@@ -135,7 +136,7 @@ please add the Buddy 4 fields to it, e.g.:
 
 - each turn's angle, duration and peak (`[TURN] right 47.0 deg in 1.2 s (peak 62 deg/s)`);
 - the compass heading and field strength, and the compass angle per turn;
-- each individual hump's peak and live hump height, roll, impact axes, acceleration.
+- each individual hump's peak and live hump height, roll, lift details (upright %, vertical mg), acceleration.
 
 No new events: the event byte is full, and `TF_EV_HUMP_PEAK` is unchanged.
 

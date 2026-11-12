@@ -347,6 +347,163 @@ static void test_distinct_motion_faults(void)
 	}
 }
 
+/* Golden encoder frame, shared with tools/dashboard.py --selftest. */
+static const char GOLDEN_ENC_HEX[] =
+	"010707200012d687000cfffffffe0001e2400000000000000003";
+
+static void golden_encoder(tf_encoder_t *e)
+{
+	memset(e, 0, sizeof(*e));
+	e->seq = 7;
+	e->reliable = true;
+	e->trusted = true;
+	e->fresh = true;
+	e->cause = FB_NONE;
+	e->state = DRIVING;
+	e->fault = F_NONE;
+	e->sample_ms = 1234567U;
+	e->age_ms = 12U;
+	e->count[0] = 0xFFFFFFFEU;		/* -2: reversed past zero */
+	e->count[1] = 123456U;
+	e->invalid[0] = 0U;
+	e->invalid[1] = 3U;
+}
+
+static bool enc_equal(const tf_encoder_t *a, const tf_encoder_t *b)
+{
+	return a->seq == b->seq && a->reliable == b->reliable && a->trusted == b->trusted &&
+	       a->fresh == b->fresh && a->cause == b->cause && a->state == b->state &&
+	       a->fault == b->fault && a->sample_ms == b->sample_ms && a->age_ms == b->age_ms &&
+	       a->count[0] == b->count[0] && a->count[1] == b->count[1] &&
+	       a->invalid[0] == b->invalid[0] && a->invalid[1] == b->invalid[1];
+}
+
+static void test_encoder_frame(void)
+{
+	tf_encoder_t	in, out;
+	uint8_t		frame[TF_ENC_BYTES], bad[TF_ENC_BYTES];
+	char		hex[2 * TF_ENC_BYTES + 1];
+	unsigned	s, f, c;
+
+	golden_encoder(&in);
+	CHECK(!tf_enc_pack(&in, frame), "golden encoder in range");
+	to_hex(frame, sizeof(frame), hex);
+	printf("golden encoder frame: %s\n", hex);
+	CHECK(strcmp(hex, GOLDEN_ENC_HEX) == 0, "golden encoder frame changed: %s", hex);
+	CHECK(tf_enc_unpack(frame, sizeof(frame), &out) && enc_equal(&in, &out),
+	      "golden encoder round trip");
+
+	/* Full 32-bit counts survive, including extremes. */
+	in.count[0] = 0U;
+	in.count[1] = 0xFFFFFFFFU;
+	in.invalid[0] = 0x80000000U;
+	in.invalid[1] = 0xFFFFFFFFU;
+	in.sample_ms = 0xFFFFFFFFU;
+	in.age_ms = (uint16_t)TF_ENC_AGE_UNKNOWN;
+	(void)tf_enc_pack(&in, frame);
+	CHECK(tf_enc_unpack(frame, sizeof(frame), &out) && enc_equal(&in, &out),
+	      "32-bit extremes round trip");
+
+	/* Every legal state/fault/cause and flag combination. */
+	for (s = 0U; s <= TF_ENC_STATE_MAX; s++) {
+		for (f = 0U; f <= TF_ENC_FAULT_MAX; f++) {
+			for (c = 0U; c <= TF_EF_CAUSE_MAX; c++) {
+				in.state = (uint8_t)s;
+				in.fault = (uint8_t)f;
+				in.cause = (uint8_t)c;
+				in.reliable = (c & 1U) != 0U;
+				in.trusted = (f & 1U) != 0U;
+				in.fresh = (s & 1U) != 0U;
+				CHECK(!tf_enc_pack(&in, frame) &&
+				      tf_enc_unpack(frame, sizeof(frame), &out) && enc_equal(&in, &out),
+				      "codes %u/%u/%u round trip", s, f, c);
+			}
+		}
+	}
+
+	/* Out-of-range codes clamp, never wrap. */
+	in.state = 9;
+	in.fault = 200;
+	in.cause = 7;
+	CHECK(tf_enc_pack(&in, frame), "encoder clamp reported");
+	CHECK(tf_enc_unpack(frame, sizeof(frame), &out) && out.state == TF_ENC_STATE_MAX &&
+	      out.fault == TF_ENC_FAULT_MAX && out.cause == TF_EF_CAUSE_MAX, "encoder clamps");
+
+	golden_encoder(&in);
+	(void)tf_enc_pack(&in, frame);
+	CHECK(!tf_enc_unpack(frame, TF_ENC_BYTES - 1, &out), "short encoder frame rejected");
+	CHECK(!tf_enc_unpack(frame, TF_ENC_BYTES + 1, &out), "long encoder frame rejected");
+	CHECK(!tf_enc_unpack(NULL, TF_ENC_BYTES, &out), "NULL encoder frame rejected");
+	CHECK(!tf_enc_unpack(frame, TF_FRAME_BYTES, &out), "status frame is not an encoder frame");
+	memcpy(bad, frame, sizeof(bad));
+	bad[0] = 2;
+	CHECK(!tf_enc_unpack(bad, sizeof(bad), &out), "encoder version rejected");
+	memcpy(bad, frame, sizeof(bad));
+	bad[2] |= 0x40;
+	CHECK(!tf_enc_unpack(bad, sizeof(bad), &out), "encoder reserved bit rejected");
+	memcpy(bad, frame, sizeof(bad));
+	bad[3] = 0x70;
+	CHECK(!tf_enc_unpack(bad, sizeof(bad), &out), "encoder state 7 rejected");
+	memcpy(bad, frame, sizeof(bad));
+	bad[3] = 0x2D;
+	CHECK(!tf_enc_unpack(bad, sizeof(bad), &out), "encoder fault 13 rejected");
+	memcpy(bad, frame, sizeof(bad));
+	bad[2] = (uint8_t)(bad[2] | (6U << TF_EF_CAUSE_SHIFT));
+	CHECK(!tf_enc_unpack(bad, sizeof(bad), &out), "encoder cause 6 rejected");
+}
+
+static void test_encoder_mapping(void)
+{
+	robot_status_t	st;
+	tf_encoder_t	e;
+
+	memset(&st, 0, sizeof(st));
+	st.motion.state = FAULT;
+	st.motion.fault = F_FEEDBACK;
+	st.motion.feedback_cause = FB_NO_PROGRESS;
+	st.motion.feedback_trusted = false;
+	st.motion.encoder.reliable = true;
+	st.motion.encoder.count[0] = 0xFFFFFFF0U;
+	st.motion.encoder.count[1] = 42U;
+	st.motion.encoder.invalid[0] = 0xFFFFFFFFU;	/* never clamped */
+	st.motion.encoder.invalid[1] = 1U;
+	st.motion.encoder_sample_time = 12.345;
+
+	tm_fill_encoder(&st, 300U, 12.395, &e);
+	CHECK(e.seq == 300U % 256U, "encoder seq low byte");
+	CHECK(e.state == FAULT && e.fault == F_FEEDBACK && e.cause == FB_NO_PROGRESS,
+	      "encoder state/fault/cause");
+	CHECK(e.reliable && !e.trusted, "reliable but not trusted");
+	CHECK(e.count[0] == 0xFFFFFFF0U && e.count[1] == 42U &&
+	      e.invalid[0] == 0xFFFFFFFFU && e.invalid[1] == 1U, "counts copied unchanged");
+	CHECK(e.sample_ms == 12345U, "sample ms %u", (unsigned)e.sample_ms);
+	CHECK(e.age_ms == 50U && e.fresh, "50 ms old is fresh, age %u", (unsigned)e.age_ms);
+
+	tm_fill_encoder(&st, 0U, 12.345 + 0.150, &e);
+	CHECK(e.age_ms == 150U && !e.fresh, "150 ms old is stale");
+
+	tm_fill_encoder(&st, 0U, 12.345 + 100.0, &e);
+	CHECK(e.age_ms == TF_ENC_AGE_UNKNOWN && !e.fresh, "very old saturates");
+
+	tm_fill_encoder(&st, 0U, 12.0, &e);
+	CHECK(e.age_ms == TF_ENC_AGE_UNKNOWN && !e.fresh, "sample from the future is not fresh");
+
+	st.motion.encoder_sample_time = NAN;
+	tm_fill_encoder(&st, 0U, 12.0, &e);
+	CHECK(e.sample_ms == 0U && e.age_ms == TF_ENC_AGE_UNKNOWN && !e.fresh,
+	      "non-finite sample time is not fresh");
+
+	st.motion.encoder_sample_time = 5.0;
+	tm_fill_encoder(&st, 0U, NAN, &e);
+	CHECK(e.age_ms == TF_ENC_AGE_UNKNOWN && !e.fresh, "non-finite clock is not fresh");
+
+	/* Robot clock past 2^32 ms (49.7 days) wraps the ms field. */
+	st.motion.encoder_sample_time = 4294967.296 + 1.0;
+	tm_fill_encoder(&st, 0U, 4294967.296 + 1.01, &e);
+	CHECK(e.sample_ms >= 999U && e.sample_ms <= 1001U && e.fresh,
+	      "sample ms wraps, got %u", (unsigned)e.sample_ms);
+}
+
 /* Tribunal follow-up: "measure JSON vs packed size". */
 static void report_json_size(void)
 {
@@ -378,6 +535,8 @@ int main(void)
 	test_mapping();
 	test_edges();
 	test_distinct_motion_faults();
+	test_encoder_frame();
+	test_encoder_mapping();
 	report_json_size();
 	printf("%s: %u checks, %u failed\n", failures ? "FAIL" : "PASS", checks, failures);
 	return failures ? 1 : 0;

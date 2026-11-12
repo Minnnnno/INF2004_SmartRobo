@@ -141,6 +141,84 @@ void tf_ack_encode(tf_ack_t result, const tf_command_t *cmd, uint8_t out[TF_ACK_
 	out[1] = (uint8_t)(word & 0xFFU);
 }
 
+static void put_u32(uint8_t *p, uint32_t v)
+{
+	p[0] = (uint8_t)(v >> 24);
+	p[1] = (uint8_t)(v >> 16);
+	p[2] = (uint8_t)(v >> 8);
+	p[3] = (uint8_t)v;
+}
+
+static uint32_t get_u32(const uint8_t *p)
+{
+	return ((uint32_t)p[0] << 24) | ((uint32_t)p[1] << 16) |
+	       ((uint32_t)p[2] << 8) | p[3];
+}
+
+static uint8_t clamp_u8(uint8_t v, unsigned max, bool *clamped)
+{
+	if (v > max) {
+		*clamped = true;
+		return (uint8_t)max;
+	}
+	return v;
+}
+
+bool tf_enc_pack(const tf_encoder_t *e, uint8_t out[TF_ENC_BYTES])
+{
+	bool	clamped = false;
+	uint8_t	cause = clamp_u8(e->cause, TF_EF_CAUSE_MAX, &clamped);
+	uint8_t	state = clamp_u8(e->state, TF_ENC_STATE_MAX, &clamped);
+	uint8_t	fault = clamp_u8(e->fault, TF_ENC_FAULT_MAX, &clamped);
+
+	out[0] = (uint8_t)TF_ENC_VERSION;
+	out[1] = e->seq;
+	out[2] = (uint8_t)((e->reliable ? TF_EF_RELIABLE : 0U) |
+			   (e->trusted ? TF_EF_TRUSTED : 0U) |
+			   (e->fresh ? TF_EF_FRESH : 0U) |
+			   ((unsigned)cause << TF_EF_CAUSE_SHIFT));
+	out[3] = (uint8_t)(((unsigned)state << 4) | fault);
+	put_u32(&out[4], e->sample_ms);
+	out[8] = (uint8_t)(e->age_ms >> 8);
+	out[9] = (uint8_t)e->age_ms;
+	put_u32(&out[10], e->count[0]);
+	put_u32(&out[14], e->count[1]);
+	put_u32(&out[18], e->invalid[0]);
+	put_u32(&out[22], e->invalid[1]);
+	return clamped;
+}
+
+bool tf_enc_unpack(const uint8_t *frame, size_t len, tf_encoder_t *e)
+{
+	unsigned cause, state, fault;
+
+	if ((frame == NULL) || (len != (size_t)TF_ENC_BYTES) ||
+	    (frame[0] != (uint8_t)TF_ENC_VERSION) || ((frame[2] & 0xC0U) != 0U)) {
+		return false;
+	}
+	cause = ((unsigned)frame[2] >> TF_EF_CAUSE_SHIFT) & 0x7U;
+	state = (unsigned)frame[3] >> 4;
+	fault = (unsigned)frame[3] & 0xFU;
+	if ((cause > TF_EF_CAUSE_MAX) || (state > TF_ENC_STATE_MAX) ||
+	    (fault > TF_ENC_FAULT_MAX)) {
+		return false;
+	}
+	e->seq = frame[1];
+	e->reliable = (frame[2] & TF_EF_RELIABLE) != 0U;
+	e->trusted = (frame[2] & TF_EF_TRUSTED) != 0U;
+	e->fresh = (frame[2] & TF_EF_FRESH) != 0U;
+	e->cause = (uint8_t)cause;
+	e->state = (uint8_t)state;
+	e->fault = (uint8_t)fault;
+	e->sample_ms = get_u32(&frame[4]);
+	e->age_ms = (uint16_t)(((unsigned)frame[8] << 8) | frame[9]);
+	e->count[0] = get_u32(&frame[10]);
+	e->count[1] = get_u32(&frame[14]);
+	e->invalid[0] = get_u32(&frame[18]);
+	e->invalid[1] = get_u32(&frame[22]);
+	return true;
+}
+
 bool tf_ack_decode(const uint8_t *data, size_t len, tf_ack_t *result, tf_command_t *cmd)
 {
 	uint32_t word;

@@ -1,8 +1,8 @@
-/* Real motion_class.c: class rules, priority, debounce, impact hold, yaw rate,
+/* Real motion_class.c: class rules, priority, debounce, overturned, yaw rate,
  * speed-change window, invalid input and gaps. No fakes needed (portable).
  */
-#include "../../../app_program/subsystem4/motion_class.h"
-#include "../../../app_program/subsystem4/terrain.h"
+#include "../../app_program/subsystem4/motion_class.h"
+#include "../../app_program/subsystem4/terrain.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -36,7 +36,7 @@ static void start(void)
     g_now = 1000U;
 }
 
-/* One 20 ms cycle with the current inputs; impact is a one-cycle pulse.
+/* One 20 ms cycle with the current inputs; overturned is a held level input.
  * The heading integrates the wheel-speed difference like Buddy 2's odometry. */
 static uint8_t step(void)
 {
@@ -50,7 +50,6 @@ static uint8_t step(void)
                                                           : (g_heading_ddeg - 0.5));
     motion_class_step(&g_mc, &g_in, g_now);
     g_now += 20U;
-    g_in.impact = false;
     return motion_class_get(&g_mc);
 }
 
@@ -79,7 +78,7 @@ int main(void)
     check(!motion_class_valid(NULL) && (MC_STATIONARY == motion_class_get(NULL)), "NULL is invalid STATIONARY");
     motion_class_step(NULL, &g_in, 0U); motion_class_step(&g_mc, NULL, 0U);
     motion_class_reset(NULL);
-    check(0 == strcmp("IMPACT", motion_class_name(MC_IMPACT)) &&
+    check(0 == strcmp("OVERTURNED", motion_class_name(MC_OVERTURNED)) &&
           0 == strcmp("STATIONARY", motion_class_name(8U)), "names, masked code");
 
     /* Yaw rate from wheel speeds: + = left/anticlockwise (right wheel faster). */
@@ -161,7 +160,7 @@ int main(void)
         check(MC_REVERSING != step(), "-10 mm/s jitter is not REVERSING");
     }
 
-    /* While reversing: sharp steering is TURNING, a hump is CLIMBING, a knock is IMPACT. */
+    /* While reversing: sharp steering is TURNING, a hump is CLIMBING, overturned is OVERTURNED. */
     start();
     (void)step();
     wheels(-75, -75);
@@ -177,8 +176,9 @@ int main(void)
     g_in.terrain_phase = TERRAIN_CLIMBING;
     (void)step(); (void)step();
     check(MC_CLIMBING == step(), "hump while reversing is CLIMBING");
-    g_in.impact = true;
-    check(MC_IMPACT == step(), "knock while reversing is IMPACT");
+    g_in.overturned = true;
+    check(MC_OVERTURNED == step(), "overturned while reversing is OVERTURNED at once");
+    g_in.overturned = false;
     g_in.terrain_phase = TERRAIN_WAITING;
 
     /* Gentle acceleration below the threshold stays MOVING (no flicker). */
@@ -242,17 +242,17 @@ int main(void)
         check(!motion_class_take_turn(&g_mc, NULL, NULL, NULL), "turn reported only once");
     }
 
-    /* A knock and a hump during a 90 deg turn do not split it into two turns. */
+    /* A brief overturned flag and a hump during a 90 deg turn do not split it. */
     cruise();
     wheels(0, 100);
     for (unsigned i = 0U; i < 90U; i++)
     {
-        if (30U == i) { g_in.impact = true; }
+        g_in.overturned = (30U == i);
         g_in.terrain_phase = ((i >= 50U) && (i < 60U)) ? TERRAIN_CLIMBING : TERRAIN_WAITING;
         (void)step();
         if ((i > 30U) && (i < 80U))
         {
-            check(!motion_class_take_turn(&g_mc, NULL, NULL, NULL), "turn not closed by IMPACT/CLIMBING on top");
+            check(!motion_class_take_turn(&g_mc, NULL, NULL, NULL), "turn not closed by OVERTURNED/CLIMBING on top");
         }
     }
     g_in.terrain_phase = TERRAIN_WAITING;
@@ -341,23 +341,26 @@ int main(void)
     g_in.heading_valid = true;
     check(!motion_class_take_turn(NULL, NULL, NULL, NULL), "NULL take_turn is safe");
 
-    /* IMPACT: immediate, held 300 ms, then debounced back. */
+    /* OVERTURNED: immediate, held while the lift detector holds it, then
+     * debounced back like any other class (no 300 ms hold any more). */
     cruise();
-    g_in.impact = true;
-    check(MC_IMPACT == step(), "impact reported in the same cycle");
-    for (unsigned i = 0U; i < 14U; i++) { check(MC_IMPACT == step(), "impact held for 300 ms"); }
+    g_in.overturned = true;
+    check(MC_OVERTURNED == step(), "overturned reported in the same cycle");
+    for (unsigned i = 0U; i < 50U; i++) { check(MC_OVERTURNED == step(), "overturned held while latched"); }
+    g_in.overturned = false;
     (void)step();
     (void)step();
-    check(MC_MOVING == step(), "back to MOVING after hold plus confirmation");
+    check(MC_MOVING == step(), "back to MOVING after the latch clears plus confirmation");
 
-    /* Priority: IMPACT > CLIMBING/DESCENDING > STATIONARY > TURNING > REVERSING > ACCEL > MOVING. */
+    /* Priority: OVERTURNED > CLIMBING/DESCENDING > STATIONARY > TURNING > REVERSING > ACCEL > MOVING. */
     cruise();
     wheels(0, 100);
     g_in.terrain_phase = TERRAIN_CLIMBING;
     (void)step(); (void)step();
     check(MC_CLIMBING == step(), "hump phase beats turning");
-    g_in.impact = true;
-    check(MC_IMPACT == step(), "impact beats climbing");
+    g_in.overturned = true;
+    check(MC_OVERTURNED == step(), "overturned beats climbing");
+    g_in.overturned = false;
     for (unsigned i = 0U; i < 20U; i++) { (void)step(); }
     g_in.terrain_phase = TERRAIN_DESCENDING;
     (void)step(); (void)step();
@@ -367,14 +370,15 @@ int main(void)
     (void)step(); (void)step();
     check(MC_STATIONARY == step(), "stationary beats a stale speed difference");
 
-    /* Invalid input: STATIONARY, invalid, impact discarded. */
+    /* Invalid input: STATIONARY, invalid, even when overturned. */
     cruise();
     g_in.valid = false;
-    g_in.impact = true;
+    g_in.overturned = true;
     check(MC_STATIONARY == step() && !motion_class_valid(&g_mc), "invalid publishes STATIONARY, invalid");
     check(0 == motion_class_yaw_deg_s(&g_mc), "invalid clears yaw");
     g_in.valid = true;
-    check(MC_IMPACT != step(), "impact seen while invalid is not replayed");
+    g_in.overturned = false;
+    check(MC_OVERTURNED != step(), "overturned seen while invalid is not replayed");
 
     /* Gap: a long pause reseeds the speed window (no false ACCELERATING). */
     cruise();
@@ -393,6 +397,6 @@ int main(void)
     }
     check(sizeof(g_mc.packed) == 1U, "class, candidate and count share one byte");
 
-    printf("PASS: %u motion class checks (rules, priority, debounce, impact hold, yaw, gaps)\n", g_checks);
+    printf("PASS: %u motion class checks (rules, priority, debounce, overturned, yaw, gaps)\n", g_checks);
     return 0;
 }

@@ -1,7 +1,7 @@
 /*
  *	telemetry_frame.h
- *	Shared binary MQTT formats: status frame, command, acknowledgement and
- *	event frame.  Owned by Buddy 1; changed only by team agreement
+ *	Shared binary MQTT formats: status frame, command, acknowledgement,
+ *	event frame and encoder frame.  Owned by Buddy 1; changed only by team agreement
  *	(Week 8 Tribunal 1 decision log: "Pack all fields into one bit-level
  *	status frame").
  *
@@ -60,7 +60,7 @@
 	X(BC_VALID,    0,     1,      1,  B3, "barcode instruction valid") \
 	X(BC_CMD,      0,     3,      2,  B3, "tf_barcode_t: left, right, straight, U-turn") \
 	X(T_VALID,     0,     7,      3,  B4, "bit0 heading, bit1 pitch, bit2 hump height valid") \
-	X(T_STATE,     0,     6,      3,  B4, "terrain state (7 states, B4 statechart)") \
+	X(T_STATE,     0,     7,      3,  B4, "terrain state (8 states, B4 statechart; 7 = LIFTED)") \
 	X(PITCH,       -90,   90,     8,  B4, "pitch, degrees, + nose up") \
 	X(T_HEADING,   0,     359,    9,  B4, "magnetic heading, degrees") \
 	X(HUMP_MM,     0,     255,    8,  B4, "peak hump height, mm") \
@@ -169,5 +169,61 @@ bool tf_ack_decode(const uint8_t *data, size_t len, tf_ack_t *result, tf_command
 #define TF_EV_SCAN_DONE		0x20U	/* B5 latches when a scan result is ready */
 #define TF_EV_HANDOVER		0x40U	/* B5 latches on B5 -> B3 recovery handover */
 #define TF_EV_CMD_REJECTED	0x80U	/* B1 latches on a malformed command */
+
+/* ---------------------------------------------------------------------
+ *  Encoder frame, published at QoS 0 on COMMS_TOPIC_ENCODER every 100 ms,
+ *  straight after the status frame of the same period (same SEQ).  The
+ *  raw counts need all 32 bits, so they do not fit the status frame's
+ *  7 spare bits; this frame is byte-aligned, big-endian, 26 bytes:
+ *    byte  0       version, TF_ENC_VERSION
+ *    byte  1       SEQ of the status frame sent in the same period
+ *    byte  2       bit0 encoder reliable (acquisition flag)
+ *                  bit1 feedback trusted (controller-qualified health)
+ *                  bit2 sample fresh (age <= TF_ENC_FRESH_MS, finite time)
+ *                  bits 5..3 feedback cause, motion_feedback_cause_t 0..5
+ *                  bits 7..6 zero
+ *    byte  3       bits 7..4 motion_state_t 0..6, bits 3..0 motion_fault_t 0..12
+ *    bytes 4..7    encoder sample time, ms on the robot's clock, mod 2^32
+ *    bytes 8..9    sample age when copied, ms, robot clock; 65535 = at
+ *                  least 65.535 s or unknown (non-finite / negative time)
+ *    bytes 10..13  left raw count, mod 2^32
+ *    bytes 14..17  right raw count, mod 2^32
+ *    bytes 18..21  left cumulative invalid quadrature transitions
+ *    bytes 22..25  right cumulative invalid quadrature transitions
+ *  Counts may decrease (reverse) and wrap: receivers take modular deltas,
+ *  never unsigned greater-than.  A reboot can restart the count baseline.
+ * --------------------------------------------------------------------- */
+#define TF_ENC_VERSION		1U
+#define TF_ENC_BYTES		26
+#define TF_ENC_FRESH_MS		100U	/* motion samples every 10 ms */
+#define TF_ENC_AGE_UNKNOWN	0xFFFFU
+
+#define TF_EF_RELIABLE		0x01U
+#define TF_EF_TRUSTED		0x02U
+#define TF_EF_FRESH		0x04U
+#define TF_EF_CAUSE_SHIFT	3
+#define TF_EF_CAUSE_MAX		5U	/* FB_RESTART_LATCH */
+#define TF_ENC_STATE_MAX	6U	/* SHUTDOWN */
+#define TF_ENC_FAULT_MAX	12U	/* F_SETUP_TIMEOUT */
+
+typedef struct {
+	uint8_t		seq;
+	bool		reliable, trusted, fresh;
+	uint8_t		cause;		/* motion_feedback_cause_t */
+	uint8_t		state;		/* motion_state_t */
+	uint8_t		fault;		/* motion_fault_t */
+	uint32_t	sample_ms;
+	uint16_t	age_ms;
+	uint32_t	count[2];	/* [0] left, [1] right */
+	uint32_t	invalid[2];
+} tf_encoder_t;
+
+/* Pack an encoder frame.  cause, state and fault above their range are
+   clamped to the maximum.  Returns true if anything was clamped. */
+bool tf_enc_pack(const tf_encoder_t *enc, uint8_t out[TF_ENC_BYTES]);
+
+/* Unpack an encoder frame.  Returns false (enc untouched) if len or the
+   version is wrong, a reserved bit is set or a code is out of range. */
+bool tf_enc_unpack(const uint8_t *frame, size_t len, tf_encoder_t *enc);
 
 #endif /* TELEMETRY_FRAME_H */

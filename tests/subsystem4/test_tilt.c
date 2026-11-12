@@ -1,5 +1,5 @@
 /* Validate geometry with synthetic gravity vectors, not sensor hardware. */
-#include "../../../app_program/subsystem4/tilt.h"
+#include "../../app_program/subsystem4/tilt.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

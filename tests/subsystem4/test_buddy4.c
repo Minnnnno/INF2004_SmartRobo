@@ -1,14 +1,12 @@
 /* Real lifecycle, tilt and terrain logic; fake only clock and device operations.
  * Stage 1 integration: no magnetic heading or calibration in buddy4.c.
  */
-#include "../../../app_program/subsystem4/buddy4.h"
+#include "../../app_program/subsystem4/buddy4.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 static uint32_t now, operation_ms;
-static ER configure_status, read_status, clock_status, impact_status;
-static uint8_t impact_source;
-static unsigned impact_reads;
+static ER configure_status, read_status, clock_status;
 static unsigned configurations, reads, checks;
 static int16_t xyz[3];
 static void check(int yes, char const *why)
@@ -32,12 +30,6 @@ ER gy511_magnetic_counts(gy511_magnetic_t const *sample, uint8_t axis, int16_t *
 {
     (void)sample; *counts=mag_xyz[axis]; return E_OK;
 }
-ER gy511_read_impact(uint8_t *source)
-{
-    impact_reads++;
-    if (E_OK==impact_status) { *source=impact_source; impact_source=0U; } /* read clears latch */
-    return impact_status;
-}
 ER gy511_acceleration_mg(gy511_acceleration_t const *sample, uint8_t axis, int16_t *value)
 {
     (void)sample; *value=xyz[axis]; return E_OK;
@@ -46,7 +38,6 @@ static void reset(buddy4_t *c)
 {
     now=0; operation_ms=0; configure_status=E_OK; read_status=E_OK;
     clock_status=E_OK; configurations=0; reads=0;
-    impact_status=E_OK; impact_source=0U; impact_reads=0U;
     mag_status=E_OK; mag_reads=0U; mag_xyz[0]=120; mag_xyz[1]=-80; mag_xyz[2]=300;
     xyz[0]=0; xyz[1]=0; xyz[2]=-1000;
     buddy4_begin(c,now);
@@ -217,7 +208,7 @@ int main(void)
     xyz[0]=259; xyz[1]=-100; xyz[2]=-961;
     for(unsigned i=0;i<50;i++) { tick(&c,20U,0U); }
     check((terrain_status(&c.terrain)&TERRAIN_PHASE_MASK)==TERRAIN_CLIMBING,"one-wheel hump integrated with tilt");
-    check(terrain_run_max(&c.terrain)==(TERRAIN_RUN_VALID|30U),"live peak 30 mm from sideways tilt");
+    check(terrain_run_max(&c.terrain)==0U,"30 mm climb not in the run max until it completes");
     fail(&c);
     check((terrain_status(&c.terrain)&TERRAIN_VALID)==0U &&
           (terrain_status(&c.terrain)&TERRAIN_PHASE_MASK)==TERRAIN_CLIMBING,"recovery retains the phase and marks unknown");
@@ -240,38 +231,86 @@ int main(void)
     for(unsigned i=0;i<50;i++) { tick(&c,20U,0U); }
     check(terrain_take_completed(&c.terrain) &&
           terrain_last_peak(&c.terrain)==20U,"left-wheel 20 mm hump completes with its peak");
-    /* Impact latch: polled every MONITORING cycle, consumed once, settle window. */
+    /* Lift/overturn latch (replaces the impact latch): armed after the settle
+     * window, fed from the raw sample, cleared upright and still or on any
+     * state change, and it suspends hump measurement. */
     {
-        uint8_t axes=0U;
+        unsigned n=0U;
         ready(&c);
-        check(impact_reads>0U,"impact latch polled while monitoring");
-        check(!buddy4_take_impact(&c,&axes),"no impact without the latch");
-        impact_source=GY511_IMPACT_ACTIVE|GY511_IMPACT_ZH; tick(&c,20U,0U);
-        check(!buddy4_take_impact(&c,NULL),"impact inside the 100 ms settle window ignored");
-        for (unsigned i=0;i<4;i++) { tick(&c,20U,0U); } /* now past B4_IMPACT_SETTLE_MS */
-        impact_source=GY511_IMPACT_ACTIVE|GY511_IMPACT_ZH|GY511_IMPACT_XH; tick(&c,20U,0U);
-        check(buddy4_take_impact(&c,&axes) && axes==(GY511_IMPACT_ZH|GY511_IMPACT_XH),"impact and axes reported");
-        check(!buddy4_take_impact(&c,NULL),"impact consumed once");
-        impact_source=GY511_IMPACT_XH; tick(&c,20U,0U); /* axis bit without IA */
-        check(!buddy4_take_impact(&c,NULL),"axis bits alone are not an impact");
-        read_status=E_BUSY; impact_source=GY511_IMPACT_ACTIVE|GY511_IMPACT_YH; tick(&c,20U,0U);
-        check(buddy4_take_impact(&c,&axes) && axes==GY511_IMPACT_YH,"latch polled even without fresh XYZ");
-        read_status=E_OK;
-        impact_status=E_IO; tick(&c,20U,0U);
-        check(buddy4_state(&c)==B4_RECOVERY && c.error==E_IO,"failed latch read enters recovery");
-        check(!buddy4_take_impact(&c,NULL),"recovery clears a pending impact");
-        /* A latch left over from capture (placing the robot) is discarded. */
-        reset(&c);
-        buddy4_step(&c,B4_LEVEL_ALLOWED);
-        tick(&c,B4_POSITION_MS,B4_LEVEL_ALLOWED);
-        for (unsigned i=0;i<49;i++) { tick(&c,20U,B4_LEVEL_ALLOWED); }
-        impact_source=GY511_IMPACT_ACTIVE|GY511_IMPACT_ZH;
-        tick(&c,20U,B4_LEVEL_ALLOWED);
-        check(buddy4_state(&c)==B4_MONITORING,"monitoring after capture");
+        check(buddy4_lift(&c)==LIFT_NONE,"level and still: not lifted");
+        xyz[0]=0; xyz[1]=0; xyz[2]=1000; /* upside down */
+        while ((buddy4_lift(&c)==LIFT_NONE) && (n<40U)) { tick(&c,20U,0U); n++; }
+        /* Armed 100 ms after MONITORING (20 ms already passed in ready), then 200 ms held. */
+        check(buddy4_lift(&c)==LIFT_OVERTURNED && n>=13U && n<=16U,"upside down: OVERTURNED after settle + 200 ms");
+        check(buddy4_state(&c)==B4_MONITORING && c.result==0U,"overturned stays MONITORING, tilt unavailable");
+        xyz[2]=-1000; /* set back down level */
+        for (unsigned i=0;i<20;i++) { tick(&c,20U,0U); }
+        check(buddy4_lift(&c)==LIFT_OVERTURNED,"latch held for the first 400 ms upright");
+        for (unsigned i=0;i<10;i++) { tick(&c,20U,0U); }
+        check(buddy4_lift(&c)==LIFT_NONE,"latch clears after 500 ms upright and still");
+
+        /* Picked straight up: +300 mg above gravity on four samples. */
+        xyz[2]=-1300;
+        for (unsigned i=0;i<3;i++) { tick(&c,20U,0U); }
+        check(buddy4_lift(&c)==LIFT_NONE,"three samples of upward push not yet a lift");
         tick(&c,20U,0U);
-        check(!buddy4_take_impact(&c,NULL),"stale capture-time latch ignored");
-        check(sizeof(c.control)==1U,"control byte still one byte with the impact bit");
-        buddy4_take_impact(NULL,NULL);
+        check(buddy4_lift(&c)==LIFT_LIFTED,"fourth sample: LIFTED");
+        xyz[2]=-1000;
+        for (unsigned i=0;i<30;i++) { tick(&c,20U,0U); }
+        check(buddy4_lift(&c)==LIFT_NONE,"cleared again");
+
+        /* A 60 ms bump (three samples) never latches. */
+        xyz[2]=-1600;
+        for (unsigned i=0;i<3;i++) { tick(&c,20U,0U); }
+        xyz[2]=-1000;
+        for (unsigned i=0;i<20;i++) { tick(&c,20U,0U); }
+        check(buddy4_lift(&c)==LIFT_NONE,"60 ms bump is not a lift");
+
+        /* Tilted 45 deg sideways (e.g. lifted by one end): no stop (the 35 deg
+         * rule was removed), and no fake hump recorded. */
+        ready(&c);
+        xyz[0]=-707; xyz[1]=0; xyz[2]=-707;
+        for (unsigned i=0;i<30;i++) { tick(&c,20U,0U); }
+        check(buddy4_lift(&c)==LIFT_NONE,"45 deg tilt held: not a lift");
+        check(terrain_run_max(&c.terrain)==0U,"steep tilt suspended hump measurement");
+        xyz[0]=0; xyz[2]=-1000;
+        for (unsigned i=0;i<40;i++) { tick(&c,20U,0U); }
+        check(buddy4_lift(&c)==LIFT_NONE && !terrain_take_completed(&c.terrain),"no hump after setting it down");
+
+        /* Lifted by one side: the tilt starts a hump, then the upward push
+         * latches LIFTED. The hump in progress is discarded and never counts. */
+        ready(&c);
+        xyz[0]=259; xyz[1]=0; xyz[2]=-961; /* ~30 mm sideways tilt */
+        for (unsigned i=0;i<30;i++) { tick(&c,20U,0U); }
+        check((terrain_status(&c.terrain)&TERRAIN_PHASE_MASK)==TERRAIN_CLIMBING,"hand tilt starts a hump");
+        xyz[2]=-1300;
+        for (unsigned i=0;i<4;i++) { tick(&c,20U,0U); }
+        check(buddy4_lift(&c)==LIFT_LIFTED,"upward push: LIFTED");
+        check((terrain_status(&c.terrain)&TERRAIN_PHASE_MASK)==TERRAIN_WAITING,"lift discards the hump in progress");
+        xyz[2]=-961;
+        for (unsigned i=0;i<10;i++) { tick(&c,20U,0U); }
+        check((terrain_status(&c.terrain)&TERRAIN_PHASE_MASK)==TERRAIN_WAITING,"no hump while the lift is latched");
+        xyz[0]=0; xyz[2]=-1000; /* set down level */
+        for (unsigned i=0;i<60;i++) { tick(&c,20U,0U); }
+        check(buddy4_lift(&c)==LIFT_NONE,"lift cleared after setting it down");
+        check(!terrain_take_completed(&c.terrain) && terrain_run_max(&c.terrain)==0U,
+              "lifted hump never completes and never reaches the run max");
+
+        /* Sensor failure while lifted: detection unavailable, latch cleared. */
+        xyz[2]=1000;
+        for (unsigned i=0;i<15;i++) { tick(&c,20U,0U); }
+        check(buddy4_lift(&c)==LIFT_OVERTURNED,"overturned again");
+        read_status=E_IO; tick(&c,20U,0U);
+        check(buddy4_state(&c)==B4_RECOVERY && buddy4_lift(&c)==LIFT_NONE,"recovery clears the lift latch");
+        read_status=E_OK;
+
+        /* Placing the robot during capture is never a lift. */
+        ready(&c);
+        xyz[2]=-1300; tick(&c,20U,0U); tick(&c,20U,0U); tick(&c,20U,0U); tick(&c,20U,0U);
+        check(buddy4_lift(&c)==LIFT_NONE,"push inside the settle window ignored");
+        xyz[2]=-1000;
+        check(sizeof(c.control)==1U,"control byte still one byte");
+        check(buddy4_lift(NULL)==LIFT_NONE,"NULL is not lifted");
     }
     /* Magnetometer: read while monitoring; busy/out-of-range never leave MONITORING. */
     {

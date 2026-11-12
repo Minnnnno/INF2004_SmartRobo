@@ -52,7 +52,6 @@ IMPORT ER subsystem5_start(void);
 #if APP_TEST
 IMPORT void subsystem1_test(void);
 IMPORT void subsystem2_test(void);
-IMPORT void subsystem4_test(void);
 IMPORT void subsystem5_test(void);
 #endif
 

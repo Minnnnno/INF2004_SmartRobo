@@ -17,7 +17,6 @@ static void buddy4_enter(buddy4_t *p_context, uint8_t state,
 static void buddy4_initialise(buddy4_t *p_context, uint8_t inputs, uint32_t now_ms);
 static void buddy4_monitor(buddy4_t *p_context, uint32_t now_ms);
 static void buddy4_recover(buddy4_t *p_context, uint32_t now_ms);
-static void buddy4_poll_impact(buddy4_t *p_context, uint32_t now_ms);
 static void buddy4_poll_magnetic(buddy4_t *p_context, uint32_t now_ms);
 
 /* One bounded logical step; hardware transaction latency is documented.
@@ -80,9 +79,19 @@ void buddy4_step(buddy4_t *p_context, uint8_t inputs)
         {
             return;
         }
-        /* Hump height = right-minus-left wheel contact height (pitch-independent). */
-        bool fresh = (0U != (p_context->result & TILT_RESULT_VALID)) &&
-                     ((now_ms - p_context->last_fresh) < B4_STALE_MS);
+        /* Hump height = right-minus-left wheel contact height (pitch-independent).
+         * Suspended while lifted or steeply tilted, so lifting the robot by one
+         * end does not record a fake hump. A lift/overturn latch also discards
+         * the hump in progress: the latch is confirmed 80-220 ms after the hand
+         * starts tilting the robot, and that tilt has often started a hump. */
+        if (LIFT_NONE != lift_state(&p_context->lift))
+        {
+            terrain_discard(&p_context->terrain);
+            return;
+        }
+        bool fresh = (0U !=(p_context->result & TILT_RESULT_VALID)) &&
+                     ((now_ms - p_context->last_fresh) < B4_STALE_MS) &&
+                     !lift_suspect(&p_context->lift);
         terrain_step(&p_context->terrain, fresh,
                      fresh ? tilt_side_height_tenths(&p_context->tilt, B4_TRACK_MM) : 0,
                      now_ms);
@@ -121,6 +130,7 @@ static void buddy4_enter(buddy4_t *p_context, uint8_t state, uint32_t now_ms, ER
     terrain_step(&p_context->terrain, false, 0, now_ms);
     p_context->error = error;
     tilt_discard_history(&p_context->tilt);
+    lift_reset(&p_context->lift);
 }
 /* Monotonic time is sampled again after blocking device operations so timeout
  * decisions and sample timestamps do not use the pre-transfer time.
@@ -308,16 +318,15 @@ static void buddy4_monitor(buddy4_t *p_context, uint32_t now_ms)
             p_context->result = tilt_update(&p_context->tilt, xyz[0], xyz[1], xyz[2]);
             p_context->forward_mg = (0U != (p_context->result & TILT_RESULT_VALID)) ?
                 tilt_forward_dynamic_mg(&p_context->tilt, xyz[0], xyz[1], xyz[2]) : 0;
+            /* Raw sample, not the tilt result: tilt rejects these very poses. */
+            (void)lift_step(&p_context->lift, &p_context->tilt, xyz[0], xyz[1], xyz[2], now_ms,
+                            (now_ms - p_context->phase_started) >= B4_LIFT_SETTLE_MS);
         }
         else
         {
             p_context->error = E_BUSY;
         }
-        buddy4_poll_impact(p_context, now_ms);
-        if (B4_MONITORING == buddy4_state(p_context))
-        {
-            buddy4_poll_magnetic(p_context, now_ms);
-        }
+        buddy4_poll_magnetic(p_context, now_ms);
     }
 }
 /* Read the magnetometer (30 Hz) every MONITORING cycle for the compass
@@ -365,39 +374,10 @@ bool buddy4_magnetic(buddy4_t const *p_context, uint32_t now_ms, uint32_t max_ag
     *p_y = p_context->mag[1];
     return true;
 }
-/* Read (and clear) the IMU's latched inertial interrupt every MONITORING cycle,
- * also when no fresh XYZ sample was ready. A failed read is a bus failure.
- */
-static void buddy4_poll_impact(buddy4_t *p_context, uint32_t now_ms)
+uint8_t buddy4_lift(buddy4_t const *p_context)
 {
-    uint8_t source = 0U;
-    ER status = gy511_read_impact(&source);
-
-    if (E_OK != status)
-    {
-        buddy4_enter(p_context, B4_RECOVERY, now_ms, status);
-        return;
-    }
-    if ((0U != (source & GY511_IMPACT_ACTIVE)) &&
-        ((now_ms - p_context->phase_started) >= B4_IMPACT_SETTLE_MS))
-    {
-        p_context->control.impact = 1U;
-        p_context->impact_axes = (uint8_t)(source & (GY511_IMPACT_XH | GY511_IMPACT_YH |
-                                                     GY511_IMPACT_ZH));
-    }
-}
-bool buddy4_take_impact(buddy4_t *p_context, uint8_t *p_axes)
-{
-    if ((NULL == p_context) || (0U == p_context->control.impact))
-    {
-        return false;
-    }
-    p_context->control.impact = 0U;
-    if (NULL != p_axes)
-    {
-        *p_axes = p_context->impact_axes;
-    }
-    return true;
+    return ((NULL == p_context) || (B4_MONITORING != buddy4_state(p_context))) ?
+           LIFT_NONE : lift_state(&p_context->lift);
 }
 /* Recover the owned sensor automatically, even without motor-status inputs.
  * Never capture a new reference here. Configuration plus a fresh sample proves

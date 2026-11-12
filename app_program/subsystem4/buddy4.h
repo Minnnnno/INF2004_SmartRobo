@@ -7,6 +7,7 @@
 #include "gy511_read.h"
 #include "tilt.h"
 #include "terrain.h"
+#include "lift.h"
 
 /* Names are constants; retained state occupies three bits in control. */
 #define B4_INIT       (0U)
@@ -46,11 +47,11 @@
  */
 #define B4_TRACK_MM      (115U)
 
-/* Ignore the impact latch this long after entering MONITORING: it may still
- * hold an event from placing or bumping the robot during capture. */
-#define B4_IMPACT_SETTLE_MS (100U)
+/* Lift/overturn detection is armed this long after entering MONITORING, so
+ * the hand placing the robot during capture is not taken for a lift. */
+#define B4_LIFT_SETTLE_MS (100U)
 
-/* Named unsigned bit-fields keep the required 3+2+2+1 bits readable.
+/* Named unsigned bit-fields keep the required 3+2+2 bits readable.
  * Internal task-owned storage only: never transmit its raw bytes as a protocol.
  * Allocation order is compiler-dependent; named access does not depend on it.
  */
@@ -59,7 +60,6 @@ typedef struct
     uint8_t state : 3;
     uint8_t attempts : 2;
     uint8_t phase : 2;
-    uint8_t impact : 1; /* IMU inertial latch seen; consumed by buddy4_take_impact(). */
 } buddy4_control_t;
 
 _Static_assert(sizeof(buddy4_control_t) == 1U, "Buddy 4 control must occupy one byte");
@@ -73,7 +73,7 @@ typedef struct
     uint32_t last_fresh;
     ER error;                 /* Last kernel/acquisition diagnostic code. */
     int16_t forward_mg;       /* IMU forward dynamic acceleration, mg (diagnostic, 12 bits). */
-    uint8_t impact_axes;      /* GY511_IMPACT_XH/YH/ZH of the last impact (3 bits). */
+    lift_t lift;              /* Lift/overturn latch; reset on every state change. */
     int16_t mag[3];           /* Last good magnetometer counts X/Y/Z (12-bit signed). */
     uint32_t mag_ms;          /* Time of the last good magnetometer sample. */
     uint8_t mag_flags;        /* Bit 0: mag[] holds a good sample (B4_MAG_HAVE). */
@@ -90,9 +90,10 @@ void buddy4_begin(buddy4_t *p_context, uint32_t now_ms);
 void buddy4_step(buddy4_t *p_context, uint8_t inputs);
 uint8_t buddy4_state(buddy4_t const *p_context);
 uint8_t buddy4_attempts(buddy4_t const *p_context);
-/* Consume a latched impact once (true at most once per event). The axis bits
- * (GY511_IMPACT_XH/YH/ZH) go to *p_axes when not NULL. */
-bool buddy4_take_impact(buddy4_t *p_context, uint8_t *p_axes);
+/* Latched lift/overturn condition (LIFT_NONE/LIFTED/OVERTURNED). Detection
+ * runs only in MONITORING; any state change clears it (lift detection is
+ * unavailable while the sensor recovers or has faulted). */
+uint8_t buddy4_lift(buddy4_t const *p_context);
 /* Latest good magnetometer sample no older than max_age_ms (raw counts X/Y).
  * False when none (not read yet, out of range, stale, or not MONITORING). */
 #define B4_MAG_HAVE (0x01U)

@@ -105,11 +105,14 @@ deltas, not unsigned greater-than tests. A stationary wheel legitimately has an
 unchanging count. These are raw counts, not reset-relative distance accumulators;
 reboot/reinitialization can restart their baseline.
 
-Buddy 1 can read these fields from the existing copied snapshot at 100 ms
-intervals. They are not yet encoded in the 21-byte MQTT frame: the Wi-Fi owner
-must add a documented message or coordinate a versioned frame extension to
-display them. Never read encoder hardware or perform network I/O in the motion
-loop for telemetry.
+Buddy 1 reads these fields from the existing copied snapshot every 100 ms and
+publishes them as the separate 26-byte encoder frame on `robot/encoder` (QoS 0),
+straight after the status frame with the same SEQ. It carries both raw 32-bit
+counts and invalid totals unclamped, plus encoder-reliable, feedback-trusted and
+fresh flags, the feedback cause, motion state and fault, the sample time in ms
+and its age on the robot's clock. The layout is in `include/telemetry_frame.h`
+("Encoder frame"); the 21-byte status frame is unchanged. Never read encoder
+hardware or perform network I/O in the motion loop for telemetry.
 
 `motion_get_status` copies a snapshot; publish after releasing all application
 locks. `robot_update_subsystem` copies a genuine owner sample. `available=false`
@@ -223,17 +226,21 @@ Subsystem 4 (when `ROBO_SUBSYSTEM4=ON`) supplies the Terrain snapshot every
 hump height; bit 0 (heading) stays clear because the magnetometer is not used.
 `values[0]` is the turn rate in rad/s (+ = left), from Buddy 2 wheel speeds.
 Bits 6..8 of `values[3]` carry the motion class (0 STATIONARY, 1 MOVING,
-2 ACCELERATING (speed changing, braking included), 3 REVERSING, 4 TURNING, 5 CLIMBING, 6 DESCENDING, 7 IMPACT) and
+2 ACCELERATING (speed changing, braking included), 3 REVERSING, 4 TURNING, 5 CLIMBING, 6 DESCENDING, 7 OVERTURNED) and
 bit 9 marks the class and turn rate valid; decode with `terrain_motion_class()`.
-`values[2]` is the highest hump peak of the run in metres (1 mm steps), measured
+`values[2]` is the highest completed hump peak of the run in metres (1 mm steps), measured
 from the sideways tilt of the axle for humps under one wheel. `values[3]` also carries
 the 3-bit `T_STATE` << 3: 0 INIT, 1 WAITING, 2 CLIMBING, 3 DESCENDING, 4 RECOVERY,
-5 FAULT, 6 STOP. `available` is true once the task runs; the timestamp is the
+5 FAULT, 6 STOP, 7 LIFTED. `available` is true once the task runs; the timestamp is the
 last valid tilt sample time. Hump completion latches `TF_EV_HUMP_PEAK`. No MQTT
-text topics are sent. See app_program/subsystem4/README.md. Buddy 4 only monitors and never changes the robot's speed. Decode the slot with
+text topics are sent. See app_program/subsystem4/README.md. Buddy 4 never changes the robot's speed. Its one
+motion command is `motion_stop()` (controlled STOP, released by START) when the
+robot is lifted (T_STATE 7) or overturned (motion class 7); this replaced IMU
+collision detection (Change Requirement, 11 November 2026). Decode the slot with
 `include/terrain_status.h` rather than by hand: `terrain_published_state()` gives
-T_STATE, and `terrain_imu_faulted(&status)` (T_STATE 5) is the IMU fault
-indicator; an IMU fault never stops the motors. Buddy 4 enters
+T_STATE (`TERRAIN_TS_UNKNOWN` = 0xFF when unusable), and
+`terrain_imu_faulted(&status)` (T_STATE 5) is the IMU fault indicator; an IMU
+fault never stops the motors. Buddy 4 enters
 STOP (T_STATE 6, completed peaks kept) when motion reports `SHUTDOWN`. A new run
 (statechart NEW_RUN) and recovery from a latched IMU fault are a power-up, which
 the level tilt reference needs anyway.

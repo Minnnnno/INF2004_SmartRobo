@@ -24,6 +24,12 @@ typedef struct {
 void tm_fill(const robot_status_t *status, const tm_frame_info_t *info,
 	     int32_t values[TF_FIELD_COUNT]);
 
+/* Fill an encoder frame from a snapshot copied at now_s (robot clock,
+   seconds).  Freshness and age are judged on the robot's clock only.
+   seq is the status frame counter of the same period (low 8 bits sent). */
+void tm_fill_encoder(const robot_status_t *status, uint32_t seq, double now_s,
+		     tf_encoder_t *enc);
+
 /* Events that can be seen by comparing two consecutive snapshots:
    TF_EV_MOTION_FAULT, TF_EV_LINE_LOST, TF_EV_BARCODE. */
 uint8_t tm_edge_events(const robot_status_t *previous, const robot_status_t *current);

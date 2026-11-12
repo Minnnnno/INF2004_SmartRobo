@@ -118,6 +118,43 @@ void tm_fill(const robot_status_t *st, const tm_frame_info_t *info,
 	values[TF_F_DROPPED]  = saturate(info->dropped, 7U);
 }
 
+_Static_assert((SHUTDOWN == TF_ENC_STATE_MAX) && (F_SETUP_TIMEOUT == TF_ENC_FAULT_MAX) &&
+	       (FB_RESTART_LATCH == TF_EF_CAUSE_MAX),
+	       "encoder frame ranges must match the motion enums");
+
+void tm_fill_encoder(const robot_status_t *st, uint32_t seq, double now_s,
+		     tf_encoder_t *e)
+{
+	const motion_status_t	*m = &st->motion;
+	double			t = m->encoder_sample_time;
+	double			age;
+
+	e->seq = (uint8_t)(seq & 0xFFU);
+	e->reliable = m->encoder.reliable;
+	e->trusted = m->feedback_trusted;
+	e->cause = (uint8_t)m->feedback_cause;
+	e->state = (uint8_t)m->state;
+	e->fault = (uint8_t)m->fault;
+	e->count[0] = m->encoder.count[0];
+	e->count[1] = m->encoder.count[1];
+	e->invalid[0] = m->encoder.invalid[0];
+	e->invalid[1] = m->encoder.invalid[1];
+
+	e->sample_ms = 0U;
+	e->age_ms = (uint16_t)TF_ENC_AGE_UNKNOWN;
+	e->fresh = false;
+	if (!tm_finite(t) || (t < 0.0) || !tm_finite(now_s)) {
+		return;
+	}
+	e->sample_ms = (uint32_t)fmod(t * 1000.0, 4294967296.0);
+	age = (now_s - t) * 1000.0;
+	if ((age < 0.0) || (age >= (double)TF_ENC_AGE_UNKNOWN)) {
+		return;		/* sample from the future, or very old */
+	}
+	e->age_ms = (uint16_t)to_int(age);	/* nearest ms; 65535 still means old */
+	e->fresh = (e->age_ms <= TF_ENC_FRESH_MS);
+}
+
 static bool line_ok(const robot_status_t *s)
 {
 	return s->line.available && (s->line.values[1] > 0.5);
