@@ -109,9 +109,9 @@ def selftest():
 # ---- log parsing ----
 NUM_LINE = re.compile(r'^-?\d+( -?\d+)*$')
 PREFIXED = re.compile(r'^(bv|bp|bh|bw)((?: -?\d+)+)$')
-READ = re.compile(r'^barcode: \*([^*]*)\*$')
+READ = re.compile(r'^barcode: \*([^*]*)\*(?: \(div=\d+\))?$')  # (div=N): read at a fallback sensitivity
 ARMED = re.compile(r'^barcode: armed, white=(\d+) peak=(\d+)')
-NOREAD = re.compile(r'^barcode: no read, elements=(\d+) samples=(\d+) white=(\d+) min=(\d+) max=(\d+)')
+NOREAD = re.compile(r'^barcode: no read(?: at any sensitivity \([^)]*\))?, elements=(\d+) samples=(\d+) white=(\d+) min=(\d+) max=(\d+)')
 STRETCH = re.compile(r'^barcode: stretch ended, no code \(samples=(\d+) elements=(\d+)'
                      r'(?: white=(\d+) min=(\d+) max=(\d+))?\)')
 TRIP = re.compile(r'^shuttle: trip (\d+) (\w+)')

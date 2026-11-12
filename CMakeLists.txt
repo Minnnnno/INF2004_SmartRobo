@@ -137,6 +137,17 @@ if(ROBO_HOST_TESTS)
     endif()
     add_test(NAME barcode_decode_checks
         COMMAND barcode_decode_checks ${CMAKE_CURRENT_SOURCE_DIR}/tests/barcode/replay.txt)
+    # The firmware's route letters: best fit may add reads but never a wrong letter.
+    add_test(NAME barcode_decode_letters_checks
+        COMMAND barcode_decode_checks --letters AZ ${CMAKE_CURRENT_SOURCE_DIR}/tests/barcode/replay.txt)
+    # Only 'A' allowed: every Z pass must be rejected, not best-fitted to A.
+    add_test(NAME barcode_decode_reject_checks
+        COMMAND barcode_decode_checks --letters A ${CMAKE_CURRENT_SOURCE_DIR}/tests/barcode/replay.txt)
+    # The robot's sensitivity ladder: no wrong letter, and Z passes still rejected when only A is allowed.
+    add_test(NAME barcode_decode_ladder_checks
+        COMMAND barcode_decode_checks --letters AZ --ladder ${CMAKE_CURRENT_SOURCE_DIR}/tests/barcode/replay.txt)
+    add_test(NAME barcode_decode_ladder_reject_checks
+        COMMAND barcode_decode_checks --letters A --ladder ${CMAKE_CURRENT_SOURCE_DIR}/tests/barcode/replay.txt)
     add_executable(crash_restart_checks tests/test_crash_restart.c
         app_program/subsystem2/motion.c app_program/subsystem2/math.c
         app_program/subsystem2/board_config.c app_program/subsystem2/encoder_capture.c

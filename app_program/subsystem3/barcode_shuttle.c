@@ -9,6 +9,7 @@
 #include "motion_hal.h"
 #include "robot.h"
 #include "steering.h"
+#include "ir_io.h" /* Plain digital inputs: the stream's ir= column shows where the car is on the tape. */
 
 #define SHUTTLE_TRIPS       20U    /* Forward-and-back round trips. */
 #define SHUTTLE_DISTANCE_M  0.40   /* One way: the 26 cm code plus a few cm of floor each side. */
@@ -16,14 +17,6 @@
 #define SHUTTLE_PAUSE_MS    1500U  /* Standing still after each leg: ends the reader's pass. */
 #define SHUTTLE_LEG_TIMEOUT 15.0   /* s. */
 #define SHUTTLE_IDLE_S      2.0    /* Abort if the car has not moved 5 mm this long after the command. */
-
-/* Plain digital input, pulls off: the stream's ir= column shows where the car is on the tape. */
-static void shuttle_input(unsigned pin)
-{
-    gpio_init(pin);
-    gpio_set_dir(pin, false);
-    gpio_disable_pulls(pin);
-}
 
 /* One finite straight move (negative = backward). True when it completed. */
 static bool shuttle_leg(uint32_t id, double metres)
@@ -54,8 +47,8 @@ void shuttle_task(INT code, void *context)
 {
     uint32_t id = 4000U;
     (void)code; (void)context;
-    shuttle_input(BOARD_LINE_R);
-    shuttle_input(BOARD_LINE_C);
+    ir_input_init(BOARD_LINE_R);
+    ir_input_init(BOARD_LINE_C);
     tm_printf((const UB *)"shuttle: %u round trips of %u mm at %u mm/s, starting in 3 s\n", SHUTTLE_TRIPS,
               (unsigned)(SHUTTLE_DISTANCE_M * 1000.0), (unsigned)(SHUTTLE_SPEED * 1000.0));
     (void)tk_dly_tsk(3000U);

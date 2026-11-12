@@ -4,11 +4,14 @@
  * Input lines are the firmware's stream format (ROBO_BARCODE_STREAM builds):
  *   bc t=<ms> v=<10 readings> ir=<10 flags> p=<10 path values, 0.1 mm>
  * Everything else is ignored, except run headers in fixture files:
- *   @run <name> <letter or -> <minimum reads>
- * A run with a letter fails when it reads fewer than the minimum or reads any other letter.
+ *   @run <name> <letter or -> <minimum reads> [contrast divisor]
+ * A run with a letter fails when it reads fewer than the minimum or reads any other letter. With
+ * --letters, only those letters can be read: a run whose letter is not among them must read nothing.
  *
- *   barcode_decode_checks FIXTURE            checks every @run in the fixture
- *   barcode_decode_checks --replay [-v] LOG  one run per log, no expectations (tuning) */
+ *   barcode_decode_checks [--letters XY] FIXTURE            checks every @run in the fixture
+ *   barcode_decode_checks --replay [-v] [--div N] [--letters XY] LOG  one run per log, no expectations
+ * --ladder (after the other options) retries a pass that does not decode at the other sensitivities,
+ * as the robot does (barcode_ladder_div). */
 #include "barcode_decode.h"
 #include <math.h>
 #include <stdio.h>
@@ -19,6 +22,7 @@ typedef struct {
     char name[96];
     char expect;       /* '\0' = no expectation. */
     unsigned minimum;
+    unsigned div;      /* Contrast divisor (sensitivity) for this run. */
     unsigned reads, wrong, failed, fragments;
     char letters[64];  /* Letters read, in order (truncated). */
 } run_t;
@@ -27,13 +31,17 @@ static barcode_seg_t seg;
 static uint16_t work[BARCODE_SAMPLES];
 static uint32_t widths[BARCODE_MAX_ELEMENTS];
 static int verbose;
+static int ladder;                        /* --ladder: retry a failed pass at the other sensitivities. */
+static const char *letters;               /* --letters: the allowed letters (NULL = any). */
+static unsigned default_div = BARCODE_CONTRAST_DIV;
 
 static void run_start(run_t *r, const char *name, char expect, unsigned minimum)
 {
     memset(r, 0, sizeof *r);
     (void)snprintf(r->name, sizeof r->name, "%s", name);
     r->expect = expect;
-    r->minimum = minimum;
+    r->minimum = (letters != NULL && expect != '\0' && strchr(letters, expect) == NULL) ? 0U : minimum;
+    r->div = default_div;
     barcode_seg_init(&seg);
 }
 
@@ -50,8 +58,15 @@ static void run_sample(run_t *r, uint16_t s, uint32_t path)
 {
     char text[BARCODE_MAX_CHARS + 1U];
     unsigned elements, chars;
+    unsigned div = r->div;
     if (barcode_seg_feed(&seg, s, path, 0U) != BARCODE_SEG_DONE) { return; }
-    chars = barcode_decode_stretch(seg.samples, seg.path, seg.count, work, widths, &elements, text);
+    chars = barcode_decode_stretch(seg.samples, seg.path, seg.count, work, widths, &elements, text,
+                                   div, letters);
+    for (unsigned i = 1U; ladder && chars == 0U && (div = barcode_ladder_div(r->div, i)) != 0U; ++i) {
+        chars = barcode_decode_stretch(seg.samples, seg.path, seg.count, work, widths, &elements, text,
+                                       div, letters); /* As the robot: the other sensitivities in turn. */
+        if (chars != 0U && verbose) { printf("  ladder: read at div=%u\n", div); }
+    }
     if (chars != 0U) {
         size_t used = strlen(r->letters);
         ++r->reads;
@@ -63,7 +78,7 @@ static void run_sample(run_t *r, uint16_t s, uint32_t path)
         }
         if (used + 1U < sizeof r->letters) { r->letters[used] = text[1]; r->letters[used + 1U] = '\0'; }
         if (verbose) { describe("read", text, elements); }
-    } else if (seg.count >= 2U * BARCODE_QUIET + BARCODE_MIN_ACTIVE) {
+    } else if (seg.count >= BARCODE_FULL_PASS) {
         ++r->failed;
         if (verbose) { describe("no read", "", elements); }
     } else {
@@ -111,14 +126,17 @@ static int replay(const char *file, int fixture)
     while (fgets(line, (int)sizeof line, f) != NULL) {
         if (fixture && strncmp(line, "@run ", 5U) == 0) {
             char name[96], letter[8];
-            unsigned minimum;
+            unsigned minimum, div;
+            int fields;
             if (open_run) { failures += run_end(&r); }
-            if (sscanf(line + 5, "%95s %7s %u", name, letter, &minimum) != 3) {
+            fields = sscanf(line + 5, "%95s %7s %u %u", name, letter, &minimum, &div);
+            if (fields < 3) {
                 printf("bad run header: %s", line);
                 (void)fclose(f);
                 return 1;
             }
             run_start(&r, name, (letter[0] == '-') ? '\0' : letter[0], minimum);
+            if (fields == 4) { r.div = div; } /* Calibrated sensitivity for this run. */
             open_run = 1;
             if (verbose) { printf("%s\n", name); }
             continue;
@@ -230,8 +248,14 @@ int main(int argc, char **argv)
     if (argc > first && strcmp(argv[first], "--replay") == 0) { fixture = 0; ++first; }
     if (argc > first && strcmp(argv[first], "-v") == 0) { verbose = 1; ++first; }
     if (argc > first && strcmp(argv[first], "-vv") == 0) { verbose = 2; ++first; }
+    if (argc > first + 1 && strcmp(argv[first], "--div") == 0) {
+        default_div = (unsigned)strtoul(argv[first + 1], NULL, 10);
+        first += 2;
+    }
+    if (argc > first + 1 && strcmp(argv[first], "--letters") == 0) { letters = argv[first + 1]; first += 2; }
+    if (argc > first && strcmp(argv[first], "--ladder") == 0) { ladder = 1; ++first; }
     if (argc <= first) {
-        printf("usage: %s [--replay] [-v] FILE...\n", argv[0]);
+        printf("usage: %s [--replay] [-v] [--div N] [--letters XY] [--ladder] FILE...\n", argv[0]);
         return 2;
     }
     if (fixture) { failures += synthetic_checks(); }

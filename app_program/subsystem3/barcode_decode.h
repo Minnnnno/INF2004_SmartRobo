@@ -7,6 +7,7 @@
 #ifndef BARCODE_DECODE_H
 #define BARCODE_DECODE_H
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #define BARCODE_SAMPLE_US    10000U  /* 100 samples per second. */
@@ -16,6 +17,8 @@
 #define BARCODE_QUIET        50U     /* First 0.5 s of a stretch is the quiet level: the noise reference. */
 #define BARCODE_FLAT         50U     /* A stretch ends after 0.5 s of flat reading. */
 #define BARCODE_MIN_ACTIVE   80U     /* Shorter stretches are bumps, not barcode passes (0.8 s). */
+#define BARCODE_FULL_PASS    (2U * BARCODE_QUIET + BARCODE_MIN_ACTIVE) /* Samples (lead-in + flat tail included)
+                                                                         * from which a stretch counts as a pass. */
 #define BARCODE_MAX_ELEMENTS 99U     /* 10 characters of 9 elements plus gaps. */
 #define BARCODE_MAX_BARS     ((BARCODE_MAX_ELEMENTS + 1U) / 2U)
 #define BARCODE_MAX_CHARS    ((BARCODE_MAX_ELEMENTS + 1U) / 10U)
@@ -47,11 +50,33 @@ typedef enum {
 void barcode_seg_init(barcode_seg_t *g);
 barcode_seg_event_t barcode_seg_feed(barcode_seg_t *g, uint16_t s, uint32_t path, uint16_t heading);
 
+#ifndef BARCODE_CONTRAST_DIV
+#define BARCODE_CONTRAST_DIV 32U /* Default sensitivity: bars must rise their median height / this (0 = off). */
+#endif
+#ifndef BARCODE_FIT_MAX_MISMATCH
+#define BARCODE_FIT_MAX_MISMATCH 2U /* Best fit: wide/narrow elements allowed to disagree (2 = one swapped pair). */
+#endif
+
+/* Sensitivity ladder, for a pass that does not decode at the calibrated setting: barcode_ladder_div(first, 0)
+ * is 'first' (non-zero), then 1, 2, ... give the other settings of BARCODE_LADDER in order, and 0 after the
+ * last. The extra settings never decoded a wrong letter in the replay fixtures (tests/barcode/replay.txt). */
+#define BARCODE_LADDER {32U, 64U, 16U, 128U}
+unsigned barcode_ladder_div(unsigned first, unsigned i);
+
 /* Decodes one stretch. work is scratch (BARCODE_SAMPLES); widths receives the element widths
  * (BARCODE_MAX_ELEMENTS, in BARCODE_SAMPLE_US units per decoding step) and *elements their count.
+ * contrast_div sets the sensitivity (BARCODE_CONTRAST_DIV by default; bigger = fainter bars kept).
+ * letters: NULL or "" accepts any strict read; otherwise only those letters are reported, and a pass the
+ * strict decoder cannot read is matched against them (barcode_best_fit).
  * Returns the character count of a complete *...* read (text holds it, '\0'-terminated), else 0. */
 unsigned barcode_decode_stretch(const uint16_t *samples, const uint32_t *path, unsigned count,
-                                uint16_t *work, uint32_t *widths, unsigned *elements, char *text);
+                                uint16_t *work, uint32_t *widths, unsigned *elements, char *text,
+                                unsigned contrast_div, const char *letters);
+
+/* The allowed letter whose *X* pattern the elements fit best (either direction, up to BARCODE_MAX_STRAY
+ * stray elements), if it is within BARCODE_FIT_MAX_MISMATCH and strictly better than every other; else '\0'.
+ * Needs one element per bar and space (29 for *X*); d is reversed and restored in place. */
+char barcode_best_fit(uint32_t *d, unsigned n, const char *letters);
 
 /* Mean and mean absolute deviation (the noise) of n samples. */
 uint32_t barcode_level(const uint16_t *s, unsigned n, uint32_t *noise);
