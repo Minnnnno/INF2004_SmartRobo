@@ -208,7 +208,7 @@ int main(void)
     xyz[0]=259; xyz[1]=-100; xyz[2]=-961;
     for(unsigned i=0;i<50;i++) { tick(&c,20U,0U); }
     check((terrain_status(&c.terrain)&TERRAIN_PHASE_MASK)==TERRAIN_CLIMBING,"one-wheel hump integrated with tilt");
-    check(terrain_run_max(&c.terrain)==(TERRAIN_RUN_VALID|30U),"live peak 30 mm from sideways tilt");
+    check(terrain_run_max(&c.terrain)==0U,"30 mm climb not in the run max until it completes");
     fail(&c);
     check((terrain_status(&c.terrain)&TERRAIN_VALID)==0U &&
           (terrain_status(&c.terrain)&TERRAIN_PHASE_MASK)==TERRAIN_CLIMBING,"recovery retains the phase and marks unknown");
@@ -276,6 +276,25 @@ int main(void)
         xyz[0]=0; xyz[2]=-1000;
         for (unsigned i=0;i<40;i++) { tick(&c,20U,0U); }
         check(buddy4_lift(&c)==LIFT_NONE && !terrain_take_completed(&c.terrain),"no hump after setting it down");
+
+        /* Lifted by one side: the tilt starts a hump, then the upward push
+         * latches LIFTED. The hump in progress is discarded and never counts. */
+        ready(&c);
+        xyz[0]=259; xyz[1]=0; xyz[2]=-961; /* ~30 mm sideways tilt */
+        for (unsigned i=0;i<30;i++) { tick(&c,20U,0U); }
+        check((terrain_status(&c.terrain)&TERRAIN_PHASE_MASK)==TERRAIN_CLIMBING,"hand tilt starts a hump");
+        xyz[2]=-1300;
+        for (unsigned i=0;i<4;i++) { tick(&c,20U,0U); }
+        check(buddy4_lift(&c)==LIFT_LIFTED,"upward push: LIFTED");
+        check((terrain_status(&c.terrain)&TERRAIN_PHASE_MASK)==TERRAIN_WAITING,"lift discards the hump in progress");
+        xyz[2]=-961;
+        for (unsigned i=0;i<10;i++) { tick(&c,20U,0U); }
+        check((terrain_status(&c.terrain)&TERRAIN_PHASE_MASK)==TERRAIN_WAITING,"no hump while the lift is latched");
+        xyz[0]=0; xyz[2]=-1000; /* set down level */
+        for (unsigned i=0;i<60;i++) { tick(&c,20U,0U); }
+        check(buddy4_lift(&c)==LIFT_NONE,"lift cleared after setting it down");
+        check(!terrain_take_completed(&c.terrain) && terrain_run_max(&c.terrain)==0U,
+              "lifted hump never completes and never reaches the run max");
 
         /* Sensor failure while lifted: detection unavailable, latch cleared. */
         xyz[2]=1000;

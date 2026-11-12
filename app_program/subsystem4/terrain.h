@@ -42,7 +42,7 @@ typedef struct
     uint16_t peak_tenths; /* Current hump peak |height|, 0.1 mm (0..3276). */
     uint8_t flags;
     uint8_t last_peak;    /* Last completed hump: mm | TERRAIN_PEAK_RIGHT. */
-    uint8_t run_max;      /* Highest peak this run: mm | TERRAIN_RUN_VALID. */
+    uint8_t run_max;      /* Highest completed peak this run: mm | TERRAIN_RUN_VALID. */
 } terrain_t;
 /* Explicit new-run reset: clears phases, peaks and the run maximum.
  * Cold initialisation is also a zero-filled context. Completion automatically rearms.
@@ -55,16 +55,21 @@ bool terrain_take_completed(terrain_t *p_terrain);
 /* One fresh observation per call: valid=false (stale/unsuitable tilt) cancels
  * pending timing and keeps the confirmed phase and peaks.
  * height_tenths: right-minus-left wheel contact height, 0.1 mm (sign = side).
- * The run maximum follows the live peak, so an up-only ramp still counts.
+ * The run maximum changes only when a hump completes.
  */
 void terrain_step(terrain_t *p_terrain, bool valid, int16_t height_tenths, uint32_t now_ms);
+/* Discard the hump in progress (robot lifted/overturned: the tilt is the hand,
+ * not the course): back to WAITING with no completion event. Completed humps,
+ * the run maximum and an unconsumed event are kept. Safe to call every sample.
+ */
+void terrain_discard(terrain_t *p_terrain);
 /* Coherent three-bit status value; copy through a protected interface across tasks.
  * Internal flags/padding must not be transmitted directly. NULL gives UNKNOWN.
  */
 uint8_t terrain_status(terrain_t const *p_terrain);
 /* Last completed hump peak byte (mm | TERRAIN_PEAK_RIGHT); 0 before the first. */
 uint8_t terrain_last_peak(terrain_t const *p_terrain);
-/* Highest peak this run (mm | TERRAIN_RUN_VALID); 0 before the first hump. */
+/* Highest completed peak this run (mm | TERRAIN_RUN_VALID); 0 before the first. */
 uint8_t terrain_run_max(terrain_t const *p_terrain);
 char const *terrain_phase_name(uint8_t status);
 #endif

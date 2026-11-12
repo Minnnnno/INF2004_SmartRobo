@@ -162,8 +162,8 @@ static void hump_script(uint32_t t)
         check(S4_TS_CLIMBING == code_of(), "one-wheel hump publishes CLIMBING");
         check(!faulted_of(), "climbing is not a fault");
         check(fabs(pitch_deg() - 5.7) < 0.5, "pitch published in radians, + nose up");
-        check((TF_TV_PITCH | TF_TV_HUMP) == valid_of(), "hump height valid once climbing");
-        check(fabs(g_last.values[2] - 0.030) < 0.0005, "live peak 30 mm published in metres");
+        check(TF_TV_PITCH == valid_of(), "hump height not published while climbing");
+        check(0.0 == g_last.values[2], "run maximum waits for the hump to complete");
         check(0U == g_events, "no hump event while climbing");
         g_xyz[0] = 130; g_xyz[1] = 0; g_xyz[2] = -991; /* ~15 mm: coming down */
         g_step = 2U;

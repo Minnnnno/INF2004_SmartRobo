@@ -81,8 +81,15 @@ void buddy4_step(buddy4_t *p_context, uint8_t inputs)
         }
         /* Hump height = right-minus-left wheel contact height (pitch-independent).
          * Suspended while lifted or steeply tilted, so lifting the robot by one
-         * end does not record a fake hump. */
-        bool fresh = (0U != (p_context->result & TILT_RESULT_VALID)) &&
+         * end does not record a fake hump. A lift/overturn latch also discards
+         * the hump in progress: the latch is confirmed 80-220 ms after the hand
+         * starts tilting the robot, and that tilt has often started a hump. */
+        if (LIFT_NONE != lift_state(&p_context->lift))
+        {
+            terrain_discard(&p_context->terrain);
+            return;
+        }
+        bool fresh = (0U !=(p_context->result & TILT_RESULT_VALID)) &&
                      ((now_ms - p_context->last_fresh) < B4_STALE_MS) &&
                      !lift_suspect(&p_context->lift);
         terrain_step(&p_context->terrain, fresh,

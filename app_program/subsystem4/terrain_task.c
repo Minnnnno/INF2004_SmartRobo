@@ -301,7 +301,7 @@ static void terrain_lift(buddy4_t const *p_context, s4_motion_t const *p_motion,
         {
             motion_stop();
 #ifndef ROBO_IR_MONITOR
-            tm_printf((UB const *)"[LIFT] %s (upright=%d%% vertical=%d mg) -> motors stopped; set it down level, then START\n",
+            tm_printf((UB const *)"[LIFT] %s (upright=%d%% vertical=%d mg) -> motors stopped, hump in progress discarded; set it down level, then START\n",
                       (UB const *)lift_name(lift), (INT)lift_upright_pct(p_lift),
                       (INT)lift_trigger_mg(p_lift));
 #endif

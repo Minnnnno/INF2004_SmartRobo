@@ -228,7 +228,7 @@ hump height; bit 0 (heading) stays clear because the magnetometer is not used.
 Bits 6..8 of `values[3]` carry the motion class (0 STATIONARY, 1 MOVING,
 2 ACCELERATING (speed changing, braking included), 3 REVERSING, 4 TURNING, 5 CLIMBING, 6 DESCENDING, 7 OVERTURNED) and
 bit 9 marks the class and turn rate valid; decode with `terrain_motion_class()`.
-`values[2]` is the highest hump peak of the run in metres (1 mm steps), measured
+`values[2]` is the highest completed hump peak of the run in metres (1 mm steps), measured
 from the sideways tilt of the axle for humps under one wheel. `values[3]` also carries
 the 3-bit `T_STATE` << 3: 0 INIT, 1 WAITING, 2 CLIMBING, 3 DESCENDING, 4 RECOVERY,
 5 FAULT, 6 STOP, 7 LIFTED. `available` is true once the task runs; the timestamp is the

@@ -92,9 +92,10 @@ s += (h - s)/4 per 20 ms sample: |h| >= 5 mm for 100 ms -> CLIMBING (peak
 tracked); 3 mm below the peak, or half the peak if smaller ->
 DESCENDING (a rise of 2 mm+ above the peak returns to CLIMBING; smaller rises
 are noise); below 2.5 mm for 300 ms -> hump complete,
-peak and side stored, `TF_EV_HUMP_PEAK` latched. The run maximum follows the
-live peak, so a ramp that never comes down still counts. Peaks are stored as
-7-bit millimetres (0..127) plus one flag bit each (CR1).
+peak and side stored, run maximum updated, `TF_EV_HUMP_PEAK` latched. The run
+maximum changes only when a hump completes, so a ramp that never comes back
+down is not counted, and a hump discarded by a lift (below) never reaches it.
+Peaks are stored as 7-bit millimetres (0..127) plus one flag bit each (CR1).
 
 Expected error: about +/-0.5 mm noise standing still; while driving, steering
 sway and vibration swing the reading by up to about 3.3 mm (measured on the
@@ -185,7 +186,11 @@ the overturned pose is being timed, and while the robot is tilted more than
 ~35 deg (`LIFT_SUSPECT_UPRIGHT_PCT`) plus 0.5 s after (`LIFT_SUSPECT_SAMPLES`,
 while the tilt filter settles), so lifting the robot by one end does not record
 a fake hump. This tilt check only pauses hump measurement; it never stops the
-robot. A hump rising before 35 deg is reached may still show.
+robot. The LIFTED/OVERTURNED latch goes further and discards the hump in
+progress (`terrain_discard`: back to WAITING, no completion event, run maximum
+unchanged): the latch is confirmed 80-220 ms after the hand starts tilting the
+robot, and that tilt has often already started a hump. A slow lift that never
+latches still looks like a hump.
 
 **Action.** On a new latch, `terrain_task` calls `motion_stop()` once
 (controlled STOP: Buddy 2 brakes and holds; the Vehicle Controller rejects all
@@ -287,8 +292,8 @@ Shared Terrain slot, published every cycle via `robot_update_subsystem`
 | `timestamp` | time of the last valid tilt sample, seconds |
 | `values[0]` | turn rate rad/s, + = left (from wheel speeds), when motion-valid (bit 9) |
 | `values[1]` | pitch rad, + front up, when `TF_TV_PITCH` is set |
-| `values[2]` | highest hump peak this run, m (1 mm steps), when `TF_TV_HUMP` is set |
-| `values[3]` | validity bits (`TF_TV_PITCH`, `TF_TV_HUMP` once a hump is confirmed) \| `T_STATE` << 3 \| motion class << 6 \| motion-valid << 9 |
+| `values[2]` | highest completed hump peak this run, m (1 mm steps), when `TF_TV_HUMP` is set |
+| `values[3]` | validity bits (`TF_TV_PITCH`, `TF_TV_HUMP` once a hump has completed) \| `T_STATE` << 3 \| motion class << 6 \| motion-valid << 9 |
 
 `T_STATE` (3 bits, 8 codes): 0 INIT, 1 WAITING, 2 CLIMBING, 3 DESCENDING
 (1..3 are MONITORING with that terrain phase), 4 RECOVERY, 5 FAULT, 6 STOP,
@@ -299,7 +304,7 @@ dashboard only as motion STOPPED/held with pitch invalid, and in full on the
 USB console.
 
 Hump completion latches `TF_EV_HUMP_PEAK` through `comms_latch_event`, which
-is interrupt-safe. The dashboard's `HUMP_MM` shows the run maximum.
+is interrupt-safe. The dashboard's `HUMP_MM` shows the run maximum (completed humps only).
 Buddy 4 does not request a slower speed over humps (tested on the robot, the
 effect was small and not needed); its only motion command is the lift/overturn
 `motion_stop()`. Other subsystems decode the slot
@@ -318,7 +323,7 @@ the binary status frame (Change Requirement 1).
 `[TERRAIN] Hump completed: peak=32 mm under RIGHT wheel | run max=41 mm`.
 Each class change prints `[MOTION] MOVING -> TURNING yaw=37 deg/s accel=..
 mm/s2 imu_fwd=.. mg`, each lift
-`[LIFT] LIFTED (upright=64% vertical=312 mg) -> motors stopped; set it down level, then START`
+`[LIFT] LIFTED (upright=64% vertical=312 mg) -> motors stopped, hump in progress discarded; set it down level, then START`
 (or `OVERTURNED`), `[LIFT] still LIFTED: motors stopped again` when released in
 the air, `[LIFT] cleared: upright and still; motors stay stopped until START`,
 and each completed turn `[TURN] left 88.4 deg in 1.9 s (peak 50 deg/s) compass 87.9 deg`
