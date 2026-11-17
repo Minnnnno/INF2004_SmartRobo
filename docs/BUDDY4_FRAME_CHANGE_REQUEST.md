@@ -1,7 +1,8 @@
 # Change request: Buddy 4 fields in the telemetry frame (layout v1 → v2)
 
 **From:** Buddy 4 (IMU / terrain) · **To:** Buddy 1 (Wi-Fi / MQTT / dashboard)
-**Status:** proposed, needs your review · **Frame size:** stays **21 bytes**
+**Status:** implemented by Buddy 1 on 14 November 2026 (see "Buddy 1 status" at
+the end); not yet verified on hardware · **Frame size:** stays **21 bytes**
 
 ## Summary
 
@@ -155,3 +156,29 @@ No new events: the event byte is full, and `TF_EV_HUMP_PEAK` is unchanged.
 Nothing further is needed from Buddy 4: the slot already publishes all of
 this (`include/terrain_status.h`, `app_program/subsystem4/terrain_task.c`).
 Questions to Buddy 4.
+
+## Buddy 1 status (14 November 2026)
+
+Implemented as proposed; not yet verified on hardware.
+
+- `include/telemetry_frame.h`: layout v2, `M_CLASS` after `T_STATE`,
+  `TURN_RATE` (−256..255 deg/s, + left), `HUMP_MM` 7 bits, `TF_TV_MOTION`
+  replaces `TF_TV_HEADING`. 163 bits, 5 spare, still 21 bytes.
+- `telemetry_map.c`: `T_VALID` bit 0, `M_CLASS` and `TURN_RATE` come only from
+  slot bit 9 (`TERRAIN_MOTION_VALID`); slot bit 0 is ignored, so a stray bit
+  can never mark an old class as valid. Without motion-valid both send 0.
+- Tests: `buddy1_frame_checks` (935 checks) has the regenerated golden frame
+  `20730394808dcbe69475b02a7f7139a4a9dc807b00`, field order, the `TURN_RATE`
+  signed offset (−256, −1, 0, 1, 255), `HUMP_MM` 127 and the clamp at 200, every
+  class code including OVERTURNED, the no-motion-valid case, an unavailable
+  slot and v1-frame rejection. The two enum-to-double assignments clang warned
+  about are now explicit casts (gcc verified; clang was not available here).
+- `tools/dashboard.py`: status line prints
+  `terrain=<T_STATE> motion=<M_CLASS or -> turn=<deg/s or ->`; `selftest`
+  shares the golden frame and checks v1 rejection. The web dashboard already
+  showed motion class, turn rate and OVERTURNED once v2 fields exist.
+- Firmware: Wi-Fi/MQTT profile (`build-wifi`) compiles and links.
+
+Acceptance check 3 (on the robot) is still open: record it as `S1-U13` in
+`testing/subsystem1/TEST_LOG.md`. **Reflash the robot and run the dashboard
+from the same commit**: a v1 dashboard rejects v2 frames, and vice versa.

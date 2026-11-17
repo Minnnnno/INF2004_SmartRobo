@@ -13,6 +13,7 @@
 
 #include "telemetry_frame.h"
 #include "telemetry_map.h"
+#include "terrain_status.h"
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -34,7 +35,7 @@ static unsigned checks, failures;
 /* Golden frame, shared with tools/dashboard.py --selftest.  If the layout
    changes on purpose, bump TF_LAYOUT_VERSION and regenerate both. */
 static const char GOLDEN_HEX[] =
-	"10730394808dcbe69475b02a7e69c002a77201ec00";
+	"20730394808dcbe69475b02a7f7139a4a9dc807b00";	/* layout v2 */
 
 static void golden_values(int32_t v[TF_FIELD_COUNT])
 {
@@ -57,10 +58,11 @@ static void golden_values(int32_t v[TF_FIELD_COUNT])
 	v[TF_F_LINE_TRACK] = 1;
 	v[TF_F_BC_VALID] = 1;
 	v[TF_F_BC_CMD] = TF_BC_UTURN;
-	v[TF_F_T_VALID] = TF_TV_PITCH | TF_TV_HUMP;
+	v[TF_F_T_VALID] = TF_TV_MOTION | TF_TV_PITCH | TF_TV_HUMP;
 	v[TF_F_T_STATE] = 3;
+	v[TF_F_M_CLASS] = 4;		/* TURNING */
 	v[TF_F_PITCH] = -12;
-	v[TF_F_T_HEADING] = 0;
+	v[TF_F_TURN_RATE] = -46;	/* right turn */
 	v[TF_F_HUMP_MM] = 42;
 	v[TF_F_O_FLAGS] = TF_OF_FIRST_EDGE | TF_OF_SECOND_EDGE | TF_OF_WIDTH_VALID;
 	v[TF_F_O_AVAIL] = 1;
@@ -101,8 +103,42 @@ static void test_layout(void)
 		      range >= ((int64_t)1 << (tf_fields[i].bits - 1)),
 		      "%s is not minimum-bit", tf_fields[i].name);
 	}
-	CHECK(bits == 161 && TF_FRAME_BITS == 161, "161 data bits, got %d", bits);
-	CHECK(TF_FRAME_BYTES == 21 && TF_SPARE_BITS == 7, "21 bytes, 7 spare");
+	CHECK(bits == 163 && TF_FRAME_BITS == 163, "163 data bits, got %d", bits);
+	CHECK(TF_FRAME_BYTES == 21 && TF_SPARE_BITS == 5, "21 bytes, 5 spare");
+	CHECK(TF_LAYOUT_VERSION == 2U, "layout v2");
+	/* Buddy 4 fields stay together, M_CLASS straight after T_STATE. */
+	CHECK(TF_F_M_CLASS == TF_F_T_STATE + 1 && TF_F_PITCH == TF_F_M_CLASS + 1 &&
+	      TF_F_TURN_RATE == TF_F_PITCH + 1 && TF_F_HUMP_MM == TF_F_TURN_RATE + 1,
+	      "Buddy 4 field order");
+}
+
+/* TURN_RATE uses the signed offset; HUMP_MM's new 7-bit top. */
+static void test_v2_extremes(void)
+{
+	static const int32_t	rates[] = { -256, -1, 0, 1, 255 };
+	int32_t			in[TF_FIELD_COUNT], out[TF_FIELD_COUNT];
+	uint8_t			frame[TF_FRAME_BYTES];
+	unsigned		i;
+
+	for (i = 0U; i < sizeof(rates) / sizeof(rates[0]); i++) {
+		mid_values(in);
+		in[TF_F_TURN_RATE] = rates[i];
+		in[TF_F_HUMP_MM] = 127;
+		CHECK(tf_pack(in, frame) == 0U && tf_unpack(frame, sizeof(frame), out) &&
+		      out[TF_F_TURN_RATE] == rates[i] && out[TF_F_HUMP_MM] == 127,
+		      "turn rate %d / hump 127 round trip", (int)rates[i]);
+	}
+	mid_values(in);
+	in[TF_F_HUMP_MM] = 200;			/* would have fitted v1's 8 bits */
+	CHECK(tf_pack(in, frame) == (1UL << TF_F_HUMP_MM) &&
+	      tf_unpack(frame, sizeof(frame), out) && out[TF_F_HUMP_MM] == 127,
+	      "hump above 127 mm clamps");
+
+	/* A v1 frame (version nibble 1) is rejected, not misread. */
+	mid_values(in);
+	(void)tf_pack(in, frame);
+	frame[0] = (uint8_t)((frame[0] & 0x0FU) | 0x10U);
+	CHECK(!tf_unpack(frame, sizeof(frame), out), "v1 frame rejected by v2 decoder");
 }
 
 /* Every legal value of every field survives pack/unpack. */
@@ -270,10 +306,10 @@ static void test_mapping(void)
 	st.line.values[0] = 1.0;
 	st.line.values[1] = 1.0;
 	st.barcode.available = true;
-	st.barcode.values[0] = TF_BC_RIGHT;
+	st.barcode.values[0] = (double)TF_BC_RIGHT;
 	st.barcode.values[1] = 1.0;
 	st.terrain.available = true;
-	st.terrain.values[0] = -10.0 * PI / 180.0;	/* heading invalid: not sent */
+	st.terrain.values[0] = -10.0 * PI / 180.0;	/* motion invalid: not sent */
 	st.terrain.values[1] = 15.4 * PI / 180.0;
 	st.terrain.values[2] = 0.0505;
 	st.terrain.values[3] = (double)(TF_TV_PITCH | TF_TV_HUMP | (5U << 3));
@@ -297,8 +333,10 @@ static void test_mapping(void)
 	CHECK(v[TF_F_BC_VALID] == 1 && v[TF_F_BC_CMD] == TF_BC_RIGHT, "barcode");
 	CHECK(v[TF_F_T_VALID] == (int32_t)(TF_TV_PITCH | TF_TV_HUMP) && v[TF_F_T_STATE] == 5,
 	      "terrain validity and state");
-	CHECK(v[TF_F_PITCH] == 15 && v[TF_F_HUMP_MM] == 51 && v[TF_F_T_HEADING] == 0,
-	      "terrain values %d %d %d", v[TF_F_PITCH], v[TF_F_HUMP_MM], v[TF_F_T_HEADING]);
+	CHECK(v[TF_F_PITCH] == 15 && v[TF_F_HUMP_MM] == 51 && v[TF_F_TURN_RATE] == 0 &&
+	      v[TF_F_M_CLASS] == 0,
+	      "terrain values %d %d %d %d", v[TF_F_PITCH], v[TF_F_HUMP_MM], v[TF_F_TURN_RATE],
+	      v[TF_F_M_CLASS]);
 	CHECK(v[TF_F_O_FLAGS] == (int32_t)(TF_OF_SCANNING | TF_OF_NO_ECHO) &&
 	      v[TF_F_O_DIST_CM] == 0 && v[TF_F_O_WIDTH_CM] == 20, "obstacle");
 	CHECK(v[TF_F_REJECTED] == 7 && v[TF_F_DROPPED] == 2, "counters saturate");
@@ -306,6 +344,60 @@ static void test_mapping(void)
 	CHECK(tf_pack(v, frame) == (1UL << TF_F_CENTRE_MM), "only centre clamps");
 	CHECK(tf_unpack(frame, sizeof(frame), out) && out[TF_F_CENTRE_MM] == -5000,
 	      "centre clamps to -5000");
+}
+
+/* Buddy 4 v2 fields from the terrain slot (include/terrain_status.h). */
+static void test_terrain_v2_mapping(void)
+{
+	robot_status_t	st;
+	tm_frame_info_t	info = { 0, 0.0, 0, 0 };
+	int32_t		v[TF_FIELD_COUNT];
+	unsigned	c;
+
+	memset(&st, 0, sizeof(st));
+	st.terrain.available = true;
+	st.terrain.values[0] = -46.2 * PI / 180.0;	/* right turn, rad/s */
+	st.terrain.values[1] = 2.0 * PI / 180.0;
+	st.terrain.values[3] = (double)(TF_TV_PITCH | (1U << 3) |
+					(TERRAIN_MC_TURNING << TERRAIN_MC_SHIFT) |
+					TERRAIN_MOTION_VALID);
+	tm_fill(&st, &info, v);
+	CHECK(v[TF_F_T_VALID] == (int32_t)(TF_TV_MOTION | TF_TV_PITCH),
+	      "motion-valid sets T_VALID bit 0, got %d", v[TF_F_T_VALID]);
+	CHECK(v[TF_F_M_CLASS] == (int32_t)TERRAIN_MC_TURNING && v[TF_F_TURN_RATE] == -46 &&
+	      v[TF_F_T_STATE] == 1 && v[TF_F_PITCH] == 2,
+	      "class %d rate %d state %d", v[TF_F_M_CLASS], v[TF_F_TURN_RATE], v[TF_F_T_STATE]);
+
+	/* Left turn is positive; a fast pivot beyond 255 deg/s clamps on pack. */
+	st.terrain.values[0] = 300.0 * PI / 180.0;
+	tm_fill(&st, &info, v);
+	CHECK(v[TF_F_TURN_RATE] == 300, "rate passed through for tf_pack to clamp");
+
+	/* Every class code, including OVERTURNED, reaches the frame. */
+	for (c = 0U; c <= 7U; c++) {
+		st.terrain.values[3] = (double)((c << TERRAIN_MC_SHIFT) | TERRAIN_MOTION_VALID);
+		tm_fill(&st, &info, v);
+		CHECK(v[TF_F_M_CLASS] == (int32_t)c, "class %u mapped", c);
+	}
+
+	/* Without motion-valid: class and rate are 0, bit 0 clear. */
+	st.terrain.values[0] = -1.0;
+	st.terrain.values[3] = (double)(TF_TV_PITCH | (TERRAIN_MC_OVERTURNED << TERRAIN_MC_SHIFT));
+	tm_fill(&st, &info, v);
+	CHECK(v[TF_F_M_CLASS] == 0 && v[TF_F_TURN_RATE] == 0 &&
+	      v[TF_F_T_VALID] == (int32_t)TF_TV_PITCH, "invalid class/rate not sent");
+
+	/* Buddy 4 never sets slot bit 0; if it did, it must not mean "valid". */
+	st.terrain.values[3] = (double)(1U | (TERRAIN_MC_MOVING << TERRAIN_MC_SHIFT));
+	tm_fill(&st, &info, v);
+	CHECK(v[TF_F_T_VALID] == 0 && v[TF_F_M_CLASS] == 0, "slot bit 0 ignored");
+
+	/* Unavailable slot (Buddy 4 compiled out): everything zero. */
+	st.terrain.available = false;
+	st.terrain.values[3] = (double)(TERRAIN_MOTION_VALID | (5U << TERRAIN_MC_SHIFT));
+	tm_fill(&st, &info, v);
+	CHECK(v[TF_F_T_VALID] == 0 && v[TF_F_M_CLASS] == 0 && v[TF_F_TURN_RATE] == 0 &&
+	      v[TF_F_T_STATE] == 0, "unavailable terrain sends zeros");
 }
 
 static void test_edges(void)
@@ -326,7 +418,7 @@ static void test_edges(void)
 	a = b;
 	b.barcode.timestamp = 5.0;		/* same decode, republished */
 	CHECK(tm_edge_events(&a, &b) == 0U, "steady fault/barcode not repeated");
-	b.barcode.values[0] = TF_BC_STRAIGHT;
+	b.barcode.values[0] = (double)TF_BC_STRAIGHT;
 	CHECK(tm_edge_events(&a, &b) == TF_EV_BARCODE, "new instruction reported");
 }
 
@@ -527,12 +619,14 @@ static void report_json_size(void)
 int main(void)
 {
 	test_layout();
+	test_v2_extremes();
 	test_exhaustive();
 	test_clamp();
 	test_malformed();
 	test_golden();
 	test_commands();
 	test_mapping();
+	test_terrain_v2_mapping();
 	test_edges();
 	test_distinct_motion_faults();
 	test_encoder_frame();

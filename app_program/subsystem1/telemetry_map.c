@@ -6,12 +6,14 @@
  *	Tribunal 1 packing decisions:
  *	  line     values[0] error -1/0/+1, values[1] trackable (> 0.5)
  *	  barcode  values[0] tf_barcode_t, values[1] valid (> 0.5)
- *	  terrain  values[0] heading rad, [1] pitch rad, [2] hump m,
- *	           [3] validity bits 0..2 (TF_TV_*) | terrain state << 3
+ *	  terrain  values[0] turn rate rad/s (+ left), [1] pitch rad, [2] hump m,
+ *	           [3] validity bits 1..2 (TF_TV_*) | terrain state << 3 |
+ *	           motion class << 6 | motion valid << 9 (terrain_status.h)
  *	  obstacle values[0] distance m, [2] width m, [3] TF_OF_* flags
  */
 
 #include "telemetry_map.h"
+#include "terrain_status.h"
 #include <math.h>
 
 #define TM_PI	3.14159265358979323846
@@ -73,6 +75,7 @@ void tm_fill(const robot_status_t *st, const tm_frame_info_t *info,
 {
 	const motion_status_t	*m = &st->motion;
 	uint32_t		flags;
+	bool			motion_ok;
 
 	values[TF_F_VERSION]   = (int32_t)TF_LAYOUT_VERSION;
 	values[TF_F_SEQ]       = (int32_t)(info->seq & 0xFFU);
@@ -99,13 +102,21 @@ void tm_fill(const robot_status_t *st, const tm_frame_info_t *info,
 	values[TF_F_BC_VALID]   = (st->barcode.available && (st->barcode.values[1] > 0.5)) ? 1 : 0;
 	values[TF_F_BC_CMD]     = st->barcode.available ? to_int(st->barcode.values[0]) : 0;
 
+	/* Buddy 4 slot word: bits 0..2 validity, 3..5 T_STATE, 6..8 motion
+	   class, bit 9 class + turn rate valid (include/terrain_status.h).
+	   Bit 0 is not used by Buddy 4; the frame's TF_TV_MOTION comes from
+	   bit 9 so a stray bit 0 can never mark a stale class as valid. */
 	flags = bits_of(&st->terrain, 3U);
-	values[TF_F_T_VALID]   = (int32_t)(flags & 0x7U);
+	motion_ok = (flags & TERRAIN_MOTION_VALID) != 0U;
+	values[TF_F_T_VALID]   = (int32_t)((flags & (TF_TV_PITCH | TF_TV_HUMP)) |
+				 (motion_ok ? TF_TV_MOTION : 0U));
 	values[TF_F_T_STATE]   = (int32_t)((flags >> 3) & 0x7U);
+	values[TF_F_M_CLASS]   = motion_ok ?
+				 (int32_t)((flags >> TERRAIN_MC_SHIFT) & 0x7U) : 0;
 	values[TF_F_PITCH]     = ((flags & TF_TV_PITCH) != 0U) ?
 				 to_int(st->terrain.values[1] * 180.0 / TM_PI) : 0;
-	values[TF_F_T_HEADING] = ((flags & TF_TV_HEADING) != 0U) ?
-				 wrap_deg(st->terrain.values[0], 0) : 0;
+	values[TF_F_TURN_RATE] = motion_ok ?
+				 to_int(st->terrain.values[0] * 180.0 / TM_PI) : 0;
 	values[TF_F_HUMP_MM]   = ((flags & TF_TV_HUMP) != 0U) ?
 				 to_int(st->terrain.values[2] * 1000.0) : 0;
 

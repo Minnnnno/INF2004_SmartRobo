@@ -122,7 +122,7 @@ means no measurement, not a zero measurement. Proposed `values[4]` contracts:
 |---|---|
 | Line | line error -1/0/+1, trackable (> 0.5), junction flag, reserved |
 | Barcode | `tf_barcode_t` (left, right, straight, U-turn), valid (> 0.5), reserved, reserved |
-| Terrain | heading rad, pitch rad, hump height m, validity bits 0..2 (`TF_TV_*`) plus terrain state << 3 |
+| Terrain | turn rate rad/s (+ left), pitch rad, hump height m, validity bits 1..2 (`TF_TV_*`) \| terrain state << 3 \| motion class << 6 \| motion valid << 9 (frame layout v2: `M_CLASS`, `TURN_RATE`) |
 | Obstacle | nearest distance m, scan angle rad, width m, scan flags (`TF_OF_*`, 5 bits) |
 | WiFi | connected flag, publish count, receive count, reserved |
 

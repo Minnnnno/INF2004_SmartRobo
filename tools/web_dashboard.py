@@ -49,11 +49,9 @@ START_CHECK_S = 2.5          # time for a START to clear the hold flag
 MODES = ["DISTANCE_MOVE", "ENCODER_TURN", "WHEEL_SPEED_TRACKING", "MANUAL_OUTPUT", "ARC_MOVE"]
 OWNERS = ["manual", "line", "barcode", "obstacle", "wifi", "terrain", "?", "none"]
 BARCODES = ["left", "right", "straight", "U-turn"]
-# Buddy 4: T_STATE codes (app_program/subsystem4/README.md, "Interfaces").
-T_STATES = ["INIT", "WAITING", "CLIMBING", "DESCENDING", "RECOVERY", "FAULT", "STOP", "LIFTED"]
-# Buddy 4: M_CLASS codes, only sent once the layout v2 change request is applied.
-M_CLASSES = ["STATIONARY", "MOVING", "ACCELERATING", "REVERSING", "TURNING",
-             "CLIMBING", "DESCENDING", "OVERTURNED"]
+# Buddy 4: T_STATE and M_CLASS codes (layout v2), shared with dashboard.py.
+T_STATES = d.T_STATES
+M_CLASSES = d.M_CLASSES
 # Buddy 5 publishes S5_STATE_* (subsystem5.h) in obstacle values[3]; the
 # frame mapper copies that into O_FLAGS, so O_FLAGS currently holds this state.
 S5_STATES = ["clear", "held / scanning", "pass left", "pass right", "no way around",

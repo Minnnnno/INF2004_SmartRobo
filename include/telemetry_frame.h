@@ -32,7 +32,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define TF_LAYOUT_VERSION	1U
+/* v1 -> v2 (Buddy 4 change request, docs/BUDDY4_FRAME_CHANGE_REQUEST.md):
+   M_CLASS added, T_HEADING (never valid) became TURN_RATE, HUMP_MM 8 -> 7
+   bits, T_VALID bit 0 now means "motion class and turn rate valid". */
+#define TF_LAYOUT_VERSION	2U
 
 /* ---------------------------------------------------------------------
  *  Status frame, published at QoS 0 on COMMS_TOPIC_FRAME every 100 ms.
@@ -59,11 +62,12 @@
 	X(LINE_TRACK,  0,     1,      1,  B3, "line trackable") \
 	X(BC_VALID,    0,     1,      1,  B3, "barcode instruction valid") \
 	X(BC_CMD,      0,     3,      2,  B3, "tf_barcode_t: left, right, straight, U-turn") \
-	X(T_VALID,     0,     7,      3,  B4, "bit0 heading, bit1 pitch, bit2 hump height valid") \
+	X(T_VALID,     0,     7,      3,  B4, "bit0 motion class + turn rate, bit1 pitch, bit2 hump height valid") \
 	X(T_STATE,     0,     7,      3,  B4, "terrain state (8 states, B4 statechart; 7 = LIFTED)") \
+	X(M_CLASS,     0,     7,      3,  B4, "motion class: 0 still 1 moving 2 accel 3 reverse 4 turn 5 climb 6 descend 7 overturned") \
 	X(PITCH,       -90,   90,     8,  B4, "pitch, degrees, + nose up") \
-	X(T_HEADING,   0,     359,    9,  B4, "magnetic heading, degrees") \
-	X(HUMP_MM,     0,     255,    8,  B4, "peak hump height, mm") \
+	X(TURN_RATE,   -256,  255,    9,  B4, "turn rate from wheel speeds, deg/s, + left (anticlockwise)") \
+	X(HUMP_MM,     0,     127,    7,  B4, "highest completed hump peak this run, mm") \
 	X(O_FLAGS,     0,     31,     5,  B5, "bit0 scanning, bit1 first boundary, bit2 second boundary, bit3 width valid, bit4 no echo") \
 	X(O_AVAIL,     0,     1,      1,  B5, "obstacle status available") \
 	X(O_DIST_CM,   0,     400,    9,  B5, "nearest obstacle distance, cm") \
@@ -98,7 +102,7 @@ extern const tf_field_t tf_fields[TF_FIELD_COUNT];
 #define TF_MF_INHIBITED		0x4U
 #define TF_MF_HOLD		0x8U
 
-#define TF_TV_HEADING		0x1U
+#define TF_TV_MOTION		0x1U	/* M_CLASS and TURN_RATE valid (v1: heading, never set) */
 #define TF_TV_PITCH		0x2U	/* = S4_VALID_PITCH in subsystem4.c */
 #define TF_TV_HUMP		0x4U
 
@@ -174,7 +178,7 @@ bool tf_ack_decode(const uint8_t *data, size_t len, tf_ack_t *result, tf_command
  *  Encoder frame, published at QoS 0 on COMMS_TOPIC_ENCODER every 100 ms,
  *  straight after the status frame of the same period (same SEQ).  The
  *  raw counts need all 32 bits, so they do not fit the status frame's
- *  7 spare bits; this frame is byte-aligned, big-endian, 26 bytes:
+ *  5 spare bits; this frame is byte-aligned, big-endian, 26 bytes:
  *    byte  0       version, TF_ENC_VERSION
  *    byte  1       SEQ of the status frame sent in the same period
  *    byte  2       bit0 encoder reliable (acquisition flag)

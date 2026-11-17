@@ -298,10 +298,8 @@ Shared Terrain slot, published every cycle via `robot_update_subsystem`
 `T_STATE` (3 bits, 8 codes): 0 INIT, 1 WAITING, 2 CLIMBING, 3 DESCENDING
 (1..3 are MONITORING with that terrain phase), 4 RECOVERY, 5 FAULT, 6 STOP,
 7 LIFTED (MONITORING, lift latch set, motors stopped). OVERTURNED is motion
-class 7 instead, so until Buddy 1 adds `M_CLASS` to the binary frame (see
-`docs/BUDDY4_FRAME_CHANGE_REQUEST.md`) an overturned robot shows on the
-dashboard only as motion STOPPED/held with pitch invalid, and in full on the
-USB console.
+class 7 instead; it reaches the dashboard through the frame's `M_CLASS` field
+(layout v2, `docs/BUDDY4_FRAME_CHANGE_REQUEST.md`).
 
 Hump completion latches `TF_EV_HUMP_PEAK` through `comms_latch_event`, which
 is interrupt-safe. The dashboard's `HUMP_MM` shows the run maximum (completed humps only).
@@ -312,8 +310,9 @@ with `include/terrain_status.h` (header-only, safe with Buddy 4 disabled):
 `terrain_published_state()` (returns `TERRAIN_TS_UNKNOWN` = 0xFF when the slot
 is unusable, outside the 3-bit codes), `terrain_motion_class()` and
 `terrain_imu_faulted()`.
-Validity bit 0 (heading) stays clear, so the current frame's `T_HEADING` stays 0
-until Buddy 1 adds `M_CLASS` and renames `T_HEADING` to `TURN_RATE`.
+Slot validity bit 0 stays clear; Buddy 1 sets the frame's `T_VALID` bit 0
+(`TF_TV_MOTION`) from bit 9 and sends `M_CLASS` and `TURN_RATE` (deg/s) in
+frame layout v2.
 Nothing is sent as MQTT text any more; data reaches the dashboard only through
 the binary status frame (Change Requirement 1).
 
