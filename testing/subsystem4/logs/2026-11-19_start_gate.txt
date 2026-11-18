@@ -1,0 +1,11 @@
+# S4-U04: ctest -R "motion_tests|line_imu_wait" (Vehicle Controller + line task start gate)
+# commit fa36f67 (main), run 2026-11-19
+1: PASS: 9633 checks (synthetic host model; no hardware accuracy claim)
+1/3 Test #1: motion_tests ......................   Passed    0.05 sec
+8: PASS: 2041 line start-up IMU wait checks
+2/3 Test #8: line_imu_wait_checks ..............   Passed    0.03 sec
+9: PASS: 3605 line start-up IMU wait checks (web Start gate)
+3/3 Test #9: line_imu_wait_start_gate_checks ...   Passed    0.03 sec
+The following tests passed:
+100% tests passed, 0 tests failed out of 3
+exit=0

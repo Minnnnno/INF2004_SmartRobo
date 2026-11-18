@@ -1,0 +1,17 @@
+# S4-U02, S4-U03: python tests/subsystem4/run_tests.py
+# commit fa36f67 (main), run 2026-11-19
+PASS: 36 GY-511 configuration and startup scenarios
+PASS: acceleration failure paths and 4096 XYZ vectors (12288 axis conversions)
+PASS: magnetic failure/lock/range paths and 4096 XYZ vectors (12288 axis conversions)
+PASS: 629 motion class checks (rules, priority, debounce, overturned, yaw, gaps)
+PASS: 35 compass checks (calibration, heading, validity, unwrap, failures)
+PASS: 682 tilt geometry, reference, validity and hysteresis checks
+PASS: 2273 lift checks (overturn, lift, hold, clear, humps, scale, gaps, NULL)
+PASS: 54 height hump, sway, side, peak, run max, hold, gap and wrap checks
+PASS: 284 autonomous recovery, reference, deadline, STOP, reset and terrain checks
+PASS: 13527 terrain task checks (snapshot, state codes, hump event, level gating, timing, lift stop, hump freeze)
+PASS: 4973 terrain task web Start gate checks (wait, START, capture, hump, STOP/START)
+PASS: 13 calibration-sequence checks (pivot left/right, stop, constants, failures)
+PASS: production I2C receive arm, 1/2/6/16-byte completion and final STOP command
+All Buddy 4 host suites passed.
+exit=0
