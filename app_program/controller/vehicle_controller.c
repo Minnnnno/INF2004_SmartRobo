@@ -39,6 +39,8 @@ motion_result_t robot_request(robot_bus_t *b, const robot_request_t *r)
 
 void robot_control(robot_bus_t *b, robot_control_t control, bool checks_ok, bool external_rest)
 {
+    /* Operator stop latched: only vehicle_controller_remote_command(START) may release. */
+    if ((control == CONTROL_RELEASE) && b->remote_hold) { return; }
     b->controls |= (uint32_t)control;
     if ((control == CONTROL_STOP) || (control == CONTROL_FAULT) ||
         (control == CONTROL_ESTOP) || (control == CONTROL_SHUTDOWN)) {
@@ -90,12 +92,21 @@ void vehicle_controller_cycle(robot_bus_t *b, double now)
 
 motion_result_t vehicle_controller_remote_command(robot_bus_t *b, robot_remote_command_t command)
 {
-    if (command == REMOTE_STOP) { robot_control(b, CONTROL_STOP, false, false); return R_OK; }
-    if (command == REMOTE_ESTOP) { robot_control(b, CONTROL_ESTOP, false, false); return R_OK; }
+    if (command == REMOTE_STOP) {
+        b->remote_hold = true;
+        robot_control(b, CONTROL_STOP, false, false);
+        return R_OK;
+    }
+    if (command == REMOTE_ESTOP) {
+        b->remote_hold = true;
+        robot_control(b, CONTROL_ESTOP, false, false);
+        return R_OK;
+    }
     if (command != REMOTE_START) { return R_INVALID; }
     if (b->shutdown_latched || b->controls != 0U || b->status.motion.state != STOPPED ||
         b->status.motion.fault != F_NONE || !b->status.motion.stationary ||
         !b->status.motion.feedback_trusted) { return R_HELD; }
+    b->remote_hold = false;
     robot_control(b, CONTROL_RELEASE, true, false);
     return R_OK;
 }

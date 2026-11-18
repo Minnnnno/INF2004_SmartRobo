@@ -33,6 +33,11 @@ typedef struct {
     robot_status_t status;
     motion_event_t events[8];
     unsigned event_head, event_count;
+    /* Web Start gate (Buddy 1): set by a remote STOP/ESTOP (and at boot when
+     * ROBO_REQUIRE_START), cleared only by an accepted remote START. While set,
+     * CONTROL_RELEASE from any other source is ignored, so no subsystem can
+     * restart a robot the operator stopped. */
+    bool remote_hold;
 } robot_bus_t;
 
 /* Bus operations require the caller's short priority-inheritance mutex lock.

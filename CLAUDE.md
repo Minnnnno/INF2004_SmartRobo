@@ -80,5 +80,6 @@ ctest --test-dir build-host-cmake -R steering_checks --output-on-failure   # sin
 ## Safety conventions
 
 - Startup always leaves motors stopped; manual PWM is disabled in production; production output may use the full PWM range (the 25% cap was removed on 4 November 2026). Don't relax these limits or the CMake profile guards without explicit user direction.
+- Production images with MQTT (`ROBO_REQUIRE_START`, default ON) boot held and move only after the web dashboard START; a dashboard STOP/ESTOP sets `robot_bus_t.remote_hold`, which blocks every other `CONTROL_RELEASE` until START. Don't add code paths that release around it.
 - Flash with motor power disconnected (hold BOOTSEL, copy UF2 to `RPI-RP2`).
 - Kernel/driver code under `kernel/`, `lib/`, `device/` is imported template code with its own licenses; `docs/template_original/` and `docs/previous_integration/` are archived references, not built.

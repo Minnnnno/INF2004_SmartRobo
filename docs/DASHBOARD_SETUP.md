@@ -107,14 +107,15 @@ Order matters: **hotspot first**, then Mosquitto.
    `--log logs/run.log --csv logs/frames.csv`.
 4. **Open http://localhost:8080** in your browser. Anyone else on the hotspot
    (a phone, a teammate's laptop) can open `http://192.168.137.1:8080`.
-5. **Power the robot.** It starts following the line on its own once it sees
-   the line, so place it on the track, or keep the wheels off the ground for a
-   bench test. Keep it still and level for a moment at power-on (the IMU takes
-   its level reference).
+5. **Place the robot on the track and power it.** It boots **stopped** and does
+   not move until you press **START**. Keep it still and level for a moment at
+   power-on (the IMU takes its level reference).
 
 Within about 10 seconds the pills at the top should read **broker connected**,
-**robot online** and **telemetry live**, and the Link card should show frame
-layout **v2** with frames counting up (about 10 per second).
+**robot online** and **telemetry live**, the motion pill **STOPPED (held)**, and
+the Link card should show frame layout **v3** with frames counting up (about 10
+per second). When the button bar says "Robot is stopped and waiting", press
+**START** and it follows the line.
 
 To finish: power the robot off, then press Ctrl+C in both terminals.
 
@@ -122,8 +123,8 @@ To finish: power the robot off, then press Ctrl+C in both terminals.
 
 | Button | What it does |
 |---|---|
-| **STOP** | Controlled stop: motors stop and the robot is held. Use this to pause. |
-| **START** | Releases a held robot. Only works when it is STOPPED, still, fault-free and with trusted encoders. Press STOP first. |
+| **START** | Makes the robot go: after power-on, and after every STOP. Only works when it is STOPPED, still, fault-free and with trusted encoders (greyed out until then). |
+| **STOP** | Controlled stop: motors stop and the robot stays stopped until you press START. Nothing else on the robot (obstacle avoidance, line following) can restart it. |
 | **E-STOP** | Emergency stop. Latches a fault that **START cannot clear**: you must **power-cycle the robot** (battery and USB off, then on). Only for real emergencies. |
 
 The robot answering "queued" in the log means the command arrived, not that it

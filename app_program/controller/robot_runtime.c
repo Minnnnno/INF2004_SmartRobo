@@ -24,6 +24,9 @@ void robot_runtime_prepare(const motion_config_t *config, const motion_status_t 
 {
     runtime_config = config;
     robot_bus_init(&bus, initial_status);
+#ifdef ROBO_REQUIRE_START
+    bus.remote_hold = true;     /* boot held until the dashboard START */
+#endif
 }
 
 ID robot_runtime_init(void)

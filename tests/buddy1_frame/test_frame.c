@@ -35,7 +35,7 @@ static unsigned checks, failures;
 /* Golden frame, shared with tools/dashboard.py --selftest.  If the layout
    changes on purpose, bump TF_LAYOUT_VERSION and regenerate both. */
 static const char GOLDEN_HEX[] =
-	"20730394808dcbe69475b02a7f7139a4a9dc807b00";	/* layout v2 */
+	"30730394808dcbe69475b02a4bf7139a4a9dc807b0";	/* layout v3 */
 
 static void golden_values(int32_t v[TF_FIELD_COUNT])
 {
@@ -56,8 +56,8 @@ static void golden_values(int32_t v[TF_FIELD_COUNT])
 	v[TF_F_LINE_AVAIL] = 1;
 	v[TF_F_LINE_ERR] = -1;
 	v[TF_F_LINE_TRACK] = 1;
-	v[TF_F_BC_VALID] = 1;
-	v[TF_F_BC_CMD] = TF_BC_UTURN;
+	v[TF_F_BC_CHAR] = 11;		/* 'A' */
+	v[TF_F_BC_READ] = 1;
 	v[TF_F_T_VALID] = TF_TV_MOTION | TF_TV_PITCH | TF_TV_HUMP;
 	v[TF_F_T_STATE] = 3;
 	v[TF_F_M_CLASS] = 4;		/* TURNING */
@@ -103,9 +103,9 @@ static void test_layout(void)
 		      range >= ((int64_t)1 << (tf_fields[i].bits - 1)),
 		      "%s is not minimum-bit", tf_fields[i].name);
 	}
-	CHECK(bits == 163 && TF_FRAME_BITS == 163, "163 data bits, got %d", bits);
-	CHECK(TF_FRAME_BYTES == 21 && TF_SPARE_BITS == 5, "21 bytes, 5 spare");
-	CHECK(TF_LAYOUT_VERSION == 2U, "layout v2");
+	CHECK(bits == 167 && TF_FRAME_BITS == 167, "167 data bits, got %d", bits);
+	CHECK(TF_FRAME_BYTES == 21 && TF_SPARE_BITS == 1, "21 bytes, 1 spare");
+	CHECK(TF_LAYOUT_VERSION == 3U, "layout v3");
 	/* Buddy 4 fields stay together, M_CLASS straight after T_STATE. */
 	CHECK(TF_F_M_CLASS == TF_F_T_STATE + 1 && TF_F_PITCH == TF_F_M_CLASS + 1 &&
 	      TF_F_TURN_RATE == TF_F_PITCH + 1 && TF_F_HUMP_MM == TF_F_TURN_RATE + 1,
@@ -134,11 +134,13 @@ static void test_v2_extremes(void)
 	      tf_unpack(frame, sizeof(frame), out) && out[TF_F_HUMP_MM] == 127,
 	      "hump above 127 mm clamps");
 
-	/* A v1 frame (version nibble 1) is rejected, not misread. */
+	/* Older frames (version nibble 1 or 2) are rejected, not misread. */
 	mid_values(in);
 	(void)tf_pack(in, frame);
 	frame[0] = (uint8_t)((frame[0] & 0x0FU) | 0x10U);
-	CHECK(!tf_unpack(frame, sizeof(frame), out), "v1 frame rejected by v2 decoder");
+	CHECK(!tf_unpack(frame, sizeof(frame), out), "v1 frame rejected by v3 decoder");
+	frame[0] = (uint8_t)((frame[0] & 0x0FU) | 0x20U);
+	CHECK(!tf_unpack(frame, sizeof(frame), out), "v2 frame rejected by v3 decoder");
 }
 
 /* Every legal value of every field survives pack/unpack. */
@@ -306,8 +308,8 @@ static void test_mapping(void)
 	st.line.values[0] = 1.0;
 	st.line.values[1] = 1.0;
 	st.barcode.available = true;
-	st.barcode.values[0] = (double)TF_BC_RIGHT;
-	st.barcode.values[1] = 1.0;
+	st.barcode.values[0] = (double)'Z';	/* B3: letter as ASCII */
+	st.barcode.values[1] = 3.0;		/* B3: third valid read */
 	st.terrain.available = true;
 	st.terrain.values[0] = -10.0 * PI / 180.0;	/* motion invalid: not sent */
 	st.terrain.values[1] = 15.4 * PI / 180.0;
@@ -330,7 +332,8 @@ static void test_mapping(void)
 	CHECK(v[TF_F_HEADING] == -170, "heading wraps, got %d", v[TF_F_HEADING]);
 	CHECK(v[TF_F_LINE_AVAIL] == 0 && v[TF_F_LINE_ERR] == 0 && v[TF_F_LINE_TRACK] == 0,
 	      "unavailable line sends zeros");
-	CHECK(v[TF_F_BC_VALID] == 1 && v[TF_F_BC_CMD] == TF_BC_RIGHT, "barcode");
+	CHECK(v[TF_F_BC_CHAR] == 36 && v[TF_F_BC_READ] == 1, "barcode 'Z', read 3: %d %d",
+	      v[TF_F_BC_CHAR], v[TF_F_BC_READ]);
 	CHECK(v[TF_F_T_VALID] == (int32_t)(TF_TV_PITCH | TF_TV_HUMP) && v[TF_F_T_STATE] == 5,
 	      "terrain validity and state");
 	CHECK(v[TF_F_PITCH] == 15 && v[TF_F_HUMP_MM] == 51 && v[TF_F_TURN_RATE] == 0 &&
@@ -412,14 +415,70 @@ static void test_edges(void)
 	b.line.values[1] = 0.0;
 	b.motion.fault = F_TIMING;
 	b.barcode.available = true;
+	b.barcode.values[0] = (double)'A';
 	b.barcode.values[1] = 1.0;
 	CHECK(tm_edge_events(&a, &b) == (TF_EV_LINE_LOST | TF_EV_MOTION_FAULT | TF_EV_BARCODE),
 	      "edges latch events");
 	a = b;
 	b.barcode.timestamp = 5.0;		/* same decode, republished */
 	CHECK(tm_edge_events(&a, &b) == 0U, "steady fault/barcode not repeated");
-	b.barcode.values[0] = (double)TF_BC_STRAIGHT;
-	CHECK(tm_edge_events(&a, &b) == TF_EV_BARCODE, "new instruction reported");
+	b.barcode.values[1] = 2.0;		/* 'A' read again: the reported bug */
+	CHECK(tm_edge_events(&a, &b) == TF_EV_BARCODE, "same letter read again reported");
+	a = b;
+	b.barcode.values[3] = 1.0;		/* a failed read is not a new decode */
+	b.barcode.values[2] = 1.0;		/* nor is a junction */
+	CHECK(tm_edge_events(&a, &b) == 0U, "failed read / junction not a barcode event");
+	b.barcode.values[0] = (double)'Z';
+	b.barcode.values[1] = 3.0;
+	CHECK(tm_edge_events(&a, &b) == TF_EV_BARCODE, "new letter reported");
+}
+
+/* B3 slot (robot.h): [0] letter as ASCII, [1] valid-read counter. */
+static void test_barcode_mapping(void)
+{
+	static const char	chars[] = TF_BC_CHARS;
+	robot_status_t		st;
+	tm_frame_info_t		info = { 0, 0.0, 0, 0 };
+	int32_t			v[TF_FIELD_COUNT];
+	unsigned		i, bad = 0U;
+
+	memset(&st, 0, sizeof(st));
+	tm_fill(&st, &info, v);
+	CHECK(v[TF_F_BC_CHAR] == 0 && v[TF_F_BC_READ] == 0, "no barcode slot: nothing read");
+
+	st.barcode.available = true;
+	tm_fill(&st, &info, v);
+	CHECK(v[TF_F_BC_CHAR] == 0 && v[TF_F_BC_READ] == 0, "available, nothing read yet");
+
+	/* Every Code 39 character round-trips through the frame. */
+	for (i = 0U; i < sizeof(chars) - 1U; i++) {
+		int32_t		out[TF_FIELD_COUNT];
+		uint8_t		frame[TF_FRAME_BYTES];
+
+		st.barcode.values[0] = (double)(unsigned char)chars[i];
+		tm_fill(&st, &info, v);
+		if (v[TF_F_BC_CHAR] != (int32_t)i + 1 || tf_pack(v, frame) != 0U ||
+		    !tf_unpack(frame, sizeof(frame), out) || out[TF_F_BC_CHAR] != (int32_t)i + 1) {
+			bad++;
+		}
+	}
+	CHECK(bad == 0U, "every Code 39 character maps: %u bad", bad);
+
+	st.barcode.values[0] = (double)'a';	/* not Code 39 */
+	tm_fill(&st, &info, v);
+	CHECK(v[TF_F_BC_CHAR] == 0, "unknown character sends 0");
+	st.barcode.values[0] = NAN;
+	tm_fill(&st, &info, v);
+	CHECK(v[TF_F_BC_CHAR] == 0, "non-finite character sends 0");
+
+	/* BC_READ flips on every valid read, repeated letters included. */
+	st.barcode.values[0] = (double)'A';
+	for (i = 1U; i <= 4U; i++) {
+		st.barcode.values[1] = (double)i;
+		tm_fill(&st, &info, v);
+		CHECK(v[TF_F_BC_CHAR] == 11 && v[TF_F_BC_READ] == (int32_t)(i & 1U),
+		      "read %u: char %d read bit %d", i, v[TF_F_BC_CHAR], v[TF_F_BC_READ]);
+	}
 }
 
 static void test_distinct_motion_faults(void)
@@ -628,6 +687,7 @@ int main(void)
 	test_mapping();
 	test_terrain_v2_mapping();
 	test_edges();
+	test_barcode_mapping();
 	test_distinct_motion_faults();
 	test_encoder_frame();
 	test_encoder_mapping();

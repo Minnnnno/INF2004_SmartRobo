@@ -5,7 +5,8 @@
  *	Slot meanings follow docs/API.md "Snapshot for other buddies", with the
  *	Tribunal 1 packing decisions:
  *	  line     values[0] error -1/0/+1, values[1] trackable (> 0.5)
- *	  barcode  values[0] tf_barcode_t, values[1] valid (> 0.5)
+ *	  barcode  values[0] letter (ASCII), [1] valid-read counter,
+ *	           [2] junction counter, [3] failed-read counter (robot.h)
  *	  terrain  values[0] turn rate rad/s (+ left), [1] pitch rad, [2] hump m,
  *	           [3] validity bits 1..2 (TF_TV_*) | terrain state << 3 |
  *	           motion class << 6 | motion valid << 9 (terrain_status.h)
@@ -63,6 +64,35 @@ static int32_t wrap_deg(double rad, int32_t lo)
 	return d;
 }
 
+/* B3 barcode slot letter (ASCII code) -> BC_CHAR: 0 none or not a Code 39
+   character, n = TF_BC_CHARS[n - 1]. */
+static int32_t bc_char_code(double ascii)
+{
+	static const char	chars[] = TF_BC_CHARS;
+	int32_t			c = to_int(ascii);
+	unsigned		i;
+
+	if ((c <= 0) || (c > 127)) {
+		return 0;
+	}
+	for (i = 0U; i < sizeof(chars) - 1U; i++) {
+		if ((int32_t)(unsigned char)chars[i] == c) {
+			return (int32_t)i + 1;
+		}
+	}
+	return 0;
+}
+
+/* B3 barcode slot counter (values[1] valid reads, [3] failed reads); 0 when
+   the slot is unavailable.  Only differences and the low bit are used, so
+   wrapping is harmless. */
+static uint32_t bc_count(const subsystem_status_t *s, unsigned slot)
+{
+	int32_t v = to_int(s->values[slot]);
+
+	return (s->available && (v > 0)) ? (uint32_t)v : 0U;
+}
+
 static uint32_t bits_of(const subsystem_status_t *s, unsigned slot)
 {
 	int32_t v = to_int(s->values[slot]);
@@ -99,8 +129,8 @@ void tm_fill(const robot_status_t *st, const tm_frame_info_t *info,
 	values[TF_F_LINE_AVAIL] = st->line.available ? 1 : 0;
 	values[TF_F_LINE_ERR]   = st->line.available ? to_int(st->line.values[0]) : 0;
 	values[TF_F_LINE_TRACK] = (st->line.available && (st->line.values[1] > 0.5)) ? 1 : 0;
-	values[TF_F_BC_VALID]   = (st->barcode.available && (st->barcode.values[1] > 0.5)) ? 1 : 0;
-	values[TF_F_BC_CMD]     = st->barcode.available ? to_int(st->barcode.values[0]) : 0;
+	values[TF_F_BC_CHAR]    = st->barcode.available ? bc_char_code(st->barcode.values[0]) : 0;
+	values[TF_F_BC_READ]    = (int32_t)(bc_count(&st->barcode, 1U) & 1U);
 
 	/* Buddy 4 slot word: bits 0..2 validity, 3..5 T_STATE, 6..8 motion
 	   class, bit 9 class + turn rate valid (include/terrain_status.h).
@@ -171,11 +201,6 @@ static bool line_ok(const robot_status_t *s)
 	return s->line.available && (s->line.values[1] > 0.5);
 }
 
-static bool barcode_ok(const robot_status_t *s)
-{
-	return s->barcode.available && (s->barcode.values[1] > 0.5);
-}
-
 uint8_t tm_edge_events(const robot_status_t *prev, const robot_status_t *cur)
 {
 	uint32_t ev = 0U;
@@ -186,11 +211,11 @@ uint8_t tm_edge_events(const robot_status_t *prev, const robot_status_t *cur)
 	if (line_ok(prev) && !line_ok(cur)) {
 		ev |= TF_EV_LINE_LOST;
 	}
-	/* A new decode: valid now, and either not valid before or a different
-	   instruction.  B3 clears validity between barcodes, so the same
-	   instruction twice in a row is still reported. */
-	if (barcode_ok(cur) && (!barcode_ok(prev) ||
-	    (to_int(cur->barcode.values[0]) != to_int(prev->barcode.values[0])))) {
+	/* A new decode: B3's valid-read counter changed.  Every read counts,
+	   including the same letter twice in a row. */
+	if (cur->barcode.available &&
+	    (bc_count(&cur->barcode, 1U) != bc_count(&prev->barcode, 1U)) &&
+	    (bc_count(&cur->barcode, 1U) != 0U)) {
 		ev |= TF_EV_BARCODE;
 	}
 	return (uint8_t)ev;

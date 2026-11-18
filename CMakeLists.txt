@@ -386,6 +386,16 @@ target_compile_definitions(mtkernel_3 PRIVATE
     TM_NET_LWIP=$<STREQUAL:${NET},lwip>
     TM_MQTT=$<BOOL:${MQTT}>
 )
+# Buddy 1 web Start gate: production images with MQTT boot held and move only
+# after the dashboard START. Without MQTT nobody could send START, so those
+# images keep the old autonomous start.
+option(ROBO_REQUIRE_START "MQTT production images: boot held until the dashboard START" ON)
+if(ROBO_REQUIRE_START AND MQTT AND ROBO_PRODUCTION_BUILD)
+    target_compile_definitions(mtkernel_3 PRIVATE ROBO_REQUIRE_START=1)
+    message(STATUS "Web Start gate ON: the robot waits for the dashboard START after boot.")
+elseif(ROBO_PRODUCTION_BUILD)
+    message(STATUS "Web Start gate OFF: the robot starts moving by itself after boot.")
+endif()
 if(ROBO_ENCODER_DIAGNOSTICS_ONLY OR ROBO_SAFE_MOTOR_TEST OR ROBO_ANGLE_TEST OR ROBO_PRODUCTION_BUILD)
     string(TIMESTAMP encoder_build_stamp "%Y%m%dT%H%M%SZ" UTC)
     if(ROBO_INTEGRATED_BUILD)

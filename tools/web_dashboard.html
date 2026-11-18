@@ -268,7 +268,10 @@ function render(s) {
     $("l-r").className = track && f.LINE_ERR > 0 ? "on" : "";
     set("l-avail", f.LINE_AVAIL ? "publishing" : "not publishing", f.LINE_AVAIL ? "ok" : "warn");
     set("l-track", !f.LINE_AVAIL ? "-" : f.LINE_TRACK ? "yes" : "no (line lost)", f.LINE_TRACK ? "ok" : "warn");
-    set("l-bc", f.BC_VALID ? M.barcodes[f.BC_CMD] : "none");
+    const bc = s.barcode;
+    set("l-bc", !bc ? "none yet" : bc.char + (bc.action ? " → " + bc.action : " (not in route)") +
+        " · " + bc.reads + " read" + (bc.reads === 1 ? "" : "s") + (bc.age != null ? ", last " + ageText(bc.age) : ""),
+        bc && bc.age != null && bc.age < 3 ? "ok" : "");
 
     // Terrain
     const ts = M.t_states[f.T_STATE];
@@ -332,7 +335,9 @@ function renderButtons(s, live) {
   if (!connected) note = "Not connected to the broker, so commands cannot be sent.";
   else if (f && f.M_FAULT === meta.faults.indexOf("ESTOP")) note = "E-STOP is latched. START cannot clear it: do the checked reset/release on the robot.";
   else if (f && f.M_FAULT) note = "Robot is in FAULT. Fix the cause, then do the checked reset/release on the robot.";
-  else if (!startOk && f && live) note = "START is available once the robot is STOPPED, stationary, with trusted encoder feedback. Press STOP first.";
+  else if (startOk) note = "Robot is stopped and waiting. Press START to go; STOP stops it again.";
+  else if (f && live && meta.states[f.M_STATE] === "STOPPED") note = "Robot is stopped and settling: START becomes available once it is still with trusted encoder feedback.";
+  else if (f && live) note = "START is available once the robot is STOPPED, stationary, with trusted encoder feedback. Press STOP first.";
   $("ctl-note").textContent = note;
 }
 

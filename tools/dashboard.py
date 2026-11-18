@@ -54,11 +54,11 @@ ENC_FIELDS = ["seq", "reliable", "trusted", "fresh", "cause", "state", "fault",
 STALE_AFTER_S = 1.0     # no message for this long (dashboard clock) = stale
 
 # Same golden frame as tests/buddy1_frame/test_frame.c.
-GOLDEN_HEX = "20730394808dcbe69475b02a7f7139a4a9dc807b00"     # layout v2
-GOLDEN = dict(VERSION=2, SEQ=7, UPTIME_DS=12345, M_STATE=2, M_MODE=2, M_FAULT=0,
+GOLDEN_HEX = "30730394808dcbe69475b02a4bf7139a4a9dc807b0"     # layout v3
+GOLDEN = dict(VERSION=3, SEQ=7, UPTIME_DS=12345, M_STATE=2, M_MODE=2, M_FAULT=0,
               M_FLAGS=2, OWNER=1, CMD_ID=0xB9, SPEED_L=-1, SPEED_R=80,
               CENTRE_MM=-1234, HEADING=-170, LINE_AVAIL=1, LINE_ERR=-1,
-              LINE_TRACK=1, BC_VALID=1, BC_CMD=3, T_VALID=7, T_STATE=3, M_CLASS=4,
+              LINE_TRACK=1, BC_CHAR=11, BC_READ=1, T_VALID=7, T_STATE=3, M_CLASS=4,
               PITCH=-12, TURN_RATE=-46, HUMP_MM=42, O_FLAGS=14, O_AVAIL=1,
               O_DIST_CM=400, O_WIDTH_CM=15, REJECTED=3, DROPPED=0)
 # Same golden encoder frame as tests/buddy1_frame/test_frame.c.
@@ -83,6 +83,39 @@ def load_layout(path=HEADER):
 VERSION, FIELDS = load_layout()
 FRAME_BITS = sum(f[3] for f in FIELDS)
 FRAME_BYTES = (FRAME_BITS + 7) // 8
+
+# BC_CHAR: 0 = nothing read yet, n = BC_CHARS[n - 1] (TF_BC_CHARS in the header).
+BC_CHARS = re.search(r'#define\s+TF_BC_CHARS\s+"([^"]*)"',
+                     open(HEADER, encoding="utf-8").read()).group(1)
+ROUTE_H = os.path.join(os.path.dirname(HEADER), "..", "app_program", "subsystem3", "route.h")
+ROUTE_NAMES = {"ROUTE_LEFT": "turn left", "ROUTE_RIGHT": "turn right",
+               "ROUTE_STRAIGHT": "go straight", "ROUTE_UTURN": "U-turn"}
+
+
+def load_route(path=ROUTE_H):
+    """Buddy 3's route table: letter -> action text, e.g. {'A': 'U-turn'}."""
+    try:
+        text = open(path, encoding="utf-8").read()
+    except OSError:
+        return {}
+    return {m.group(1): ROUTE_NAMES.get(m.group(2), m.group(2))
+            + (" at junction" if m.group(3) == "ROUTE_AT_JUNCTION" else "")
+            for m in re.finditer(r"X\(\s*'(.)'\s*,\s*(\w+)\s*,\s*(\w+)\s*\)", text)}
+
+
+ROUTE = load_route()
+
+
+def barcode_char(v):
+    """Decoded character, or None before the first read."""
+    return BC_CHARS[v["BC_CHAR"] - 1] if v["BC_CHAR"] else None
+
+
+def barcode_text(v):
+    c = barcode_char(v)
+    if c is None:
+        return "-"
+    return c + (" (%s)" % ROUTE[c] if c in ROUTE else "")
 
 
 def encode(values):
@@ -210,17 +243,23 @@ def selftest():
             failures += 1
             print("FAIL", what)
 
-    check(FRAME_BYTES == 21 and FRAME_BITS == 163, "21-byte frame, 163 bits")
-    check(VERSION == 2, "layout v2")
+    check(FRAME_BYTES == 21 and FRAME_BITS == 167, "21-byte frame, 167 bits")
+    check(VERSION == 3, "layout v3")
+    check(len(BC_CHARS) == 44 and BC_CHARS[10] == "A", "barcode character table")
+    check(barcode_char(GOLDEN) == "A" and barcode_char(dict(GOLDEN, BC_CHAR=0)) is None,
+          "barcode character decode")
+    check(barcode_text(dict(GOLDEN, BC_CHAR=0)) == "-", "no barcode yet")
+    check(ROUTE.get("A") == "U-turn", "route table from route.h: %r" % ROUTE)
     check(decode(bytes.fromhex(GOLDEN_HEX)) == GOLDEN, "golden frame decodes")
     check(encode(GOLDEN).hex() == GOLDEN_HEX, "golden frame encodes")
     old = bytearray.fromhex(GOLDEN_HEX)
-    old[0] = (old[0] & 0x0F) | 0x10                 # a v1 frame
-    try:
-        decode(bytes(old))
-        check(False, "v1 frame accepted by v2 decoder")
-    except ValueError:
-        pass
+    for older in (0x10, 0x20):                      # v1 and v2 frames
+        old[0] = (old[0] & 0x0F) | older
+        try:
+            decode(bytes(old))
+            check(False, "v%d frame accepted by v3 decoder" % (older >> 4))
+        except ValueError:
+            pass
     for rate in (-256, -1, 255):
         check(decode(encode(dict(GOLDEN, TURN_RATE=rate)))["TURN_RATE"] == rate,
               "turn rate %d round trip" % rate)
@@ -354,7 +393,7 @@ def listen(args):
                          FAULTS[v["M_FAULT"]],
                          v["SPEED_L"], v["SPEED_R"], v["CENTRE_MM"], v["HEADING"],
                          "%+d" % v["LINE_ERR"] if v["LINE_TRACK"] else "lost",
-                         v["BC_CMD"] if v["BC_VALID"] else "-", v["PITCH"], v["HUMP_MM"],
+                         barcode_text(v), v["PITCH"], v["HUMP_MM"],
                          terrain_text(v), bin(v["O_FLAGS"]), v["O_DIST_CM"], state["lost"]))
         elif msg.topic == TOPIC_EVENT and len(msg.payload) == 2:
             print("EVENT #%d: %s" % (msg.payload[1], ", ".join(event_names(msg.payload[0]))))

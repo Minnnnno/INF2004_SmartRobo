@@ -17,10 +17,11 @@
 TF_FIELDS(TF_CHECK_)
 #undef TF_CHECK_
 
-/* Agreed in the Tribunal: 21 bytes.  Layout v2 (Buddy 4 change request):
-   163 bits, 5 spare bits. */
+/* Agreed in the Tribunal: 21 bytes.  Layout v3 (Buddy 4 fields, Buddy 3
+   barcode character): 167 bits, 1 spare bit. */
 _Static_assert(TF_FRAME_BYTES == 21, "status frame must stay 21 bytes");
-_Static_assert(TF_SPARE_BITS == 5, "status frame spare bits changed");
+_Static_assert(TF_SPARE_BITS == 1, "status frame spare bits changed");
+_Static_assert(sizeof(TF_BC_CHARS) - 1U == 44U, "BC_CHAR range is 0..44");
 _Static_assert(TF_FIELD_COUNT <= 32, "clamp mask holds 32 fields");
 
 #define TF_ROW_(name, lo, hi, bits, owner, text)	{ #name, (lo), (hi), (bits) },

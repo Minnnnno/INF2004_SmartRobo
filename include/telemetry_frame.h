@@ -34,8 +34,11 @@
 
 /* v1 -> v2 (Buddy 4 change request, docs/BUDDY4_FRAME_CHANGE_REQUEST.md):
    M_CLASS added, T_HEADING (never valid) became TURN_RATE, HUMP_MM 8 -> 7
-   bits, T_VALID bit 0 now means "motion class and turn rate valid". */
-#define TF_LAYOUT_VERSION	2U
+   bits, T_VALID bit 0 now means "motion class and turn rate valid".
+   v2 -> v3 (Buddy 3 barcode): BC_VALID + BC_CMD (a 0..3 command B3 never
+   published) became BC_CHAR (the decoded character) + BC_READ (flips on
+   every valid read, so a repeated letter still shows as a new read). */
+#define TF_LAYOUT_VERSION	3U
 
 /* ---------------------------------------------------------------------
  *  Status frame, published at QoS 0 on COMMS_TOPIC_FRAME every 100 ms.
@@ -60,8 +63,8 @@
 	X(LINE_AVAIL,  0,     1,      1,  B3, "line status available") \
 	X(LINE_ERR,    -1,    1,      2,  B3, "line error: -1 left, 0 centred, +1 right") \
 	X(LINE_TRACK,  0,     1,      1,  B3, "line trackable") \
-	X(BC_VALID,    0,     1,      1,  B3, "barcode instruction valid") \
-	X(BC_CMD,      0,     3,      2,  B3, "tf_barcode_t: left, right, straight, U-turn") \
+	X(BC_CHAR,     0,     44,     6,  B3, "last decoded Code 39 character: 0 none yet, n = TF_BC_CHARS[n - 1]") \
+	X(BC_READ,     0,     1,      1,  B3, "flips on every valid read (low bit of B3's read counter)") \
 	X(T_VALID,     0,     7,      3,  B4, "bit0 motion class + turn rate, bit1 pitch, bit2 hump height valid") \
 	X(T_STATE,     0,     7,      3,  B4, "terrain state (8 states, B4 statechart; 7 = LIFTED)") \
 	X(M_CLASS,     0,     7,      3,  B4, "motion class: 0 still 1 moving 2 accel 3 reverse 4 turn 5 climb 6 descend 7 overturned") \
@@ -114,8 +117,11 @@ extern const tf_field_t tf_fields[TF_FIELD_COUNT];
 
 #define TF_OWNER_NONE		7
 
-/* BC_CMD values.  Mapping still to be confirmed with the controller owner. */
-typedef enum { TF_BC_LEFT, TF_BC_RIGHT, TF_BC_STRAIGHT, TF_BC_UTURN } tf_barcode_t;
+/* BC_CHAR: 0 = nothing read yet, n = TF_BC_CHARS[n - 1].  Same order as the
+   decoder's code39_symbol table (subsystem3/barcode_decode.c).  The route
+   action for a letter is in subsystem3/route.h; the dashboard reads it there.
+   Keep on one line: tools/dashboard.py parses it. */
+#define TF_BC_CHARS	"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-. *$/+%"
 
 /* Pack values[TF_FIELD_COUNT] into out[TF_FRAME_BYTES].  Out-of-range values
    are clamped.  Returns a mask with bit i set if field i was clamped. */
@@ -178,7 +184,7 @@ bool tf_ack_decode(const uint8_t *data, size_t len, tf_ack_t *result, tf_command
  *  Encoder frame, published at QoS 0 on COMMS_TOPIC_ENCODER every 100 ms,
  *  straight after the status frame of the same period (same SEQ).  The
  *  raw counts need all 32 bits, so they do not fit the status frame's
- *  5 spare bits; this frame is byte-aligned, big-endian, 26 bytes:
+ *  1 spare bit; this frame is byte-aligned, big-endian, 26 bytes:
  *    byte  0       version, TF_ENC_VERSION
  *    byte  1       SEQ of the status frame sent in the same period
  *    byte  2       bit0 encoder reliable (acquisition flag)
