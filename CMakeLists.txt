@@ -242,6 +242,51 @@ set_property(CACHE WIFI PROPERTY STRINGS cyw43 none)
 set(NET none CACHE STRING "Network stack: none or lwip")
 set_property(CACHE NET PROPERTY STRINGS none lwip)
 option(MQTT "Enable the lwIP MQTT client" OFF)
+
+# Buddy 1 shortcut used by the VS Code build (.vscode/tasks.json), so the one
+# image the team flashes (build/mtkernel_3.uf2) carries Wi-Fi + MQTT:
+#   AUTO  Wi-Fi + lwIP + MQTT when config/wifi_secrets.h exists and this is not
+#         a calibration/test profile; otherwise none, with a warning.
+#   ON    always Wi-Fi + lwIP + MQTT (fails without wifi_secrets.h).
+#   OFF   no networking.
+#   ""    (default) leave WIFI / NET / MQTT exactly as given.
+set(ROBO_NETWORK "" CACHE STRING "Wi-Fi/MQTT shortcut: AUTO, ON, OFF or empty (use WIFI/NET/MQTT)")
+set_property(CACHE ROBO_NETWORK PROPERTY STRINGS "" AUTO ON OFF)
+if(NOT ROBO_NETWORK STREQUAL "")
+    if(NOT ROBO_NETWORK MATCHES "^(AUTO|ON|OFF)$")
+        message(FATAL_ERROR "ROBO_NETWORK must be AUTO, ON, OFF or empty.")
+    endif()
+    set(ROBO_NETWORK_ON OFF)
+    set(ROBO_NETWORK_CALIBRATION OFF)
+    if(ROBO_MANUAL_CONSOLE OR ROBO_SAFE_MOTOR_TEST OR ROBO_ANGLE_TEST OR
+       ROBO_ENCODER_DIAGNOSTICS_ONLY OR ROBO_MAG_CAL)
+        set(ROBO_NETWORK_CALIBRATION ON)
+    endif()
+    if(ROBO_NETWORK STREQUAL "ON")
+        set(ROBO_NETWORK_ON ON)
+    elseif(ROBO_NETWORK STREQUAL "AUTO")
+        if(ROBO_NETWORK_CALIBRATION)
+            message(STATUS "ROBO_NETWORK=AUTO: calibration/test profile, building without Wi-Fi.")
+        elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/config/wifi_secrets.h")
+            set(ROBO_NETWORK_ON ON)
+        else()
+            message(WARNING "ROBO_NETWORK=AUTO: config/wifi_secrets.h not found, so this image has "
+                            "NO Wi-Fi/MQTT and the web dashboard will not see the robot. Copy "
+                            "config/wifi_secrets.example.h to config/wifi_secrets.h, fill it in, and rebuild.")
+        endif()
+    endif()
+    if(ROBO_NETWORK_ON)
+        set(WIFI cyw43 CACHE STRING "Radio: cyw43 or none" FORCE)
+        set(NET lwip CACHE STRING "Network stack: none or lwip" FORCE)
+        set(MQTT ON CACHE BOOL "Enable the lwIP MQTT client" FORCE)
+    else()
+        set(WIFI none CACHE STRING "Radio: cyw43 or none" FORCE)
+        set(NET none CACHE STRING "Network stack: none or lwip" FORCE)
+        set(MQTT OFF CACHE BOOL "Enable the lwIP MQTT client" FORCE)
+    endif()
+    message(STATUS "ROBO_NETWORK=${ROBO_NETWORK}: WIFI=${WIFI} NET=${NET} MQTT=${MQTT}")
+endif()
+
 option(TEST "Run subsystem self-tests at startup" OFF)
 option(CRASH_REPORT "Mirror console and crash reports to UART0 on GP0/GP1" OFF)
 if(SMP)

@@ -10,7 +10,7 @@ Firmware for a 5-person team robot car (INF2004) on a **Raspberry Pi Pico W (RP2
 
 CMake is the only supported route (the `build_make/` GNU Make files and the `make TEST=1` instructions in `testing/README.md` are legacy/unverified; `TEST=ON` is rejected by CMake). Toolchain: Pico SDK 2.3.0, Arm GCC 15_2_Rel1, board `pico_w`.
 
-- VS Code: Ctrl+Shift+B ("Compile Project") configures and builds into `build/` → `build/mtkernel_3.uf2`.
+- VS Code: Ctrl+Shift+B ("Compile Project") configures and builds into `build/` → `build/mtkernel_3.uf2`. This is the image the team flashes: production + line steering + Buddy 4/5, plus Wi-Fi/MQTT via `-DROBO_NETWORK=AUTO` whenever `config/wifi_secrets.h` exists (otherwise built without networking, with a CMake warning).
 - Terminal (production image):
   ```sh
   cmake -S . -B build-production -G Ninja -DSMP=OFF -DWIFI=none -DNET=none -DCONSOLE=usb_cdc \
