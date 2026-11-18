@@ -55,6 +55,7 @@ typedef struct
 } s4_compass_t;
 static s4_compass_t s_compass; /* Task-owned. */
 static uint8_t s_start_gate;   /* Task-owned web Start gate, S4_START_* (terrain_wait_start). */
+static bool s_hump_paused;     /* Task-owned: hump recording paused while stopped. */
 #define S4_RAD_TO_DDEG   (572.95779513082323)    /* 1800 / pi */
 #define S4_HEADING_LIMIT_DDEG (2.0e9)            /* int32 range for the unwrapped heading */
 
@@ -92,6 +93,9 @@ static void terrain_lift(buddy4_t const *p_context, s4_motion_t const *p_motion,
                          uint8_t *p_previous);
 static void terrain_hump_freeze(buddy4_t *p_context, s4_motion_t const *p_motion,
                                 bool *p_previous);
+static bool terrain_hump_paused(buddy4_t const *p_context, s4_motion_t const *p_motion);
+static void terrain_hump_pause(buddy4_t const *p_context, s4_motion_t const *p_motion,
+                               bool *p_previous);
 static uint8_t terrain_state_code(buddy4_t const *p_context);
 static void terrain_publish(buddy4_t const *p_context, motion_class_t const *p_class,
                             double *p_sample_time);
@@ -120,6 +124,7 @@ void terrain_task(INT code, void *p_context)
     uint8_t previous_class = MC_STATIONARY;
     uint8_t previous_lift = LIFT_NONE;
     bool previous_frozen = false;
+    bool previous_paused = false;
     bool previous_class_valid = false;
 
     (void)code;
@@ -130,6 +135,7 @@ void terrain_task(INT code, void *p_context)
     motion_class_reset(&s_class);
     s_compass = (s4_compass_t){0};
     s_start_gate = 0U; /* S4_START_NONE */
+    s_hump_paused = false;
 #ifndef ROBO_IR_MONITOR /* Keep the IR monitor's single console line clean. */
 #ifdef ROBO_ENCODER_BUILD_ID
     /* Build ID next to the Buddy 4 start-up lines, to confirm which image is flashed. */
@@ -151,6 +157,9 @@ void terrain_task(INT code, void *p_context)
         terrain_read_motion(&motion);
         buddy4_step(&s_context, terrain_inputs(state, &motion, terrain_wait_start(&motion)));
         terrain_lift(&s_context, &motion, &previous_lift);
+        /* Pause before freeze: on the START that unfreezes, the pause still
+         * sees the freeze and leaves the single "resumed" line to it. */
+        terrain_hump_pause(&s_context, &motion, &previous_paused);
         terrain_hump_freeze(&s_context, &motion, &previous_frozen);
         terrain_classify(&s_context, &s_class, &motion);
         terrain_publish(&s_context, &s_class, &sample_time);
@@ -242,7 +251,8 @@ static uint8_t terrain_inputs(uint8_t state, s4_motion_t const *p_motion, bool w
     }
     if (B4_INIT != state)
     {
-        return 0U;
+        /* Controller hold (dashboard STOP or any controlled stop): no humps. */
+        return (p_motion->available && p_motion->hold) ? B4_HUMP_PAUSE : 0U;
     }
     if (!p_motion->available)
     {
@@ -408,6 +418,42 @@ static void terrain_hump_freeze(buddy4_t *p_context, s4_motion_t const *p_motion
     *p_previous = frozen;
 }
 
+/* Hump pause while stopped: same rule as the B4_HUMP_PAUSE input (MONITORING
+ * with the controller hold set). */
+static bool terrain_hump_paused(buddy4_t const *p_context, s4_motion_t const *p_motion)
+{
+    return (B4_MONITORING == buddy4_state(p_context)) && p_motion->available && p_motion->hold;
+}
+
+/* Console lines for the pause. The overturn freeze has its own lines and
+ * takes precedence, so a frozen robot never prints both. */
+static void terrain_hump_pause(buddy4_t const *p_context, s4_motion_t const *p_motion,
+                               bool *p_previous)
+{
+    bool paused = terrain_hump_paused(p_context, p_motion);
+
+#ifndef ROBO_IR_MONITOR
+    if (paused != *p_previous)
+    {
+        if (buddy4_hump_frozen(p_context))
+        {
+            /* The freeze lines already say what happens. */
+        }
+        else if (paused)
+        {
+            tm_printf((UB const *)"[TERRAIN] hump recording paused (robot stopped): run max kept at %d mm until START\n",
+                      (INT)(terrain_run_max(&p_context->terrain) & TERRAIN_PEAK_MM_MASK));
+        }
+        else if (B4_MONITORING == buddy4_state(p_context))
+        {
+            tm_printf((UB const *)"[TERRAIN] hump recording resumed (START)\n");
+        }
+    }
+#endif
+    *p_previous = paused;
+    s_hump_paused = paused;
+}
+
 /* Motion class from the IMU (overturned latch, hump phase) and Buddy 2
  * (stationary, wheel speeds). Valid only while MONITORING with motion status
  * available. */
@@ -568,7 +614,7 @@ static void terrain_report(buddy4_t const *p_context, motion_class_t const *p_cl
                       tilt_condition_name(p_context->result, 0U),
                       tilt_condition_name(p_context->result, 1U),
                       height / 10, height % 10, side,
-                      buddy4_hump_frozen(p_context) ? "FROZEN" : terrain_phase_name(terrain),
+                      buddy4_hump_frozen(p_context) ? "FROZEN" : (s_hump_paused ? "PAUSED" : terrain_phase_name(terrain)),
                       (INT)(terrain_run_max(&p_context->terrain) & TERRAIN_PEAK_MM_MASK),
                       motion_class_valid(p_class) ? motion_class_name(motion_class_get(p_class)) : "-",
                       (INT)motion_class_yaw_deg_s(p_class),
@@ -582,7 +628,7 @@ static void terrain_report(buddy4_t const *p_context, motion_class_t const *p_cl
                       tilt_condition_name(p_context->result, 0U),
                       tilt_condition_name(p_context->result, 1U),
                       height / 10, height % 10, side,
-                      buddy4_hump_frozen(p_context) ? "FROZEN" : terrain_phase_name(terrain),
+                      buddy4_hump_frozen(p_context) ? "FROZEN" : (s_hump_paused ? "PAUSED" : terrain_phase_name(terrain)),
                       (INT)(terrain_run_max(&p_context->terrain) & TERRAIN_PEAK_MM_MASK),
                       motion_class_valid(p_class) ? motion_class_name(motion_class_get(p_class)) : "-",
                       (INT)motion_class_yaw_deg_s(p_class),
