@@ -54,6 +54,7 @@ typedef struct
     bool have;           /* unwrapped holds a value. */
 } s4_compass_t;
 static s4_compass_t s_compass; /* Task-owned. */
+static uint8_t s_start_gate;   /* Task-owned web Start gate, S4_START_* (terrain_wait_start). */
 #define S4_RAD_TO_DDEG   (572.95779513082323)    /* 1800 / pi */
 #define S4_HEADING_LIMIT_DDEG (2.0e9)            /* int32 range for the unwrapped heading */
 
@@ -83,7 +84,8 @@ typedef struct
 
 static uint32_t terrain_time_ms(void);
 static void terrain_read_motion(s4_motion_t *p_motion);
-static uint8_t terrain_inputs(uint8_t state, s4_motion_t const *p_motion);
+static bool terrain_wait_start(s4_motion_t const *p_motion);
+static uint8_t terrain_inputs(uint8_t state, s4_motion_t const *p_motion, bool wait_start);
 static void terrain_classify(buddy4_t *p_context, motion_class_t *p_class,
                              s4_motion_t const *p_motion);
 static void terrain_lift(buddy4_t const *p_context, s4_motion_t const *p_motion,
@@ -127,6 +129,7 @@ void terrain_task(INT code, void *p_context)
     buddy4_begin(&s_context, release);
     motion_class_reset(&s_class);
     s_compass = (s4_compass_t){0};
+    s_start_gate = 0U; /* S4_START_NONE */
 #ifndef ROBO_IR_MONITOR /* Keep the IR monitor's single console line clean. */
 #ifdef ROBO_ENCODER_BUILD_ID
     /* Build ID next to the Buddy 4 start-up lines, to confirm which image is flashed. */
@@ -146,7 +149,7 @@ void terrain_task(INT code, void *p_context)
         bool class_valid = false;
 
         terrain_read_motion(&motion);
-        buddy4_step(&s_context, terrain_inputs(state, &motion));
+        buddy4_step(&s_context, terrain_inputs(state, &motion, terrain_wait_start(&motion)));
         terrain_lift(&s_context, &motion, &previous_lift);
         terrain_hump_freeze(&s_context, &motion, &previous_frozen);
         terrain_classify(&s_context, &s_class, &motion);
@@ -229,8 +232,10 @@ static uint32_t terrain_time_ms(void)
  * New run and fault reset are by design a power-up (statechart NEW_RUN): the
  * level reference needs a level, still boot before every run anyway.
  */
-static uint8_t terrain_inputs(uint8_t state, s4_motion_t const *p_motion)
+static uint8_t terrain_inputs(uint8_t state, s4_motion_t const *p_motion, bool wait_start)
 {
+    uint8_t start = wait_start ? B4_WAIT_START : 0U;
+
     if (p_motion->available && (SHUTDOWN == p_motion->state))
     {
         return B4_CMD_STOP;
@@ -241,13 +246,63 @@ static uint8_t terrain_inputs(uint8_t state, s4_motion_t const *p_motion)
     }
     if (!p_motion->available)
     {
-        return B4_LEVEL_ALLOWED;
+        return (uint8_t)(B4_LEVEL_ALLOWED | start);
     }
     if (p_motion->stationary)
     {
-        return B4_LEVEL_ALLOWED | B4_MOTORS_STOPPED;
+        return (uint8_t)(B4_LEVEL_ALLOWED | B4_MOTORS_STOPPED | start);
     }
-    return (INITIALISING == p_motion->state) ? B4_LEVEL_ALLOWED : 0U;
+    return (uint8_t)(((INITIALISING == p_motion->state) ? B4_LEVEL_ALLOWED : 0U) | start);
+}
+
+/* Web Start gate (ROBO_REQUIRE_START: MQTT production images boot held until
+ * the dashboard START). Buddy 4 captures its level reference, and so starts
+ * hump recording and lift detection, only after START: the robot can be
+ * powered up anywhere and placed on the course before the run. START = the
+ * controller hold seen, then released; latched for the rest of the run (a
+ * later STOP/START keeps the reference). Before any hold is seen, missing
+ * motion status means the motion task is not running: no gate, as before.
+ * Without ROBO_REQUIRE_START the reference is captured at boot as before. */
+#define S4_START_NONE  (0U) /* No hold seen yet. */
+#define S4_START_HELD  (1U) /* Held: waiting for START. */
+#define S4_START_GIVEN (2U) /* START seen (or no Start gate): capture allowed. */
+static bool terrain_wait_start(s4_motion_t const *p_motion)
+{
+#ifdef ROBO_REQUIRE_START
+    uint8_t before = s_start_gate;
+
+    if (S4_START_GIVEN == s_start_gate)
+    {
+        return false;
+    }
+    if (p_motion->available && p_motion->hold)
+    {
+        s_start_gate = S4_START_HELD;
+    }
+    else if (p_motion->available && (S4_START_HELD == s_start_gate))
+    {
+        s_start_gate = S4_START_GIVEN;
+    }
+#ifndef ROBO_IR_MONITOR
+    if ((S4_START_HELD == s_start_gate) && (S4_START_NONE == before))
+    {
+        tm_printf((UB const *)"[B4] waiting for dashboard START before capturing the level reference (keep the robot level and still after START)\n");
+    }
+    else if (S4_START_GIVEN == s_start_gate)
+    {
+        tm_printf((UB const *)"[B4] START: capturing level reference; keep the robot level and still ~2 s\n");
+    }
+#else
+    (void)before;
+#endif
+    /* Held, or motion reports but its boot hold has not been seen yet. */
+    return (S4_START_HELD == s_start_gate) ||
+           ((S4_START_NONE == s_start_gate) && p_motion->available);
+#else
+    (void)p_motion;
+    s_start_gate = S4_START_GIVEN;
+    return false;
+#endif
 }
 
 /* One short copy of the Buddy 2 status under the bus mutex; speeds in mm/s. */
@@ -486,7 +541,11 @@ static void terrain_report(buddy4_t const *p_context, motion_class_t const *p_cl
     uint8_t state = buddy4_state(p_context);
     uint8_t terrain = terrain_status(&p_context->terrain);
 
-    if (B4_INIT == state)
+    if ((B4_INIT == state) && (S4_START_GIVEN != s_start_gate))
+    {
+        tm_printf((UB const *)"[B4] INIT: waiting for dashboard START (level reference not captured yet)\n");
+    }
+    else if (B4_INIT == state)
     {
         tm_printf((UB const *)"[B4] INIT: capturing level reference %d/%d; keep level and still\n",
                   (INT)(p_context->tilt.progress & TILT_COUNT_MASK), (INT)TILT_CAPTURE_SAMPLES);

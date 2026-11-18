@@ -56,6 +56,12 @@ build_and_run("test_terrain_task", TEAM,
                source_dir / "motion_class.c", source_dir / "mag_heading.c",
                test_dir / "test_terrain_task.c"],
               STUBS + ["-I", str(project_root / "include")])
+# Same loop in the MQTT production image: boot held until the dashboard START.
+build_and_run("test_terrain_task_start_gate", TEAM,
+              [source_dir / "buddy4.c", source_dir / "terrain.c", source_dir / "tilt.c", source_dir / "lift.c",
+               source_dir / "motion_class.c", source_dir / "mag_heading.c",
+               test_dir / "test_terrain_task.c"],
+              STUBS + ["-I", str(project_root / "include"), "-DROBO_REQUIRE_START=1"])
 
 build_and_run("test_mag_cal_task", TEAM,
               [source_dir / "buddy4.c", source_dir / "terrain.c", source_dir / "tilt.c", source_dir / "lift.c",

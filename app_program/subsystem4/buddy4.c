@@ -228,6 +228,12 @@ static void buddy4_initialise(buddy4_t *p_context, uint8_t inputs, uint32_t now_
     //(POSITION , give you time to place the board)
     if (B4_INIT_POSITION == buddy4_phase(p_context))
     {
+        /* No START yet: keep waiting; the settle time counts from START. */
+        if (0U != (inputs & B4_WAIT_START))
+        {
+            p_context->phase_started = now_ms;
+            return;
+        }
         //waits 5 second to so ask to set the robot down and level it
         if ((now_ms - p_context->phase_started) < B4_POSITION_MS)
         {

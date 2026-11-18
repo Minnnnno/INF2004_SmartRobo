@@ -12,6 +12,7 @@ static double settle_at;       /* Time Buddy 4 leaves INIT; < 0 = never. */
 static unsigned settled_state; /* T_STATE published once settled. */
 static bool status_ok;
 static bool terrain_available;
+static double release_at;     /* Dashboard START (controller hold released); hold before it. */
 
 void gpio_init(unsigned pin) { (void)pin; }
 void gpio_set_dir(unsigned pin, bool output) { (void)pin; (void)output; }
@@ -27,6 +28,7 @@ bool motion_get_status(robot_status_t *out)
     if (!status_ok) { return false; }
     *out = (robot_status_t){0};
     out->terrain.available = terrain_available;
+    out->motion.hold = clock_s < release_at;
     out->terrain.values[3] = (double)((state << 3) | ((state == 1U) ? 2U : 0U));
     return true;
 }
@@ -45,13 +47,47 @@ static double wait_once(bool ok, bool available, double settle, unsigned state)
 {
     clock_s = 2.0; delays = 0U; status_calls = 0U;
     status_ok = ok; terrain_available = available; settle_at = settle; settled_state = state;
+    release_at = 0.0;
     line_wait_for_imu();
     return clock_s - 2.0;
 }
 
+#ifdef ROBO_REQUIRE_START
+/* Web Start gate: boot held for hold_s; Buddy 4 captures only after START, so
+ * the wait and its 10 s cap must count from START, not from boot. */
+static double wait_held(double hold_s, double settle_after_start, unsigned state)
+{
+    clock_s = 2.0; delays = 0U; status_calls = 0U;
+    status_ok = true; terrain_available = true; settled_state = state;
+    release_at = 2.0 + hold_s;
+    settle_at = (settle_after_start >= 0.0) ? (release_at + settle_after_start) : -1.0;
+    line_wait_for_imu();
+    return clock_s - 2.0;
+}
+
+static int start_gate_main(void)
+{
+    double waited;
+    /* Held 30 s (far past the cap), Buddy 4 captures 1.5 s after START. */
+    waited = wait_held(30.0, 1.5, 1U);
+    CHECK(waited >= 31.5 && waited < 31.54);
+    /* After START the IMU never settles: the cap counts from START. */
+    waited = wait_held(30.0, -1.0, 1U);
+    CHECK(waited >= 30.0 + LINE_IMU_WAIT_MAX && waited < 30.0 + LINE_IMU_WAIT_MAX + 0.041);
+    /* START pressed at once: same as the normal wait. */
+    waited = wait_held(0.0, 0.5, 1U);
+    CHECK(waited >= 0.5 && waited < 0.52);
+    printf("PASS: %u line start-up IMU wait checks (web Start gate)\n", checks);
+    return 0;
+}
+#endif
+
 int main(void)
 {
     double waited;
+#ifdef ROBO_REQUIRE_START
+    return start_gate_main();
+#endif
 
     /* Typical boot: Buddy 4 reaches MONITORING (WAITING) 0.5 s into the wait. */
     waited = wait_once(true, true, 2.5, 1U);

@@ -94,6 +94,8 @@ void comms_latch_event(UB events) { g_event_bits |= events; g_events++; }
 double motion_hal_time(void) { return (double)g_clock / 1000.0; }
 static unsigned g_turn_lines;
 static unsigned g_frozen_lines, g_resumed_lines; /* [TERRAIN] hump freeze console lines. */
+static unsigned g_wait_lines, g_start_lines;     /* [B4] web Start gate console lines. */
+static bool g_boot_hold; /* Controller hold at boot (ROBO_REQUIRE_START images boot held). */
 static char g_turn_reason[16]; /* Last "%s" passed with a "compass n/a (%s)" [TURN] line. */
 INT tm_printf(UB const *format, ...)
 {
@@ -112,6 +114,8 @@ INT tm_printf(UB const *format, ...)
     }
     if (0 == strncmp((char const *)format, "[TURN]", 6U)) { g_turn_lines++; }
     if (0 == strncmp((char const *)format, "[TERRAIN] hump recording frozen", 31U)) { g_frozen_lines++; }
+    if (0 == strncmp((char const *)format, "[B4] waiting for dashboard START", 32U)) { g_wait_lines++; }
+    if (0 == strncmp((char const *)format, "[B4] START:", 11U)) { g_start_lines++; }
     if (0 == strncmp((char const *)format, "[TERRAIN] hump recording resumed", 32U)) { g_resumed_lines++; }
     return 0;
 }
@@ -134,7 +138,7 @@ static void run(motion_mode_fake_t motion, uint32_t end_ms, void (*script)(uint3
 {
     g_clock = 1000U; g_start = g_clock; g_end = end_ms;
     g_motion = motion; g_script = script; g_read_status = E_OK;
-    g_speed[0] = 0.0; g_speed[1] = 0.0; g_hold = false; g_stops = 0U; g_heading_rad = 0.0;
+    g_speed[0] = 0.0; g_speed[1] = 0.0; g_hold = g_boot_hold; g_stops = 0U; g_heading_rad = 0.0;
     g_mag_status = E_OK; g_mag[0] = 200; g_mag[1] = 0; g_turn_reason[0] = '\0';
     g_status_calls = 0U; g_published = 0U; g_events = 0U; g_reads = 0U; g_event_bits = 0U;
     g_last = (subsystem_status_t){0};
@@ -418,8 +422,83 @@ static void fail_script(uint32_t t)
     if (t >= 8000U) { g_read_status = E_IO; }
 }
 
+#ifdef ROBO_REQUIRE_START
+/* Web Start gate (built with -DROBO_REQUIRE_START): boot held for 20 s (no
+ * capture, no FAULT), START, capture ~2 s later, a hump is recorded, and a
+ * later STOP/START does not re-capture. */
+static unsigned g_sstep;
+static void start_script(uint32_t t)
+{
+    if ((0U == g_sstep) && (t >= 20000U))
+    {
+        check(S4_TS_INIT == code_of() && 0U == g_reads && !faulted_of(),
+              "held 20 s: INIT, no capture reads, no FAULT");
+        check(1U == g_wait_lines && 0U == g_start_lines, "one waiting line, no START yet");
+        g_hold = false; /* dashboard START */
+        g_sstep = 1U;
+    }
+    else if ((1U == g_sstep) && (t >= 20900U))
+    {
+        check(S4_TS_INIT == code_of() && 0U == g_reads, "1 s settle after START before capture");
+        check(1U == g_start_lines, "START line printed once");
+        g_sstep = 2U;
+    }
+    else if ((2U == g_sstep) && (t >= 22500U))
+    {
+        check(S4_TS_WAITING == code_of() && TF_TV_PITCH == valid_of(), "captured after START: WAITING");
+        right_hump(259, -966);
+        g_sstep = 3U;
+    }
+    else if ((3U == g_sstep) && (t >= 24500U))
+    {
+        level();
+        g_sstep = 4U;
+    }
+    else if ((4U == g_sstep) && (t >= 25500U))
+    {
+        check(1U == g_events && fabs(g_last.values[2] - 0.030) < 0.0015, "hump recorded after START");
+        g_hold = true; /* dashboard STOP */
+        g_sstep = 5U;
+    }
+    else if ((5U == g_sstep) && (t >= 26000U))
+    {
+        g_hold = false; /* START again */
+        g_sstep = 6U;
+    }
+    else if ((6U == g_sstep) && (t >= 27000U))
+    {
+        check(S4_TS_WAITING == code_of() && 1U == g_start_lines, "STOP/START mid-run: no re-capture");
+        check(fabs(g_last.values[2] - 0.030) < 0.0015, "run maximum kept across STOP/START");
+        g_sstep = 7U;
+    }
+}
+
+static int start_gate_main(void)
+{
+    g_boot_hold = true; g_sstep = 0U; g_wait_lines = 0U; g_start_lines = 0U;
+    run(MOTION_STILL, 27100U, start_script);
+    check(7U == g_sstep, "all start-gate checkpoints reached");
+
+    /* Motion task not running (no status, never held): no gate, capture at boot. */
+    g_boot_hold = false;
+    run(MOTION_ABSENT, 7500U, NULL);
+    check(S4_TS_WAITING == code_of(), "no motion task: capture at boot as before");
+
+    /* Motion reports but never held: keep waiting (never capture before a START). */
+    g_wait_lines = 0U;
+    run(MOTION_STILL, 15000U, NULL);
+    check(S4_TS_INIT == code_of() && 0U == g_reads && !faulted_of(), "status never held: still waiting");
+
+    printf("PASS: %u terrain task web Start gate checks (wait, START, capture, hump, STOP/START)\n", g_checks);
+    return 0;
+}
+#endif
+
 int main(void)
 {
+#ifdef ROBO_REQUIRE_START
+    return start_gate_main();
+#endif
     /* Normal run with a hump and a release-grid check. */
     g_step = 0U;
     run(MOTION_STILL, 14100U, hump_script);

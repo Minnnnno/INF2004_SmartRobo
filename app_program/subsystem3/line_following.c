@@ -480,12 +480,19 @@ static bool line_imu_settled(const robot_status_t *status)
     return (state != LINE_TERRAIN_INIT) && (state != LINE_TERRAIN_RECOVERY);
 }
 
-/* Runs once before the first motion request; nothing is driving yet. */
+/* Runs once before the first motion request; nothing is driving yet.
+ * With the web Start gate (ROBO_REQUIRE_START) Buddy 4 captures its reference
+ * only after the dashboard START, so the wait (and its cap) starts at START:
+ * the robot stays still ~2 s after START while Buddy 4 captures. */
 static void line_wait_for_imu(void)
 {
-    double start = motion_hal_time();
+    double start;
     robot_status_t status;
     bool settled = false;
+#ifdef ROBO_REQUIRE_START
+    while (!motion_get_status(&status) || status.motion.hold) { (void)tk_dly_tsk(20U); }
+#endif
+    start = motion_hal_time();
     while (!settled && ((motion_hal_time() - start) < LINE_IMU_WAIT_MAX)) {
         settled = motion_get_status(&status) && line_imu_settled(&status);
         if (!settled) { (void)tk_dly_tsk(20U); }

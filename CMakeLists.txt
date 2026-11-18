@@ -94,6 +94,17 @@ if(ROBO_HOST_TESTS)
         target_link_libraries(line_imu_wait_checks m)
     endif()
     add_test(NAME line_imu_wait_checks COMMAND line_imu_wait_checks)
+    # Same wait in the MQTT production image (web Start gate): it starts at START.
+    add_executable(line_imu_wait_start_gate_checks
+        app_program/subsystem2/steering.c app_program/subsystem2/board_config.c tests/test_line_imu_wait.c)
+    target_include_directories(line_imu_wait_start_gate_checks PRIVATE include tests)
+    target_compile_definitions(line_imu_wait_start_gate_checks PRIVATE
+        ROBO_LINE_STEERING=1 ROBO_LINE_TEST_HOST=1 ROBO_SUBSYSTEM4=1 ROBO_REQUIRE_START=1)
+    if(NOT MSVC)
+        target_compile_options(line_imu_wait_start_gate_checks PRIVATE -Wall -Wextra -Werror -Wconversion -Wshadow)
+        target_link_libraries(line_imu_wait_start_gate_checks m)
+    endif()
+    add_test(NAME line_imu_wait_start_gate_checks COMMAND line_imu_wait_start_gate_checks)
     add_executable(angle_control_checks app_program/subsystem2/angle_control.c
         app_program/subsystem2/math.c app_program/subsystem2/board_config.c tests/test_angle_control.c)
     target_compile_definitions(angle_control_checks PRIVATE ROBO_ANGLE_TEST=1)

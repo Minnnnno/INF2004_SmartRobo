@@ -372,6 +372,28 @@ int main(void)
         check(sizeof(c.control)==1U,"control byte still one byte");
         check(buddy4_lift(NULL)==LIFT_NONE,"NULL is not lifted");
     }
+    /* Web Start gate: WAIT_START keeps INIT in POSITION (no capture reads, no
+     * capture timeout); the 1 s settle and the capture start after START.
+     * A kept reference (recovery) ignores the bit. */
+    {
+        unsigned n=0U;
+        reset(&c);
+        buddy4_step(&c,B4_LEVEL_ALLOWED|B4_WAIT_START);
+        check(configurations==1U,"sensor configured before START");
+        for (unsigned i=0;i<1500U;i++) { tick(&c,20U,B4_LEVEL_ALLOWED|B4_MOTORS_STOPPED|B4_WAIT_START); }
+        check(buddy4_state(&c)==B4_INIT && reads==0U,"30 s before START: INIT, no capture reads, no FAULT");
+        tick(&c,20U,B4_LEVEL_ALLOWED|B4_MOTORS_STOPPED);
+        check(reads==0U,"START: settle time counts from START");
+        tick(&c,B4_POSITION_MS-20U,B4_LEVEL_ALLOWED|B4_MOTORS_STOPPED);
+        tick(&c,20U,B4_LEVEL_ALLOWED|B4_MOTORS_STOPPED);
+        while ((buddy4_state(&c)==B4_INIT) && (n<60U)) { tick(&c,20U,B4_LEVEL_ALLOWED|B4_MOTORS_STOPPED); n++; }
+        check(buddy4_state(&c)==B4_MONITORING && n>=49U && n<=51U,"after START: 1 s settle + 50 samples");
+        fail(&c);
+        read_status=E_OK;
+        n=0U;
+        while ((buddy4_state(&c)!=B4_MONITORING) && (n<400U)) { tick(&c,20U,B4_WAIT_START); n++; }
+        check(buddy4_state(&c)==B4_MONITORING,"recovery with the reference kept ignores WAIT_START");
+    }
     /* Magnetometer: read while monitoring; busy/out-of-range never leave MONITORING. */
     {
         int16_t mx=0, my=0;

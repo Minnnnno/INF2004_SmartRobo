@@ -55,6 +55,18 @@ otherwise SENSOR_FAULT. Capture normally finishes about 2 s after boot.
 In `ROBO_LINE_STEERING` builds the line task does not send its first motion
 request until Buddy 4 has left INIT/RECOVERY (`line_imu_wait` console line),
 capped at 10 s so a missing or faulty IMU never stops the robot.
+**With the web Start gate** (`ROBO_REQUIRE_START`: MQTT production images,
+which boot held until the dashboard START), Buddy 4 does **not** capture at
+boot. INIT waits (`[B4] waiting for dashboard START ...`, T_STATE 0) with no
+capture timeout, so the robot can be powered up anywhere and carried to the
+course. **Place it level on the course, press START, and keep it still about
+2 s**: the 1 s settle and the 50-sample capture start at START (`[B4] START:
+capturing level reference`), then MONITORING begins, and with it hump recording
+and lift/overturn detection. START is the controller hold seen, then released;
+it is latched, so a later STOP/START keeps the reference. The line task's
+`line_imu_wait` also starts at START (the robot stays still while Buddy 4
+captures, at most 10 s). Images without MQTT have no dashboard START and
+capture at boot as described above.
 Level permission comes from Buddy 2's motion status: it is withheld only when
 motion reports the wheels may be moving (not stationary and not initialising).
 Software cannot tell a level floor from a stationary slope. The reference is

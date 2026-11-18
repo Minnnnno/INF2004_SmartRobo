@@ -21,7 +21,11 @@
  * STOPPED and CAUSE_CLEARED are controller-confirmed facts, never inferred.
  * LEVEL permits capture only when the user/controller guarantees level/still.
  */
-/* Input bit 0 is reserved (formerly the recovery command). */
+/* WAIT_START (bit 0, formerly the recovery command): no dashboard START yet.
+ * INIT stays in POSITION with its timer restarted, so the level reference is
+ * captured only after START and the capture timeout cannot fire while waiting.
+ * Ignored once a reference exists (recovery goes straight to MONITORING). */
+#define B4_WAIT_START     (0x01U)
 #define B4_MOTORS_STOPPED (0x02U)
 #define B4_CMD_STOP       (0x04U)
 #define B4_CMD_RESET      (0x08U)
