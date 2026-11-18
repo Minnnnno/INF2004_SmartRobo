@@ -20,7 +20,8 @@
  *	  values[1]  centre of the last measured obstacle, m, positive = left
  *	  values[2]  width of the last measured obstacle, m (0 before the first)
  *	  values[3]  S5_STATE_*: clear, held (scanning), pass left, pass right,
- *	             no way around, driving round it, or detour abandoned
+ *	             no way around, driving round it, detour abandoned, or
+ *	             stopped from outside (STOP / lifted)
  *	  available  FALSE while the ultrasonic sensor is not answering
  *
  *	The full decision (side, sideways move needed for each side, room
@@ -30,6 +31,10 @@
  *	  "obstacle width_mm=<w> dist_mm=<d> offset_mm=<o> complete=<0|1>
  *	   position=<centre|left|right|unknown>"
  *	  "obstacle avoid=<left|right|none> shift_l_mm=<l> shift_r_mm=<r>"
+ *	and, when a scan or detour ends without driving round it:
+ *	  "obstacle abort=<code> a=<a> b=<b> x=<x> y=<y> tries=<n> state=<failed|stopped>"
+ *	  "obstacle spurious_stop ahead_mm=<d> resumed=<0|1>"
+ *	(codes and their a/b: README.md "Why a detour stopped").
  *	offset is the obstacle centre, + left; complete=0 means an edge lay
  *	beyond the 20..160 deg sweep, so the width is a lower bound.
  *	position compares how far each edge is from 90 deg (obstacle_scan.h);
@@ -61,6 +66,8 @@
 #define S5_STATE_AVOIDING	5.0	/* driving round it: the line follower must not drive
 					   (mirrored as LINE_OBSTACLE_AVOIDING in line_following.c) */
 #define S5_STATE_AVOID_FAILED	6.0	/* gave up on the detour: stopped and held */
+#define S5_STATE_STOPPED	7.0	/* scan or detour stopped from outside (STOP,
+					   Buddy 4 lifted): held, nothing went wrong */
 
 /* The decision for the obstacle the robot is held at or driving round.
    Returns false (and no decision) while line following, while scanning,

@@ -133,10 +133,13 @@ A 5 V module would need a divider or a level shifter on ECHO.
 - Shared status (`motion_get_status()`, `.obstacle`): `values[1]` = obstacle
   centre (m, + left), `values[2]` = width (m), `values[3]` = `S5_STATE_*`:
   0 clear, 1 held/scanning, 2 pass left, 3 pass right, 4 no way around,
-  5 driving round it, 6 detour abandoned (stopped and held).
+  5 driving round it, 6 detour abandoned (stopped and held), 7 stopped from
+  outside (STOP or lifted: held, nothing failed).
 - MQTT `robot/telemetry/obstacle`: two text diagnostics, each bounded to the 96-byte queue buffer:
   `obstacle width_mm=<w> dist_mm=<d> offset_mm=<o> complete=<0|1> position=<centre|left|right|unknown>`
-  and `obstacle avoid=<left|right|none> shift_l_mm=<l> shift_r_mm=<r>`.
+  and `obstacle avoid=<left|right|none> shift_l_mm=<l> shift_r_mm=<r>`; then, if it
+  does not drive round it, `obstacle abort=...` ([Why a detour stopped](#why-a-detour-stopped))
+  or `obstacle spurious_stop ...` ([Stops with nothing there](#stops-with-nothing-there)).
   A message that cannot fit is skipped with a console diagnostic.
   Scan completion also latches `TF_EV_OBSTACLE | TF_EV_SCAN_DONE` for the binary `robot/event`
   frame, including when the scan finishes offline.
@@ -187,7 +190,7 @@ axle centre.
    remainder under `S5_MIN_DIAGONAL_STEP_MM` (10 mm) is dropped, because moves
    that short do not turn the wheels, and the last two sections share the
    distance if the last would be shorter than that. Lack of progress aborts.
-   There is no automatic replan around an obstruction.
+   A way out blocked before it leaves is retried another way (below).
 
    Once parallel, it repeats the three-bearing sweep for the next
    `S5_PASS_STEP_MM` of forward passing, then looks towards the obstacle (logical 20 deg when
@@ -198,8 +201,51 @@ axle centre.
    `clearance=parallel`, and `insufficient sideways clearance`.
    If the diagonal sweep is blocked by an echo (not a sensor fault), the robot
    first turns further out by `S5_OUT_RETRY_STEP_DEG` and sweeps again, up to
-   `S5_OUT_RETRY_MAX_DEG`, with a shorter diagonal for the same sideways shift,
-   and only gives up if every angle is blocked.
+   `S5_OUT_RETRY_MAX_DEG`, with a shorter diagonal for the same sideways shift.
+
+   **The obstacle itself does not block.** Turned out at 70..75 deg (the usual
+   angle from the 150 mm stop), the look 30 deg back towards the obstacle hears
+   its near corner about 30 deg off the beam's axis, and the 15 deg allowance
+   then places it in the path: the likely cause of the 18 November 2026
+   abandoned detour (194 mm box), and of the extra turns on the runs that got
+   through. Every sweep during a detour now asks `s5_echo_on_obstacle()`
+   (detour_plan.c) first: if, within `S5_KNOWN_BEAM_HALF_DEG` (35 deg) of the
+   look, the scanned obstacle's nearest point is within `S5_KNOWN_RANGE_TOL_MM`
+   (40 mm) of the echo's range, the echo is the obstacle and is ignored
+   (console: `... is the obstacle being passed (expected N mm), ignored`). Only
+   the nearest point counts, so an echo nearer than the obstacle (something in
+   front of it) still blocks, and so does one from a part of the beam the
+   obstacle is not in.
+
+   **Pings that disagree count as blocked, not as a failure.** Looking at an
+   edge or a slanted face, half the beam hears nothing and the rest echo at no
+   one range (the 19:15 run on 18 November 2026: 5 of 10 pings at 60 deg, no
+   3 agreeing, gave up as `look_failed` without trying again). In the
+   clearance sweep such a look is judged by its nearest echo: beyond the
+   corridor it is clear; if the obstacle being passed explains both the
+   nearest and the furthest echo it is ignored; otherwise it is blocked, so the
+   robot turns further out and then works through the retry ladder below
+   (console: `pings disagree, N of M echoed, A..B mm`). Elsewhere (the check
+   ahead of a straight leg) disagreeing pings still refuse the move, as
+   `look_unstable`.
+
+   **Another way out (retry ladder).** If every angle up to 90 deg stays blocked
+   before any of the diagonal has been driven, the robot turns back and drives
+   forward over any reversing to where it stopped (checking ahead first), and
+   `drive_round()` tries the next way, skipping any that has no room or is the
+   same as the one just tried:
+
+   | Try | Side | Turn at most | First |
+   |---|---|---|---|
+   | 1 | scan's choice | 75 deg (`S5_OUT_MAX_DEG`) | |
+   | 2 | scan's choice | 55 deg (`S5_RETRY_OUT_MAX_DEG`): reverses further | |
+   | 3 | other side, if the scan found room | 75 deg | |
+   | 4 | other side | 55 deg | |
+   | 5, 6 | scan's choice | 75 deg | waits 2 s (`S5_RETRY_WAIT_MS`): a hand or foot may move |
+
+   Only then does it hold. Once it has left the start (any diagonal driven, or
+   anything failing other than a blocked way out), it does not retry: it holds
+   where it is.
 3. **Past it.** It drives forward in one continuous move, without stopping to
    look. The one sensor alternates between sideways at the obstacle (servo 20
    or 160 deg, 70 deg off straight ahead) and straight ahead (stops if anything
@@ -222,12 +268,19 @@ axle centre.
    **Line interrupt (from `S5_REJOIN_AFTER_MM`, 20 mm, into step 3, not during
    a stall escape, and in steps 4 and 5).** If Buddy 3's centre and right IR
    sensors both read black (`line_rejoin_seen()` in
-   `subsystem3/line_rejoin.h`, debounced over two samples), the robot stops and
-   goes to step 6, wherever odometry puts it. If braking carried it off the
-   line it reverses onto it, and if the line still is not there it holds. The
-   robot is not aligned to the line, and if this happens in step 3 or 4 it may
-   still be beside the obstacle. Only the forward ultrasonic guards it from
-   there.
+   `subsystem3/line_rejoin.h`, debounced over two samples) **where odometry puts
+   the straight line** (sensors within `S5_LINE_WINDOW_MM`, 100 mm, of y 0), the
+   robot stops and goes to step 6. If braking carried it off the line it
+   reverses onto it, and if the line still is not there it holds. The robot is
+   not aligned to the line, and if this happens in step 3 or 4 it may still be
+   beside the obstacle. Only the forward ultrasonic guards it from there.
+
+   **Black anywhere else is noted, not taken.** Beside the obstacle the robot is
+   about 200 mm off the line, so black there is a junction's branch or the line
+   curving away. The robot remembers where its sensors last saw it (console:
+   `line under the sensors at x .. y .., away from the straight path: noted,
+   carrying on`) and carries on, so that the straight path ahead wins over a
+   junction just behind the obstacle. The same applies on the way back (step 5).
 5. **Back.** It turns in by `S5_RETURN_DEG` (45 deg), checks the way ahead
    is clear, and drives towards the line at `S5_LINE_SEARCH_SPEED_MM_S`. Both
    sensors black ends it, as above. One sensor black is not enough, since they do
@@ -235,7 +288,22 @@ axle centre.
    having been black it stops and reverses to the middle of what it crossed, and
    hands over as above. One sensor only counts within `S5_LINE_WINDOW_MM` of where
    odometry puts the line. If nothing is found within `S5_RETURN_EXTRA_MM` past
-   where the line should be, it stops.
+   where the line should be, the line must have curved, and it goes back to the
+   last place black was noted, handing over on the line there (both black, or
+   one sensor within `S5_LINE_WINDOW_MM` of the point):
+   - **Crossed on this way back** (the usual case: a curve just behind the
+     obstacle): it **reverses** along the track it just drove, up to
+     `S5_NOTED_OVERSHOOT_MM` (100 mm, detour.c) past where it crossed. No turn,
+     so no new heading error: on 18 November 2026 turning round 180 deg and
+     driving back missed the 2 cm line. The track was just driven, so it is not
+     checked again (the ultrasonic only looks forward). If braking carries it
+     off the line it drives forward back onto it.
+   - **Seen beside the obstacle** (during the pass): it turns towards that
+     place, checks the way with a full clearance sweep (the scanned obstacle is
+     not excused here, since this leg was not planned round it) and drives its
+     sensors up to `S5_NOTED_OVERSHOOT_MM` past it. About a metre more driving.
+
+   With nothing noted, or nothing there, it holds.
 
 6. **Hand back.** `values[3]` returns to 0 and the line follower takes over from
    wherever the robot is, typically at an angle across the line. Going straight
@@ -245,11 +313,73 @@ axle centre.
    2026 it missed by about 13 mm and abandoned the detour. The next obstacle is
    scanned afresh.
 
-If anything fails (a move rejected, faulted, timed out or stopped by
-someone else, something ahead, the obstacle not ending, the line not
-found), the robot is stopped with `motion_stop()` and held, and `values[3]`
-reads 6. Releasing it (e.g. MQTT `start`) hands it back to the line
-follower as after any stop.
+If anything fails (a move rejected, faulted or timed out, something ahead,
+the obstacle not ending, the line not found), the robot is stopped with
+`motion_stop()` and held, and `values[3]` reads 6. If it was stopped from
+outside instead (the dashboard's STOP, or Buddy 4 seeing it lifted or
+overturned) it reads 7 (`S5_STATE_STOPPED`): held, but nothing went wrong.
+Either way the console prints `===== DETOUR ABANDONED: <code> ...` or
+`===== STOPPED FROM OUTSIDE: <code> ...`, and MQTT gets
+`obstacle abort=<code> a=<a> b=<b> x=<x> y=<y> tries=<n> state=<failed|stopped>`
+(below). Releasing it (e.g. MQTT `start`) hands it back to the line follower
+as after any stop.
+
+### Why a detour stopped
+
+`code`, with what `a` and `b` hold; `x`, `y` are the detour's pose (mm, frame
+above; 0 when the detour had not started) and `tries` how many ways out it
+tried. The first failure is reported, not what failed because of it.
+
+| Code | Meaning | a | b |
+|---|---|---|---|
+| `diagonal_blocked` | every way out blocked (after the whole retry ladder) | servo angle | range mm |
+| `parallel_blocked` | blocked ahead once parallel, before passing | servo angle | range mm |
+| `side_too_close` | something beside the obstacle: not enough room to pass | gap mm | needed mm |
+| `ahead_blocked` | something ahead of a straight leg (return, or back to the start) | ahead mm | needed mm |
+| `pass_ahead_blocked` | something ahead while passing | ahead mm | x |
+| `pass_look_failed` | a look failed while passing | 0 | x |
+| `obstacle_too_long` | the obstacle did not end within `S5_PASS_MAX_MM` | x | y |
+| `stall_no_escape` | wheels stalled and every escape tilt failed | x | y |
+| `line_not_found` | no line within `S5_RETURN_EXTRA_MM` of where it should be, and none noted | y | x |
+| `noted_line_blocked` | going back to a noted line: something in the way | servo angle | range mm |
+| `noted_line_not_found` | going back to a noted line: not there | x | y |
+| `line_lost_at_stop` | stopped on the line, but it was not there after braking | x | y |
+| `no_progress` | a diagonal section moved nowhere | progress mm | 0 |
+| `look_unstable` | pings disagreed on a look outside the clearance sweep (e.g. ahead of a straight leg) | servo angle | pings echoed |
+| `sensor_fault` | the ultrasonic sensor gave no pulse or stayed busy during a look | servo angle | pings echoed |
+| `look_moved` | the robot moved (or Buddy 2 changed state) during a look | servo angle | pings echoed (-1: before pinging) |
+| `stopped` | held from outside (STOP) mid-move or mid-look: state 7 | motion state | angle |
+| `lifted` | Buddy 4: lifted or overturned: state 7 | | |
+| `motion_fault` | Buddy 2 latched a fault | fault | state |
+| `timeout`, `not_accepted`, `refused`, `move_event` | Buddy 2 did not run a move | move / state | |
+| `not_still`, `no_release`, `no_status` | could not confirm the robot still / released | | |
+| `no_safe_detour` | no plan on either side within `S5_BACKUP_MAX_MM` of reversing | that limit | 0 |
+| `no_way_around` | the scan found no room either side (state 4, a result, not a failure) | clear left mm | clear right mm (-1: none) |
+| `line_not_reporting` | Buddy 3 is not publishing line readings, so no way back | | |
+| `repeated_spurious` | a second stop with nothing there, within 150 mm | ahead mm | count |
+| `released_while_scanning` (state 7), `moved_while_scanning`, `ultrasonic_failed`, `sensor_failed`, `scan_failed`, `scan_setup_failed` | the scan or the watch could not finish | | |
+
+### Stops with nothing there
+
+What stopped the robot may be gone by the time it scans (a hand, a foot) or
+never have been there (a floor echo). If the scan finds nothing within
+`S5_STOP_MM` + `S5_SPURIOUS_MARGIN_MM` (300 mm) straight ahead, five more looks
+(90, 70, 110, 50, 130 deg) check the corridor the robot drives through (its
+half-width + 50 mm either side, to 300 mm, with the 15 deg beam allowance). If
+that is clear too, it releases the hold and line following resumes: console
+`nothing in the robot's path ...; line following resumes`, MQTT
+`obstacle spurious_stop ahead_mm=<d> resumed=1` (-1: no echo ahead at all). An
+obstacle off to one side of straight ahead is still in that corridor, so it
+does not resume past it. A second such stop within `S5_SPURIOUS_TRAVEL_MM`
+(150 mm) of driving holds instead (`repeated_spurious`), so it cannot stop-start
+in front of something it cannot measure.
+
+**Humps.** While Buddy 4 reports a wheel climbing or coming down a hump
+(`TERRAIN_TS_CLIMBING` / `DESCENDING`), the nose pitches and the sensor can hear
+the floor. Echoes then stop the robot only when nearer than `S5_HUMP_STOP_MM`
+(100 mm); further ones are ignored until it is level (console `on a hump:
+echoes beyond 100 mm ignored`, once per hump). An obstacle right after a hump is
+then stopped for at 100 mm, and the back-off reverses to 150 mm before the scan.
 
 Sensor faults (`NO_PULSE` or stuck-high `BUSY`) hold the robot; they do not
 count as clear space. A normal no-echo response still does. A sweep is
@@ -318,9 +448,9 @@ as clear. Straight ahead, the two are the same.
 | `S5_SPILL_RANGE_MM` | obstacle_scan.h | Off-axis echoes nearer than the obstacle's far point + this are its corners (50 mm) |
 | `S5_DEFAULT_AVOID` | obstacle_scan.h | Side for a centred obstacle (right) |
 | `S5_FACE_JUMP_MM`, `S5_FACE_TAIL_MM` | obstacle_scan.h | A bigger step ends the face (45 mm); a last reading this far past the one before is a grazing echo, not the corner (20 mm) |
-| `S5_FACE_CENTRE_FRACTION`, `S5_FACE_TILT_MIN_DEG` | obstacle_scan.h | Off-centre tolerance as a fraction of D (0.11, about 20 mm at the stop); tilt that decides a centred face's side (5�) |
-| `S5_FACE_TILT_BIAS_DEG` | obstacle_scan.h | Added to every tilt: **measure** on a square-on box (0� until then) |
-| `S5_CURVE_MIN_DEG`, `S5_CURVE_WINDOW_MM` | obstacle_scan.h | A curve, for the log only: this heading change within this travel (25�, 300 mm) |
+| `S5_FACE_CENTRE_FRACTION`, `S5_FACE_TILT_MIN_DEG` | obstacle_scan.h | Off-centre tolerance as a fraction of D (0.11, about 20 mm at the stop); tilt that decides a centred face's side (5째) |
+| `S5_FACE_TILT_BIAS_DEG` | obstacle_scan.h | Added to every tilt: **measure** on a square-on box (0째 until then) |
+| `S5_CURVE_MIN_DEG`, `S5_CURVE_WINDOW_MM` | obstacle_scan.h | A curve, for the log only: this heading change within this travel (25째, 300 mm) |
 | `S5_CURVE_HOLD_MM` | obstacle_scan.h | How much further it still counts as after a curve (300 mm) |
 | `S5_SAMPLES_PER_POINT` | obstacle_scan.h | Pings per angle (5) |
 | `S5_SENSOR_OFFSET_MM` | obstacle_scan.h | Servo axis to sensor along the horn arm (30 mm) |
@@ -332,7 +462,7 @@ as clear. Straight ahead, the two are the same.
 | `S5_TURN_MARGIN_MM` | detour_plan.h | Kept from the face by the front corners while turning out (30 mm) |
 | `S5_OUT_MIN_DEG`, `S5_OUT_MAX_DEG` | detour_plan.h | Outward turn range (45..75째) |
 | `S5_BACKUP_MAX_MM` | detour_plan.h | Most reversing before turning out (150 mm) |
-| `S5_OUT_RETRY_STEP_DEG`, `S5_OUT_RETRY_MAX_DEG` | detour_plan.h | If the diagonal sweep finds something in the way, turn this much further out (10�) and look again, up to straight sideways (90�); the diagonal is shortened to keep the same shift |
+| `S5_OUT_RETRY_STEP_DEG`, `S5_OUT_RETRY_MAX_DEG` | detour_plan.h | If the diagonal sweep finds something in the way, turn this much further out (10째) and look again, up to straight sideways (90째); the diagonal is shortened to keep the same shift |
 | `S5_SQUARE_MIN_DEG`, `S5_SQUARE_TRIES` | subsystem5.c | Tilted by at least this (5 deg): turn on the spot to face the obstacle, up to 2 times, checking the angle with a coarse sweep only. The full scan with the fine edges runs once, after the last turn. The tilt it stopped with is kept for the side choice and the way back to the line |
 | `S5_STILL_MOVE_MM` | detour.c | A scan or stopped look only fails on real movement beyond this (5 mm): one encoder count of wobble clears Motion Control's "stationary" and is ignored |
 | `S5_FACE_EDGE_ECHO_DEG`, `S5_FACE_EDGE_CONFIRM_DEG` | obstacle_scan.h | A reading within 3 deg past the face's end only blocks that side if one within the next 5 deg agrees: it can be the corner's own echo |
@@ -340,6 +470,10 @@ as clear. Straight ahead, the two are the same.
 | `S5_DIAGONAL_EXTRA_MM`, `S5_MIN_DIAGONAL_STEP_MM` | detour_plan.h | Driven beyond the planned diagonal (50 mm); shortest diagonal section, shorter remainders are dropped (10 mm) |
 | `S5_GUARD_SWEEP_DEG`, `S5_GUARD_SWEEP_STEP_DEG` | detour_plan.h | Guard bearings: +/-30 deg in 30-degree steps |
 | `S5_GUARD_BEAM_HALF_DEG` | detour_plan.h | Conservative beam bearing uncertainty for corridor checks (15 deg) |
+| `S5_KNOWN_BEAM_HALF_DEG`, `S5_KNOWN_RANGE_TOL_MM` | detour_plan.h | An echo is the obstacle being passed (and does not block) if the obstacle's nearest point within 35 deg of the look is within 40 mm of its range. Wider or looser excuses more; narrower brings back blocks on its own corner |
+| `S5_RETRY_OUT_MAX_DEG`, `S5_RETRY_WAIT_MS`, `S5_RETRY_WAITS` | detour_plan.h | Retry ladder: shallower turn limit (55 deg, reversing further); wait before the repeat tries (2 s), how many (2) |
+| `S5_SPURIOUS_MARGIN_MM`, `S5_SPURIOUS_TRAVEL_MM`, `S5_SPURIOUS_MAX` | subsystem5.c | Nothing in the path within stop + 150 mm: resume line following; a second such stop within 150 mm of driving holds |
+| `S5_HUMP_STOP_MM` | subsystem5.c | On a hump, only echoes nearer than this stop the robot (100 mm) |
 | `S5_PASS_CYCLE_S`, `S5_PASS_STEP_MM`, `S5_PASS_MAX_MM` | detour_plan.h | Side + ahead look cycle (1.4 s); travel per cycle (speed x cycle, 112 mm; 150 mm fails the "single missed echoes" geometry check); give-up length (800 mm) |
 | `S5_PASS_TRIM_MM` | detour_plan.h | Taken off the drive past the obstacle's end before turning back (150 mm) |
 | `S5_SIDE_SEE_MM` | detour_plan.h | Side echoes this far past the edge are still the obstacle (150 mm) |

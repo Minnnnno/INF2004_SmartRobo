@@ -46,6 +46,8 @@ void s5_estimate(const double range_mm[], const bool echo[], unsigned count,
 	p_out->support = 0U;
 	p_out->valid = 0U;
 	p_out->total = count;
+	p_out->nearest_mm = 0.0;
+	p_out->farthest_mm = 0.0;
 
 	for (i = 0U; i < count; i++) {
 		unsigned	support = 0U;
@@ -54,6 +56,8 @@ void s5_estimate(const double range_mm[], const bool echo[], unsigned count,
 		if (!echo[i]) {
 			continue;
 		}
+		if ((p_out->valid == 0U) || (range_mm[i] < p_out->nearest_mm)) { p_out->nearest_mm = range_mm[i]; }
+		if ((p_out->valid == 0U) || (range_mm[i] > p_out->farthest_mm)) { p_out->farthest_mm = range_mm[i]; }
 		p_out->valid++;
 		for (j = 0U; j < count; j++) {
 			double gap = fabs(range_mm[j] - range_mm[i]);

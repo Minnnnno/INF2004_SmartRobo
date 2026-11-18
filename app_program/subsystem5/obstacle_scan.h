@@ -158,6 +158,8 @@ typedef struct {
 	unsigned	support;	/* pings in the agreeing group */
 	unsigned	valid;		/* pings that heard an echo */
 	unsigned	total;		/* pings taken */
+	double		nearest_mm;	/* nearest and furthest echo of all (valid > 0) */
+	double		farthest_mm;
 } s5_estimate_t;
 
 typedef struct {

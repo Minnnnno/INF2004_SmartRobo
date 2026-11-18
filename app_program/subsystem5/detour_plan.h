@@ -57,6 +57,28 @@
    tested corridor by this angular uncertainty; this is a conservative guard,
    not a replacement for the calibrated width scan. */
 #define S5_GUARD_BEAM_HALF_DEG	15.0
+/* An echo that the scanned obstacle explains does not block a move: the plan
+   already keeps the robot clear of it.  Turned out at 75 deg, the look 30 deg
+   back towards the obstacle hears its near corner about 30 deg off the beam's
+   axis (the width scan's S5_BEAM_CORRECTION_DEG is 22 deg; servo play and
+   odometry add a few more), and S5_GUARD_BEAM_HALF_DEG then places it in the
+   path.  An echo is the obstacle when, somewhere within S5_KNOWN_BEAM_HALF_DEG
+   of the look, the obstacle's nearest point is within S5_KNOWN_RANGE_TOL_MM of
+   the echo's range.  Only the nearest point counts: an echo closer than the
+   obstacle is something else, and still blocks. */
+#define S5_KNOWN_BEAM_HALF_DEG	35
+#define S5_KNOWN_RANGE_TOL_MM	40.0
+
+/* ---- recovering from a blocked way out ---- */
+/* When the way out stays blocked before any diagonal travel, the robot drives
+   back to where it stopped and tries, in order: the same side reversing further
+   for a turn of at most S5_RETRY_OUT_MAX_DEG, the other side (if the scan found
+   room there) at the normal angle and then the shallower one, and finally waits
+   S5_RETRY_WAIT_MS and repeats the first plan, up to S5_RETRY_WAITS times (a
+   hand or a foot in the way).  Only then does it hold. */
+#define S5_RETRY_OUT_MAX_DEG	55.0
+#define S5_RETRY_WAIT_MS	2000U
+#define S5_RETRY_WAITS		2U
 
 /* ---- passing ---- */
 /* The pass is one continuous move while the one servo-mounted sensor alternates
@@ -114,6 +136,23 @@ typedef struct {
 
 /* Plan step 1 from a finished scan.  Needs a pass side with room. */
 bool	s5_detour_plan(const s5_scan_t *p_scan, s5_detour_plan_t *p_plan);
+/* The same for a chosen side, turning out by at most max_out_deg
+   (S5_OUT_MIN_DEG..S5_OUT_MAX_DEG): a shallower turn backs up further first.
+   s5_detour_plan() is this with the scan's side and S5_OUT_MAX_DEG. */
+bool	s5_detour_plan_side(const s5_scan_t *p_scan, s5_avoid_side_t side, double max_out_deg,
+			    s5_detour_plan_t *p_plan);
+
+/* Axis range (from the servo axis) of the scanned obstacle's nearest point
+   within S5_KNOWN_BEAM_HALF_DEG of a look at servo angle_deg, with the axle at
+   (x_mm, y_mm) and heading heading_deg in the plan's frame.  The obstacle is
+   everything beyond its face on its side of the passed end.  INFINITY: not in
+   that beam. */
+double	s5_obstacle_range(const s5_detour_plan_t *p_plan, double x_mm, double y_mm,
+			  double heading_deg, int angle_deg);
+/* TRUE when an echo (range_mm from the transducer, as s5_us_ping returns it)
+   is the scanned obstacle rather than something new: see S5_KNOWN_BEAM_HALF_DEG. */
+bool	s5_echo_on_obstacle(const s5_detour_plan_t *p_plan, double x_mm, double y_mm,
+			    double heading_deg, int angle_deg, double range_mm);
 
 typedef struct {
 	double		rear_mm;	/* furthest x the obstacle has been seen at */

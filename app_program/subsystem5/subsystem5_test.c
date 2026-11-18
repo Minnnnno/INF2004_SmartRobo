@@ -1017,6 +1017,83 @@ static void test_detour_pass(void)
 	check(!s5_line_expected(300.0, -S5_RETURN_DEG), "line: too far out to be it");
 }
 
+/* The retry ladder's plans, and telling the obstacle's own echoes from new
+   ones.  A centred 200 mm box at the 150 mm stop, as in the 18 November run
+   whose detour was abandoned (194 mm, 148 mm away, passed right). */
+static void test_detour_retry(void)
+{
+	static s5_scan_t	scan;
+	yawed_t			yawed = {0.0, 100.0, 0.0};
+	s5_detour_plan_t	steep;
+	s5_detour_plan_t	shallow;
+	s5_detour_plan_t	other;
+	s5_avoid_side_t		side;
+	double			x;
+	double			expected;
+	double			echo;
+	double			needed;
+	int			look;
+
+	check(s5_scan_run(&scan, yawed_measure, &yawed) && scan.b_valid, "retry: scanned");
+	side = scan.avoid.side;
+	check(s5_detour_plan(&scan, &steep), "retry: normal plan");
+	check(s5_detour_plan_side(&scan, side, S5_OUT_MAX_DEG, &other) &&
+	      (other.turn_deg == steep.turn_deg) && (other.backup_mm == steep.backup_mm) &&
+	      (other.diagonal_mm == steep.diagonal_mm), "retry: the normal plan is the side planner at S5_OUT_MAX_DEG");
+	/* Stopped this close, the normal plan turns out nearly sideways (70..75 deg) */
+	check(fabs(steep.turn_deg) >= S5_RETRY_OUT_MAX_DEG + 10.0, "retry: steep at the stop distance");
+
+	/* Shallower: reverses further first, still reaches the same y, short of the face */
+	check(s5_detour_plan_side(&scan, side, S5_RETRY_OUT_MAX_DEG, &shallow), "retry: shallower plan");
+	check(fabs(shallow.turn_deg) <= S5_RETRY_OUT_MAX_DEG + 1e-9, "retry: shallower turn");
+	check(shallow.backup_mm > steep.backup_mm + 50.0, "retry: reverses further for it");
+	check(shallow.backup_mm <= S5_BACKUP_MAX_MM, "retry: within the reversing limit");
+	check_near(shallow.shift_mm, steep.shift_mm, 1e-9, "retry: same sideways shift");
+	check_plan_geometry(&shallow, "retry: shallower plan geometry");
+
+	/* The other side: the mirror image, when the scan found room there */
+	check(s5_detour_plan_side(&scan, (side == S5_AVOID_LEFT) ? S5_AVOID_RIGHT : S5_AVOID_LEFT,
+				  S5_OUT_MAX_DEG, &other), "retry: other side plan");
+	check(other.turn_deg * steep.turn_deg < 0.0, "retry: other side turns the other way");
+	check_plan_geometry(&other, "retry: other side plan geometry");
+	check(!s5_detour_plan_side(&scan, side, S5_OUT_MIN_DEG - 1.0, &other), "retry: limit below the minimum");
+	check(!s5_detour_plan_side(&scan, side, S5_OUT_MAX_DEG + 1.0, &other), "retry: limit above the maximum");
+	check(!s5_detour_plan_side(&scan, S5_AVOID_NONE, S5_OUT_MAX_DEG, &other), "retry: no side");
+
+	/* Turned out by the steep plan, the look 30 deg back towards the box hears its
+	   near corner.  The guard alone puts that echo in the path (the abandoned run). */
+	x = -steep.backup_mm;
+	look = S5_ANGLE_CENTRE_DEG + ((side == S5_AVOID_LEFT) ? S5_GUARD_SWEEP_DEG : -S5_GUARD_SWEEP_DEG);
+	expected = s5_obstacle_range(&steep, x, steep.start_y_mm, steep.turn_deg, look);
+	check(isfinite(expected), "retry: the box is in that look's beam");
+	echo = expected - S5_SENSOR_OFFSET_MM;
+	needed = steep.diagonal_mm + S5_DIAGONAL_EXTRA_MM + S5_FRONT_MM - S5_SERVO_AHEAD_MM + S5_PASS_MARGIN_MM;
+	check((expected * cos((S5_GUARD_SWEEP_DEG + S5_GUARD_BEAM_HALF_DEG) * DEG_TO_RAD) <= needed) &&
+	      (expected * sin((S5_GUARD_SWEEP_DEG - S5_GUARD_BEAM_HALF_DEG) * DEG_TO_RAD) <=
+	       S5_ROBOT_HALF_WIDTH_MM + S5_PASS_MARGIN_MM), "retry: the guard alone would block on it");
+	check(s5_echo_on_obstacle(&steep, x, steep.start_y_mm, steep.turn_deg, look, echo),
+	      "retry: that echo is the box");
+	check(s5_echo_on_obstacle(&steep, x, steep.start_y_mm, steep.turn_deg, look,
+				  echo + S5_KNOWN_RANGE_TOL_MM - 1.0), "retry: within the tolerance");
+	check(!s5_echo_on_obstacle(&steep, x, steep.start_y_mm, steep.turn_deg, look,
+				   echo - S5_KNOWN_RANGE_TOL_MM - 20.0), "retry: nearer than the box is something else");
+	check(!s5_echo_on_obstacle(&steep, x, steep.start_y_mm, steep.turn_deg, look,
+				   echo + S5_KNOWN_RANGE_TOL_MM + 20.0), "retry: further than the box is something else");
+	/* Straight along the way out the box is not in the beam: nothing there is excused */
+	check(!isfinite(s5_obstacle_range(&steep, x, steep.start_y_mm, steep.turn_deg, S5_ANGLE_CENTRE_DEG)),
+	      "retry: the box is not ahead on the way out");
+	check(!s5_echo_on_obstacle(&steep, x, steep.start_y_mm, steep.turn_deg, S5_ANGLE_CENTRE_DEG, echo),
+	      "retry: an echo ahead still blocks");
+	/* Before turning, straight ahead is the face itself */
+	check_near(s5_obstacle_range(&steep, 0.0, steep.start_y_mm, 0.0, S5_ANGLE_CENTRE_DEG),
+		   steep.face_mm - S5_SERVO_AHEAD_MM, 1e-6, "retry: the face straight ahead");
+	steep.b_ok = false;
+	check(!s5_echo_on_obstacle(&steep, x, steep.start_y_mm, steep.turn_deg, look, echo),
+	      "retry: no plan, nothing is known");
+	printf("ok    %-34s steep %+5.1f deg back %3.0f, shallow %+5.1f deg back %3.0f, corner %3.0f mm\n",
+	       "retry: ladder plans", steep.turn_deg, steep.backup_mm, shallow.turn_deg, shallow.backup_mm, echo);
+}
+
 int main(void)
 {
 	if (S5_BEAM_CORRECTION_DEG != 0.0) {
@@ -1037,6 +1114,7 @@ int main(void)
 	test_curve();
 	test_detour_plan();
 	test_detour_pass();
+	test_detour_retry();
 	printf("%u/%u checks passed\n", checks - failures, checks);
 	return (failures == 0U) ? 0 : 1;
 }
