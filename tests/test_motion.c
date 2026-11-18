@@ -20,10 +20,15 @@ static motion_config_t simulation_config(void)
     c.diameter[0] = 0.065;
     c.diameter[1] = 0.065;
     c.track = 0.14;
+    /* The default plant is frictionless: a breakaway kick only adds a start-up jolt
+     * there. breakaway_tracking_tests() uses a plant with a starting threshold. */
+    c.breakaway[0] = 0.0;
+    c.breakaway[1] = 0.0;
     return c;
 }
 
-typedef struct { motion_t m; encoder_sample_t sample; double now, fractional[2], velocity[2], weak_right; } rig_t;
+/* breakaway: |output| below this does not turn the simulated wheel (0 = frictionless). */
+typedef struct { motion_t m; encoder_sample_t sample; double now, fractional[2], velocity[2], weak_right, breakaway; } rig_t;
 
 static void tick(rig_t *r, bool plant)
 {
@@ -36,7 +41,8 @@ static void tick(rig_t *r, bool plant)
             int32_t count;
             /* Deliberately unequal simulated motor gains, first-order inertia. */
             double gain = (w == 0U) ? 0.9 : ((r->weak_right > 0.0) ? r->weak_right : 0.8);
-            r->velocity[w] += (output * gain - r->velocity[w]) * dt / 0.04;
+            double drive = (fabs(output) < r->breakaway) ? 0.0 : output * gain;
+            r->velocity[w] += (drive - r->velocity[w]) * dt / 0.04;
             r->fractional[w] += r->velocity[w] * dt / quantum;
             count = (int32_t)r->fractional[w];
             r->fractional[w] -= count;
@@ -120,6 +126,109 @@ static void movement_tests(void)
         CHECK(r.m.status.state == READY);
         CHECK(motion_next_event(&r.m, &e)); CHECK(e.type == EV_COMPLETE && e.id == 1U);
     }
+}
+
+/* 2026-11-18 COM4: an 18 deg detour turn slowed to 35 mm/s about 2 mm before its goal,
+ * both wheels stopped at ~16-18% PWM (below breakaway) and the no-progress check
+ * faulted. A plant that does not move below 20% output reproduces it. */
+static void breakaway_turn(rig_t *r, double radians, double min_goal_speed)
+{
+    motion_command_t c;
+    unsigned i;
+    init(r);
+    r->breakaway = 0.20;
+    r->m.config.min_goal_speed = min_goal_speed;
+    c = command(r, ENCODER_TURN, radians);
+    CHECK(motion_accept(&r->m, &c, r->now) == R_OK);
+    for (i = 0; i < 3000U && (r->m.status.state == DRIVING || r->m.status.state == STOPPING); ++i) { tick(r, true); }
+}
+
+static void goal_speed_floor_tests(void)
+{
+    const double deg = 3.141592653589793 / 180.0;
+    const double floor_speed = board_motion_config().min_goal_speed;
+    motion_config_t c = simulation_config();
+    rig_t r;
+    motion_event_t e;
+    int degrees;
+    /* Ramp all the way down (the old behaviour): stalls short of the goal. */
+    breakaway_turn(&r, 18.0 * deg, 0.0);
+    CHECK(r.m.status.state == FAULT && r.m.status.fault == F_FEEDBACK);
+    CHECK(r.m.status.feedback_cause == FB_NO_PROGRESS && r.m.status.debug.mode == ENCODER_TURN);
+    /* Board floor: every turn completes and settles inside the angle tolerance. */
+    CHECK(floor_speed > 0.0);
+    for (degrees = -180; degrees <= 180; degrees += 3) {
+        double radians = (double)degrees * deg;
+        if (degrees == 0) { continue; }
+        breakaway_turn(&r, radians, floor_speed);
+        if (r.m.status.state != READY) {
+            fprintf(stderr, "floor turn %d deg state %d fault %d heading %f\n", degrees,
+                    r.m.status.state, r.m.status.fault, r.m.odom.heading / deg);
+        }
+        CHECK(r.m.status.state == READY);
+        CHECK(motion_next_event(&r.m, &e) && e.type == EV_COMPLETE);
+        CHECK(fabs(r.m.odom.heading - radians) <= r.m.config.angle_tolerance);
+    }
+    CHECK(motion_config_valid(&c));
+    c.min_goal_speed = 0.0; CHECK(motion_config_valid(&c));
+    c.min_goal_speed = -0.01; CHECK(!motion_config_valid(&c));
+    c.min_goal_speed = NAN; CHECK(!motion_config_valid(&c));
+    c.min_goal_speed = c.max_speed; CHECK(!motion_config_valid(&c));
+}
+
+/* 2026-11-18 COM4: line following restarted from rest at 69/31 mm/s after a detour;
+ * the right wheel's PID output reached only 11.5% within the no-progress limit and
+ * it never turned. Same plant threshold as breakaway_turn(), refreshed every cycle. */
+static void breakaway_track(rig_t *r, double plant, double left, double right, const double kick[2],
+                            double seconds)
+{
+    motion_command_t c;
+    unsigned i;
+    init(r);
+    r->breakaway = plant;
+    r->m.config.breakaway[0] = kick[0];
+    r->m.config.breakaway[1] = kick[1];
+    c = command(r, WHEEL_SPEED_TRACKING, 0.0);
+    c.speed[0] = left; c.speed[1] = right;
+    for (i = 0; i < (unsigned)(seconds / 0.01) && r->m.status.state != FAULT; ++i) {
+        c.expires = r->now + 0.25; c.deadline = r->now + 20.0;
+        CHECK(motion_accept(&r->m, &c, r->now) == R_OK);
+        tick(r, true);
+    }
+}
+
+static void breakaway_tracking_tests(void)
+{
+    const motion_config_t board = board_motion_config();
+    const double none[2] = {0.0, 0.0};
+    const double speeds[4][2] = {{0.069, 0.031}, {0.031, 0.069}, {0.05, 0.05}, {0.10, 0.0}};
+    rig_t r;
+    motion_config_t c = simulation_config();
+    unsigned test;
+    /* PID only (the old behaviour): the slow wheel never starts. */
+    breakaway_track(&r, 0.22, 0.069, 0.031, none, 1.0);
+    CHECK(r.m.status.state == FAULT && r.m.status.fault == F_FEEDBACK);
+    CHECK(r.m.status.feedback_cause == FB_NO_PROGRESS && r.m.status.debug.stalled_wheels == 2U);
+    /* Board breakaway: every start pattern keeps moving, and both commanded wheels advance. */
+    CHECK(board.breakaway[0] > 0.0 && board.breakaway[1] > 0.0);
+    for (test = 0; test < 4U; ++test) {
+        breakaway_track(&r, 0.22, speeds[test][0], speeds[test][1], board.breakaway, 2.0);
+        if (r.m.status.state != DRIVING) {
+            fprintf(stderr, "breakaway track %u state %d fault %d\n", test, r.m.status.state, r.m.status.fault);
+        }
+        CHECK(r.m.status.state == DRIVING && r.m.status.fault == F_NONE);
+        CHECK(speeds[test][0] == 0.0 || r.m.odom.travel[0] > 0.01);
+        CHECK(speeds[test][1] == 0.0 || r.m.odom.travel[1] > 0.01);
+        CHECK(speeds[test][1] != 0.0 || r.m.odom.travel[1] == 0.0);
+    }
+    /* A blocked wheel still faults: the kick is not a way round the no-progress check. */
+    breakaway_track(&r, 2.0, 0.05, 0.05, board.breakaway, 1.5);
+    CHECK(r.m.status.state == FAULT && r.m.status.fault == F_FEEDBACK);
+    CHECK(r.m.status.feedback_cause == FB_NO_PROGRESS && r.m.status.debug.stalled_wheels == 3U);
+    c.breakaway[1] = -0.01; CHECK(!motion_config_valid(&c));
+    c.breakaway[1] = NAN; CHECK(!motion_config_valid(&c));
+    c.breakaway[1] = c.max_output + 0.01; CHECK(!motion_config_valid(&c));
+    c.breakaway[1] = c.max_output; CHECK(motion_config_valid(&c));
 }
 
 static void safety_tests(void)
@@ -1097,6 +1206,8 @@ int main(void)
 {
     math_tests(); movement_tests(); safety_tests(); correction_and_final_tests(); bus_tests(); validation_tests();
     low_speed_feedback_tests();
+    goal_speed_floor_tests();
+    breakaway_tracking_tests();
     encoder_capture_tests();
     board_encoder_polarity_tests();
     production_line_integration_tests();

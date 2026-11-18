@@ -563,7 +563,13 @@ static void drive(motion_t *m, double now, double dt, const bool progressed[2])
             return;
         }
         if (command.mode == ENCODER_TURN) { remaining *= m->config.track / 2.0; }
-        desired[1] = copysign(fmin(m->config.max_speed, sqrt(2.0 * m->config.acceleration * remaining)), command.value);
+        /* The ramp alone falls to ~35 mm/s in the last 2 mm, where the PID output
+         * (~16% PWM) is below the motors' breakaway: the wheels stop short and the
+         * no-progress check faults. Hold min_goal_speed instead; stopping() above
+         * cuts the output at once, so the floor does not delay the stop. */
+        desired[1] = copysign(fmax(m->config.min_goal_speed,
+                                   fmin(m->config.max_speed, sqrt(2.0 * m->config.acceleration * remaining))),
+                              command.value);
         desired[0] = (command.mode == DISTANCE_MOVE) ? desired[1] : -desired[1];
         if (command.mode == DISTANCE_MOVE) {
             double correction = fmax(-m->config.max_speed / 2.0,
@@ -582,6 +588,20 @@ static void drive(motion_t *m, double now, double dt, const bool progressed[2])
         m->status.target[w] += change;
         m->status.output[w] = manual ? command.speed[w] :
             pid_step(&m->pid[w], &m->config.pid[w], m->status.target[w], m->odom.speed[w], dt, m->config.max_output);
+        /* Breakaway: from rest the PID integral took longer than the no-progress limit
+         * to pass the motor's starting threshold, so a stationary wheel asked to move
+         * or speed up gets at least breakaway[w], doubling by the time that limit
+         * expires. Not while the target is falling (braking ramp) and never for manual
+         * output; a truly blocked wheel still trips the no-progress check below. */
+        if (!manual && !progressed[w] && (fabs(m->status.target[w]) > 1e-9) &&
+            ((desired[w] * m->status.target[w]) > 0.0) &&
+            (fabs(desired[w]) >= fabs(m->status.target[w]))) {
+            double kick = fmin(m->config.max_output, m->config.breakaway[w] *
+                               (1.0 + (now - m->last_progress[w]) / m->config.feedback_timeout));
+            if (fabs(m->status.output[w]) < kick) {
+                m->status.output[w] = copysign(kick, m->status.target[w]);
+            }
+        }
         /* No active reverse torque at zero target. Hardware enforces reversal dead-time. */
         if ((desired[w] == 0.0) && (fabs(m->status.target[w]) < 1e-9)) {
             m->status.output[w] = 0.0;

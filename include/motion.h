@@ -32,6 +32,12 @@ typedef struct {
     double startup_grace, feedback_timeout, stop_timeout, setup_timeout;
     double command_lifetime, movement_timeout, max_distance, max_angle;
     double straight_gain, reversal_time, manual_limit, manual_timeout;
+    /* Slowest wheel speed (m/s) the DISTANCE_MOVE/ENCODER_TURN deceleration
+     * ramp may ask for before the goal; 0 = ramp all the way down. */
+    double min_goal_speed;
+    /* Least output (fraction of max) given to a wheel that is asked to move or
+     * speed up but saw no encoder count this cycle; 0 = PID only. */
+    double breakaway[2];
     pid_config_t pid[2];
     unsigned pwm_hz;
     bool hardware_confirmed, brake, manual_enabled;
