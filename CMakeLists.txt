@@ -252,6 +252,17 @@ endif()
 if(MQTT AND NOT NET STREQUAL "lwip")
     message(FATAL_ERROR "MQTT requires NET=lwip.")
 endif()
+# The robot boots held; the dashboard START begins Buddy 4's level calibration,
+# then the run. Default ON in production MQTT images with Buddy 4 (the dashboard
+# is the only START source, so it is refused without MQTT).
+set(ROBO_DEFAULT_WAIT_FOR_START OFF)
+if(MQTT AND ROBO_PRODUCTION_BUILD AND ROBO_SUBSYSTEM4 AND NOT ROBO_MAG_CAL)
+    set(ROBO_DEFAULT_WAIT_FOR_START ON)
+endif()
+option(ROBO_WAIT_FOR_START "Hold at boot; dashboard START calibrates Buddy 4, then the run begins" ${ROBO_DEFAULT_WAIT_FOR_START})
+if(ROBO_WAIT_FOR_START AND (NOT MQTT OR NOT ROBO_PRODUCTION_BUILD OR NOT ROBO_SUBSYSTEM4 OR ROBO_MAG_CAL))
+    message(FATAL_ERROR "ROBO_WAIT_FOR_START needs MQTT=ON (dashboard START), a production profile, ROBO_SUBSYSTEM4=ON and ROBO_MAG_CAL=OFF.")
+endif()
 if(CONSOLE STREQUAL "uart")
     set(CRASH_REPORT ON)
 endif()
@@ -309,6 +320,7 @@ target_compile_definitions(mtkernel_3 PRIVATE
     $<$<BOOL:${ROBO_IR_MONITOR}>:ROBO_IR_MONITOR=1>
     $<$<BOOL:${ROBO_MAG_CAL}>:ROBO_MAG_CAL=1>
     $<$<BOOL:${ROBO_MOTION_FAULTS_DISABLED}>:ROBO_MOTION_FAULTS_DISABLED=1>
+    $<$<BOOL:${ROBO_WAIT_FOR_START}>:ROBO_WAIT_FOR_START=1>
     ROBO_SUBSYSTEM4=$<BOOL:${ROBO_SUBSYSTEM4}>
     ROBO_SUBSYSTEM5=$<BOOL:${ROBO_SUBSYSTEM5}>
     _PICO_RP2040_
@@ -341,6 +353,9 @@ if(ROBO_ENCODER_DIAGNOSTICS_ONLY OR ROBO_SAFE_MOTOR_TEST OR ROBO_ANGLE_TEST OR R
     endif()
     if(NOT ROBO_SUBSYSTEM5)
         string(APPEND encoder_build_id "-no-s5")
+    endif()
+    if(ROBO_WAIT_FOR_START)
+        string(APPEND encoder_build_id "-start")
     endif()
     target_compile_definitions(mtkernel_3 PRIVATE ROBO_ENCODER_BUILD_ID="${encoder_build_id}")
     file(WRITE "${CMAKE_BINARY_DIR}/encoder-build-id.txt" "${encoder_build_id}\n")

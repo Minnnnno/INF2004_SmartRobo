@@ -1,5 +1,6 @@
 #include "motion.h"
 #include "robot.h"
+#include "terrain_status.h"
 #include "board_config.h"
 #include "encoder_capture.h"
 #include <math.h>
@@ -525,6 +526,123 @@ static void production_line_integration_tests(void)
     CHECK(r.m.status.state == FAULT && r.m.status.fault == F_CONFIG && r.m.status.inhibited);
 }
 
+/* ROBO_WAIT_FOR_START: boot held, the first START waits for Buddy 4's level
+ * calibration (terrain slot), then releases; STOP cancels a waiting START. */
+static void set_terrain(robot_bus_t *b, unsigned state)
+{
+    b->status.terrain.available = true;
+    b->status.terrain.values[3] = (double)((state << 3U) | 2U); /* pitch valid */
+}
+
+static void gate_cycles(rig_t *r, robot_bus_t *b, unsigned n)
+{
+    unsigned i;
+    for (i = 0U; i < n; ++i) {
+        vehicle_controller_cycle(b, r->now);
+        robot_motion_inputs(b, &r->m, r->sample, r->now);
+        tick(r, false);
+        robot_publish(b, &r->m, r->now);
+    }
+}
+
+static void boot_held(rig_t *r, robot_bus_t *b)
+{
+    motion_config_t c = simulation_config();
+    unsigned i;
+    memset(r, 0, sizeof(*r));
+    r->sample.reliable = true;
+    motion_init(&r->m, &c, r->sample, r->now, true);
+    r->m.status.hold = true; /* as motion_runtime_init() with ROBO_WAIT_FOR_START */
+    for (i = 0U; i < 40U; ++i) { tick(r, false); }
+    CHECK(r->m.status.state == STOPPED && r->m.status.hold && r->m.status.stationary);
+    robot_bus_init(b, &r->m.status);
+    robot_bus_wait_for_start(b);
+    robot_publish(b, &r->m, r->now);
+    set_terrain(b, TERRAIN_TS_INIT);
+}
+
+static void start_gate_tests(void)
+{
+    rig_t r;
+    robot_bus_t b;
+    robot_request_t request;
+
+    /* Held at boot: nothing drives, START is kept pending while Buddy 4 is INIT. */
+    boot_held(&r, &b);
+    request.source = SOURCE_LINE;
+    request.command = command(&r, WHEEL_SPEED_TRACKING, 0.0);
+    CHECK(robot_request(&b, &request) == R_HELD);
+    gate_cycles(&r, &b, 300U); /* 3 s without START */
+    CHECK(r.m.status.state == STOPPED && r.m.status.hold && !b.status.start_pending);
+    CHECK(vehicle_controller_remote_command(&b, REMOTE_START) == R_OK);
+    CHECK(b.status.start_pending && b.start_gate);
+    gate_cycles(&r, &b, 200U); /* Buddy 4 calibrating for 2 s */
+    CHECK(r.m.status.state == STOPPED && r.m.status.hold && b.status.start_pending);
+    CHECK(robot_request(&b, &request) == R_HELD);
+    CHECK(vehicle_controller_remote_command(&b, REMOTE_START) == R_OK && b.status.start_pending);
+    /* Calibrated (WAITING): released in the next cycle; the line task may drive. */
+    set_terrain(&b, TERRAIN_TS_WAITING);
+    gate_cycles(&r, &b, 1U);
+    CHECK(r.m.status.state == READY && !r.m.status.hold);
+    CHECK(!b.status.start_pending && !b.start_gate);
+    request.command = command(&r, WHEEL_SPEED_TRACKING, 0.0);
+    CHECK(robot_request(&b, &request) == R_OK);
+    /* Gate used up: a later STOP/START (e.g. after a lift) releases at once. */
+    robot_control(&b, CONTROL_STOP, false, false);
+    gate_cycles(&r, &b, 40U);
+    CHECK(r.m.status.state == STOPPED && r.m.status.hold);
+    CHECK(vehicle_controller_remote_command(&b, REMOTE_START) == R_OK && !b.status.start_pending);
+    robot_motion_inputs(&b, &r.m, r.sample, r.now);
+    CHECK(r.m.status.state == READY && !r.m.status.hold);
+
+    /* STOP cancels a waiting START; calibration finishing then releases nothing. */
+    boot_held(&r, &b);
+    CHECK(vehicle_controller_remote_command(&b, REMOTE_START) == R_OK && b.status.start_pending);
+    gate_cycles(&r, &b, 50U);
+    CHECK(vehicle_controller_remote_command(&b, REMOTE_STOP) == R_OK && !b.status.start_pending);
+    set_terrain(&b, TERRAIN_TS_WAITING);
+    gate_cycles(&r, &b, 100U);
+    CHECK(r.m.status.state == STOPPED && r.m.status.hold && b.start_gate);
+    CHECK(vehicle_controller_remote_command(&b, REMOTE_START) == R_OK);
+    gate_cycles(&r, &b, 1U);
+    CHECK(r.m.status.state == READY && !b.status.start_pending && !b.start_gate);
+
+    /* IMU fault: the run is not blocked (sensor faults never stop the robot). */
+    boot_held(&r, &b);
+    CHECK(vehicle_controller_remote_command(&b, REMOTE_START) == R_OK);
+    gate_cycles(&r, &b, 10U);
+    set_terrain(&b, TERRAIN_TS_FAULT);
+    gate_cycles(&r, &b, 1U);
+    CHECK(r.m.status.state == READY && !b.status.start_pending);
+
+    /* Silent Buddy 4 (slot never published): released after the timeout, not before. */
+    boot_held(&r, &b);
+    b.status.terrain = (subsystem_status_t){0};
+    CHECK(vehicle_controller_remote_command(&b, REMOTE_START) == R_OK);
+    gate_cycles(&r, &b, (unsigned)(ROBOT_START_CAL_TIMEOUT_S * 100.0) - 10U);
+    CHECK(r.m.status.state == STOPPED && b.status.start_pending);
+    gate_cycles(&r, &b, 20U);
+    CHECK(r.m.status.state == READY && !b.status.start_pending);
+
+    /* Recovery keeps waiting; LIFTED cancels (and the next START is a normal one). */
+    boot_held(&r, &b);
+    CHECK(vehicle_controller_remote_command(&b, REMOTE_START) == R_OK);
+    set_terrain(&b, TERRAIN_TS_RECOVERY);
+    gate_cycles(&r, &b, 300U);
+    CHECK(r.m.status.state == STOPPED && b.status.start_pending);
+    set_terrain(&b, TERRAIN_TS_LIFTED);
+    gate_cycles(&r, &b, 1U);
+    CHECK(r.m.status.state == STOPPED && !b.status.start_pending && !b.start_gate);
+    set_terrain(&b, TERRAIN_TS_WAITING);
+    gate_cycles(&r, &b, 50U);
+    CHECK(r.m.status.state == STOPPED && r.m.status.hold);
+
+    /* START refused (R_HELD) while not stopped/still: nothing becomes pending. */
+    boot_held(&r, &b);
+    robot_control(&b, CONTROL_STOP, false, false);
+    CHECK(vehicle_controller_remote_command(&b, REMOTE_START) == R_HELD && !b.status.start_pending);
+}
+
 /* A straight finite move stays straight while it runs, not only once it finishes:
  * subsystem 5 stops long moves early (obstacle passed, line found), so a correction
  * saved for the end never happens. Hardware: 8.5 and 10.7 deg right in about 200 mm. */
@@ -1024,6 +1142,7 @@ int main(void)
     encoder_capture_tests();
     board_encoder_polarity_tests();
     production_line_integration_tests();
+    start_gate_tests();
     arc_tests();
     arc_straight_tests();
     startup_sampling_tests();

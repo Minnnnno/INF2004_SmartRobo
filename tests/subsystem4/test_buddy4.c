@@ -331,6 +331,32 @@ int main(void)
         check(!buddy4_magnetic(NULL,0U,100U,&mx,&my),"NULL safe");
         mag_status=E_OK;
     }
+    /* CAL_HOLD (waiting for START): configure, then wait with no capture and no
+     * timeout; settle and capture start only when the hold ends. */
+    {
+        uint8_t const held=(uint8_t)(B4_LEVEL_ALLOWED|B4_MOTORS_STOPPED|B4_CAL_HOLD);
+        uint8_t const go=(uint8_t)(B4_LEVEL_ALLOWED|B4_MOTORS_STOPPED);
+        reset(&c);
+        buddy4_step(&c,held);
+        check(configurations==1U && buddy4_state(&c)==B4_INIT,"held: sensor configured at boot");
+        for (unsigned i=0U;i<3000U;i++) { tick(&c,20U,held); } /* 60 s waiting for START */
+        check(buddy4_state(&c)==B4_INIT && reads==0U && c.result==0U,"held: no capture, no tilt");
+        check(configurations==1U && c.error==E_OK,"held: no capture timeout, no recovery");
+        check(0U==(c.tilt.progress&TILT_CALIBRATED),"held: not calibrated");
+        tick(&c,B4_POSITION_MS-1U,go); check(reads==0U,"START: settle time starts at release");
+        tick(&c,1U,go);
+        for (unsigned i=0U;i<49U;i++) { tick(&c,20U,go); }
+        check(buddy4_state(&c)==B4_INIT,"START: 49 samples not enough");
+        tick(&c,20U,go);
+        check(buddy4_state(&c)==B4_MONITORING,"START: calibrated about 2 s after release");
+        tick(&c,20U,held);
+        check(buddy4_state(&c)==B4_MONITORING && (c.result&TILT_RESULT_VALID)!=0U,"hold bit ignored after calibration");
+        /* Hold at boot then a stuck sensor: capture window still bounded after release. */
+        reset(&c);
+        for (unsigned i=0U;i<100U;i++) { tick(&c,20U,held); }
+        tick(&c,B4_POSITION_MS,B4_MOTORS_STOPPED); tick(&c,B4_CAPTURE_MS,B4_MOTORS_STOPPED);
+        check(buddy4_state(&c)==B4_FAULT && c.error==E_TMOUT,"after release the 10 s capture limit applies");
+    }
     buddy4_step(NULL,0U); buddy4_begin(NULL,0U);
     printf("PASS: %u autonomous recovery, reference, deadline, STOP, reset and terrain checks\n",checks);
     return 0;

@@ -21,6 +21,8 @@ static motion_mode_fake_t g_motion;
 static double g_speed[2]; /* m/s, reported while DRIVING */
 static double g_heading_rad; /* Fake odometry: integrates the speed difference per call. */
 static bool g_hold;      /* Controller hold as Buddy 2 reports it. */
+static bool g_start_pending;        /* Dashboard START waiting for calibration. */
+static bool g_start_initial = true; /* run() value: START already pressed. */
 static unsigned g_stops; /* motion_stop() calls from the lift detector. */
 static unsigned g_status_calls, g_published, g_events, g_reads;
 static uint32_t g_read_time[2048];
@@ -77,6 +79,7 @@ bool motion_get_status(robot_status_t *p_status)
     }
     p_status->motion.heading = g_heading_rad;
     p_status->motion.hold = g_hold;
+    p_status->start_pending = g_start_pending;
     p_status->motion.state = (MOTION_DRIVING == g_motion) ? DRIVING :
                              ((MOTION_BOOTING == g_motion) ? INITIALISING :
                              ((MOTION_SHUTDOWN == g_motion) ? SHUTDOWN : READY));
@@ -132,6 +135,7 @@ static void run(motion_mode_fake_t motion, uint32_t end_ms, void (*script)(uint3
     g_clock = 1000U; g_start = g_clock; g_end = end_ms;
     g_motion = motion; g_script = script; g_read_status = E_OK;
     g_speed[0] = 0.0; g_speed[1] = 0.0; g_hold = false; g_stops = 0U; g_heading_rad = 0.0;
+    g_start_pending = g_start_initial;
     g_mag_status = E_OK; g_mag[0] = 200; g_mag[1] = 0; g_turn_reason[0] = '\0';
     g_status_calls = 0U; g_published = 0U; g_events = 0U; g_reads = 0U; g_event_bits = 0U;
     g_last = (subsystem_status_t){0};
@@ -338,6 +342,39 @@ static void reason_script(uint32_t t)
     if ((t >= 8200U) && (t < 8220U)) { g_speed[0] = 0.100; g_speed[1] = 0.100; } /* turn 2 ends */
 }
 
+/* Boot held 30 s, then one START pulse (pending for a single 20 ms cycle,
+ * as when the controller releases it or a STOP cancels it). With the start
+ * gate, calibration waits for it; without, it happened at boot. */
+static unsigned g_sstep;
+static void start_script(uint32_t t)
+{
+    if ((0U == g_sstep) && (t >= 30000U))
+    {
+#if S4_WAIT_FOR_START
+        check(g_last.available && (S4_TS_INIT == code_of()) && (0U == valid_of()),
+              "held 30 s: still INIT, pitch invalid");
+        check(0U == g_reads, "held: no capture reads before START");
+        check(!faulted_of(), "waiting for START is not an IMU fault");
+#else
+        check(S4_TS_WAITING == code_of(), "no start gate: calibrated at boot");
+#endif
+        g_start_pending = true;
+        g_sstep = 1U;
+    }
+    else if ((1U == g_sstep) && (t >= 30020U))
+    {
+        g_start_pending = false; /* Latched: calibration continues. */
+        g_sstep = 2U;
+    }
+    else if ((2U == g_sstep) && (t >= 30900U))
+    {
+#if S4_WAIT_FOR_START
+        check(S4_TS_INIT == code_of(), "START: settle time before the capture");
+#endif
+        g_sstep = 3U;
+    }
+}
+
 static void fail_script(uint32_t t)
 {
     if (t >= 8000U) { g_read_status = E_IO; }
@@ -396,9 +433,23 @@ int main(void)
           "capture timeout publishes FAULT with pitch invalid");
     check(faulted_of(), "capture timeout reports the IMU fault");
 
-    /* Motion task not running: capture is allowed. */
+    /* Motion task not running: capture is allowed (no START can arrive with the gate). */
     run(MOTION_ABSENT, 7500U, NULL);
+#if S4_WAIT_FOR_START
+    check((S4_TS_INIT == code_of()) && (0U == g_reads), "start gate: no motion task, no START, no capture");
+#else
     check((S4_TS_WAITING == code_of()) && (TF_TV_PITCH == valid_of()), "capture allowed without motion task");
+#endif
+
+    /* Calibration starts at START (gate) or at boot (no gate); one START pulse is enough. */
+    g_sstep = 0U;
+    g_start_initial = false;
+    run(MOTION_STILL, 32600U, start_script);
+    g_start_initial = true;
+    check(3U == g_sstep, "all start checkpoints reached");
+    check((S4_TS_WAITING == code_of()) && (TF_TV_PITCH == valid_of()) && (fabs(pitch_deg()) < 0.5),
+          "calibrated about 2 s after START: WAITING, level pitch valid");
+    check(!faulted_of(), "no fault after the START calibration");
 
     /* Motion still initialising (outputs held stopped): capture is allowed. */
     run(MOTION_BOOTING, 7500U, NULL);
@@ -455,7 +506,7 @@ int main(void)
         check(!terrain_imu_faulted(&status), "unavailable slot is not a fault");
     }
 
-    printf("PASS: %u terrain task checks (snapshot, state codes, hump event, level gating, timing, lift stop)\n",
-           g_checks);
+    printf("PASS: %u terrain task checks (snapshot, state codes, hump event, level gating, timing, lift stop%s)\n",
+           g_checks, S4_WAIT_FOR_START ? ", calibration on START" : "");
     return 0;
 }

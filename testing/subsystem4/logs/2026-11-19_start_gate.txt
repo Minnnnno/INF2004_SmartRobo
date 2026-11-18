@@ -1,0 +1,7 @@
+# S4-U03: ctest -R motion_tests (Vehicle Controller start gate)
+# base commit 0b11baf + uncommitted changes, 2026-11-18T18:27Z
+1: PASS: 8003 checks (synthetic host model; no hardware accuracy claim)
+1/1 Test #1: motion_tests .....................   Passed    0.02 sec
+The following tests passed:
+100% tests passed, 0 tests failed out of 1
+exit=0

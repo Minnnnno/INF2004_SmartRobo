@@ -1,4 +1,5 @@
 #include "robot.h"
+#include "terrain_status.h"
 #include <math.h>
 #include <string.h>
 
@@ -7,6 +8,35 @@ void robot_bus_init(robot_bus_t *b, const motion_status_t *s)
     memset(b, 0, sizeof(*b));
     b->generation = s->generation;
     b->status.motion = *s;
+    b->start_since = -1.0;
+}
+
+void robot_bus_wait_for_start(robot_bus_t *b) { b->start_gate = true; }
+
+/* Release a pending first START once Buddy 4 has its level reference. Buddy 4
+ * starts calibrating when it sees start_pending; the robot stays held (still)
+ * meanwhile, so the capture is not disturbed. An IMU fault or a silent Buddy 4
+ * releases too: a sensor problem never stops the run. LIFTED cancels it. */
+static void start_gate_cycle(robot_bus_t *b, double now)
+{
+    uint8_t state;
+    bool ready;
+    if (!b->status.start_pending) { return; }
+    if (!(b->start_since >= 0.0)) { b->start_since = now; }
+    state = terrain_published_state(&b->status.terrain);
+    if (state == TERRAIN_TS_LIFTED) {
+        b->status.start_pending = false;
+        b->start_gate = false; /* Calibrated already: the next START is a normal one. */
+        return;
+    }
+    ready = (state == TERRAIN_TS_WAITING) || (state == TERRAIN_TS_CLIMBING) ||
+            (state == TERRAIN_TS_DESCENDING) || (state == TERRAIN_TS_FAULT) ||
+            ((now - b->start_since) >= ROBOT_START_CAL_TIMEOUT_S);
+    if (ready) {
+        b->status.start_pending = false;
+        b->start_gate = false;
+        robot_control(b, CONTROL_RELEASE, true, false);
+    }
 }
 
 motion_result_t robot_request(robot_bus_t *b, const robot_request_t *r)
@@ -47,6 +77,8 @@ void robot_control(robot_bus_t *b, robot_control_t control, bool checks_ok, bool
         b->approved_valid = false;
         b->status.owner_valid = false;
         b->status.motion.hold = true;
+        b->status.start_pending = false; /* A STOP cancels a START still waiting for calibration. */
+        b->start_since = -1.0;
         b->controls &= ~(uint32_t)(CONTROL_RELEASE | CONTROL_RESET);
     }
     if (control == CONTROL_SHUTDOWN) { b->shutdown_latched = true; }
@@ -58,6 +90,7 @@ void vehicle_controller_cycle(robot_bus_t *b, double now)
 {
     robot_request_t r;
     unsigned i;
+    start_gate_cycle(b, now);
     if (b->event_count != 0U) {
         for (i = 0; i < b->event_count; ++i) {
             motion_event_t e = b->events[(b->event_head + i) % 8U];
@@ -96,6 +129,11 @@ motion_result_t vehicle_controller_remote_command(robot_bus_t *b, robot_remote_c
     if (b->shutdown_latched || b->controls != 0U || b->status.motion.state != STOPPED ||
         b->status.motion.fault != F_NONE || !b->status.motion.stationary ||
         !b->status.motion.feedback_trusted) { return R_HELD; }
+    if (b->start_gate) {
+        /* First START: Buddy 4 calibrates now; start_gate_cycle() releases after. */
+        if (!b->status.start_pending) { b->status.start_pending = true; b->start_since = -1.0; }
+        return R_OK;
+    }
     robot_control(b, CONTROL_RELEASE, true, false);
     return R_OK;
 }

@@ -73,6 +73,11 @@ void motion_runtime_init(void)
     bool setup = motion_hal_init(&config);
     double now = motion_hal_time();
     motion_init(&motion, &config, motion_hal_sample(), now, setup);
+#if defined(ROBO_WAIT_FOR_START) && ROBO_WAIT_FOR_START
+    /* Boot held: INITIALISING ends in STOPPED (not READY), so nothing drives
+     * until the dashboard START (vehicle controller start gate). */
+    motion.status.hold = true;
+#endif
     if (setup && motion.status.state == INITIALISING && ((now - start) > config.setup_timeout)) {
         motion_raise_fault(&motion, F_SETUP_TIMEOUT, now);
     }

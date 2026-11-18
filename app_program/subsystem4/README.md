@@ -52,6 +52,20 @@ Forward is the sensor's +Y axis; positive pitch = front up.
 **Power up with the robot level and still.** After configuration, INIT waits
 1 s (`B4_POSITION_MS`), then needs 50 stable fresh samples within 10 s,
 otherwise SENSOR_FAULT. Capture normally finishes about 2 s after boot.
+
+**Dashboard images: calibration starts at START** (`ROBO_WAIT_FOR_START`, on
+by default with `MQTT=ON` in production builds). The robot boots held (motion
+STOPPED) and Buddy 4 stays in INIT (`[B4] INIT: waiting for START before
+calibrating`), with no capture timeout. The first dashboard START does not
+release the robot: the controller keeps it pending (`start_pending`), Buddy 4
+sees it (`[B4] START pressed: calibrating ...`, input `B4_CAL_HOLD` cleared),
+settles 1 s and captures, and the controller releases the robot once the
+terrain slot reports MONITORING (WAITING), about 2 s after START. An IMU
+FAULT, or no Buddy 4 answer within 15 s (`ROBOT_START_CAL_TIMEOUT_S`), also
+releases; a STOP cancels the pending START; LIFTED cancels it. Only the first
+START is gated: later STOP/START cycles (e.g. after a lift) release at once,
+and the reference is kept. Without the option (no WiFi), calibration starts
+at boot as above.
 In `ROBO_LINE_STEERING` builds the line task does not send its first motion
 request until Buddy 4 has left INIT/RECOVERY (`line_imu_wait` console line),
 capped at 10 s so a missing or faulty IMU never stops the robot.

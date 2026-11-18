@@ -54,6 +54,16 @@ typedef struct
     bool have;           /* unwrapped holds a value. */
 } s4_compass_t;
 static s4_compass_t s_compass; /* Task-owned. */
+
+/* ROBO_WAIT_FOR_START: the level calibration waits for the dashboard START
+ * (seen as robot_status_t.start_pending). Latched once seen, so a STOP during
+ * the capture does not restart it. Without the option it is always true. */
+#if defined(ROBO_WAIT_FOR_START) && ROBO_WAIT_FOR_START
+#define S4_WAIT_FOR_START (1)
+#else
+#define S4_WAIT_FOR_START (0)
+#endif
+static bool s_start_seen; /* Task-owned. */
 #define S4_RAD_TO_DDEG   (572.95779513082323)    /* 1800 / pi */
 #define S4_HEADING_LIMIT_DDEG (2.0e9)            /* int32 range for the unwrapped heading */
 
@@ -76,6 +86,7 @@ typedef struct
     bool stationary;
     motion_state_t state;
     bool hold;            /* Controller holds the robot (STOP/fault): no motion until START. */
+    bool start_pending;   /* START pressed, waiting for this calibration (ROBO_WAIT_FOR_START). */
     int16_t speed_mm_s[2];
     bool heading_valid;
     int32_t heading_ddeg; /* Buddy 2 odometry heading, unwrapped, 0.1 deg, + = left. */
@@ -124,13 +135,22 @@ void terrain_task(INT code, void *p_context)
     buddy4_begin(&s_context, release);
     motion_class_reset(&s_class);
     s_compass = (s4_compass_t){0};
+    s_start_seen = (0 == S4_WAIT_FOR_START);
 #ifndef ROBO_IR_MONITOR /* Keep the IR monitor's single console line clean. */
 #ifdef ROBO_ENCODER_BUILD_ID
     /* Build ID next to the Buddy 4 start-up lines, to confirm which image is flashed. */
     tm_printf((UB const *)"[B4] firmware=%s\n", (UB const *)ROBO_ENCODER_BUILD_ID);
 #endif
     tm_printf((UB const *)"[B4] GY-511 on I2C1 SDA=GP6 SCL=GP7. Keep the robot LEVEL and STILL:\n");
-    tm_printf((UB const *)"[B4] tilt reference is captured about 1-2 s after boot (50 stable samples).\n");
+    if (s_start_seen)
+    {
+        tm_printf((UB const *)"[B4] tilt reference is captured about 1-2 s after boot (50 stable samples).\n");
+    }
+    else
+    {
+        tm_printf((UB const *)"[B4] robot held: press START on the dashboard; the tilt reference is captured\n");
+        tm_printf((UB const *)"[B4] about 1-2 s after START (50 stable samples), then the run begins.\n");
+    }
 #endif
     for (;;)
     {
@@ -227,6 +247,8 @@ static uint32_t terrain_time_ms(void)
  */
 static uint8_t terrain_inputs(uint8_t state, s4_motion_t const *p_motion)
 {
+    uint8_t hold = 0U;
+
     if (p_motion->available && (SHUTDOWN == p_motion->state))
     {
         return B4_CMD_STOP;
@@ -235,15 +257,26 @@ static uint8_t terrain_inputs(uint8_t state, s4_motion_t const *p_motion)
     {
         return 0U;
     }
+    if (!s_start_seen && p_motion->available && p_motion->start_pending)
+    {
+        s_start_seen = true;
+#ifndef ROBO_IR_MONITOR
+        tm_printf((UB const *)"[B4] START pressed: calibrating the level reference; keep level and still\n");
+#endif
+    }
+    if (!s_start_seen)
+    {
+        hold = B4_CAL_HOLD;
+    }
     if (!p_motion->available)
     {
-        return B4_LEVEL_ALLOWED;
+        return B4_LEVEL_ALLOWED | hold;
     }
     if (p_motion->stationary)
     {
-        return B4_LEVEL_ALLOWED | B4_MOTORS_STOPPED;
+        return B4_LEVEL_ALLOWED | B4_MOTORS_STOPPED | hold;
     }
-    return (INITIALISING == p_motion->state) ? B4_LEVEL_ALLOWED : 0U;
+    return ((INITIALISING == p_motion->state) ? B4_LEVEL_ALLOWED : 0U) | hold;
 }
 
 /* One short copy of the Buddy 2 status under the bus mutex; speeds in mm/s. */
@@ -260,6 +293,7 @@ static void terrain_read_motion(s4_motion_t *p_motion)
     p_motion->stationary = status.motion.stationary;
     p_motion->state = status.motion.state;
     p_motion->hold = status.motion.hold;
+    p_motion->start_pending = status.start_pending;
     for (uint8_t wheel = 0U; wheel < 2U; wheel++)
     {
         double mm_s = status.motion.speed[wheel] * 1000.0;
@@ -456,7 +490,11 @@ static void terrain_report(buddy4_t const *p_context, motion_class_t const *p_cl
     uint8_t state = buddy4_state(p_context);
     uint8_t terrain = terrain_status(&p_context->terrain);
 
-    if (B4_INIT == state)
+    if ((B4_INIT == state) && !s_start_seen)
+    {
+        tm_printf((UB const *)"[B4] INIT: waiting for START before calibrating; robot held\n");
+    }
+    else if (B4_INIT == state)
     {
         tm_printf((UB const *)"[B4] INIT: capturing level reference %d/%d; keep level and still\n",
                   (INT)(p_context->tilt.progress & TILT_COUNT_MASK), (INT)TILT_CAPTURE_SAMPLES);

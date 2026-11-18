@@ -21,7 +21,10 @@
  * STOPPED and CAUSE_CLEARED are controller-confirmed facts, never inferred.
  * LEVEL permits capture only when the user/controller guarantees level/still.
  */
-/* Input bit 0 is reserved (formerly the recovery command). */
+/* CAL_HOLD: calibration not started yet (waiting for START). INIT configures
+ * the sensor, then waits without a timeout; the settle time and the 10 s
+ * capture window start only once this bit clears. No effect after capture. */
+#define B4_CAL_HOLD       (0x01U)
 #define B4_MOTORS_STOPPED (0x02U)
 #define B4_CMD_STOP       (0x04U)
 #define B4_CMD_RESET      (0x08U)

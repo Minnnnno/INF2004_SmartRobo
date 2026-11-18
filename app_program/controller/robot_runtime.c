@@ -24,6 +24,10 @@ void robot_runtime_prepare(const motion_config_t *config, const motion_status_t 
 {
     runtime_config = config;
     robot_bus_init(&bus, initial_status);
+#if defined(ROBO_WAIT_FOR_START) && ROBO_WAIT_FOR_START
+    /* Motion boots held (motion_runtime_init); the first START calibrates Buddy 4, then runs. */
+    robot_bus_wait_for_start(&bus);
+#endif
 }
 
 ID robot_runtime_init(void)

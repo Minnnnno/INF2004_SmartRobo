@@ -19,6 +19,9 @@ typedef struct {
     motion_event_t last_event;
     request_source_t owner;
     bool owner_valid;
+    /* START was pressed and is waiting for Buddy 4's level calibration
+     * (ROBO_WAIT_FOR_START builds only; see robot_bus_wait_for_start). */
+    bool start_pending;
 } robot_status_t;
 typedef struct {
     robot_request_t requests[8];
@@ -30,11 +33,22 @@ typedef struct {
     robot_status_t status;
     motion_event_t events[8];
     unsigned event_head, event_count;
+    bool start_gate;   /* The first START waits for Buddy 4's level calibration. */
+    double start_since; /* When the pending START was first seen by the controller; < 0 = not yet. */
 } robot_bus_t;
+
+/* Seconds a pending first START waits for Buddy 4 before releasing anyway, so a
+ * silent IMU never blocks the run (Buddy 4's own worst case is about 12 s). */
+#define ROBOT_START_CAL_TIMEOUT_S (15.0)
 
 /* Bus operations require the caller's short priority-inheritance mutex lock.
  * Payloads copied by value; never keep references to caller storage. */
 void robot_bus_init(robot_bus_t *bus, const motion_status_t *status);
+/* Arm the start gate (before tasks start). The robot boots held; the first
+ * START is kept pending (status.start_pending) while Buddy 4 calibrates, and
+ * is released once the terrain slot reports MONITORING (or IMU FAULT, or after
+ * ROBOT_START_CAL_TIMEOUT_S). Any STOP cancels a pending START. */
+void robot_bus_wait_for_start(robot_bus_t *bus);
 motion_result_t robot_request(robot_bus_t *bus, const robot_request_t *request);
 void robot_control(robot_bus_t *bus, robot_control_t control, bool checks_ok, bool external_rest);
 void vehicle_controller_cycle(robot_bus_t *bus, double now);
