@@ -39,6 +39,6 @@ Newest at the bottom. Never delete a row.
 | Date | Subsystem | Test ID / demo | Commit | Student ID | Link | Notes |
 |---|---|---|---|---|---|---|
 | YYYY-MM-DD | S1 | S1-U03 | `abc1234` | | <https://youtu.be/...> | LED blinks at 2 Hz |
-| 2026-11-19 | S4 | S4-H03, S4-H01 | `8d8e173` | 2500910 | <https://youtu.be/b0VxlQ2r320> | Overturn and lift while driving stop the motors |
-| 2026-11-19 | S4 | S4-H07, S4-H09, S4-H04, S4-H10, S4-H11 | `8d8e173` | 2500910 | <https://youtu.be/O-3cIuu86ew> | Full run: start-up calibration, 10 mm hump, motion classes and turn rate |
-| 2026-11-19 | S4 | S4-H08 | `8d8e173` | 2500910 | <https://youtu.be/OaEkDdhVMTM> | Hand tilt: pitch, uphill/downhill state, hump states |
+| 2026-11-19 | S4 | S4-H03, S4-H01 | `0b11baf` | 2500910 | <https://youtu.be/b0VxlQ2r320> | Overturn and lift while driving stop the motors |
+| 2026-11-19 | S4 | S4-H07, S4-H09, S4-H04, S4-H10, S4-H11 | `0b11baf` | 2500910 | <https://youtu.be/O-3cIuu86ew> | Full run: start-up calibration, 10 mm hump, motion classes and turn rate |
+| 2026-11-19 | S4 | S4-H08 | `0b11baf` | 2500910 | <https://youtu.be/OaEkDdhVMTM> | Hand tilt: pitch, uphill/downhill state, hump states |

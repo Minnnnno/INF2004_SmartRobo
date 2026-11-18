@@ -113,14 +113,14 @@ Add a new row for every run. Never edit or delete old rows.
 
 | Date | Test ID | Commit | Tester | Result | Log / evidence | Notes |
 |---|---|---|---|---|---|---|
-| 2026-11-19 | S4-H03 | `8d8e173` | 2500910 | PASS | <https://youtu.be/b0VxlQ2r320> | Overturn stops the motors; recorded before the START-gate change |
-| 2026-11-19 | S4-H01 | `8d8e173` | 2500910 | PASS | <https://youtu.be/b0VxlQ2r320> | Lift while driving stops the motors; same video as S4-H03 |
-| 2026-11-19 | S4-H07 | `8d8e173` | 2500910 | PASS | <https://youtu.be/O-3cIuu86ew> | INIT → calibrating → WAITING before driving. Firmware before the START gate (calibrates at boot, not on START): re-run on the START-gate build |
-| 2026-11-19 | S4-H09 | `8d8e173` | 2500910 | PASS | <https://youtu.be/O-3cIuu86ew> | 10 mm hump (ruler); reported peak within ±3 mm. Run 1 of 3 |
-| 2026-11-19 | S4-H04 | `8d8e173` | 2500910 | PASS | <https://youtu.be/O-3cIuu86ew> | Full run over the hump with no LIFTED stop |
-| 2026-11-19 | S4-H10 | `8d8e173` | 2500910 | PASS | <https://youtu.be/O-3cIuu86ew> | Motion classes and turn rate (yaw sign) shown on the console during the full run |
-| 2026-11-19 | S4-H11 | `8d8e173` | 2500910 | PASS | <https://youtu.be/O-3cIuu86ew> | Start of the full run: INIT until START, calibrating, WAITING, then drives |
-| 2026-11-19 | S4-H08 | `8d8e173` | 2500910 | PASS | <https://youtu.be/OaEkDdhVMTM> | Robot held by hand at various angles: pitch and uphill/downhill state; also shows the hump states (CLIMBING/DESCENDING) from sideways tilt |
-| 2026-11-19 | S4-U01 | `0b11baf` + uncommitted START-gate changes | Claude Code for 2500910 | PASS | `logs/2026-11-19_host.txt` | `PASS: 2273 lift checks ...` |
-| 2026-11-19 | S4-U02 | `0b11baf` + uncommitted START-gate changes | Claude Code for 2500910 | PASS | `logs/2026-11-19_host.txt` | All 13 suites PASS incl. `terrain task checks (..., calibration on START)`; `All Buddy 4 host suites passed.` |
-| 2026-11-19 | S4-U03 | `0b11baf` + uncommitted START-gate changes | Claude Code for 2500910 | PASS | `logs/2026-11-19_start_gate.txt` | `motion_tests`: `PASS: 8003 checks`, `100% tests passed` |
+| 2026-11-19 | S4-H03 | `0b11baf` | 2500910 | PASS | <https://youtu.be/b0VxlQ2r320> | Overturn stops the motors; recorded before the START-gate change |
+| 2026-11-19 | S4-H01 | `0b11baf` | 2500910 | PASS | <https://youtu.be/b0VxlQ2r320> | Lift while driving stops the motors; same video as S4-H03 |
+| 2026-11-19 | S4-H07 | `0b11baf` | 2500910 | PASS | <https://youtu.be/O-3cIuu86ew> | INIT → calibrating → WAITING before driving. Firmware before the START gate (calibrates at boot, not on START): re-run on the START-gate build |
+| 2026-11-19 | S4-H09 | `0b11baf` | 2500910 | PASS | <https://youtu.be/O-3cIuu86ew> | 10 mm hump (ruler); reported peak within ±3 mm. Run 1 of 3 |
+| 2026-11-19 | S4-H04 | `0b11baf` | 2500910 | PASS | <https://youtu.be/O-3cIuu86ew> | Full run over the hump with no LIFTED stop |
+| 2026-11-19 | S4-H10 | `0b11baf` | 2500910 | PASS | <https://youtu.be/O-3cIuu86ew> | Motion classes and turn rate (yaw sign) shown on the console during the full run |
+| 2026-11-19 | S4-H11 | `0b11baf` | 2500910 | PASS | <https://youtu.be/O-3cIuu86ew> | Start of the full run: INIT until START, calibrating, WAITING, then drives |
+| 2026-11-19 | S4-H08 | `0b11baf` | 2500910 | PASS | <https://youtu.be/OaEkDdhVMTM> | Robot held by hand at various angles: pitch and uphill/downhill state; also shows the hump states (CLIMBING/DESCENDING) from sideways tilt |
+| 2026-11-19 | S4-U01 | `8922e0a` | Claude Code for 2500910 | PASS | `logs/2026-11-19_host.txt` | `PASS: 2273 lift checks ...` |
+| 2026-11-19 | S4-U02 | `8922e0a` | Claude Code for 2500910 | PASS | `logs/2026-11-19_host.txt` | All 13 suites PASS incl. `terrain task checks (..., calibration on START)`; `All Buddy 4 host suites passed.` |
+| 2026-11-19 | S4-U03 | `8922e0a` | Claude Code for 2500910 | PASS | `logs/2026-11-19_start_gate.txt` | `motion_tests`: `PASS: 8003 checks`, `100% tests passed` |
