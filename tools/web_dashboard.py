@@ -48,12 +48,9 @@ START_CHECK_S = 2.5          # time for a START to clear the hold flag
 
 MODES = ["DISTANCE_MOVE", "ENCODER_TURN", "WHEEL_SPEED_TRACKING", "MANUAL_OUTPUT", "ARC_MOVE"]
 OWNERS = ["manual", "line", "barcode", "obstacle", "wifi", "terrain", "?", "none"]
-BARCODES = ["left", "right", "straight", "U-turn"]
-# Buddy 4: T_STATE codes (app_program/subsystem4/README.md, "Interfaces").
-T_STATES = ["INIT", "WAITING", "CLIMBING", "DESCENDING", "RECOVERY", "FAULT", "STOP", "LIFTED"]
-# Buddy 4: M_CLASS codes, only sent once the layout v2 change request is applied.
-M_CLASSES = ["STATIONARY", "MOVING", "ACCELERATING", "REVERSING", "TURNING",
-             "CLIMBING", "DESCENDING", "OVERTURNED"]
+# Buddy 4: T_STATE and M_CLASS codes (layout v2), shared with dashboard.py.
+T_STATES = d.T_STATES
+M_CLASSES = d.M_CLASSES
 # Buddy 5 publishes S5_STATE_* (subsystem5.h) in obstacle values[3]; the
 # frame mapper copies that into O_FLAGS, so O_FLAGS currently holds this state.
 S5_STATES = ["clear", "held / scanning", "pass left", "pass right", "no way around",
@@ -120,6 +117,8 @@ class Hub:
         self.enc = self.enc_prev = self.enc_at = None
         self.hb = self.hb_at = None
         self.obstacle_text = {}
+        self.bc_reads = 0               # valid reads seen by this dashboard (BC_READ flips)
+        self.bc_at = None               # monotonic time of the last read
         self.counts = dict(frames=0, lost=0, bad=0, enc_frames=0, enc_bad=0, events=0)
         self.last_bad = None            # (monotonic, message)
         self.seq = None
@@ -247,6 +246,11 @@ class Hub:
                       "line sensor status %s" % ("available" if v["LINE_AVAIL"] else "UNAVAILABLE"))
         if v["LINE_TRACK"] and not p["LINE_TRACK"]:
             self._add("info", "B3", "line found")
+        # BC_READ flips on every valid read, so a repeated letter still counts.
+        if v["BC_CHAR"] and (v["BC_READ"] != p["BC_READ"] or v["BC_CHAR"] != p["BC_CHAR"]):
+            self.bc_reads += 1
+            self.bc_at = time.monotonic()
+            self._add("info", "B3", "barcode read: %s" % d.barcode_text(v))
         if v["T_STATE"] != p["T_STATE"]:
             new_state = T_STATES[v["T_STATE"]]
             if new_state == "LIFTED":
@@ -408,10 +412,14 @@ class Hub:
                        hb=self.hb, hb_age=age(self.hb_at), counts=dict(self.counts),
                        last_bad=None if self.last_bad is None else
                        dict(age=round(mono - self.last_bad[0], 1), msg=self.last_bad[1]),
-                       obstacle_text=dict(self.obstacle_text), session=self.session)
+                       obstacle_text=dict(self.obstacle_text), session=self.session,
+                       barcode=None if not (self.frame and self.frame["BC_CHAR"]) else dict(
+                           char=d.barcode_char(self.frame),
+                           action=d.ROUTE.get(d.barcode_char(self.frame)),
+                           reads=self.bc_reads, age=age(self.bc_at)))
             if fresh_log:
                 out["meta"] = dict(states=d.STATES, faults=d.FAULTS, fb=d.FB_CAUSES, modes=MODES,
-                                   owners=OWNERS, barcodes=BARCODES, t_states=T_STATES,
+                                   owners=OWNERS, t_states=T_STATES,
                                    m_classes=M_CLASSES, s5_states=S5_STATES,
                                    fault_help=FAULT_HELP, fb_help=FB_HELP,
                                    layout=d.VERSION, fields=[f[0] for f in d.FIELDS])
@@ -468,6 +476,8 @@ class Simulator(threading.Thread):
         self.centre = 0.0
         self.heading = 0.0
         self.hump_max = 0
+        self.bc_char = 0                # Buddy 3 slot: last letter, valid-read counter
+        self.bc_count = 0
         self.ev_seq = 0
 
     def handle(self, payload):
@@ -521,6 +531,11 @@ class Simulator(threading.Thread):
             self.send(TOPIC_TEXT + "obstacle", b"obstacle width_mm=184 dist_mm=152 offset_mm=31 "
                       b"complete=1 position=left")
             self.send(TOPIC_TEXT + "obstacle", b"obstacle avoid=right shift_l_mm=230 shift_r_mm=172")
+        # Barcode 'A' at 5 s and again at 18 s: the same letter twice must show as two reads.
+        if driving and (abs(cycle - 5.0) < 0.05 or abs(cycle - 18.0) < 0.05):
+            self.bc_char = d.BC_CHARS.index("A") + 1
+            self.bc_count += 1
+            self.event(0x04)
         if driving and abs(cycle - 34.0) < 0.05:
             self.event(0x40)
         if driving and abs(cycle - 37.0) < 0.05:
@@ -556,7 +571,8 @@ class Simulator(threading.Thread):
             LINE_TRACK=1 if obstacle in (0,) else 0, T_VALID=2 | (4 if self.hump_max else 0),
             T_STATE=terrain, PITCH={2: 12, 3: -10}.get(terrain, 0), HUMP_MM=self.hump_max,
             O_FLAGS=obstacle, O_AVAIL=1, O_DIST_CM=15 if obstacle else 400,
-            O_WIDTH_CM=18 if obstacle >= 2 else 0)
+            O_WIDTH_CM=18 if obstacle >= 2 else 0,
+            BC_CHAR=self.bc_char, BC_READ=self.bc_count & 1)
         if "M_CLASS" in values:               # layout v2 (Buddy 4 change request)
             values.update(T_VALID=values["T_VALID"] | 1,
                           M_CLASS=0 if stationary else (5 if terrain == 2 else 1),

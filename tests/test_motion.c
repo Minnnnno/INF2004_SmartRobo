@@ -1017,6 +1017,82 @@ static void live_encoder_snapshot_tests(void)
     CHECK(b.status.motion.output[0] == 0.0 && b.status.motion.output[1] == 0.0);
 }
 
+/* One 10 ms controller + motion period with the line follower asking to drive. */
+static void gate_period(rig_t *r, robot_bus_t *bus, robot_request_t *request)
+{
+    request->command.generation = bus->generation;
+    request->command.expires = r->now + r->m.config.command_lifetime;
+    request->command.deadline = r->now + r->m.config.movement_timeout;
+    (void)robot_request(bus, request);
+    vehicle_controller_cycle(bus, r->now);
+    robot_motion_inputs(bus, &r->m, r->sample, r->now);
+    tick(r, true);
+    robot_publish(bus, &r->m, r->now);
+}
+
+/* Buddy 1 web Start gate (ROBO_REQUIRE_START): boot held, only the dashboard START
+ * moves the robot, and after a dashboard STOP no other subsystem can release it. */
+static void web_start_gate_tests(void)
+{
+    static rig_t r;
+    static robot_bus_t bus;
+    motion_config_t c = simulation_config();
+    robot_request_t request;
+    unsigned i;
+
+    memset(&r, 0, sizeof(r));
+    r.sample.reliable = true;
+    motion_init(&r.m, &c, r.sample, r.now, true);
+    r.m.status.hold = true;                         /* motion_runtime_init() */
+    robot_bus_init(&bus, &r.m.status);
+    bus.remote_hold = true;                         /* robot_runtime_prepare() */
+    memset(&request, 0, sizeof(request));
+    request.source = SOURCE_LINE;
+    request.command.id = 4001U;
+    request.command.mode = WHEEL_SPEED_TRACKING;
+    request.command.speed[0] = 0.08;
+    request.command.speed[1] = 0.08;
+
+    /* Boot: settles into STOPPED, not READY; the line follower cannot drive. */
+    for (i = 0U; i < 60U; ++i) { gate_period(&r, &bus, &request); }
+    CHECK(r.m.status.state == STOPPED && r.m.status.hold && r.m.status.fault == F_NONE);
+    CHECK(r.m.status.output[0] == 0.0 && r.m.status.output[1] == 0.0 && !bus.status.owner_valid);
+
+    /* A subsystem release (Buddy 5 detour's motion_controller_release) is ignored. */
+    robot_control(&bus, CONTROL_RELEASE, true, false);
+    CHECK(bus.controls == 0U);
+    for (i = 0U; i < 20U; ++i) { gate_period(&r, &bus, &request); }
+    CHECK(r.m.status.state == STOPPED && r.m.status.hold);
+
+    /* Dashboard START releases it and the line follower takes over. */
+    CHECK(vehicle_controller_remote_command(&bus, REMOTE_START) == R_OK && !bus.remote_hold);
+    for (i = 0U; i < 50U; ++i) { gate_period(&r, &bus, &request); }
+    CHECK(r.m.status.state == DRIVING && !r.m.status.hold);
+    CHECK(bus.status.owner_valid && bus.status.owner == SOURCE_LINE);
+
+    /* Dashboard STOP: stops, and stays stopped despite subsystem releases. */
+    CHECK(vehicle_controller_remote_command(&bus, REMOTE_STOP) == R_OK && bus.remote_hold);
+    for (i = 0U; i < 100U; ++i) {
+        gate_period(&r, &bus, &request);
+        robot_control(&bus, CONTROL_RELEASE, true, false);
+    }
+    CHECK(r.m.status.state == STOPPED && r.m.status.hold);
+    CHECK(r.m.status.output[0] == 0.0 && r.m.status.output[1] == 0.0);
+
+    /* START again resumes. */
+    CHECK(vehicle_controller_remote_command(&bus, REMOTE_START) == R_OK);
+    for (i = 0U; i < 50U; ++i) { gate_period(&r, &bus, &request); }
+    CHECK(r.m.status.state == DRIVING);
+
+    /* A subsystem's own stop (Buddy 5 scan) can still be released by that subsystem. */
+    robot_control(&bus, CONTROL_STOP, false, false);
+    for (i = 0U; i < 100U; ++i) { gate_period(&r, &bus, &request); }
+    CHECK(r.m.status.state == STOPPED && !bus.remote_hold);
+    robot_control(&bus, CONTROL_RELEASE, true, false);
+    robot_motion_inputs(&bus, &r.m, r.sample, r.now);
+    CHECK(r.m.status.state == READY && !r.m.status.hold);
+}
+
 int main(void)
 {
     math_tests(); movement_tests(); safety_tests(); correction_and_final_tests(); bus_tests(); validation_tests();
@@ -1034,6 +1110,7 @@ int main(void)
     stalled_wheel_mask_tests();
     fault_reason_tests();
     live_encoder_snapshot_tests();
+    web_start_gate_tests();
     printf("PASS: %u checks (synthetic host model; no hardware accuracy claim)\n", checks);
     return 0;
 }

@@ -94,6 +94,17 @@ if(ROBO_HOST_TESTS)
         target_link_libraries(line_imu_wait_checks m)
     endif()
     add_test(NAME line_imu_wait_checks COMMAND line_imu_wait_checks)
+    # Same wait in the MQTT production image (web Start gate): it starts at START.
+    add_executable(line_imu_wait_start_gate_checks
+        app_program/subsystem2/steering.c app_program/subsystem2/board_config.c tests/test_line_imu_wait.c)
+    target_include_directories(line_imu_wait_start_gate_checks PRIVATE include tests)
+    target_compile_definitions(line_imu_wait_start_gate_checks PRIVATE
+        ROBO_LINE_STEERING=1 ROBO_LINE_TEST_HOST=1 ROBO_SUBSYSTEM4=1 ROBO_REQUIRE_START=1)
+    if(NOT MSVC)
+        target_compile_options(line_imu_wait_start_gate_checks PRIVATE -Wall -Wextra -Werror -Wconversion -Wshadow)
+        target_link_libraries(line_imu_wait_start_gate_checks m)
+    endif()
+    add_test(NAME line_imu_wait_start_gate_checks COMMAND line_imu_wait_start_gate_checks)
     add_executable(angle_control_checks app_program/subsystem2/angle_control.c
         app_program/subsystem2/math.c app_program/subsystem2/board_config.c tests/test_angle_control.c)
     target_compile_definitions(angle_control_checks PRIVATE ROBO_ANGLE_TEST=1)
@@ -242,6 +253,51 @@ set_property(CACHE WIFI PROPERTY STRINGS cyw43 none)
 set(NET none CACHE STRING "Network stack: none or lwip")
 set_property(CACHE NET PROPERTY STRINGS none lwip)
 option(MQTT "Enable the lwIP MQTT client" OFF)
+
+# Buddy 1 shortcut used by the VS Code build (.vscode/tasks.json), so the one
+# image the team flashes (build/mtkernel_3.uf2) carries Wi-Fi + MQTT:
+#   AUTO  Wi-Fi + lwIP + MQTT when config/wifi_secrets.h exists and this is not
+#         a calibration/test profile; otherwise none, with a warning.
+#   ON    always Wi-Fi + lwIP + MQTT (fails without wifi_secrets.h).
+#   OFF   no networking.
+#   ""    (default) leave WIFI / NET / MQTT exactly as given.
+set(ROBO_NETWORK "" CACHE STRING "Wi-Fi/MQTT shortcut: AUTO, ON, OFF or empty (use WIFI/NET/MQTT)")
+set_property(CACHE ROBO_NETWORK PROPERTY STRINGS "" AUTO ON OFF)
+if(NOT ROBO_NETWORK STREQUAL "")
+    if(NOT ROBO_NETWORK MATCHES "^(AUTO|ON|OFF)$")
+        message(FATAL_ERROR "ROBO_NETWORK must be AUTO, ON, OFF or empty.")
+    endif()
+    set(ROBO_NETWORK_ON OFF)
+    set(ROBO_NETWORK_CALIBRATION OFF)
+    if(ROBO_MANUAL_CONSOLE OR ROBO_SAFE_MOTOR_TEST OR ROBO_ANGLE_TEST OR
+       ROBO_ENCODER_DIAGNOSTICS_ONLY OR ROBO_MAG_CAL)
+        set(ROBO_NETWORK_CALIBRATION ON)
+    endif()
+    if(ROBO_NETWORK STREQUAL "ON")
+        set(ROBO_NETWORK_ON ON)
+    elseif(ROBO_NETWORK STREQUAL "AUTO")
+        if(ROBO_NETWORK_CALIBRATION)
+            message(STATUS "ROBO_NETWORK=AUTO: calibration/test profile, building without Wi-Fi.")
+        elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/config/wifi_secrets.h")
+            set(ROBO_NETWORK_ON ON)
+        else()
+            message(WARNING "ROBO_NETWORK=AUTO: config/wifi_secrets.h not found, so this image has "
+                            "NO Wi-Fi/MQTT and the web dashboard will not see the robot. Copy "
+                            "config/wifi_secrets.example.h to config/wifi_secrets.h, fill it in, and rebuild.")
+        endif()
+    endif()
+    if(ROBO_NETWORK_ON)
+        set(WIFI cyw43 CACHE STRING "Radio: cyw43 or none" FORCE)
+        set(NET lwip CACHE STRING "Network stack: none or lwip" FORCE)
+        set(MQTT ON CACHE BOOL "Enable the lwIP MQTT client" FORCE)
+    else()
+        set(WIFI none CACHE STRING "Radio: cyw43 or none" FORCE)
+        set(NET none CACHE STRING "Network stack: none or lwip" FORCE)
+        set(MQTT OFF CACHE BOOL "Enable the lwIP MQTT client" FORCE)
+    endif()
+    message(STATUS "ROBO_NETWORK=${ROBO_NETWORK}: WIFI=${WIFI} NET=${NET} MQTT=${MQTT}")
+endif()
+
 option(TEST "Run subsystem self-tests at startup" OFF)
 option(CRASH_REPORT "Mirror console and crash reports to UART0 on GP0/GP1" OFF)
 if(SMP)
@@ -341,6 +397,16 @@ target_compile_definitions(mtkernel_3 PRIVATE
     TM_NET_LWIP=$<STREQUAL:${NET},lwip>
     TM_MQTT=$<BOOL:${MQTT}>
 )
+# Buddy 1 web Start gate: production images with MQTT boot held and move only
+# after the dashboard START. Without MQTT nobody could send START, so those
+# images keep the old autonomous start.
+option(ROBO_REQUIRE_START "MQTT production images: boot held until the dashboard START" ON)
+if(ROBO_REQUIRE_START AND MQTT AND ROBO_PRODUCTION_BUILD)
+    target_compile_definitions(mtkernel_3 PRIVATE ROBO_REQUIRE_START=1)
+    message(STATUS "Web Start gate ON: the robot waits for the dashboard START after boot.")
+elseif(ROBO_PRODUCTION_BUILD)
+    message(STATUS "Web Start gate OFF: the robot starts moving by itself after boot.")
+endif()
 if(ROBO_ENCODER_DIAGNOSTICS_ONLY OR ROBO_SAFE_MOTOR_TEST OR ROBO_ANGLE_TEST OR ROBO_PRODUCTION_BUILD)
     string(TIMESTAMP encoder_build_stamp "%Y%m%dT%H%M%SZ" UTC)
     if(ROBO_INTEGRATED_BUILD)

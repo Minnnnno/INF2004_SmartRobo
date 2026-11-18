@@ -80,6 +80,12 @@ void motion_runtime_init(void)
         motion_restore_encoder_fault(&motion, motion_hal_sample(), now);
     }
     sync_encoder_fault_latch();
+#ifdef ROBO_REQUIRE_START
+    /* Buddy 1 web Start gate: boot held. INITIALISING then settles into STOPPED
+       (not READY) once still, and only the dashboard START releases it
+       (vehicle_controller_remote_command; robot_runtime_prepare sets the latch). */
+    motion.status.hold = true;
+#endif
 }
 
 const motion_config_t *motion_runtime_config(void) { return &motion.config; }

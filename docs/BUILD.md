@@ -81,9 +81,15 @@ Use host tests or deliberate manual mode instead. The imported GNU Make files ar
 retained for reference but were not verified for the merged application; CMake is
 the supported build route.
 
-WiFi/network source is imported, but WIFI=none / NET=none / MQTT=OFF is the safe
-default. Optional networking requires Buddy 1 integration and real credentials;
-config/wifi_secrets.h is ignored. Do not put credentials in tracked files.
+The VS Code build (Ctrl+Shift+B -> build/mtkernel_3.uf2) passes
+`-DROBO_NETWORK=AUTO`: if config/wifi_secrets.h exists, the image includes Wi-Fi,
+lwIP and MQTT (WIFI=cyw43 NET=lwip MQTT=ON) for the Buddy 1 web dashboard; if it
+does not, the image builds without networking and CMake prints a warning.
+Calibration/test profiles always build without Wi-Fi. ROBO_NETWORK=ON forces
+networking (fails without the secrets file), OFF disables it. Terminal builds that
+leave ROBO_NETWORK empty keep WIFI=none / NET=none / MQTT=OFF unless set
+explicitly. config/wifi_secrets.h is ignored by git: share it with teammates
+privately, and never put credentials in tracked files.
 
 All active application .c files live at app_program root or one subdirectory,
 matching the supplied CMake glob. Kernel and driver licenses remain intact.

@@ -55,6 +55,18 @@ otherwise SENSOR_FAULT. Capture normally finishes about 2 s after boot.
 In `ROBO_LINE_STEERING` builds the line task does not send its first motion
 request until Buddy 4 has left INIT/RECOVERY (`line_imu_wait` console line),
 capped at 10 s so a missing or faulty IMU never stops the robot.
+**With the web Start gate** (`ROBO_REQUIRE_START`: MQTT production images,
+which boot held until the dashboard START), Buddy 4 does **not** capture at
+boot. INIT waits (`[B4] waiting for dashboard START ...`, T_STATE 0) with no
+capture timeout, so the robot can be powered up anywhere and carried to the
+course. **Place it level on the course, press START, and keep it still about
+2 s**: the 1 s settle and the 50-sample capture start at START (`[B4] START:
+capturing level reference`), then MONITORING begins, and with it hump recording
+and lift/overturn detection. START is the controller hold seen, then released;
+it is latched, so a later STOP/START keeps the reference. The line task's
+`line_imu_wait` also starts at START (the robot stays still while Buddy 4
+captures, at most 10 s). Images without MQTT have no dashboard START and
+capture at boot as described above.
 Level permission comes from Buddy 2's motion status: it is withheld only when
 motion reports the wheels may be moving (not stationary and not initialising).
 Software cannot tell a level floor from a stationary slope. The reference is
@@ -205,6 +217,19 @@ air also clears it, which is why nothing restarts automatically: the robot
 stays stopped until the dashboard START (which needs STOPPED, stationary and
 trusted encoders). No reboot is needed (the level reference is kept).
 
+**Hump freeze after overturn.** In the demonstration the run ends with the
+robot lifted and turned over, so the peak must come only from humps completed
+on the course. The latch clears by itself once the robot is upright and still,
+which can happen while it is still held level in the air; setting it down at an
+angle could then look like a hump. So an **OVERTURNED** latch also **freezes
+hump recording**: no hump is measured, and the run maximum and last peak keep
+their values (`[TILT] ... terrain=FROZEN`), even after the latch clears. Only
+**START** unfreezes it (`buddy4_hump_start()`): Buddy 2 must first report the
+controller hold (the STOP), then the hold is released by START while MONITORING
+with the latch clear. START pressed while still overturned is re-stopped and
+keeps the freeze; a sensor RECOVERY keeps it; power-up clears it. A LIFTED
+latch alone does not freeze (an accidental lift mid-course resumes as before).
+
 **Limits.** Lift detection runs only in MONITORING: during sensor RECOVERY or
 after SENSOR_FAULT it is unavailable and any latch is cleared (sensor faults
 still never stop the motors). The GY-511 has no gyroscope, so a lift is only
@@ -298,10 +323,8 @@ Shared Terrain slot, published every cycle via `robot_update_subsystem`
 `T_STATE` (3 bits, 8 codes): 0 INIT, 1 WAITING, 2 CLIMBING, 3 DESCENDING
 (1..3 are MONITORING with that terrain phase), 4 RECOVERY, 5 FAULT, 6 STOP,
 7 LIFTED (MONITORING, lift latch set, motors stopped). OVERTURNED is motion
-class 7 instead, so until Buddy 1 adds `M_CLASS` to the binary frame (see
-`docs/BUDDY4_FRAME_CHANGE_REQUEST.md`) an overturned robot shows on the
-dashboard only as motion STOPPED/held with pitch invalid, and in full on the
-USB console.
+class 7 instead; it reaches the dashboard through the frame's `M_CLASS` field
+(layout v2, `docs/BUDDY4_FRAME_CHANGE_REQUEST.md`).
 
 Hump completion latches `TF_EV_HUMP_PEAK` through `comms_latch_event`, which
 is interrupt-safe. The dashboard's `HUMP_MM` shows the run maximum (completed humps only).
@@ -312,8 +335,9 @@ with `include/terrain_status.h` (header-only, safe with Buddy 4 disabled):
 `terrain_published_state()` (returns `TERRAIN_TS_UNKNOWN` = 0xFF when the slot
 is unusable, outside the 3-bit codes), `terrain_motion_class()` and
 `terrain_imu_faulted()`.
-Validity bit 0 (heading) stays clear, so the current frame's `T_HEADING` stays 0
-until Buddy 1 adds `M_CLASS` and renames `T_HEADING` to `TURN_RATE`.
+Slot validity bit 0 stays clear; Buddy 1 sets the frame's `T_VALID` bit 0
+(`TF_TV_MOTION`) from bit 9 and sends `M_CLASS` and `TURN_RATE` (deg/s) in
+frame layout v2.
 Nothing is sent as MQTT text any more; data reaches the dashboard only through
 the binary status frame (Change Requirement 1).
 
@@ -326,6 +350,8 @@ mm/s2 imu_fwd=.. mg`, each lift
 `[LIFT] LIFTED (upright=64% vertical=312 mg) -> motors stopped, hump in progress discarded; set it down level, then START`
 (or `OVERTURNED`), `[LIFT] still LIFTED: motors stopped again` when released in
 the air, `[LIFT] cleared: upright and still; motors stay stopped until START`,
+on an overturn `[TERRAIN] hump recording frozen (OVERTURNED): run max kept at 41 mm until START`
+and on START `[TERRAIN] hump recording resumed (START)`,
 and each completed turn `[TURN] left 88.4 deg in 1.9 s (peak 50 deg/s) compass 87.9 deg`
 (or `compass n/a (reason)`). The calibration image prints `[MAGCAL]` lines.
 Every 500 ms: `[B4] INIT ...` capture progress, `[TILT] pitch=.. roll=.. |

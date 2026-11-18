@@ -302,7 +302,67 @@ int main(void)
         check(buddy4_lift(&c)==LIFT_OVERTURNED,"overturned again");
         read_status=E_IO; tick(&c,20U,0U);
         check(buddy4_state(&c)==B4_RECOVERY && buddy4_lift(&c)==LIFT_NONE,"recovery clears the lift latch");
+        check(buddy4_hump_frozen(&c),"hump freeze survives sensor recovery");
+        check(!buddy4_hump_start(&c,true,true) && !buddy4_hump_start(&c,true,false) &&
+              buddy4_hump_frozen(&c),"START during recovery keeps the freeze");
         read_status=E_OK;
+
+        /* Hump freeze after OVERTURNED (demo end: lifted and turned over). A
+         * hump-shaped tilt while setting it down is never recorded; only START
+         * (hold seen, then released, robot back down) unfreezes it. */
+        ready(&c);
+        check(!buddy4_hump_frozen(&c),"power-up clears the freeze");
+        xyz[0]=0; xyz[1]=0; xyz[2]=1000;
+        for (unsigned i=0;i<15;i++) { tick(&c,20U,0U); }
+        check(buddy4_lift(&c)==LIFT_OVERTURNED && buddy4_hump_frozen(&c),"OVERTURNED freezes hump recording");
+        check(!buddy4_hump_start(&c,true,false) && c.hump_freeze==B4_FREEZE_WAIT,
+              "not held yet (stale status before motion_stop): stays frozen");
+        check(!buddy4_hump_start(&c,false,true) && c.hump_freeze==B4_FREEZE_WAIT,
+              "no motion status: hold not taken");
+        check(!buddy4_hump_start(&c,true,true) && c.hump_freeze==B4_FREEZE_HELD,"controller hold seen");
+        check(!buddy4_hump_start(&c,true,false) && buddy4_hump_frozen(&c),
+              "START while still overturned keeps the freeze");
+        xyz[2]=-1000; /* held level in the air: the lift latch clears */
+        for (unsigned i=0;i<30;i++) { tick(&c,20U,0U); }
+        check(buddy4_lift(&c)==LIFT_NONE && buddy4_hump_frozen(&c),"latch clears, freeze stays");
+        xyz[0]=348; xyz[2]=-937; /* set down at an angle: ~40 mm, then level */
+        for (unsigned i=0;i<60;i++) { tick(&c,20U,0U); }
+        xyz[0]=0; xyz[2]=-1000;
+        for (unsigned i=0;i<60;i++) { tick(&c,20U,0U); }
+        check(!terrain_take_completed(&c.terrain) && terrain_run_max(&c.terrain)==0U &&
+              (terrain_status(&c.terrain)&TERRAIN_PHASE_MASK)==TERRAIN_WAITING,
+              "set-down tilt while frozen records no hump");
+        check(!buddy4_hump_start(&c,false,false) && buddy4_hump_frozen(&c),"no motion status: stays frozen");
+        check(buddy4_hump_start(&c,true,false) && !buddy4_hump_frozen(&c),"START unfreezes");
+        check(!buddy4_hump_start(&c,true,false),"resume reported once");
+        xyz[0]=348; xyz[2]=-937;
+        for (unsigned i=0;i<60;i++) { tick(&c,20U,0U); }
+        xyz[0]=0; xyz[2]=-1000;
+        for (unsigned i=0;i<60;i++) { tick(&c,20U,0U); }
+        check(terrain_take_completed(&c.terrain) &&
+              (terrain_run_max(&c.terrain)&TERRAIN_PEAK_MM_MASK)>=38U &&
+              (terrain_run_max(&c.terrain)&TERRAIN_PEAK_MM_MASK)<=41U,"after START humps count again");
+        xyz[2]=-1300; /* LIFTED alone never freezes */
+        for (unsigned i=0;i<4;i++) { tick(&c,20U,0U); }
+        check(buddy4_lift(&c)==LIFT_LIFTED && !buddy4_hump_frozen(&c),"LIFTED does not freeze");
+        xyz[2]=-1000;
+        for (unsigned i=0;i<30;i++) { tick(&c,20U,0U); }
+        check(buddy4_lift(&c)==LIFT_NONE && !buddy4_hump_frozen(&c),"cleared LIFTED: not frozen");
+        check(!buddy4_hump_frozen(NULL) && !buddy4_hump_start(NULL,true,false),"NULL safe");
+
+        /* The controller hold was never seen (the STOP did not take effect):
+         * even with the robot back down and the latch clear, a "not held"
+         * status must not unfreeze; only a real hold, then START, does. */
+        ready(&c);
+        xyz[0]=0; xyz[1]=0; xyz[2]=1000;
+        for (unsigned i=0;i<15;i++) { tick(&c,20U,0U); }
+        xyz[2]=-1000;
+        for (unsigned i=0;i<30;i++) { tick(&c,20U,0U); }
+        check(buddy4_lift(&c)==LIFT_NONE && c.hump_freeze==B4_FREEZE_WAIT,"down, latch clear, hold never seen");
+        check(!buddy4_hump_start(&c,true,false) && buddy4_hump_frozen(&c),
+              "no unfreeze without the controller hold first");
+        check(!buddy4_hump_start(&c,true,true) && buddy4_hump_start(&c,true,false) &&
+              !buddy4_hump_frozen(&c),"hold then START unfreezes");
 
         /* Placing the robot during capture is never a lift. */
         ready(&c);
@@ -311,6 +371,28 @@ int main(void)
         xyz[2]=-1000;
         check(sizeof(c.control)==1U,"control byte still one byte");
         check(buddy4_lift(NULL)==LIFT_NONE,"NULL is not lifted");
+    }
+    /* Web Start gate: WAIT_START keeps INIT in POSITION (no capture reads, no
+     * capture timeout); the 1 s settle and the capture start after START.
+     * A kept reference (recovery) ignores the bit. */
+    {
+        unsigned n=0U;
+        reset(&c);
+        buddy4_step(&c,B4_LEVEL_ALLOWED|B4_WAIT_START);
+        check(configurations==1U,"sensor configured before START");
+        for (unsigned i=0;i<1500U;i++) { tick(&c,20U,B4_LEVEL_ALLOWED|B4_MOTORS_STOPPED|B4_WAIT_START); }
+        check(buddy4_state(&c)==B4_INIT && reads==0U,"30 s before START: INIT, no capture reads, no FAULT");
+        tick(&c,20U,B4_LEVEL_ALLOWED|B4_MOTORS_STOPPED);
+        check(reads==0U,"START: settle time counts from START");
+        tick(&c,B4_POSITION_MS-20U,B4_LEVEL_ALLOWED|B4_MOTORS_STOPPED);
+        tick(&c,20U,B4_LEVEL_ALLOWED|B4_MOTORS_STOPPED);
+        while ((buddy4_state(&c)==B4_INIT) && (n<60U)) { tick(&c,20U,B4_LEVEL_ALLOWED|B4_MOTORS_STOPPED); n++; }
+        check(buddy4_state(&c)==B4_MONITORING && n>=49U && n<=51U,"after START: 1 s settle + 50 samples");
+        fail(&c);
+        read_status=E_OK;
+        n=0U;
+        while ((buddy4_state(&c)!=B4_MONITORING) && (n<400U)) { tick(&c,20U,B4_WAIT_START); n++; }
+        check(buddy4_state(&c)==B4_MONITORING,"recovery with the reference kept ignores WAIT_START");
     }
     /* Magnetometer: read while monitoring; busy/out-of-range never leave MONITORING. */
     {

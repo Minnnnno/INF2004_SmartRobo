@@ -82,6 +82,16 @@ motion task and outside the shared-status lock.
 The current intended behavior is autonomous startup after flashing/booting.
 Buddy 1 will handle any web Start gate during integration.
 
+**Buddy 1 web Start gate (18 November 2026):** production images built with
+MQTT (`ROBO_REQUIRE_START`, default ON; the VS Code build) now boot held:
+motion settles into STOPPED, not READY, and nothing moves until the dashboard
+START. A dashboard STOP or ESTOP sets `robot_bus_t.remote_hold`; while it is set
+the Vehicle Controller ignores `CONTROL_RELEASE` from any other source (for
+example Buddy 5's detour release), so only START restarts the robot. A
+subsystem's own `motion_stop()` (Buddy 4 lift, Buddy 5 scan) is not a remote
+hold and keeps its existing release behaviour. Images without MQTT keep the
+autonomous startup. Host test: `web_start_gate_tests` in `tests/test_motion.c`.
+
 Route web Start/Stop/ESTOP through the existing communications command queue and
 vehicle-controller interface. Do not write motor PWM from Wi-Fi code.
 

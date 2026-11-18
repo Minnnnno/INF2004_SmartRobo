@@ -86,8 +86,8 @@ motion_result_t robot_submit(request_source_t source,uint32_t id,motion_mode_t m
                              double value,double left,double right)
 {
     CHECK(source==SOURCE_LINE && mode==WHEEL_SPEED_TRACKING && value==0.0);
-    /* Straight/left/right follow LINE_SPEED 0.05 +- LINE_CORRECTION 0.01875; pivot and back-up speeds are separate. */
-    static const double wheels[][2]={{0.0,0.0},{0.05,0.05},{0.03125,0.06875},{0.06875,0.03125},{0.0,0.1},{0.1,0.0},{0.0,0.0},{-0.075,-0.075}};
+    /* Straight/left/right follow at 0.07 m/s with a 0.02625 m/s steering correction. */
+    static const double wheels[][2]={{0.0,0.0},{0.07,0.07},{0.04375,0.09625},{0.09625,0.04375},{0.0,0.1},{0.1,0.0},{0.0,0.0},{-0.075,-0.075}};
     CHECK(id==3001U && inputs[row].request!=NONE);
     CHECK(fabs(left-wheels[inputs[row].request][0])<1e-9 && fabs(right-wheels[inputs[row].request][1])<1e-9);
     status.motion.state=DRIVING; status.owner_valid=true; status.owner=SOURCE_LINE; status.motion.id=id;
