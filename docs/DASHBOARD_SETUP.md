@@ -130,6 +130,18 @@ To finish: power the robot off, then press Ctrl+C in both terminals.
 The robot answering "queued" in the log means the command arrived, not that it
 was carried out. Watch the Motion card for the actual result.
 
+### Barcode route letters
+
+On the day, type the four letters in the **Line & barcode** card, e.g. `L=B R=C S=D U=A`
+(Left, Right, Straight, U-turn), and press **Send route**. The log shows the robot's reply:
+`robot route: ok …`, or `rejected …` (all four needed, each letter different; the old route stays).
+The message is retained, so the robot gets it again after a reboot. Until a route arrives the
+robot uses `app_program/subsystem3/route.h`. Turns happen at the junction after the code, the
+U-turn at once, and straight ignores the junction.
+
+Without the dashboard: `mosquitto_pub -h 192.168.137.1 -t robot/route -r -q 1 -m "L=B R=C S=D U=A"`.
+To clear an old retained route: `mosquitto_pub -h 192.168.137.1 -t robot/route -r -n`.
+
 ## 7. Troubleshooting
 
 The **Troubleshooting** card on the page lists what it thinks is wrong. Common cases:

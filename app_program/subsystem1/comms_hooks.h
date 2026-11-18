@@ -22,6 +22,8 @@
 #define COMMS_TOPIC_EVENT	"robot/event"		/* 2-byte event frame, QoS 1 */
 #define COMMS_TOPIC_CMD		"robot/cmd"		/* 2-byte command, QoS 1 */
 #define COMMS_TOPIC_ACK		"robot/cmd/ack"		/* 2-byte acknowledgement, QoS 1 */
+#define COMMS_TOPIC_ROUTE	"robot/route"		/* text "L=B R=C S=D U=A", QoS 1 */
+#define COMMS_TOPIC_ROUTE_ACK	"robot/route/ack"	/* text "ok ..." or "rejected ..." */
 
 #define COMMS_NAME_MAX		16	/* telemetry name, including the '\0' */
 #define COMMS_TOPIC_MAX		32	/* full topic, including the '\0' */
@@ -36,6 +38,11 @@ int comms_hook_next(char *topic, unsigned char *payload, int *qos);
    commands are passed on to the Vehicle Controller; either way a binary
    acknowledgement is queued. */
 void comms_hook_command(const unsigned char *payload, int len);
+
+/* A message arrived on COMMS_TOPIC_ROUTE (len < 0: truncated).  A valid
+   route replaces the barcode route (subsystem3/route.h); either way a text
+   acknowledgement is queued. */
+void comms_hook_route(const unsigned char *payload, int len);
 
 /* The MQTT connection came up (1) or went down (0). */
 void comms_hook_online(int online);

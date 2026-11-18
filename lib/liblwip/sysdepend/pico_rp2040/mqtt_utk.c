@@ -21,6 +21,7 @@
 #include "wifi_secrets.h"
 #include "mqtt_utk.h"
 #include <tm/tmonitor.h>
+#include <string.h>
 
 /* Topics, size limits and the queue hooks of the comms subsystem (plain C
  * types only, so the note above about tk/tkernel.h still holds). */
@@ -93,9 +94,13 @@ static void incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags)
 		}
 		tm_printf((UB*)"%s\n", rx_truncated? " (truncated)": "");
 
-		/* The command topic is the only subscription. A truncated
-		 * message is passed with length -1, so it is rejected. */
-		comms_hook_command(rx_data, rx_truncated? -1: (int)rx_len);
+		/* A truncated message is passed with length -1, so it is
+		 * rejected. */
+		if(strcmp(rx_topic, COMMS_TOPIC_ROUTE) == 0) {
+			comms_hook_route(rx_data, rx_truncated? -1: (int)rx_len);
+		} else {
+			comms_hook_command(rx_data, rx_truncated? -1: (int)rx_len);
+		}
 	}
 }
 
@@ -103,7 +108,7 @@ static void subscribe_done_cb(void *arg, err_t result)
 {
 	(void)arg;
 	if(result == ERR_OK) {
-		tm_printf((UB*)"mqtt: subscribed to " COMMS_TOPIC_CMD "\n");
+		tm_printf((UB*)"mqtt: subscribed\n");
 	} else {
 		tm_printf((UB*)"mqtt: subscribe failed, err=%d\n", (int)result);
 	}
@@ -221,6 +226,10 @@ static void connection_cb(mqtt_client_t *c, void *arg, mqtt_connection_status_t 
 
 		err = mqtt_subscribe(client, COMMS_TOPIC_CMD, 1 /* qos */,
 				     subscribe_done_cb, NULL);
+		if(err == ERR_OK) {
+			err = mqtt_subscribe(client, COMMS_TOPIC_ROUTE, 1 /* qos */,
+					     subscribe_done_cb, NULL);
+		}
 		if(err != ERR_OK) {
 			tm_printf((UB*)"mqtt: mqtt_subscribe() failed, err=%d\n",
 				  (int)err);

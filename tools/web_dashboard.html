@@ -39,6 +39,10 @@ button { font: inherit; font-weight: 700; border: 0; border-radius: 8px; padding
 button:disabled { opacity: .4; cursor: not-allowed; }
 #b-start { background: #1a7f37; } #b-stop { background: #b26b00; } #b-estop { background: #c62828; }
 .ctl-note { color: var(--muted); font-size: 13px; flex: 1 1 260px; }
+.route { display: flex; gap: 8px; margin-top: 10px; }
+.route input { flex: 1; min-width: 0; font: inherit; padding: 8px; border: 1px solid var(--line); border-radius: 8px;
+               background: var(--card); color: inherit; }
+.route button { background: #1f6feb; min-width: 0; }
 .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; min-width: 0; }
 .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted);
@@ -147,6 +151,10 @@ dt { color: var(--muted); } dd { margin: 0; font-family: var(--mono); font-size:
         <dt>On the line</dt><dd id="l-track">-</dd>
         <dt>Barcode</dt><dd id="l-bc">-</dd>
       </dl>
+      <form id="route-form" class="route">
+        <input id="route-text" placeholder="L=B R=C S=D U=A" maxlength="64" aria-label="Barcode route letters">
+        <button type="submit">Send route</button>
+      </form>
     </section>
 
     <section class="card" id="c-terrain">
@@ -444,6 +452,16 @@ async function send(cmd) {
   } catch (err) { alert("Not sent: dashboard server unreachable"); }
 }
 document.querySelectorAll("button[data-cmd]").forEach(b => b.addEventListener("click", () => send(b.dataset.cmd)));
+// The robot's reply ("ok ..." / "rejected ...") appears in the log.
+$("route-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  try {
+    const r = await fetch("/api/route", { method: "POST", headers: { "Content-Type": "application/json" },
+                                          body: JSON.stringify({ route: $("route-text").value }) });
+    const j = await r.json();
+    if (!j.ok) alert("Not sent: " + j.error);
+  } catch (err) { alert("Not sent: dashboard server unreachable"); }
+});
 
 // ---- polling ----
 async function poll() {
