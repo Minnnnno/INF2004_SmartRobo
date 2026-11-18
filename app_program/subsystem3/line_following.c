@@ -333,14 +333,6 @@ static void line_report(unsigned centre, unsigned right, line_direction_t direct
                                      * stop the car at 150 mm while the route pivots, see route_flag()). */
 #define LINE_CAL_BUTTON       ((unsigned)BOARD_CAL_BUTTON) /* GP21, active low: calibrate, and resume after it. */
 
-#define ROUTE_CASE(letter_, action_, trigger_) if (letter == (letter_)) { *trigger = (trigger_); return (action_); }
-static route_action_t route_action_for(char letter, route_trigger_t *trigger)
-{
-    ROUTE_TABLE(ROUTE_CASE)
-    *trigger = ROUTE_AT_JUNCTION;
-    return ROUTE_NONE;
-}
-
 static double route_abs(double x) { return (x < 0.0) ? -x : x; }
 
 /* Zero-speed refreshes keep the session (no expiry) until both wheels are nearly still. */
@@ -438,7 +430,6 @@ static bool route_run(route_action_t action, bool at_junction, double path_seen,
     static robot_status_t status; /* Static: the line task stack is nearly full. */
     double dir = (action == ROUTE_RIGHT) ? -1.0 : 1.0; /* The U-turn pivots left. */
     *side = LINE_STRAIGHT;
-    if (action == ROUTE_STRAIGHT) { tm_printf((const UB *)"route: straight on\n"); return true; }
     if (action == ROUTE_UTURN) { barcode_ignore_for(ROUTE_UTURN_IGNORE_M); } /* Before turning: the pivot sweeps the sensor. */
     if (!route_brake()) { tm_printf((const UB *)"route: FAILED while braking\n"); return false; }
     if (!motion_get_status(&status)) { return false; }
@@ -517,7 +508,8 @@ typedef struct {
     unsigned seen_junctions, seen_failures;
 #if ROBO_BARCODE_TASK
     unsigned seen_reads;
-    unsigned cal_presses;         /* Consecutive polls with GP21 pressed (debounce). */
+    uint8_t route_pending;        /* route_action_t read before its junction (left/right only), else NONE. */
+    unsigned cal_presses;        /* Consecutive polls with GP21 pressed (debounce). */
     bool calibrating;             /* GP21 pressed: the reader is calibrating on the next full pass. */
     bool cal_wait;                /* CAL_WAIT: calibration finished, stopped until GP21 is pressed again. */
     double bc_hold_from;          /* Path (m) where the barcode pass began, see LINE_BC_*; < 0 = none. */
@@ -585,6 +577,7 @@ static bool line_calibration_step(line_ctx_t *c, const robot_status_t *status)
          * acted on next tick (STOPPED), as always. The reader also drops a junction armed meanwhile. */
         c->seen_reads = (unsigned)status->barcode.values[1];
         c->seen_junctions = (unsigned)status->barcode.values[2];
+        c->route_pending = (uint8_t)ROUTE_NONE; /* A turn read before the wait has lost its junction. */
         barcode_ignore_for(0.0);
         line_restart(c);
         tm_printf((const UB *)"calibration: GP21 pressed, carrying on\n");
@@ -618,15 +611,22 @@ static bool line_route_event(line_ctx_t *c, const robot_status_t *status, bool o
 {
     bool at_junction = reads == c->seen_reads; /* A new read first; its junction comes later. */
     char letter = (char)(unsigned)status->barcode.values[0];
-    route_trigger_t trigger;
-    route_action_t action = route_action_for(letter, &trigger);
+    route_action_t action;
     line_direction_t side = LINE_STRAIGHT;
-    if (at_junction) { c->seen_junctions = junctions; } else { c->seen_reads = reads; }
     tm_printf((const UB *)"route: %s after *%c*, path %d mm\n", at_junction ? "junction" : "read",
               letter, (int)(status->motion.path * 1000.0));
-    if (action == ROUTE_NONE || (trigger == ROUTE_AT_JUNCTION) != at_junction) {
-        return true; /* Nothing to do now (no action for this letter, or it waits for the junction). */
+    if (at_junction) {
+        c->seen_junctions = junctions;
+        action = (route_action_t)c->route_pending; /* Decided at the read: a new route cannot switch it. */
+        c->route_pending = (uint8_t)ROUTE_NONE;
+    } else {
+        c->seen_reads = reads;
+        action = route_action(route_get(), letter);
+        if (action == ROUTE_STRAIGHT) { tm_printf((const UB *)"route: straight on, junction ignored\n"); }
+        c->route_pending = (uint8_t)((action == ROUTE_LEFT || action == ROUTE_RIGHT) ? action : ROUTE_NONE);
+        if (action != ROUTE_UTURN) { return true; } /* Only the U-turn happens at the read. */
     }
+    if (action == ROUTE_NONE) { return true; }
     if (c->search.phase != SEARCH_IDLE || !owns || !line_motion_ok(status) ||
         status->obstacle.values[3] == LINE_OBSTACLE_AVOIDING) {
         /* A spin or sweep carries the barcode sensor in an arc, possibly back over the code. */

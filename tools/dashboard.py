@@ -27,6 +27,8 @@ TOPIC_ENCODER = "robot/encoder"
 TOPIC_EVENT = "robot/event"
 TOPIC_CMD = "robot/cmd"
 TOPIC_ACK = "robot/cmd/ack"
+TOPIC_ROUTE = "robot/route"          # text "L=B R=C S=D U=A", sent retained
+TOPIC_ROUTE_ACK = "robot/route/ack"  # text "ok ..." or "rejected ..."
 TOPIC_STATUS = "robot/status"
 
 OPCODES = {"start": 1, "stop": 2, "estop": 3}
@@ -93,14 +95,20 @@ ROUTE_NAMES = {"ROUTE_LEFT": "turn left", "ROUTE_RIGHT": "turn right",
 
 
 def load_route(path=ROUTE_H):
-    """Buddy 3's route table: letter -> action text, e.g. {'A': 'U-turn'}."""
+    """Buddy 3's fallback route table: letter -> action text, e.g. {'A': 'U-turn'}."""
     try:
         text = open(path, encoding="utf-8").read()
     except OSError:
         return {}
     return {m.group(1): ROUTE_NAMES.get(m.group(2), m.group(2))
-            + (" at junction" if m.group(3) == "ROUTE_AT_JUNCTION" else "")
-            for m in re.finditer(r"X\(\s*'(.)'\s*,\s*(\w+)\s*,\s*(\w+)\s*\)", text)}
+            for m in re.finditer(r"X\(\s*'(.)'\s*,\s*(\w+)\s*\)", text)}
+
+
+def parse_route(text):
+    """'L=B R=C S=D U=A' (as the robot acknowledged it) -> letter -> action text."""
+    keys = dict(L="ROUTE_LEFT", R="ROUTE_RIGHT", S="ROUTE_STRAIGHT", U="ROUTE_UTURN")
+    return {v.upper(): ROUTE_NAMES[keys[k.upper()]]
+            for k, v in re.findall(r"([LRSUlrsu])=(\w)", text)}
 
 
 ROUTE = load_route()
@@ -250,6 +258,8 @@ def selftest():
           "barcode character decode")
     check(barcode_text(dict(GOLDEN, BC_CHAR=0)) == "-", "no barcode yet")
     check(ROUTE.get("A") == "U-turn", "route table from route.h: %r" % ROUTE)
+    check(parse_route("L=b, R=C S=D U=A") == {"B": "turn left", "C": "turn right",
+                                             "D": "go straight", "A": "U-turn"}, "route from MQTT text")
     check(decode(bytes.fromhex(GOLDEN_HEX)) == GOLDEN, "golden frame decodes")
     check(encode(GOLDEN).hex() == GOLDEN_HEX, "golden frame encodes")
     old = bytearray.fromhex(GOLDEN_HEX)

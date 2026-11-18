@@ -127,6 +127,8 @@ class Hub:
         self.session = random.getrandbits(5)
         self.cmd_seq = random.getrandbits(8)
         self.publish = None             # set by the transport: payload -> bool
+        self.publish_route = None       # set by the transport: route text -> bool
+        self.route = dict(d.ROUTE)      # letter -> action; route.h until the robot acks a route
         self.log = collections.deque(maxlen=3000)
         self.log_id = 0
         self.log_file = self._open(args.log, "a")
@@ -181,6 +183,11 @@ class Hub:
                 self._on_event(payload)
             elif topic == d.TOPIC_ACK:
                 self._on_ack(payload)
+            elif topic == d.TOPIC_ROUTE_ACK:
+                text = payload.decode("utf-8", "replace")
+                if text.startswith("ok "):
+                    self.route = d.parse_route(text[3:])
+                self._add("info" if text.startswith("ok ") else "warn", "B1", "robot route: " + text)
             elif topic == d.TOPIC_STATUS:
                 text = payload.decode("ascii", "replace").strip()
                 if text != self.robot:
@@ -362,6 +369,16 @@ class Hub:
                     self.stale.discard(name)
                     self._add("info", "B1", "%s resumed" % name)
 
+    def send_route(self, text):
+        text = text.strip()[:64]
+        if not text:
+            return dict(ok=False, error="type the route first, e.g. L=B R=C S=D U=A")
+        sent = bool(text and self.publish_route and self.publish_route(text))
+        with self.lock:
+            self._add("info" if sent else "error", "you",
+                      ("sent route " if sent else "could not send route (not connected): ") + text)
+        return dict(ok=sent, error=None if sent else "not connected to the broker")
+
     def command(self, name):
         if name not in d.OPCODES:
             return dict(ok=False, error="unknown command")
@@ -415,7 +432,7 @@ class Hub:
                        obstacle_text=dict(self.obstacle_text), session=self.session,
                        barcode=None if not (self.frame and self.frame["BC_CHAR"]) else dict(
                            char=d.barcode_char(self.frame),
-                           action=d.ROUTE.get(d.barcode_char(self.frame)),
+                           action=self.route.get(d.barcode_char(self.frame)),
                            reads=self.bc_reads, age=age(self.bc_at)))
             if fresh_log:
                 out["meta"] = dict(states=d.STATES, faults=d.FAULTS, fb=d.FB_CAUSES, modes=MODES,
@@ -438,7 +455,7 @@ def start_mqtt(hub, args):
 
     def on_connect(client, userdata, flags, rc, properties=None):
         client.subscribe([(d.TOPIC_FRAME, 0), (d.TOPIC_ENCODER, 0), (d.TOPIC_EVENT, 1),
-                          (d.TOPIC_ACK, 1), (d.TOPIC_STATUS, 1), (TOPIC_HEARTBEAT, 0),
+                          (d.TOPIC_ACK, 1), (d.TOPIC_ROUTE_ACK, 1), (d.TOPIC_STATUS, 1), (TOPIC_HEARTBEAT, 0),
                           (TOPIC_TEXT + "#", 0)])
         hub.set_broker("connected")
 
@@ -451,6 +468,8 @@ def start_mqtt(hub, args):
     client.on_connect = on_connect
     client.on_disconnect = on_disconnect
     client.on_message = lambda c, u, m: hub.on_message(m.topic, m.payload)
+    # Retained, so the robot gets the route again after a reboot or reconnect.
+    hub.publish_route = lambda text: client.publish(d.TOPIC_ROUTE, text, qos=1, retain=True).rc == 0
     client.reconnect_delay_set(1, 5)
     client.connect_async(args.host, args.mqtt_port)
     client.loop_start()             # keeps reconnecting on its own
@@ -626,17 +645,19 @@ def make_handler(hub):
                 self.reply(404, "not found", "text/plain")
 
         def do_POST(self):
-            if urlparse(self.path).path != "/api/cmd":
+            path = urlparse(self.path).path
+            if path not in ("/api/cmd", "/api/route"):
                 self.reply(404, "not found", "text/plain")
                 return
             try:
                 length = min(int(self.headers.get("Content-Length", 0)), 1024)
                 body = json.loads(self.rfile.read(length) or b"{}")
-                name = str(body.get("command", ""))
+                arg = str(body.get("command" if path == "/api/cmd" else "route", ""))
             except (ValueError, AttributeError):
                 self.reply(400, json.dumps(dict(ok=False, error="bad request")), "application/json")
                 return
-            self.reply(200, json.dumps(hub.command(name)), "application/json")
+            result = hub.command(arg) if path == "/api/cmd" else hub.send_route(arg)
+            self.reply(200, json.dumps(result), "application/json")
 
     return Handler
 
@@ -667,6 +688,7 @@ def main():
     if args.demo:
         sim = Simulator(hub)
         hub.publish = sim.handle
+        hub.publish_route = lambda text: sim.send(d.TOPIC_ROUTE_ACK, b"ok " + text.encode()) or True
         hub.set_broker("connected")
         sim.start()
     else:

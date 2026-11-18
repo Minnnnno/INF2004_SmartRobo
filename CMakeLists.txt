@@ -159,6 +159,16 @@ if(ROBO_HOST_TESTS)
         COMMAND barcode_decode_checks --letters AZ --ladder ${CMAKE_CURRENT_SOURCE_DIR}/tests/barcode/replay.txt)
     add_test(NAME barcode_decode_ladder_reject_checks
         COMMAND barcode_decode_checks --letters A --ladder ${CMAKE_CURRENT_SOURCE_DIR}/tests/barcode/replay.txt)
+    # A four-letter MQTT route: best fit among more letters must still never give a wrong letter.
+    add_test(NAME barcode_decode_route4_checks
+        COMMAND barcode_decode_checks --letters AZBC --ladder ${CMAKE_CURRENT_SOURCE_DIR}/tests/barcode/replay.txt)
+    # Barcode route supplied over MQTT (subsystem3/route.c).
+    add_executable(route_checks app_program/subsystem3/route.c tests/test_route.c)
+    target_include_directories(route_checks PRIVATE app_program/subsystem3)
+    if(NOT MSVC)
+        target_compile_options(route_checks PRIVATE -Wall -Wextra -Werror -Wconversion -Wshadow)
+    endif()
+    add_test(NAME route_checks COMMAND route_checks)
     add_executable(crash_restart_checks tests/test_crash_restart.c
         app_program/subsystem2/motion.c app_program/subsystem2/math.c
         app_program/subsystem2/board_config.c app_program/subsystem2/encoder_capture.c

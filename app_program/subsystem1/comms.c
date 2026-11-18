@@ -16,6 +16,7 @@
 #include "robot.h"
 #include "motion_hal.h"
 #include "telemetry_map.h"
+#include "../subsystem3/route.h"
 
 #define COMMS_TLM_DEPTH		8	/* queued frames / diagnostics */
 #define COMMS_EVT_DEPTH		4	/* queued events and acks */
@@ -219,6 +220,23 @@ void comms_hook_command(const unsigned char *payload, int len)
 
 	tf_ack_encode(result, &cmd, ack);
 	(void)queue_message(mbf_comms_evt, 1, COMMS_TOPIC_ACK, NULL, ack, TF_ACK_BYTES);
+}
+
+void comms_hook_route(const unsigned char *payload, int len)
+{
+	UB		reply[COMMS_PAYLOAD_MAX + 1];
+	const char	*head = ((len >= 0) && route_set((const char *)payload, len)) ? "ok " : "rejected ";
+	INT		n = 0, i;
+
+	while (*head != '\0') {
+		reply[n++] = (UB)*head++;
+	}
+	for (i = 0; (i < len) && (n < COMMS_PAYLOAD_MAX); i++) {
+		reply[n++] = payload[i];	/* echo what was received */
+	}
+	reply[n] = '\0';
+	tm_printf((UB*)"route: %s\n", reply);
+	(void)queue_message(mbf_comms_evt, 1, COMMS_TOPIC_ROUTE_ACK, NULL, reply, n);
 }
 
 void comms_hook_online(int online)

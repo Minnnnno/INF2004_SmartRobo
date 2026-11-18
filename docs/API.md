@@ -121,7 +121,7 @@ means no measurement, not a zero measurement. Proposed `values[4]` contracts:
 | Owner | values[0..3] |
 |---|---|
 | Line | line error -1/0/+1, trackable (> 0.5), junction flag, reserved |
-| Barcode | letter (ASCII), valid-read counter, junction counter, failed-read counter (`robot.h`). Frame layout v3: `BC_CHAR` = decoded character (index into `TF_BC_CHARS`), `BC_READ` flips on every valid read; the dashboard shows the action from `subsystem3/route.h` |
+| Barcode | letter (ASCII), valid-read counter, junction counter, failed-read counter (`robot.h`). Frame layout v3: `BC_CHAR` = decoded character (index into `TF_BC_CHARS`), `BC_READ` flips on every valid read; the dashboard shows the action from the route the robot last acknowledged on `robot/route/ack` (text `L=B R=C S=D U=A`, sent on `robot/route`), else `subsystem3/route.h` |
 | Terrain | turn rate rad/s (+ left), pitch rad, hump height m, validity bits 1..2 (`TF_TV_*`) \| terrain state << 3 \| motion class << 6 \| motion valid << 9 (frame layout v2: `M_CLASS`, `TURN_RATE`) |
 | Obstacle | nearest distance m, scan angle rad, width m, scan flags (`TF_OF_*`, 5 bits) |
 | WiFi | connected flag, publish count, receive count, reserved |

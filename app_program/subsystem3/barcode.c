@@ -58,8 +58,6 @@ static void barcode_set_mode(barcode_mode_t next)
     }
 }
 
-/* Only the route's letters are read (best fit among them, barcode_decode.h). */
-static const char bc_letters[] = { ROUTE_TABLE(ROUTE_LETTER_OF) '\0' };
 /* Sensitivity (contrast divisor), tried first on every pass. The sensor's height over the floor changes
  * whenever the robot is handled, so GP21 calibrates it on a known code (RAM only: lost at power-off on
  * purpose). A pass that does not decode is retried down BARCODE_LADDER (barcode_decode.h) before it fails. */
@@ -302,7 +300,13 @@ static void barcode_finish(const uint16_t *samples, const uint32_t *path, const 
         if (count >= BARCODE_FULL_PASS) { barcode_calibrate_pass(samples, path, heading, count); } /* Else a fragment. */
         return;
     }
-    chars = barcode_decode_any(samples, path, count, &n, text, bc_div, bc_letters, &used);
+    char letters[5]; /* Only the route's letters are read (best fit among them, barcode_decode.h). */
+    unsigned k = 0U;
+    for (uint32_t route = route_get(); route != 0U; route >>= 8) {
+        if ((route & 0xFFU) != 0U) { letters[k++] = (char)(route & 0xFFU); }
+    }
+    letters[k] = '\0';
+    chars = barcode_decode_any(samples, path, count, &n, text, bc_div, letters, &used);
     white = barcode_level(samples, BARCODE_QUIET, &noise);
     barcode_range(samples, count, &low, &high);
     if (chars != 0U) {
