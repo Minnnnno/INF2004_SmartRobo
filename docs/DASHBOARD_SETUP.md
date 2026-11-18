@@ -132,8 +132,8 @@ was carried out. Watch the Motion card for the actual result.
 
 ### Barcode route letters
 
-On the day, type the four letters in the **Line & barcode** card, e.g. `L=B R=C S=D U=A`
-(Left, Right, Straight, U-turn), and press **Send route**. The log shows the robot's reply:
+On the day, type one letter in each of the **Left**, **Right**, **Straight** and **U-turn** boxes
+in the **Line & barcode** card and press **Send route**. The log shows the robot's reply:
 `robot route: ok …`, or `rejected …` (all four needed, each letter different; the old route stays).
 The message is retained, so the robot gets it again after a reboot. Until a route arrives the
 robot uses `app_program/subsystem3/route.h`. Turns happen at the junction after the code, the
