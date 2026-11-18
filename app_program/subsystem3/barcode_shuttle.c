@@ -13,7 +13,7 @@
 
 #define SHUTTLE_TRIPS       20U    /* Forward-and-back round trips. */
 #define SHUTTLE_DISTANCE_M  0.40   /* One way: the 26 cm code plus a few cm of floor each side. */
-#define SHUTTLE_SPEED       0.05   /* m/s, the line following speed (LINE_SPEED). */
+#define SHUTTLE_SPEED       0.05   /* m/s during barcode shuttle tests. */
 #define SHUTTLE_PAUSE_MS    1500U  /* Standing still after each leg: ends the reader's pass. */
 #define SHUTTLE_LEG_TIMEOUT 15.0   /* s. */
 #define SHUTTLE_IDLE_S      2.0    /* Abort if the car has not moved 5 mm this long after the command. */

@@ -76,9 +76,9 @@ when centred (Buddy 3 update).
 
 | GP27 centre (1=black) | GP26 right (1=black) | Action |
 | --- | --- | --- |
-| 1 | 1 | Both wheel targets 0.08 m/s |
-| 1 | 0 | Line to the left: 0.05 / 0.11 m/s |
-| 0 | 1 | Line to the right: 0.11 / 0.05 m/s |
+| 1 | 1 | Both wheel targets 0.07 m/s |
+| 1 | 0 | Steer left at 0.04375 / 0.09625 m/s |
+| 0 | 1 | Steer right at 0.09625 / 0.04375 m/s |
 | 0 | 0 | Repeat the last command for 0.2 s; then pivot (inner wheel 0, outer 0.08 m/s) up to 60° towards the side last seen (left if unknown), then up to 60° past the original heading the other way. If both miss: turn back to the heading on the line, reverse 0.06 m/s by the overshoot + 2 cm, sweep both sides once more; then refresh 0 / 0 m/s. Resumes when the line returns |
 
 Line loss no longer calls `motion_stop()`, so it creates no latched hold. Zero-speed

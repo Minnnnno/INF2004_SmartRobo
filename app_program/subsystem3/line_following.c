@@ -103,8 +103,7 @@ static void line_loop(void)
 /* Both IR sensors read black (1) when centred on the line; GP26 sits slightly right of centre. */
 #define DEG_TO_RAD          (0.017453292519943295)
 #define LINE_SESSION        3001U
-#define LINE_SPEED          0.05  /* m/s forward while following. Halved from 0.1 so the barcode sensor gets
-                                   * about 7 samples (0.42 mm each) across a 3 mm bar of the small barcode. */
+#define LINE_SPEED          0.07  /* Target centre speed in m/s while following the line. */
 #define LINE_CORRECTION     (LINE_SPEED * 0.375) /* m/s per wheel when one sensor is off the line: the same
                                    * inner/outer wheel ratio as 0.0375 at 0.1 m/s. */
 #define LINE_SEARCH_SPEED   0.1   /* m/s outer wheel while pivoting on the stopped inner wheel.
