@@ -83,8 +83,16 @@ void buddy4_step(buddy4_t *p_context, uint8_t inputs)
          * Suspended while lifted or steeply tilted, so lifting the robot by one
          * end does not record a fake hump. A lift/overturn latch also discards
          * the hump in progress: the latch is confirmed 80-220 ms after the hand
-         * starts tilting the robot, and that tilt has often started a hump. */
-        if (LIFT_NONE != lift_state(&p_context->lift))
+         * starts tilting the robot, and that tilt has often started a hump.
+         * OVERTURNED also freezes hump recording until START (buddy4.h), so
+         * setting the robot down after the latch clears records nothing. */
+        if ((LIFT_OVERTURNED == lift_state(&p_context->lift)) &&
+            (B4_FREEZE_NONE == p_context->hump_freeze))
+        {
+            p_context->hump_freeze = B4_FREEZE_WAIT;
+        }
+        if ((LIFT_NONE != lift_state(&p_context->lift)) ||
+            (B4_FREEZE_NONE != p_context->hump_freeze))
         {
             terrain_discard(&p_context->terrain);
             return;
@@ -378,6 +386,35 @@ uint8_t buddy4_lift(buddy4_t const *p_context)
 {
     return ((NULL == p_context) || (B4_MONITORING != buddy4_state(p_context))) ?
            LIFT_NONE : lift_state(&p_context->lift);
+}
+/* Unfreeze hump recording on START (see buddy4.h). The hold must be seen
+ * first, so a stale "not held" from the cycle before motion_stop() takes
+ * effect cannot unfreeze it. Unfreezing also needs MONITORING with the lift
+ * latch clear (the robot is back down), so START in the air or during sensor
+ * recovery keeps it frozen. No motion status: stays frozen (safe side). */
+bool buddy4_hump_start(buddy4_t *p_context, bool available, bool held)
+{
+    if ((NULL == p_context) || (B4_FREEZE_NONE == p_context->hump_freeze) || !available)
+    {
+        return false;
+    }
+    if (held)
+    {
+        p_context->hump_freeze = B4_FREEZE_HELD;
+        return false;
+    }
+    if ((B4_FREEZE_HELD == p_context->hump_freeze) &&
+        (B4_MONITORING == buddy4_state(p_context)) &&
+        (LIFT_NONE == lift_state(&p_context->lift)))
+    {
+        p_context->hump_freeze = B4_FREEZE_NONE;
+        return true;
+    }
+    return false;
+}
+bool buddy4_hump_frozen(buddy4_t const *p_context)
+{
+    return (NULL != p_context) && (B4_FREEZE_NONE != p_context->hump_freeze);
 }
 /* Recover the owned sensor automatically, even without motor-status inputs.
  * Never capture a new reference here. Configuration plus a fresh sample proves

@@ -77,6 +77,8 @@ typedef struct
     int16_t mag[3];           /* Last good magnetometer counts X/Y/Z (12-bit signed). */
     uint32_t mag_ms;          /* Time of the last good magnetometer sample. */
     uint8_t mag_flags;        /* Bit 0: mag[] holds a good sample (B4_MAG_HAVE). */
+    uint8_t hump_freeze;      /* B4_FREEZE_*: hump recording frozen after OVERTURNED.
+                               * Survives state changes; cleared only by START. */
     buddy4_control_t control; /* Readable fields, one byte total. */
 } buddy4_t;
 
@@ -94,6 +96,19 @@ uint8_t buddy4_attempts(buddy4_t const *p_context);
  * runs only in MONITORING; any state change clears it (lift detection is
  * unavailable while the sensor recovers or has faulted). */
 uint8_t buddy4_lift(buddy4_t const *p_context);
+/* Hump freeze (demo: the run ends with the robot lifted and turned over). An
+ * OVERTURNED latch freezes hump recording: no hump is measured and the run
+ * maximum and last peak stay as they were, even after the lift latch clears,
+ * so setting the robot down can never record a peak. START unfreezes it:
+ * call buddy4_hump_start() every cycle with Buddy 2's status. It unfreezes
+ * only after the controller hold has been seen and then released (START
+ * accepted) with the lift latch clear; it returns true on that cycle. A LIFTED
+ * latch alone does not freeze. Power-up (buddy4_begin) also clears it. */
+#define B4_FREEZE_NONE     (0U)
+#define B4_FREEZE_WAIT     (1U) /* Frozen; controller hold not seen yet. */
+#define B4_FREEZE_HELD     (2U) /* Frozen; hold seen, START will unfreeze. */
+bool buddy4_hump_start(buddy4_t *p_context, bool available, bool held);
+bool buddy4_hump_frozen(buddy4_t const *p_context);
 /* Latest good magnetometer sample no older than max_age_ms (raw counts X/Y).
  * False when none (not read yet, out of range, stale, or not MONITORING). */
 #define B4_MAG_HAVE (0x01U)

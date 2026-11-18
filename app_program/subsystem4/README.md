@@ -205,6 +205,19 @@ air also clears it, which is why nothing restarts automatically: the robot
 stays stopped until the dashboard START (which needs STOPPED, stationary and
 trusted encoders). No reboot is needed (the level reference is kept).
 
+**Hump freeze after overturn.** In the demonstration the run ends with the
+robot lifted and turned over, so the peak must come only from humps completed
+on the course. The latch clears by itself once the robot is upright and still,
+which can happen while it is still held level in the air; setting it down at an
+angle could then look like a hump. So an **OVERTURNED** latch also **freezes
+hump recording**: no hump is measured, and the run maximum and last peak keep
+their values (`[TILT] ... terrain=FROZEN`), even after the latch clears. Only
+**START** unfreezes it (`buddy4_hump_start()`): Buddy 2 must first report the
+controller hold (the STOP), then the hold is released by START while MONITORING
+with the latch clear. START pressed while still overturned is re-stopped and
+keeps the freeze; a sensor RECOVERY keeps it; power-up clears it. A LIFTED
+latch alone does not freeze (an accidental lift mid-course resumes as before).
+
 **Limits.** Lift detection runs only in MONITORING: during sensor RECOVERY or
 after SENSOR_FAULT it is unavailable and any latch is cleared (sensor faults
 still never stop the motors). The GY-511 has no gyroscope, so a lift is only
@@ -325,6 +338,8 @@ mm/s2 imu_fwd=.. mg`, each lift
 `[LIFT] LIFTED (upright=64% vertical=312 mg) -> motors stopped, hump in progress discarded; set it down level, then START`
 (or `OVERTURNED`), `[LIFT] still LIFTED: motors stopped again` when released in
 the air, `[LIFT] cleared: upright and still; motors stay stopped until START`,
+on an overturn `[TERRAIN] hump recording frozen (OVERTURNED): run max kept at 41 mm until START`
+and on START `[TERRAIN] hump recording resumed (START)`,
 and each completed turn `[TURN] left 88.4 deg in 1.9 s (peak 50 deg/s) compass 87.9 deg`
 (or `compass n/a (reason)`). The calibration image prints `[MAGCAL]` lines.
 Every 500 ms: `[B4] INIT ...` capture progress, `[TILT] pitch=.. roll=.. |

@@ -93,6 +93,7 @@ void motion_stop(void) { g_stops++; g_hold = true; }
 void comms_latch_event(UB events) { g_event_bits |= events; g_events++; }
 double motion_hal_time(void) { return (double)g_clock / 1000.0; }
 static unsigned g_turn_lines;
+static unsigned g_frozen_lines, g_resumed_lines; /* [TERRAIN] hump freeze console lines. */
 static char g_turn_reason[16]; /* Last "%s" passed with a "compass n/a (%s)" [TURN] line. */
 INT tm_printf(UB const *format, ...)
 {
@@ -110,6 +111,8 @@ INT tm_printf(UB const *format, ...)
         (void)snprintf(g_turn_reason, sizeof(g_turn_reason), "%s", p_reason);
     }
     if (0 == strncmp((char const *)format, "[TURN]", 6U)) { g_turn_lines++; }
+    if (0 == strncmp((char const *)format, "[TERRAIN] hump recording frozen", 31U)) { g_frozen_lines++; }
+    if (0 == strncmp((char const *)format, "[TERRAIN] hump recording resumed", 32U)) { g_resumed_lines++; }
     return 0;
 }
 
@@ -291,6 +294,78 @@ static void lift_script(uint32_t t)
     }
 }
 
+/* Demo end (S4-H07): a real hump completes; the robot is turned over (frozen),
+ * START is pressed upside down, it is held level until the lift latch clears,
+ * set down at an angle (a hump-shaped tilt), then START. Nothing between the
+ * overturn and START may become a peak; after START humps count again. */
+static unsigned g_fstep;
+static void right_hump(int16_t x, int16_t z) { g_xyz[0] = x; g_xyz[1] = 0; g_xyz[2] = z; }
+static void freeze_script(uint32_t t)
+{
+    if ((0U == g_fstep) && (t >= 4000U))
+    {
+        right_hump(259, -966); /* ~30 mm under the right wheel */
+        g_fstep = 1U;
+    }
+    else if ((1U == g_fstep) && (t >= 6000U))
+    {
+        level();
+        g_fstep = 2U;
+    }
+    else if ((2U == g_fstep) && (t >= 7000U))
+    {
+        check(1U == g_events && fabs(g_last.values[2] - 0.030) < 0.0015, "real hump recorded before the end");
+        g_xyz[2] = 1000; /* lifted and turned over */
+        g_fstep = 3U;
+    }
+    else if ((3U == g_fstep) && (t >= 7300U))
+    {
+        check(1U == g_stops && g_hold && 1U == g_frozen_lines, "overturn: stopped and hump recording frozen");
+        g_hold = false; /* START while still upside down */
+        g_fstep = 4U;
+    }
+    else if ((4U == g_fstep) && (t >= 7400U))
+    {
+        check(2U == g_stops && g_hold && 0U == g_resumed_lines, "START upside down: re-stopped, still frozen");
+        level(); /* held level in the air: the latch clears after 500 ms */
+        g_fstep = 5U;
+    }
+    else if ((5U == g_fstep) && (t >= 8200U))
+    {
+        check(TERRAIN_MC_OVERTURNED != class_of() && g_hold, "latch cleared, still held");
+        right_hump(348, -937); /* set down at an angle: ~40 mm */
+        g_fstep = 6U;
+    }
+    else if ((6U == g_fstep) && (t >= 10000U))
+    {
+        level();
+        g_fstep = 7U;
+    }
+    else if ((7U == g_fstep) && (t >= 11000U))
+    {
+        check(1U == g_events && fabs(g_last.values[2] - 0.030) < 0.0015, "set-down tilt never reaches the run max");
+        check(S4_TS_WAITING == code_of() && 0U == g_resumed_lines, "frozen: WAITING, not resumed");
+        g_hold = false; /* START */
+        g_fstep = 8U;
+    }
+    else if ((8U == g_fstep) && (t >= 11100U))
+    {
+        check(1U == g_resumed_lines && 2U == g_stops, "START resumes hump recording");
+        right_hump(348, -937);
+        g_fstep = 9U;
+    }
+    else if ((9U == g_fstep) && (t >= 13000U))
+    {
+        level();
+        g_fstep = 10U;
+    }
+    else if ((10U == g_fstep) && (t >= 14000U))
+    {
+        check(2U == g_events && fabs(g_last.values[2] - 0.040) < 0.0015, "after START a new hump counts");
+        g_fstep = 11U;
+    }
+}
+
 /* Tilt to one side while driving (S4-H06): 45 deg for 2 s is neither a lift
  * nor an overturn, stops nothing and records no hump. */
 static unsigned g_tstep;
@@ -366,6 +441,12 @@ int main(void)
     run(MOTION_STILL, 7000U, lift_script);
     check(7U == g_lstep, "all lift checkpoints reached");
     check(3U == g_stops, "exactly three stops (overturn, release in the air, lift)");
+
+    /* Overturn freezes hump recording until START (demo end). */
+    g_fstep = 0U; g_frozen_lines = 0U; g_resumed_lines = 0U;
+    run(MOTION_STILL, 14100U, freeze_script);
+    check(11U == g_fstep, "all freeze checkpoints reached");
+    check(1U == g_frozen_lines && 1U == g_resumed_lines, "one frozen and one resumed line");
 
     /* Tilting to one side never stops the robot (35 deg rule removed). */
     g_tstep = 0U;
@@ -455,7 +536,7 @@ int main(void)
         check(!terrain_imu_faulted(&status), "unavailable slot is not a fault");
     }
 
-    printf("PASS: %u terrain task checks (snapshot, state codes, hump event, level gating, timing, lift stop)\n",
+    printf("PASS: %u terrain task checks (snapshot, state codes, hump event, level gating, timing, lift stop, hump freeze)\n",
            g_checks);
     return 0;
 }
