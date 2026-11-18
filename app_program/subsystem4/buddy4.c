@@ -92,7 +92,8 @@ void buddy4_step(buddy4_t *p_context, uint8_t inputs)
             p_context->hump_freeze = B4_FREEZE_WAIT;
         }
         if ((LIFT_NONE != lift_state(&p_context->lift)) ||
-            (B4_FREEZE_NONE != p_context->hump_freeze))
+            (B4_FREEZE_NONE != p_context->hump_freeze) ||
+            (0U != (inputs & B4_HUMP_PAUSE))) /* Stopped: no humps until START. */
         {
             terrain_discard(&p_context->terrain);
             return;

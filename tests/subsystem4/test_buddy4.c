@@ -394,6 +394,46 @@ int main(void)
         while ((buddy4_state(&c)!=B4_MONITORING) && (n<400U)) { tick(&c,20U,B4_WAIT_START); n++; }
         check(buddy4_state(&c)==B4_MONITORING,"recovery with the reference kept ignores WAIT_START");
     }
+    /* Hump pause while stopped (controller hold): no hump is measured, the one
+     * in progress is discarded, run max kept; lift detection keeps running. */
+    {
+        uint8_t kept=0U;
+        ready(&c);
+        xyz[0]=259; xyz[1]=0; xyz[2]=-966; /* real ~30 mm hump while driving */
+        for (unsigned i=0;i<60;i++) { tick(&c,20U,0U); }
+        xyz[0]=0; xyz[2]=-1000;
+        for (unsigned i=0;i<60;i++) { tick(&c,20U,0U); }
+        check(terrain_take_completed(&c.terrain),"hump recorded while driving");
+        kept=terrain_run_max(&c.terrain);
+        xyz[0]=348; xyz[2]=-937; /* stopped, tilted by hand: ~40 mm, then level */
+        for (unsigned i=0;i<60;i++) { tick(&c,20U,B4_HUMP_PAUSE); }
+        check((terrain_status(&c.terrain)&TERRAIN_PHASE_MASK)==TERRAIN_WAITING,"paused: no hump phase");
+        xyz[0]=0; xyz[2]=-1000;
+        for (unsigned i=0;i<60;i++) { tick(&c,20U,B4_HUMP_PAUSE); }
+        check(!terrain_take_completed(&c.terrain) && terrain_run_max(&c.terrain)==kept,
+              "paused: tilt not recorded, run max kept");
+        xyz[0]=348; xyz[2]=-937; /* a hump in progress when STOP is pressed */
+        for (unsigned i=0;i<30;i++) { tick(&c,20U,0U); }
+        check((terrain_status(&c.terrain)&TERRAIN_PHASE_MASK)==TERRAIN_CLIMBING,"hump started while driving");
+        tick(&c,20U,B4_HUMP_PAUSE);
+        check((terrain_status(&c.terrain)&TERRAIN_PHASE_MASK)==TERRAIN_WAITING,"STOP discards the hump in progress");
+        xyz[0]=0; xyz[2]=-1000;
+        for (unsigned i=0;i<60;i++) { tick(&c,20U,B4_HUMP_PAUSE); }
+        check(!terrain_take_completed(&c.terrain) && terrain_run_max(&c.terrain)==kept,"discarded hump never counts");
+        xyz[2]=-1300; /* lift detection still runs while paused */
+        for (unsigned i=0;i<4;i++) { tick(&c,20U,B4_HUMP_PAUSE); }
+        check(buddy4_lift(&c)==LIFT_LIFTED,"paused: lift still detected");
+        xyz[2]=-1000;
+        for (unsigned i=0;i<30;i++) { tick(&c,20U,B4_HUMP_PAUSE); }
+        check(buddy4_lift(&c)==LIFT_NONE,"lift cleared");
+        xyz[0]=348; xyz[2]=-937; /* START: the same profile is recorded again */
+        for (unsigned i=0;i<60;i++) { tick(&c,20U,0U); }
+        xyz[0]=0; xyz[2]=-1000;
+        for (unsigned i=0;i<60;i++) { tick(&c,20U,0U); }
+        check(terrain_take_completed(&c.terrain) &&
+              (terrain_run_max(&c.terrain)&TERRAIN_PEAK_MM_MASK)>(kept&TERRAIN_PEAK_MM_MASK),
+              "after START humps count again");
+    }
     /* Magnetometer: read while monitoring; busy/out-of-range never leave MONITORING. */
     {
         int16_t mx=0, my=0;

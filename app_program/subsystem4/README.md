@@ -230,6 +230,16 @@ with the latch clear. START pressed while still overturned is re-stopped and
 keeps the freeze; a sensor RECOVERY keeps it; power-up clears it. A LIFTED
 latch alone does not freeze (an accidental lift mid-course resumes as before).
 
+**Hump pause while stopped.** A dashboard STOP (or any controlled stop: the
+lift stop, an obstacle scan) sets the controller hold. While Buddy 2 reports
+the hold, hump recording is **paused**: no hump is measured, the hump in
+progress is discarded, and the run maximum and last peak keep their values
+(`[TILT] ... terrain=PAUSED`), so tilting or handling a stopped robot never
+records a peak. START releases the hold and recording resumes. Tilt, motion
+class, the dashboard data and lift/overturn detection keep running while
+paused. (The overturn freeze above outlasts the pause: it also needs START,
+but only once the robot is back down.)
+
 **Limits.** Lift detection runs only in MONITORING: during sensor RECOVERY or
 after SENSOR_FAULT it is unavailable and any latch is cleared (sensor faults
 still never stop the motors). The GY-511 has no gyroscope, so a lift is only
@@ -351,7 +361,9 @@ mm/s2 imu_fwd=.. mg`, each lift
 (or `OVERTURNED`), `[LIFT] still LIFTED: motors stopped again` when released in
 the air, `[LIFT] cleared: upright and still; motors stay stopped until START`,
 on an overturn `[TERRAIN] hump recording frozen (OVERTURNED): run max kept at 41 mm until START`
-and on START `[TERRAIN] hump recording resumed (START)`,
+and on START `[TERRAIN] hump recording resumed (START)`; on a STOP
+`[TERRAIN] hump recording paused (robot stopped): run max kept at 41 mm until START`
+and the same `resumed` line on START,
 and each completed turn `[TURN] left 88.4 deg in 1.9 s (peak 50 deg/s) compass 87.9 deg`
 (or `compass n/a (reason)`). The calibration image prints `[MAGCAL]` lines.
 Every 500 ms: `[B4] INIT ...` capture progress, `[TILT] pitch=.. roll=.. |

@@ -95,6 +95,7 @@ double motion_hal_time(void) { return (double)g_clock / 1000.0; }
 static unsigned g_turn_lines;
 static unsigned g_frozen_lines, g_resumed_lines; /* [TERRAIN] hump freeze console lines. */
 static unsigned g_wait_lines, g_start_lines;     /* [B4] web Start gate console lines. */
+static unsigned g_paused_lines;                  /* [TERRAIN] hump pause (STOP) lines. */
 static bool g_boot_hold; /* Controller hold at boot (ROBO_REQUIRE_START images boot held). */
 static char g_turn_reason[16]; /* Last "%s" passed with a "compass n/a (%s)" [TURN] line. */
 INT tm_printf(UB const *format, ...)
@@ -114,6 +115,7 @@ INT tm_printf(UB const *format, ...)
     }
     if (0 == strncmp((char const *)format, "[TURN]", 6U)) { g_turn_lines++; }
     if (0 == strncmp((char const *)format, "[TERRAIN] hump recording frozen", 31U)) { g_frozen_lines++; }
+    if (0 == strncmp((char const *)format, "[TERRAIN] hump recording paused", 31U)) { g_paused_lines++; }
     if (0 == strncmp((char const *)format, "[B4] waiting for dashboard START", 32U)) { g_wait_lines++; }
     if (0 == strncmp((char const *)format, "[B4] START:", 11U)) { g_start_lines++; }
     if (0 == strncmp((char const *)format, "[TERRAIN] hump recording resumed", 32U)) { g_resumed_lines++; }
@@ -370,6 +372,65 @@ static void freeze_script(uint32_t t)
     }
 }
 
+/* Dashboard STOP (S4-H09): a real hump is recorded; STOP (controller hold)
+ * pauses hump recording, so a hand tilt while stopped is never a peak;
+ * START resumes it and the next hump counts. */
+static unsigned g_pstep;
+static void pause_script(uint32_t t)
+{
+    if ((0U == g_pstep) && (t >= 4000U))
+    {
+        right_hump(259, -966); /* ~30 mm */
+        g_pstep = 1U;
+    }
+    else if ((1U == g_pstep) && (t >= 6000U))
+    {
+        level();
+        g_pstep = 2U;
+    }
+    else if ((2U == g_pstep) && (t >= 7000U))
+    {
+        check(1U == g_events && fabs(g_last.values[2] - 0.030) < 0.0015, "hump recorded before STOP");
+        g_hold = true; /* dashboard STOP */
+        g_pstep = 3U;
+    }
+    else if ((3U == g_pstep) && (t >= 7100U))
+    {
+        check(1U == g_paused_lines && 0U == g_resumed_lines, "STOP: one paused line");
+        right_hump(348, -937); /* tilted by hand, ~40 mm */
+        g_pstep = 4U;
+    }
+    else if ((4U == g_pstep) && (t >= 9000U))
+    {
+        check(S4_TS_WAITING == code_of(), "paused: no CLIMBING published");
+        level();
+        g_pstep = 5U;
+    }
+    else if ((5U == g_pstep) && (t >= 10000U))
+    {
+        check(1U == g_events && fabs(g_last.values[2] - 0.030) < 0.0015, "stopped: tilt never reaches the run max");
+        check(0U == g_stops, "a dashboard STOP is not a lift");
+        g_hold = false; /* START */
+        g_pstep = 6U;
+    }
+    else if ((6U == g_pstep) && (t >= 10100U))
+    {
+        check(1U == g_resumed_lines, "START: one resumed line");
+        right_hump(348, -937);
+        g_pstep = 7U;
+    }
+    else if ((7U == g_pstep) && (t >= 12000U))
+    {
+        level();
+        g_pstep = 8U;
+    }
+    else if ((8U == g_pstep) && (t >= 13000U))
+    {
+        check(2U == g_events && fabs(g_last.values[2] - 0.040) < 0.0015, "after START a new hump counts");
+        g_pstep = 9U;
+    }
+}
+
 /* Tilt to one side while driving (S4-H06): 45 deg for 2 s is neither a lift
  * nor an overturn, stops nothing and records no hump. */
 static unsigned g_tstep;
@@ -522,10 +583,18 @@ int main(void)
     check(3U == g_stops, "exactly three stops (overturn, release in the air, lift)");
 
     /* Overturn freezes hump recording until START (demo end). */
-    g_fstep = 0U; g_frozen_lines = 0U; g_resumed_lines = 0U;
+    g_fstep = 0U; g_frozen_lines = 0U; g_resumed_lines = 0U; g_paused_lines = 0U;
     run(MOTION_STILL, 14100U, freeze_script);
     check(11U == g_fstep, "all freeze checkpoints reached");
     check(1U == g_frozen_lines && 1U == g_resumed_lines, "one frozen and one resumed line");
+
+    check(0U == g_paused_lines, "frozen robot prints only the freeze lines");
+
+    /* Dashboard STOP pauses hump recording until START. */
+    g_pstep = 0U; g_paused_lines = 0U; g_resumed_lines = 0U;
+    run(MOTION_STILL, 13100U, pause_script);
+    check(9U == g_pstep, "all pause checkpoints reached");
+    check(1U == g_paused_lines && 1U == g_resumed_lines, "one paused and one resumed line");
 
     /* Tilting to one side never stops the robot (35 deg rule removed). */
     g_tstep = 0U;

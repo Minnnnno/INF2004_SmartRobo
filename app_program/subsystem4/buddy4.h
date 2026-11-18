@@ -31,7 +31,12 @@
 #define B4_CMD_RESET      (0x08U)
 #define B4_CAUSE_CLEARED  (0x10U)
 #define B4_LEVEL_ALLOWED  (0x20U)
-/* Bits 0x40 and 0x80 are reserved for the heading stage (MARK, CAL_DONE). */
+/* HUMP_PAUSE: controller hold (dashboard STOP or any controlled stop): the
+ * robot is stopped, so MONITORING measures no humps and discards the one in
+ * progress; run maximum and last peak are kept. Recording resumes when the
+ * bit clears (START). Tilt and lift/overturn detection keep running. */
+#define B4_HUMP_PAUSE     (0x40U)
+/* Bit 0x80 is reserved. */
 
 #define B4_STALE_MS      (100U)
 #define B4_LOSS_MS       (500U)
