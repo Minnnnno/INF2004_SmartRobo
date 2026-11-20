@@ -323,8 +323,13 @@ static void line_report(unsigned centre, unsigned right, line_direction_t direct
 #define ROUTE_PIVOT_MAX       (150.0 * DEG_TO_RAD) /* ... and the old line comes back near 220 deg: give up here. */
 #define ROUTE_UTURN_MIN       (150.0 * DEG_TO_RAD) /* U-turn: the same line, found again behind the car ... */
 #define ROUTE_UTURN_MAX       (240.0 * DEG_TO_RAD) /* ... give up past this. */
-#define ROUTE_UTURN_IGNORE_M  0.7   /* Path not read after a U-turn: the pivot itself adds ~0.18 m (path counts both
-                                     * directions), then the car drives back over the code it just read (up to 28 cm). */
+#define ROUTE_UTURN_IGNORE_M  0.52  /* Path not read after a U-turn: the car drives back over the code (up to 28 cm).
+                                     * The on-the-spot spin adds ~0 path (path is |centre| travel; it was 0.7 with the
+                                     * old one-wheel pivot's ~0.18 m). line_route_event() adds the way from the read
+                                     * to the turn, twice. */
+#define ROUTE_SPIN_SPEED      0.08  /* m/s per wheel, opposite directions: route turns spin on the spot (~80 deg/s).
+                                     * Too slow and a wheel can stall (latched F_FEEDBACK); the line search keeps
+                                     * its one-wheel pivot. */
 #define ROUTE_PIVOT_TIMEOUT   10.0  /* s backstop for the pivot (a stalled wheel). */
 #define ROUTE_STILL_SPEED     0.005 /* m/s per wheel counted as stopped. */
 #define ROUTE_BRAKE_TIMEOUT   1.5   /* s of zero-speed refreshes before giving up. */
@@ -377,7 +382,7 @@ static void route_flag(bool pivoting, bool black)
     (void)robot_update_subsystem(SOURCE_LINE, &line_status);
 }
 
-/* Pivots (dir +1 left, -1 right; the line search's own pivot on the stopped inner wheel, session 3001)
+/* Spins on the spot (dir +1 left, -1 right; both wheels driven, opposite ways, session 3001)
  * until a line IR sees black, having first left the line and turned at least min_turn. Returns at once
  * on the black, without braking, so the line loop takes over the same session immediately. */
 static bool route_pivot(double dir, double min_turn, double max_turn)
@@ -414,7 +419,9 @@ static bool route_pivot(double dir, double min_turn, double max_turn)
             continue;
         }
         /* Not accepted for ~0.2 s (well under the 0.3 s command lifetime): give up rather than wait. */
-        rejected = (line_pivot(dir) == R_OK) ? 0U : rejected + 1U;
+        rejected = (((dir < 0.0) ? motion_steer_right(SOURCE_LINE, LINE_SESSION, 0.0, ROUTE_SPIN_SPEED)
+                                 : motion_steer_left(SOURCE_LINE, LINE_SESSION, 0.0, ROUTE_SPIN_SPEED)) == R_OK)
+                   ? 0U : rejected + 1U;
         if (rejected >= 10U) { break; }
         (void)tk_dly_tsk(20U);
     }
@@ -428,9 +435,8 @@ static bool route_pivot(double dir, double min_turn, double max_turn)
 static bool route_run(route_action_t action, bool at_junction, double path_seen, line_direction_t *side)
 {
     static robot_status_t status; /* Static: the line task stack is nearly full. */
-    double dir = (action == ROUTE_RIGHT) ? -1.0 : 1.0; /* The U-turn pivots left. */
+    double dir = (action == ROUTE_RIGHT) ? -1.0 : 1.0; /* The U-turn spins left. */
     *side = LINE_STRAIGHT;
-    if (action == ROUTE_UTURN) { barcode_ignore_for(ROUTE_UTURN_IGNORE_M); } /* Before turning: the pivot sweeps the sensor. */
     if (!route_brake()) { tm_printf((const UB *)"route: FAILED while braking\n"); return false; }
     if (!motion_get_status(&status)) { return false; }
     if (at_junction && ROUTE_ADVANCE_M > 0.0) {
@@ -508,7 +514,8 @@ typedef struct {
     unsigned seen_junctions, seen_failures;
 #if ROBO_BARCODE_TASK
     unsigned seen_reads;
-    uint8_t route_pending;        /* route_action_t read before its junction (left/right only), else NONE. */
+    uint8_t route_pending;        /* route_action_t read before its junction (left/right/U-turn), else NONE. */
+    double route_read_path;       /* Path (m) at that read: sizes the U-turn's barcode ignore. */
     unsigned cal_presses;        /* Consecutive polls with GP21 pressed (debounce). */
     bool calibrating;             /* GP21 pressed: the reader is calibrating on the next full pass. */
     bool cal_wait;                /* CAL_WAIT: calibration finished, stopped until GP21 is pressed again. */
@@ -623,8 +630,9 @@ static bool line_route_event(line_ctx_t *c, const robot_status_t *status, bool o
         c->seen_reads = reads;
         action = route_action(route_get(), letter);
         if (action == ROUTE_STRAIGHT) { tm_printf((const UB *)"route: straight on, junction ignored\n"); }
-        c->route_pending = (uint8_t)((action == ROUTE_LEFT || action == ROUTE_RIGHT) ? action : ROUTE_NONE);
-        if (action != ROUTE_UTURN) { return true; } /* Only the U-turn happens at the read. */
+        c->route_pending = (uint8_t)((action == ROUTE_STRAIGHT) ? ROUTE_NONE : action);
+        c->route_read_path = status->motion.path;
+        return true; /* Every action waits for its junction. */
     }
     if (action == ROUTE_NONE) { return true; }
     if (c->search.phase != SEARCH_IDLE || !owns || !line_motion_ok(status) ||
@@ -632,6 +640,9 @@ static bool line_route_event(line_ctx_t *c, const robot_status_t *status, bool o
         /* A spin or sweep carries the barcode sensor in an arc, possibly back over the code. */
         tm_printf((const UB *)"route: not following the line right now, action skipped\n");
         return true;
+    }
+    if (action == ROUTE_UTURN) { /* Before turning: the spin sweeps the sensor, then it drives back over the code. */
+        barcode_ignore_for(ROUTE_UTURN_IGNORE_M + (status->motion.path - c->route_read_path) + 2.0 * ROUTE_ADVANCE_M);
     }
     line_set_state(&c->state, LS_MANEUVER);
     if (!route_run(action, at_junction, status->motion.path, &side)) {
