@@ -136,8 +136,8 @@ On the day, type one letter in each of the **Left**, **Right**, **Straight** and
 in the **Line & barcode** card and press **Send route**. The log shows the robot's reply:
 `robot route: ok …`, or `rejected …` (all four needed, each letter different; the old route stays).
 The message is retained, so the robot gets it again after a reboot. Until a route arrives the
-robot uses `app_program/subsystem3/route.h`. Turns happen at the junction after the code, the
-U-turn at once, and straight ignores the junction.
+robot uses `app_program/subsystem3/route.h`. Turns and the U-turn happen at the junction after
+the code, spinning on the spot (both wheels), and straight ignores the junction.
 
 Without the dashboard: `mosquitto_pub -h 192.168.137.1 -t robot/route -r -q 1 -m "L=B R=C S=D U=A"`.
 To clear an old retained route: `mosquitto_pub -h 192.168.137.1 -t robot/route -r -n`.

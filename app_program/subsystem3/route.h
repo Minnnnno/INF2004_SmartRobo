@@ -1,8 +1,8 @@
 /* Barcode route: which letter means which action. On the day the letters arrive over MQTT
  * (robot/route, text "L=B R=C S=D U=A", see subsystem1/comms.c); until then ROUTE_TABLE is used.
  * The same route gives the barcode decoder its allowed letters (barcode.c) and the line task its
- * actions (line_following.c), so the two cannot disagree. Turns wait for the junction after the
- * code; a U-turn happens at once; straight ignores the junction. */
+ * actions (line_following.c), so the two cannot disagree. Turns and the U-turn wait for the
+ * junction after the code; straight ignores the junction. */
 #ifndef ROBO_ROUTE_H
 #define ROBO_ROUTE_H
 #include <stdbool.h>
