@@ -54,7 +54,7 @@ M_CLASSES = d.M_CLASSES
 # Buddy 5 publishes S5_STATE_* (subsystem5.h) in obstacle values[3]; the
 # frame mapper copies that into O_FLAGS, so O_FLAGS currently holds this state.
 S5_STATES = ["clear", "held / scanning", "pass left", "pass right", "no way around",
-             "driving round it", "detour abandoned"]
+             "driving round it", "detour abandoned", "stopped from outside (STOP / lifted)"]
 
 # From the [ERROR] lines in app_program/subsystem2/motion_runtime.c.
 FAULT_HELP = {

@@ -21,6 +21,12 @@ static double side_sign(s5_avoid_side_t side)
    only once it is clear of it sideways. */
 bool s5_detour_plan(const s5_scan_t *p_scan, s5_detour_plan_t *p_plan)
 {
+	return s5_detour_plan_side(p_scan, p_scan->avoid.side, S5_OUT_MAX_DEG, p_plan);
+}
+
+bool s5_detour_plan_side(const s5_scan_t *p_scan, s5_avoid_side_t side, double max_out_deg,
+			 s5_detour_plan_t *p_plan)
+{
 	unsigned	index;
 	double		sign;
 	double		shift;
@@ -43,20 +49,21 @@ bool s5_detour_plan(const s5_scan_t *p_scan, s5_detour_plan_t *p_plan)
 	p_plan->out_x_mm = 0.0;
 	p_plan->tilt_deg = 0.0;
 	p_plan->start_y_mm = 0.0;
-	if (!p_scan->b_valid || (p_scan->avoid.side == S5_AVOID_NONE)) {
+	if (!p_scan->b_valid || (side == S5_AVOID_NONE) ||
+	    (max_out_deg < S5_OUT_MIN_DEG) || (max_out_deg > S5_OUT_MAX_DEG)) {
 		return false;
 	}
-	index = (p_scan->avoid.side == S5_AVOID_LEFT) ? (unsigned)S5_LEFT : (unsigned)S5_RIGHT;
+	index = (side == S5_AVOID_LEFT) ? (unsigned)S5_LEFT : (unsigned)S5_RIGHT;
 	if (!p_scan->avoid.b_room[index] ||
 	    !(b_face ? p_scan->face.b_corner[index] : p_scan->edge[index].b_found)) {
 		return false;
 	}
-	sign = side_sign(p_scan->avoid.side);
+	sign = side_sign(side);
 	/* The line sensors were on the line, ahead of the axle, at the tilt it stopped
 	   with.  Squaring up turns about the axle, so it does not change this. */
 	p_plan->start_y_mm = S5_IR_AHEAD_MM * sin(s5_start_tilt_deg(p_scan) * DEG_TO_RAD);
 	shift = p_scan->avoid.shift_mm[index];
-	p_plan->side = p_scan->avoid.side;
+	p_plan->side = side;
 	if (b_face) {
 		p_plan->tilt_deg = p_scan->face.tilt_deg;
 		p_plan->edge_mm = p_plan->start_y_mm +
@@ -75,7 +82,7 @@ bool s5_detour_plan(const s5_scan_t *p_scan, s5_detour_plan_t *p_plan)
 	   the sideways move too) until the steepest turn fits in it. */
 	front_reach = hypot(S5_FRONT_MM, S5_ROBOT_HALF_WIDTH_MM);
 	room = p_plan->face_mm - front_reach - S5_TURN_MARGIN_MM;
-	tan_max = tan(S5_OUT_MAX_DEG * DEG_TO_RAD);
+	tan_max = tan(max_out_deg * DEG_TO_RAD);
 	p_plan->backup_mm = fmax(0.0, (shift / tan_max - room) /
 				 (cos(heading) - sign * sin(heading) / tan_max));
 	if (p_plan->backup_mm > S5_BACKUP_MAX_MM) {
@@ -85,7 +92,7 @@ bool s5_detour_plan(const s5_scan_t *p_scan, s5_detour_plan_t *p_plan)
 	travel = shift + sign * p_plan->backup_mm * sin(heading);
 
 	angle_deg = atan2(travel, room) / DEG_TO_RAD;
-	angle_deg = fmax(S5_OUT_MIN_DEG, fmin(S5_OUT_MAX_DEG, angle_deg));
+	angle_deg = fmax(S5_OUT_MIN_DEG, fmin(max_out_deg, angle_deg));
 	p_plan->turn_deg = sign * angle_deg;
 	p_plan->diagonal_mm = travel / sin(angle_deg * DEG_TO_RAD);
 	p_plan->out_x_mm = travel / tan(angle_deg * DEG_TO_RAD) - p_plan->backup_mm * cos(heading);
@@ -154,4 +161,58 @@ double s5_return_length(double y_mm)
 bool s5_line_expected(double y_mm, double heading_deg)
 {
 	return fabs(y_mm + S5_IR_AHEAD_MM * sin(heading_deg * DEG_TO_RAD)) <= S5_LINE_WINDOW_MM;
+}
+
+/* t >= 0 along a ray stays inside the half-plane a + t * d >= 0: narrow [*p_lo, *p_hi]. */
+static bool clip_ray(double a, double d, double *p_lo, double *p_hi)
+{
+	if (fabs(d) < 1e-12) {
+		return a >= 0.0;
+	}
+	if (d > 0.0) {
+		*p_lo = fmax(*p_lo, -a / d);
+	} else {
+		*p_hi = fmin(*p_hi, -a / d);
+	}
+	return *p_lo <= *p_hi;
+}
+
+double s5_obstacle_range(const s5_detour_plan_t *p_plan, double x_mm, double y_mm,
+			 double heading_deg, int angle_deg)
+{
+	double	sign = side_sign(p_plan->side);
+	double	heading = heading_deg * DEG_TO_RAD;
+	double	servo_x = x_mm + S5_SERVO_AHEAD_MM * cos(heading);
+	double	servo_y = y_mm + S5_SERVO_AHEAD_MM * sin(heading);
+	double	look_deg = heading_deg + (double)(S5_ANGLE_CENTRE_DEG - angle_deg);
+	double	nearest = INFINITY;
+	int	offset;
+
+	for (offset = -S5_KNOWN_BEAM_HALF_DEG; offset <= S5_KNOWN_BEAM_HALF_DEG; offset++) {
+		double ray = (look_deg + (double)offset) * DEG_TO_RAD;
+		double ux = cos(ray);
+		double uy = sin(ray);
+		double lo = 0.0;
+		double hi = INFINITY;
+
+		/* Beyond the face (x >= face_mm), on the obstacle's side of the passed end */
+		if (clip_ray(servo_x - p_plan->face_mm, ux, &lo, &hi) &&
+		    clip_ray(-sign * (servo_y - p_plan->edge_mm), -sign * uy, &lo, &hi)) {
+			nearest = fmin(nearest, lo);
+		}
+	}
+	return nearest;
+}
+
+bool s5_echo_on_obstacle(const s5_detour_plan_t *p_plan, double x_mm, double y_mm,
+			 double heading_deg, int angle_deg, double range_mm)
+{
+	double expected;
+
+	if (!p_plan->b_ok || (p_plan->side == S5_AVOID_NONE)) {
+		return false;
+	}
+	expected = s5_obstacle_range(p_plan, x_mm, y_mm, heading_deg, angle_deg);
+	return isfinite(expected) &&
+	       (fabs(range_mm + S5_SENSOR_OFFSET_MM - expected) <= S5_KNOWN_RANGE_TOL_MM);
 }

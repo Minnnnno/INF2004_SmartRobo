@@ -49,7 +49,24 @@ bool	s5_square_up(double degrees, double *p_turned_deg);
    the obstacle or coming back, stop there and skip the rest.  The robot is not
    aligned with the line, and when interrupted while passing it may not have
    cleared the obstacle.  True: the robot is on the line, READY and not held.
-   False: it gave up somewhere; the caller must stop it. */
+   False: it gave up somewhere; the caller must stop it, unless
+   s5_detour_retryable() says the way out was blocked before it left and the
+   robot is back, held and still, where it stopped: another plan may be tried.
+   While it runs, an echo the plan's obstacle explains does not block a move
+   (s5_echo_on_obstacle). */
 bool	s5_detour_run(const s5_detour_plan_t *p_plan);
+bool	s5_detour_retryable(void);
+
+/* Why the last s5_detour_run() (or anything since the last clear) gave up:
+   a short code (README.md "Why a detour stopped"), or NULL when nothing failed.
+   *p_a and *p_b: two numbers whose meaning depends on the code. */
+void	s5_detour_reason_clear(void);
+const char *s5_detour_reason(int *p_a, int *p_b);
+/* Where the detour has the axle now (detour_plan.h frame), mm */
+void	s5_detour_pose(int *p_x_mm, int *p_y_mm);
+
+/* Release the hold this task latched, once the robot is still (as the detour
+   does before each move).  True: released, READY. */
+bool	s5_release(void);
 
 #endif /* S5_DETOUR_H */

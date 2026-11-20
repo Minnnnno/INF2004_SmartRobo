@@ -85,6 +85,16 @@ motor-test buttons drive full output and are not this software's limited test mo
   Set stopped_speed and settle_time so slow creep is observed; choose feedback
   grace/timeouts for acceleration, reversal dead time and the lowest commanded speed.
   Default estimates are unfiltered differences, while PID derivative is filtered.
+* Set min_goal_speed above the speed at which either wheel stops on its own during a
+  slow pivot. Distance moves and encoder turns hold it until the stop point instead of
+  ramping to zero; too low and the wheels stall millimetres short (no-progress fault),
+  too high and the braked stop overshoots the goal tolerance (final-goal fault).
+  0.07 m/s from the 2026-11-18 detour-turn stalls (~16-18% PWM at 35 mm/s).
+* Set breakaway[] per wheel near the lowest output that starts that wheel from rest
+  under load. A wheel asked to move or speed up that saw no encoder count gets at
+  least this, doubling by feedback_timeout; it never applies while braking or to
+  manual output, and a blocked wheel still faults. {0.18, 0.22} from the same logs
+  (right wheel never started at 11.5% and 19.2%). Retune if a drivetrain is fixed.
 * Measure the actual stop distance at each operating speed for both brake/coast.
   Choose stopping deadline and deceleration accordingly. Reversal is forced through
   a configurable neutral interval; verify it is long enough for the real drivetrain.

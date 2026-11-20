@@ -39,3 +39,6 @@ Newest at the bottom. Never delete a row.
 | Date | Subsystem | Test ID / demo | Commit | Student ID | Link | Notes |
 |---|---|---|---|---|---|---|
 | YYYY-MM-DD | S1 | S1-U03 | `abc1234` | | <https://youtu.be/...> | LED blinks at 2 Hz |
+| 2026-11-19 | S4 | S4-H03, S4-H01 | main after `610725f` | 2500910 | <https://youtu.be/b0VxlQ2r320> | Overturn and lift while driving stop the motors |
+| 2026-11-19 | S4 | S4-H08, S4-H11, S4-H04, S4-H12 | main after `610725f` | 2500910 | <https://youtu.be/O-3cIuu86ew> | Full run: calibration after START, 10 mm hump, motion classes and turn rate |
+| 2026-11-19 | S4 | S4-H10 | main after `610725f` | 2500910 | <https://youtu.be/OaEkDdhVMTM> | Hand tilt: pitch, uphill/downhill state, hump states |

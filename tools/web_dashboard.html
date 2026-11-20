@@ -384,7 +384,8 @@ function renderChecks(s, live, encLive) {
     else if (!(f.T_VALID & 2)) add("warn", "No valid pitch from the IMU", "Buddy 4 is still starting, or the GY-511 is not answering.");
     if (!f.O_AVAIL) add("bad", "Ultrasonic sensor not OK (Buddy 5)", "Check the sensor on GP16/GP17 and its 5 V supply.");
     if (f.O_FLAGS === 4) add("warn", "Obstacle: no way around", "Neither side has room. The robot stays held.");
-    if (f.O_FLAGS === 6) add("warn", "Obstacle detour abandoned", "The robot stopped and is held.");
+    if (f.O_FLAGS === 6) add("warn", "Obstacle detour abandoned", "The robot stopped and is held. The event log's \"obstacle abort=...\" line says why (subsystem5 README, \"Why a detour stopped\").");
+    if (f.O_FLAGS === 7) add("warn", "Obstacle detour stopped from outside", "STOP was sent or Buddy 4 saw the robot lifted; nothing failed. START resumes line following.");
   }
   if (e) {
     if (!e.reliable) add("bad", "Encoder readings unreliable", M.fb_help.unreliable);
