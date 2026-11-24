@@ -5,7 +5,7 @@
 | 1 | app_program/subsystem1 | WiFi/MQTT task; snapshot telemetry |
 | 2 | app_program/subsystem2 | Motion, motor driver, encoder IRQs, odometry, PID, calibration |
 | 3 | app_program/subsystem3 | Line task and barcode task |
-| 4 | app_program/subsystem4 | Heading/terrain task; confirm hardware capability |
+| 4 | app_program/subsystem4 | IMU tilt/terrain and hump height, motion class and turn rate, lift/overturn stop |
 | 5 | app_program/subsystem5 | Obstacle scan/avoidance task |
 
 Vehicle Controller: app_program/controller. Startup and seven application tasks:
@@ -35,7 +35,7 @@ general GPIO dispatcher.
 Hardware measurements, safety policy and interfaces: docs/HARDWARE.md,
 docs/CALIBRATION.md and docs/API.md. Subsystem 4 supplies real IMU/tilt readings; other sensor placeholders remain inactive.
 
-Subsystem 4 is temporarily disabled by default (`ROBO_SUBSYSTEM4=OFF`), including
-its terrain task and I2C1 startup. When re-enabled, it owns I2C1 GP6 SDA / GP7 SCL
-and runs the GY-511 background monitor at priority 8. I2C0 is not initialised.
+Subsystem 4 is enabled by default (`ROBO_SUBSYSTEM4=ON`; `OFF` drops its terrain
+task and I2C1 startup). It owns I2C1 GP6 SDA / GP7 SCL and runs the GY-511
+monitor (`terrain_task`) at priority 8. I2C0 is not initialised.
 See app_program/subsystem4/README.md for telemetry and validity semantics.

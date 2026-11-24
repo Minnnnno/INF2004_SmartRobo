@@ -21,7 +21,7 @@ Pico SDK startup adapter is archived and is not linked.
 | Buddy 2 initialization, motion task and motor diagnostics | app_program/subsystem2/motion_runtime.c |
 | Watchdog, retained crash reports and system supervision | app_program/system/system_runtime.c |
 | Buddy 3 line and barcode | app_program/subsystem3/line_following.c, barcode.c |
-| Buddy 4 heading/terrain | app_program/subsystem4/subsystem4.c |
+| Buddy 4 IMU/terrain | app_program/subsystem4/terrain_task.c |
 | Buddy 5 obstacle avoidance | app_program/subsystem5/subsystem5.c |
 
 Shared interfaces remain in include/robot.h and include/motion.h. Requests pass

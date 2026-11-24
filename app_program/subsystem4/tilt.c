@@ -1,4 +1,4 @@
-/* Gravity-based bench tilt, no gyro fusion or hump state machine. */
+/* Gravity-based robot tilt (no gyroscope fitted); hump phases are in terrain.c. */
 #include "tilt.h"
 #include <math.h>
 #include <stddef.h>
@@ -276,7 +276,7 @@ char const *tilt_condition_name(uint32_t result, uint8_t axis)
     uint32_t condition;
     if (0U == (result & TILT_RESULT_VALID)) { return "UNAVAILABLE"; } //check validity
 
-    //get the 2 bit condition at bits 22-23 and roll at bits 23-25
+    //get the 2 bit condition: pitch at bits 22-23, roll at bits 24-25
     condition = (result >> ((0U == axis) ? 22U : 24U)) & 3U;
     if (1U == condition) { return (0U == axis) ? "FRONT UP" : "LEFT SIDE LOWER"; }
     if (2U == condition) { return (0U == axis) ? "FRONT DOWN" : "RIGHT SIDE LOWER"; }

@@ -93,6 +93,8 @@ static bool mc_heading_window(motion_class_t *p_context, motion_class_input_t co
     if (!p_input->heading_valid)
     {
         p_context->ring = 0U;
+        /* Drop a turn in progress: its end angle would use an invalid heading. */
+        p_context->flags &= (uint8_t)~MC_FLAG_TURN;
         return false;
     }
     if ((0U == count) || ((now_ms - p_context->last_ms) > MC_MAX_GAP_MS))

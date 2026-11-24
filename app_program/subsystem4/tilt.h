@@ -1,4 +1,4 @@
-/* Bench orientation relative to a stationary, known-level startup reference. */
+/* Robot orientation relative to a stationary, known-level startup reference. */
 #ifndef TILT_H
 #define TILT_H
 #include <stdbool.h>
@@ -29,7 +29,8 @@ typedef struct
 
 /* Packed result: pitch offset +900 in bits 0..10; roll offset +900 in 11..21;
  * pitch condition in 22..23, roll condition in 24..25, valid in bit 26.
- * 27 useful bits; remaining bits zero. Only +/-75 deg is supported this stage.
+ * 27 useful bits; remaining bits zero. Only +/-75 deg is supported (lift.c
+ * handles steeper poses).
  */
 #define TILT_RESULT_VALID (1UL << 26U)
 #define TILT_CALIBRATED (0x40U)

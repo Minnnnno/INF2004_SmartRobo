@@ -106,7 +106,7 @@ extern const tf_field_t tf_fields[TF_FIELD_COUNT];
 #define TF_MF_HOLD		0x8U
 
 #define TF_TV_MOTION		0x1U	/* M_CLASS and TURN_RATE valid (v1: heading, never set) */
-#define TF_TV_PITCH		0x2U	/* = S4_VALID_PITCH in subsystem4.c */
+#define TF_TV_PITCH		0x2U	/* set by terrain_task.c (subsystem4) */
 #define TF_TV_HUMP		0x4U
 
 #define TF_OF_SCANNING		0x01U

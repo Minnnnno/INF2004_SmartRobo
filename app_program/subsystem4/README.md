@@ -32,7 +32,7 @@ created and I2C1 is not initialised. When enabled, the startup banner reports
 | `lift.c/.h` | Lift / overturn detection from the raw sample against the level reference, latch and clear |
 | `motion_class.c/.h` | Motion class (8 codes, 3 bits), debounce, overturned, yaw rate, turn angle, compass angle per turn |
 | `mag_heading.c/.h` | Compass: 2D calibration from a flat spin, calibrated heading, field check, unwrap |
-| `mag_cal.h` | Calibration constants pasted from the calibration build (uncalibrated by default) |
+| `mag_cal.h` | Calibration constants pasted from the calibration build (current: 6 November 2026 self-pivot, fit 0.9 %; `B4_MAG_CALIBRATED 0` turns the compass off) |
 
 ## Wiring and mounting
 
@@ -152,7 +152,8 @@ move >= 15 deg within ~0.5 s (an average of ~30 deg/s held): barcode turns,
 U-turns, line-search pivots and sharp curves; gentle curves stay MOVING. The
 window is 5 heading samples, 100 ms apart, from Buddy 2's odometry heading
 (integrated from raw encoder counts, unwrapped). It reseeds after a gap, an
-invalid heading or an impossible jump (> 90 deg in 100 ms = odometry reset).
+invalid heading or an impossible jump (> 90 deg in 100 ms = odometry reset);
+on an invalid heading or a jump a turn in progress is dropped (no `[TURN]` line).
 The instantaneous yaw rate (deg/s, from wheel speeds) is still published and
 printed, but it no longer decides the class.
 
@@ -334,7 +335,8 @@ Shared Terrain slot, published every cycle via `robot_update_subsystem`
 (1..3 are MONITORING with that terrain phase), 4 RECOVERY, 5 FAULT, 6 STOP,
 7 LIFTED (MONITORING, lift latch set, motors stopped). OVERTURNED is motion
 class 7 instead; it reaches the dashboard through the frame's `M_CLASS` field
-(layout v2, `docs/BUDDY4_FRAME_CHANGE_REQUEST.md`).
+(added in layout v2, `docs/BUDDY4_FRAME_CHANGE_REQUEST.md`; the current layout
+is v3, which changed only the barcode fields).
 
 Hump completion latches `TF_EV_HUMP_PEAK` through `comms_latch_event`, which
 is interrupt-safe. The dashboard's `HUMP_MM` shows the run maximum (completed humps only).
@@ -347,12 +349,14 @@ is unusable, outside the 3-bit codes), `terrain_motion_class()` and
 `terrain_imu_faulted()`.
 Slot validity bit 0 stays clear; Buddy 1 sets the frame's `T_VALID` bit 0
 (`TF_TV_MOTION`) from bit 9 and sends `M_CLASS` and `TURN_RATE` (deg/s) in
-frame layout v2.
+the frame (since layout v2).
 Nothing is sent as MQTT text any more; data reaches the dashboard only through
 the binary status frame (Change Requirement 1).
 
 ## Console
 
+At start-up: `[B4] firmware=<build ID>` and `[B4] GY-511 on I2C1 ...` with the
+capture instructions.
 `[B4-STATE]` and `[TERRAIN-STATE]` transitions print once, and each hump prints
 `[TERRAIN] Hump completed: peak=32 mm under RIGHT wheel | run max=41 mm`.
 Each class change prints `[MOTION] MOVING -> TURNING yaw=37 deg/s accel=..

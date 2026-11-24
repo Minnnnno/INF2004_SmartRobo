@@ -334,6 +334,19 @@ int main(void)
     wheels(100, 100);
     for (unsigned i = 0U; i < 60U; i++) { (void)step(); }
     check(!motion_class_take_turn(&g_mc, NULL, NULL, NULL), "turn interrupted by invalid input is dropped");
+    /* Heading lost mid-turn: the turn is dropped, not ended with a bogus angle
+     * (the task passes heading 0 while the heading is invalid). */
+    cruise();
+    wheels(0, 100);
+    for (unsigned i = 0U; i < 40U; i++) { (void)step(); }
+    check(motion_class_turn_active(&g_mc), "turn in progress before the heading dropout");
+    g_in.heading_valid = false;
+    g_heading_ddeg = 0.0;
+    for (unsigned i = 0U; i < 10U; i++) { (void)step(); g_heading_ddeg = 0.0; }
+    g_in.heading_valid = true;
+    wheels(100, 100);
+    for (unsigned i = 0U; i < 60U; i++) { (void)step(); }
+    check(!motion_class_take_turn(&g_mc, NULL, NULL, NULL), "turn interrupted by an invalid heading is dropped");
     cruise();
     g_in.heading_valid = false;
     wheels(0, 100);
