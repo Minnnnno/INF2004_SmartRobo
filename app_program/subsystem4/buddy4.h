@@ -39,7 +39,13 @@
  * progress; run maximum and last peak are kept. Recording resumes when the
  * bit clears (START). Tilt and lift/overturn detection keep running. */
 #define B4_HUMP_PAUSE     (0x40U)
-/* Bit 0x80 is reserved. */
+/* TURN_PAUSE: the robot is pivoting or spinning on the spot (one wheel stopped
+ * or the wheels opposite), or did so in the last 0.5 s. The accelerometer has
+ * no gyroscope and reads the sideways jolt of a starting or stopping turn as
+ * tilt, i.e. as a false hump. Same handling as HUMP_PAUSE: no humps, the one in
+ * progress is discarded, run maximum and last peak kept. Lift detection keeps
+ * running. */
+#define B4_TURN_PAUSE     (0x80U)
 
 #define B4_STALE_MS      (100U)
 #define B4_LOSS_MS       (500U)

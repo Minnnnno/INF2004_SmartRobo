@@ -51,8 +51,8 @@ robot and the dashboard (and the serial console where needed) as evidence.
    must be in that commit.
 2. **Build the MQTT production image** (VS Code "Compile Project", with
    `config/wifi_secrets.h` present) and flash it with motor power disconnected.
-3. **Start the broker and dashboard**, as in `testing/subsystem4/TEST_LOG.md`
-   ("Running the video tests"), saving the dashboard log to
+3. **Start the broker and dashboard**, as in `docs/DASHBOARD_SETUP.md`, saving the
+   dashboard log to
    `logs/<date>_SYS-xx_dashboard.log` and the serial log to `logs/<date>_SYS-xx.txt`.
 4. **Every run:** power up, place the robot level on the line, press START and keep
    it still ~2 s while Buddy 4 captures the level reference. A new run is a
@@ -111,7 +111,14 @@ What Buddy 4 brings to the system tests (details in
 - **SYS-09 (support):** confirm hump recording pauses during STOP.
 - **SYS-11:** end the run by lifting the robot (the demo ending); Highest hump must
   stay frozen.
-- Already verified at subsystem level: S4-H01, H03, H04, H07 to H12, H14 to H16;
+- **SYS-03 and SYS-11 (support):** confirm barcode turns, U-turns and line-search
+  pivots record no hump: **Highest hump** unchanged across each turn (console
+  `[TERRAIN] turning on the spot: hump recording paused` / `turn finished`).
+  SYS-11 reports the final Highest hump, so a false hump from a turn would spoil it.
+- Already verified at subsystem level: S4-H01, H03, H04, H07 to H12, H14 to H16.
+  S4-H15 (no false hump) failed on turns on the spot (2026-11-18) and passed the
+  re-test with the hump pause while turning (2026-11-24, `4033ff7`, see
+  `testing/subsystem4/TEST_LOG.md`);
   at integration level: INT-03, INT-04, INT-05.
 
 ## Other logs in this folder
