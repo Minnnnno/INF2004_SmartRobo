@@ -36,7 +36,7 @@ third_party/
 .template-reference/
 __pycache__/
 
-# Claude Code files stay local (instructions, settings, plans)
+# Claude Code files stay local (settings, plans, CLAUDE.md)
 .claude/
 CLAUDE.md
 CLAUDE.local.md
