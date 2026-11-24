@@ -11,7 +11,7 @@ References: `docs/BUDDY_MOTION_API.md`, `docs/MOTION_FAULT_DIAGNOSTICS.md`, `doc
 - **Laptop tests (S2-U..)** execute portable C logic with synthetic inputs/fake registers. Evidence is saved console output; these do not prove physical accuracy or RTOS timing.
 - **Hardware/video tests (S2-H..)** exercise the robot, with independent measurements for accuracy claims. Evidence is a video showing the robot, measurements and relevant dashboard/serial readings; separate physical-test logs are optional.
 
-This document defines planned tests. Empty links and NOT RUN entries are not passes. Current Kd is zero: the configured wheel controller is **PI**, although PID support exists.
+This document records laptop tests and submitted hardware video results. The four hardware results are user-reported PASS, with one trial per test. Current Kd is zero: the configured wheel controller is **PI**, although PID support exists.
 
 ## Requirements mapping
 
@@ -22,8 +22,8 @@ R2 labels are local traceability labels derived from Buddy 2 responsibilities/cu
 | R2-1 | Startup stopped; MQTT production requires dashboard START | S2-U04, S2-U10 | S2-H01 |
 | R2-2 | Independent signed encoder capture and modular rollover | S2-U03, S2-U07 | S2-H02 |
 | R2-3 | Independent wheel-speed regulation, acceleration limiting and bounded output | S2-U03, S2-U05 | S2-H03 |
-| R2-4 | Signed finite travel and encoder-relative completion | S2-U03, S2-U05 | S2-H05 |
-| R2-5 | Left/right finite encoder turns and heading estimation | S2-U03, S2-U05 | S2-H06 |
+| R2-4 | Signed finite travel and encoder-relative completion | S2-U03, S2-U05 | Not physically tested |
+| R2-5 | Left/right finite encoder turns and heading estimation | S2-U03, S2-U05 | Not physically tested |
 | R2-6 | STOP cancels movement, holds and requires deliberate checked release | S2-U04, S2-U10 | S2-H04 |
 | R2-7 | Invalid/stale/conflicting command rejection; expiry, feedback and overflow faults | S2-U04 | Separate physical fault tests pending |
 | R2-8 | Coherent feedback, polarity, inhibition and reversal policy | S2-U05, S2-U07 | S2-H02, S2-H03; instrumented reversal pending |
@@ -64,63 +64,11 @@ cmake --build build-s2-compact
 ctest --test-dir build-s2-compact -V > testing/subsystem2/logs/<date>_compact_driver.txt 2>&1
 ```
 
-Save verbose output including actual check counts. Earlier inspection runs reported successful host checks; this new log does not backfill them as completed runs without identifiable saved evidence. Run again and append results with the tested commit.
-
-## Hardware/video tests
-
-**Film S2-H01 to H04 first.** H05/H06 require a confirmed finite-command interface and agreed physical acceptance limits.
-
-| ID | Test | Setup and steps | Expected behaviour / evidence |
-|---|---|---|---|
-| S2-H01 | Startup and START gate | MQTT production with `ROBO_REQUIRE_START` active. Record before power-up; show no movement before START. Place level on course, press START and keep still during IMU qualification. | Physical wheels stay stopped before START. After START/qualification, valid autonomous requests drive. Show dashboard hold/state and wheels, not just command acknowledgement. |
-| S2-H02 | Independent signed encoders | Motor power disconnected, chassis supported. Use raw-count viewer/read-only diagnostic firmware. Save baseline; rotate left only forward/backward, then right only; pause for readings. | Only rotated wheel's count changes; forward positive/reverse negative using modular interpretation. Other count unchanged; invalid totals do not increase. Record pins/viewer/build. |
-| S2-H03 | Wheel-speed control | Production robot on straight track. Record serial requested/measured speeds and outputs, physical movement and dashboard. Repeat three runs in same conditions. | Forward targets correspond to positive movement. Show target/measured traces in the video and record tracking error/oscillation. Unequal PWM for equal requested speed is acceptable. No accuracy PASS without agreed limits. |
-| S2-H04 | STOP, hold and deliberate restart | Press dashboard STOP while moving; show both wheels through settling. Wait at least 3 s after settling without START, then press START. Repeat three times. | Both wheels stop; state reaches STOPPED/held; no restart during hold. Healthy settled robot resumes after deliberate START and new movement requests. Record latency if claiming it; no hard latency limit is established here. |
-| S2-H05 | Finite-distance accuracy | Confirm finite-command harness. Mark axle-centre start; request e.g. +300 mm; wait for completion/settling; measure final axle position and baseline-relative encoder displacement. Three trials each at +300 and -300 mm with clear space. | Record requested/encoder/physical distances, error, lateral drift and completion/fault. Apply physical limits agreed before testing. Identify command mode/build. |
-| S2-H06 | Finite encoder-turn accuracy | Confirm production `ENCODER_TURN` harness. Mark axle midpoint/start heading and protractor/reference rays. Request +90 and -90 degrees; measure settled physical angle and encoder heading delta. Three trials each direction. | Correct wheel/heading signs; record angle error, centre drift and completion/fault. Apply pre-agreed physical limits. A barcode tracking pivot is a different command path. |
-
-### Prerequisites and limits
-
-- Normal production dashboard provides START/STOP/ESTOP, not arbitrary finite distance/turn commands. Confirm how H05/H06 will be submitted before filming. This document does not add a harness or change firmware.
-- Standalone `calibration/distance_usb/`, motor-test and angle-test images have different output/control policies. Label their evidence separately; their accuracy does not establish production PI accuracy.
-- H02 needs **raw encoder counts**, not just wheel speed. Use the selected firmware's count viewer/encoder-frame reader or diagnostic console; verify actual pins.
-- Measure from the same axle-centre reference before/after. Use baseline-relative readings; cumulative distance includes earlier movement and dashboard heading wraps. Save results before manual repositioning.
-- Code tolerances of 10 mm / 0.05 rad (about 2.86 degrees) are encoder-based completion settings, not proven physical accuracy limits. Until physical limits are agreed, accuracy status is **MEASURED / LIMIT PENDING**, not PASS.
-- Current 10 Hz dashboard/video cannot verify 10 ms control execution, PWM frequency or electrical reversal dead time. Those require suitable target traces/instruments.
-- Fault injection remains separate from these initial videos. Do not jam/hold a powered wheel by hand; host failure-logic results are not physical fault-test evidence.
-
-## Recording procedure
-
-1. Commit code before testing; capture `git rev-parse --short HEAD` and note any local changes. Also capture the flashed firmware build ID/profile: checkout hash alone does not identify an old UF2.
-2. Flash with motor power disconnected. Identify production versus diagnostic/calibration image and enabled start/fault options.
-3. For physical tests, record the robot and relevant dashboard/serial readings in the video. A video link is sufficient in the evidence column; separate serial/dashboard log files are optional.
-4. Start each landscape clip with ID/name, commit and build/profile. Show setup and measurement references; keep robot and relevant feedback visible. Camera plus dashboard/terminal split-screen is suitable.
-5. Perform the action without cutting away from the transition. Hold on final physical behaviour and readings. State PASS/FAIL only against defined criteria.
-6. Aim for 15-60 s per simple demonstration; repeated accuracy trials may be longer or separate labelled clips. Record surface, load, battery condition, instrument/uncertainty and all trials including failures.
-7. Later upload unlisted YouTube links and add them to results and `videos/README.md`. Links are deliberately blank below. Do not commit video files.
-
-## Planned run status
-
-This is planning, not completed execution. Video links remain blank until supplied.
-
-| Test ID | Status | Log / video evidence | Preparation |
-| --- | --- | --- | --- |
-| S2-U03 | PASS (2026-11-24) | `logs/2026-11-24_motion_steering_startup_recovery.txt` | Host motion suite |
-| S2-U04 | PASS (2026-11-24) | `logs/2026-11-24_motion_steering_startup_recovery.txt` | Same motion suite; safety coverage |
-| S2-U05 | PASS (2026-11-24) | `logs/2026-11-24_motion_steering_startup_recovery.txt` | Steering suite |
-| S2-U06 | PASS (2026-11-24) | `logs/2026-11-24_compact_representation_motor_driver.txt` | Compact suite |
-| S2-U07 | PASS (2026-11-24) | `logs/2026-11-24_compact_representation_motor_driver.txt` | Driver suite |
-| S2-U08 | PASS (2026-11-24) | `logs/2026-11-24_motion_steering_startup_recovery.txt` | Crash/restart suite |
-| S2-U09 | PASS (2026-11-24) | `logs/2026-11-24_motion_steering_startup_recovery.txt` | Simulated timing cases only |
-| S2-U10 | PASS (2026-11-24) | `logs/2026-11-24_motion_steering_startup_recovery.txt` | Motion and both IMU-wait suites |
-| S2-H01 | NOT RUN |  | MQTT production/dashboard |
-| S2-H02 | NOT RUN |  | Raw-count viewer; motor power disconnected |
-| S2-H03 | NOT RUN |  | Serial targets/speeds/outputs; straight track |
-| S2-H04 | NOT RUN |  | Dashboard STOP/START; clear track |
-| S2-H05 | NOT RUN |  | Confirm harness and physical limits |
-| S2-H06 | NOT RUN |  | Confirm finite-turn harness and physical limits |
+Save verbose output including actual check counts. The laptop results below link to saved evidence for the identified tested commit. Append a new result row for each later run.
 
 ## Results
+
+Hardware videos were submitted on 2026-11-24. Buddy 2 reports S2-H01 to S2-H04 passed, with ONE trial each. Recording dates and flashed code commits were not supplied; the submission date is not assumed to be the recording date. Videos were not independently reviewed by the agent. Single trials do not establish repeatability or replace measured accuracy/timing evidence. Only these four hardware tests were performed; unperformed hardware cases have been removed.
 
 Append one row per actual run. Never overwrite/delete old results; record failures and append later retests. Retired template examples had no recorded result; their old placeholder row was not an actual run.
 
@@ -138,5 +86,9 @@ For startup, encoder-direction and STOP/START demonstrations, record the observe
 | 2026-11-24 | S2-U08 | `27eda0c9439075e4bbcf3c60ea9e4f68a385b443` | Codex | PASS | [Host log](logs/2026-11-24_motion_steering_startup_recovery.txt) | `crash_restart_checks`: retained crash/encoder evidence and checked recovery |
 | 2026-11-24 | S2-U09 | `27eda0c9439075e4bbcf3c60ea9e4f68a385b443` | Codex | PASS | [Host log](logs/2026-11-24_motion_steering_startup_recovery.txt) | Timing cases in the same motion suite; actual 10 ms scheduling not measured |
 | 2026-11-24 | S2-U10 | `27eda0c9439075e4bbcf3c60ea9e4f68a385b443` | Codex | PASS | [Host log](logs/2026-11-24_motion_steering_startup_recovery.txt) | Motion plus IMU wait (2041 checks) and web START-gate IMU wait (3605 checks) |
+| Not supplied | S2-H01 / trial 1 | Not supplied | Buddy 2 | PASS | [Startup and START](https://youtu.be/lzCOjuQXgig) | User-reported pass; startup and START gate; one trial only. |
+| Not supplied | S2-H02 / trial 1 | Not supplied | Buddy 2 | PASS | [Independent encoders](https://youtu.be/qB7hPMGxUTQ) | User-reported pass; independent signed encoder check; one trial only; does not establish rollover or maximum edge-rate performance. |
+| Not supplied | S2-H03 / trial 1 | Not supplied | Buddy 2 | PASS | [Wheel-speed control](https://youtu.be/8NpKcqakr0c) | User-reported functional pass; one trial only; original three-run repeatability check not completed; no numerical speed-accuracy result supplied. |
+| Not supplied | S2-H04 / trial 1 | Not supplied | Buddy 2 | PASS | [STOP, hold and restart](https://youtu.be/yS6CX1FzbrM) | User-reported functional pass; one trial only; original three-run repeatability check not completed; stop latency not supplied. |
 
-Run summary: selected host CTest batch 5/5 passed; standalone compact/driver batch 2/2 passed, using native Zig 0.16.0 / Clang 21.1.0 with undefined-behaviour instrumentation in the compact/driver batch. All configure/build/CTest exit codes were zero. The root build emitted a pointer-width warning in `lib/libtm/libtm_printf.c:230` for a template formatter compiled on the host; compilation still succeeded. No firmware was flashed and no physical tests were performed. The linked motion/steering/startup/recovery and compact/driver logs are evidence for this run. Two incomplete metadata-only logs from the earlier attempt were subsequently removed during cleanup; the completed evidence logs are retained.
+Host run summary: selected host CTest batch 5/5 passed; standalone compact/driver batch 2/2 passed, using native Zig 0.16.0 / Clang 21.1.0 with undefined-behaviour instrumentation in the compact/driver batch. All configure/build/CTest exit codes were zero. The root build emitted a pointer-width warning in `lib/libtm/libtm_printf.c:230` for a template formatter compiled on the host; compilation still succeeded. No firmware was flashed and no physical tests were performed. The linked motion/steering/startup/recovery and compact/driver logs are evidence for this run. Two incomplete metadata-only logs from the earlier attempt were subsequently removed during cleanup; the completed evidence logs are retained.

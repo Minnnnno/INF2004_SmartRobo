@@ -45,3 +45,7 @@ Newest at the bottom. Never delete a row.
 | 2026-11-24 | S3 | S3-H01 | not recorded | 2500622 | <https://youtu.be/t8ZaVSFGggE> | Line following and line recovery |
 | 2026-11-24 | S3 | S3-H02 | not recorded | 2500622 | <https://www.youtube.com/shorts/dHfarWP__Gw> | Barcode shuttle, both directions |
 | 2026-11-24 | S3 | S3-H03, S3-H04 | not recorded | 2500622 | <https://youtu.be/GsEvuXFR86U> | Route from the dashboard: `*Z*` → left at the junction, `*A*` → U-turn |
+| Not supplied | S2 | S2-H01 | Not supplied | <student ID> | <https://youtu.be/lzCOjuQXgig> | Startup and START; one trial; user-reported PASS; submitted 2026-11-24. |
+| Not supplied | S2 | S2-H02 | Not supplied | <student ID> | <https://youtu.be/qB7hPMGxUTQ> | Independent signed encoders; one trial; user-reported PASS; submitted 2026-11-24. |
+| Not supplied | S2 | S2-H03 | Not supplied | <student ID> | <https://youtu.be/8NpKcqakr0c> | Wheel-speed control; one trial; user-reported functional PASS; repeatability/accuracy not established; submitted 2026-11-24. |
+| Not supplied | S2 | S2-H04 | Not supplied | <student ID> | <https://youtu.be/yS6CX1FzbrM> | STOP/hold/restart; one trial; user-reported functional PASS; repeatability/latency not established; submitted 2026-11-24. |
