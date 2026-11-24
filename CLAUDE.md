@@ -25,8 +25,8 @@ CMake is the only supported route (the `build_make/` GNU Make files and the `mak
 
 | Option | Purpose | Extra UF2 |
 |---|---|---|
-| (none) | Production: `ROBO_PRODUCTION_BUILD` defined, motion enabled, full PWM range | `buddy2_production.uf2` |
-| `ROBO_LINE_STEERING=ON` | Production line following via PID steering | `buddy2_line_steering.uf2` |
+| `ROBO_LINE_STEERING=OFF` | Production without the line task: `ROBO_PRODUCTION_BUILD` defined, motion enabled, full PWM range | `buddy2_production.uf2` |
+| `ROBO_LINE_STEERING=ON` (**default** for fresh non-calibration builds) | Production line following via PID steering | `buddy2_line_steering.uf2` |
 | `ROBO_IR_MONITOR=ON` (+ line steering) | Prints IR readings only, never moves | — |
 | `ROBO_MANUAL_CONSOLE=ON` | Armed serial calibration console | — |
 | `ROBO_SAFE_MOTOR_TEST=ON` (+ console) | 1 s, 25% motor tests ([docs/SAFE_MOTOR_TEST.md](docs/SAFE_MOTOR_TEST.md)) | `buddy2_safe_motor_test.uf2` |
@@ -34,7 +34,7 @@ CMake is the only supported route (the `build_make/` GNU Make files and the `mak
 | `ROBO_ENCODER_DIAGNOSTICS_ONLY=ON` (+ console) | Read-only encoders, motors compiled out | `buddy2_encoder_diag.uf2` |
 | `ROBO_MAG_CAL=ON` (+ `ROBO_SUBSYSTEM5=OFF`, no line steering) | Buddy 4 magnetometer calibration: pivots 360 deg each way, prints `mag_cal.h` constants | — |
 
-Other options: `SMP` must stay OFF (encoder snapshot/IRQ ownership is single-core). `WIFI=cyw43`, `NET=lwip`, `MQTT=ON` enable Buddy 1 networking; `NET=lwip` requires a local untracked `config/wifi_secrets.h` (copy `wifi_secrets.example.h`). `CONSOLE=uart` uses GP0/GP1 and forces `CRASH_REPORT`.
+Other options: `SMP` must stay OFF (encoder snapshot/IRQ ownership is single-core). `WIFI=cyw43`, `NET=lwip`, `MQTT=ON` enable Buddy 1 networking; the `ROBO_NETWORK=AUTO|ON|OFF` shortcut sets all three at once (AUTO = on only if `wifi_secrets.h` exists and the profile isn't calibration/test; empty, the default, leaves them as given); `NET=lwip` requires a local untracked `config/wifi_secrets.h` (copy `wifi_secrets.example.h`). `CONSOLE=uart` uses GP0/GP1 and forces `CRASH_REPORT`.
 
 Feature toggles (not profiles): `ROBO_SUBSYSTEM4` (default ON; Buddy 4 IMU/terrain + its I2C1 driver), `ROBO_SUBSYSTEM5` (default ON; obstacle detection + servo scanning), `ROBO_MOTION_FAULTS_DISABLED` (default OFF; Buddy 2 never enters the latched FAULT state — has its own host test).
 
@@ -42,7 +42,7 @@ Each build writes a build ID (`firmware-build-id.txt`) that the USB banner print
 
 ## Host tests
 
-Portable logic (motion, faults, steering, line sensor/PID, motor/angle test state machines, obstacle runtime/servo, Buddy 1 telemetry frames, crash restart, tmonitor formatting) is unit-tested natively:
+Portable logic (motion, faults, steering, line sensor/PID, motor/angle test state machines, obstacle runtime/servo, Buddy 1 telemetry frames, crash restart, tmonitor formatting, barcode decoder, MQTT route parsing) is unit-tested natively:
 
 ```sh
 cmake -S . -B build-host-cmake -G Ninja -DROBO_HOST_TESTS=ON
@@ -50,6 +50,8 @@ cmake --build build-host-cmake
 ctest --test-dir build-host-cmake --output-on-failure
 ctest --test-dir build-host-cmake -R steering_checks --output-on-failure   # single test
 ```
+
+The `barcode_decode_*` tests are one executable replaying recorded runs from `tests/barcode/replay.txt` under different `--letters`/`--ladder` args (`-R barcode_decode` runs them all); the invariant is "never decode a wrong letter".
 
 `ROBO_HOST_TESTS=ON` builds only the host test project (no Pico SDK), so it needs its own build directory and a native C compiler. Host tests compile with `-Wall -Wextra -Werror -Wconversion -Wshadow` (non-MSVC); firmware code shared with them must stay warning-clean under those flags. Hardware is faked via `ROBO_*_HOST` defines and fake HAL headers in [tests/](tests/) (e.g. `motor_test_fake_hal.h`, `line_test_fake_hal.h`). Additional standalone suites: [tests/buddy2_compact/CMakeLists.txt](tests/buddy2_compact/CMakeLists.txt) `python tests/forward_console/run_tests.py` (uses clang), and the Buddy 4 IMU suite `python tests/subsystem4/run_tests.py` (native gcc; set `CC` for another compiler). Test records/logs for hardware tests live under [testing/](testing/) with IDs like `S2-U01`, `INT-01`, `SYS-01` that are never reused.
 
@@ -61,7 +63,9 @@ ctest --test-dir build-host-cmake -R steering_checks --output-on-failure   # sin
 
 **Source globbing:** CMake globs `app_program/*.c` and `app_program/*/*.c` — active app sources must live at the root or exactly one subdirectory deep. The exclusion regex in CMakeLists.txt keeps subsystem self-tests and legacy demo names out of firmware. Buddy 2's obsolete producer demo has been removed from the active application tree; its current entry points are in `subsystem2/motion_runtime.h`.
 
-**Ownership** ([TEAM.md](TEAM.md)): subsystem1 = WiFi/MQTT (Buddy 1), subsystem2 = motion/motors/encoders/PID/odometry (Buddy 2), subsystem3 = line + barcode, subsystem4 = IMU heading/terrain (GY-511 on I2C1 GP6/GP7), subsystem5 = obstacle avoidance. `app_program/controller/` is the Vehicle Controller.
+**Ownership** ([TEAM.md](TEAM.md)): subsystem1 = WiFi/MQTT (Buddy 1), subsystem2 = motion/motors/encoders/PID/odometry (Buddy 2), subsystem3 = line + barcode, subsystem4 = IMU heading/terrain (GY-511 on I2C1 GP6/GP7), subsystem5 = obstacle avoidance. `app_program/controller/` is the Vehicle Controller (plus `robot_runtime.c`); `app_program/system/` creates the tasks (`app_tasks.c`).
+
+**Barcode + route (subsystem3):** `ROBO_BARCODE_TASK` ([include/subsystems.h](include/subsystems.h)) is 1 only in the line-steering image or with `-DCMAKE_C_FLAGS=-DROBO_BARCODE_TEST=1`. [route.h](app_program/subsystem3/route.h) maps barcode letters to LEFT/RIGHT/STRAIGHT/UTURN; the route arrives over MQTT `robot/route` (text `L=B R=C S=D U=A`, acked on `robot/route/ack`, topics in `subsystem1/comms_hooks.h`), falling back to `ROUTE_TABLE`. The same route supplies the decoder's allowed letters and the line task's actions, so they cannot disagree. Turns and U-turns wait for the junction after the code; straight ignores it. Reader modes (WATCHING / CALIBRATING after GP21 / ARMED / IGNORING) are logged as `[S3-BARCODE] A -> B`. Analysis-only flags go through `CMAKE_C_FLAGS`, not CMake options: `ROBO_BARCODE_SHUTTLE`, `ROBO_BARCODE_LOG_ONLY`, `ROBO_BARCODE_STREAM`, `ROBO_BARCODE_JUNCTION_DUMP`.
 
 **Request flow:** sensor subsystems never touch motor GPIO. They call `robot_submit(...)` / `motion_*` from [include/robot.h](include/robot.h) (non-blocking; `R_OK` means queued, not approved or completed). The Vehicle Controller arbitrates sources into one approved `motion_command_t`; the Motion Control task (subsystem2 `motion.c` + HAL `drv_motion.c`) executes it. Stop/fault/shutdown are separate control latches that bypass the request queue and invalidate stale commands. Buddy 4 calls `motion_stop()` when the IMU detects the robot lifted or overturned (`subsystem4/lift.c`; this replaced IMU collision detection, which was dropped from the brief). Continuous commands (e.g. `WHEEL_SPEED_TRACKING`) must be refreshed with the same source+ID before expiry (≈300 ms). See [docs/API.md](docs/API.md) and [docs/PRODUCTION_INTEGRATION.md](docs/PRODUCTION_INTEGRATION.md).
 
@@ -71,7 +75,7 @@ ctest --test-dir build-host-cmake -R steering_checks --output-on-failure   # sin
 
 **GPIO IRQ 13** has a single shared dispatcher in [app_program/subsystem2/gpio_dispatch.c](app_program/subsystem2/gpio_dispatch.c). Register non-overlapping pin masks via `board_gpio_irq_register` during core-0 init; never call `tk_def_int(13)` directly.
 
-**Pins:** motors 8/9 and 10/11; encoders left A/B 2/3, right A/B 4/5; I2C1 SDA/SCL 6/7; servo 15 (PWM slice 7B; diagnostic `S5_DIAG=6` uses GP14); ultrasonic 16/17; line right/centre 26/27; barcode 28 (reserved, inactive); calibration buttons 20/21 (optional). GP23/24/25/29 belong to the Pico W radio; GP0/GP1 are reserved when the UART console is on. Encoder pins live in `include/board_config.h`; I2C1 pins in `device/i2c/sysdepend/rp2040/i2c_cnf_sysdep.h`. `board_pins_valid()` and `motor_test_init()` also hardcode the encoder pins, so a remap must update those and the host tests.
+**Pins:** motors 8/9 and 10/11; encoders left A/B 2/3, right A/B 4/5; I2C1 SDA/SCL 6/7; servo 15 (PWM slice 7B; diagnostic `S5_DIAG=6` uses GP14); ultrasonic 16/17; line right/centre 26/27; barcode 28 (analog AO = ADC2, sampled continuously by the barcode task); calibration buttons 20/21 (optional). GP23/24/25/29 belong to the Pico W radio; GP0/GP1 are reserved when the UART console is on. Encoder pins live in `include/board_config.h`; I2C1 pins in `device/i2c/sysdepend/rp2040/i2c_cnf_sysdep.h`. `board_pins_valid()` and `motor_test_init()` also hardcode the encoder pins, so a remap must update those and the host tests.
 
 **Calibration constants** live in [app_program/subsystem2/board_config.c](app_program/subsystem2/board_config.c) (wheel diameter 65 mm, track 115 mm, ~2542/2543 counts/rev). `board_motion_config()` reports `hardware_confirmed=true` only in production; calibration profiles force it false.
 
