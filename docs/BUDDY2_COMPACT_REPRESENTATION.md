@@ -194,8 +194,13 @@ because of linker/compiler alignment. This is static RAM, not a measured runtime
 stack high-water mark. Temporary conversion views can increase stack use; task
 stack margin and control latency still need target measurement.
 
-Evidence: `build-buddy2-compact-before/{type-sizes,buddy2-symbols,image-size}.txt`
-and matching files in `build-buddy2-compact-after`. ARM object array probes in
+Historical measurement records are preserved in
+`testing/subsystem2/logs/compact_representation_2026-10-22/before/` and `after/`
+(`type-sizes.txt`, `buddy2-symbols.txt`, `image-size.txt` and build metadata).
+The original before/after generated build directories and binaries were removed
+during build-folder cleanup; their recorded hashes remain in
+`docs/BUDDY2_MEMORY_RESULTS.json`. These are historical measurements, not a
+current-image before/after comparison. ARM object array probes in
 `tests/buddy2_compact/memory_probe.c` encode sizeof values as symbol lengths.
 
 ## Tests, builds and reproducibility
