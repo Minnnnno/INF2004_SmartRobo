@@ -61,6 +61,44 @@ robot and the dashboard (and the serial console where needed) as evidence.
    obstacle size and position), do the run, end on the dashboard value that proves
    the result. Unlisted YouTube link in the results row.
 
+## Buddy 2 checklist
+
+Buddy 2's subsystem procedures are in `testing/subsystem2/TEST_LOG.md`;
+cross-buddy motion interfaces are INT-06 to INT-10 in
+`testing/integration/TEST_LOG.md`. This checklist adds responsibilities, not
+completed results. New Buddy 2 video links remain empty until supplied.
+
+- **SYS-09 (lead, B1/B4 support):** show the robot driving over the hump, dashboard STOP, physical wheel rest and held state, a 5 s wait with no restart, then deliberate START and resumed line following. B4 confirms Highest hump stays unchanged while stopped and a subsequent hump can be recorded. Record any fault; START is not a fault reset.
+- **SYS-01 (support B1/B4):** confirm wheels remain stopped during the specified 30 s pre-START wait and IMU reference qualification, then move only after valid requests are permitted.
+- **SYS-02 and SYS-03 (support B3):** confirm motor response on straights/curves and route actions. Barcode tracking pivots demonstrate navigation; they do not by themselves prove finite `ENCODER_TURN` accuracy.
+- **SYS-04 (support B5/B3):** confirm stop before contact, settled scan, detour execution and rejoin handover. B5 records the required width, time and repeated-trial results. Motion remaining held on an unsafe path must be distinguished from a successful bypass.
+- **SYS-07 (support B1):** compare motion state, signed wheel speeds, encoder counts and distance/heading with the visible movement and serial feedback, allowing for frame precision/update delay. This does not establish physical odometry accuracy.
+- **SYS-08 (support B1):** observe whether motion continues without a motion fault during the specified network outage/reconnect; this requires an actual outage test, not ordinary connected driving.
+- **SYS-10 (support B4):** confirm both physical wheels stop and remain held after lift/overturn. Check existing evidence with B4 before signing off steps not yet physically demonstrated.
+- **SYS-11 (all):** support a continuous full-course recording showing startup, barcode actions, obstacle bypass, hump reporting and lift/overturn ending. Reference separate outage and repeated-trial evidence where required; a single normal mission clip does not establish every stress/performance criterion in SYS-01 to SYS-10.
+
+### Reusing subsystem videos
+
+There is no need to record a new clip solely because a different log has a
+different test ID. Reuse footage only when it shows the specified setup, action
+and outcome; add the video link and timestamps to each applicable results row.
+
+| Existing footage | Can support | Additional coverage needed |
+|---|---|---|
+| S2-H01 startup | SYS-01 | Full 30 s wait, dashboard/IMU state and post-START qualification |
+| S2-H03 driving/speed feedback | Parts of SYS-02, SYS-06, SYS-07; INT-06/08/10 | Curves/clear turn, relevant motion-class/serial readings and feedback comparison; full-course completion for SYS-02 |
+| S2-H04 STOP/START | INT-09 line-following case; SYS-09 | At least 5 s held after settling; SYS-09 also needs hump recording pause/resume |
+| Team/B5 obstacle footage | SYS-04; INT-07 | Stop/scan/detour/rejoin visible; required measured width/time and trial count for system performance claims |
+| Team full-mission footage | SYS-11 and demonstrated parts of other cases | All required course features and end-of-run behaviour visible; separate special-case tests where not demonstrated |
+
+S2-H02 encoder isolation and S2-H05/H06 finite-command measurements remain
+subsystem evidence. They do not replace integrated mission footage. Physical
+test evidence may be a video showing the robot and dashboard/serial readings;
+no separate Buddy 2 physical-test log file is required for video-visible claims.
+Preserve existing team results and append actual new runs with their tested
+commit, testers, result and evidence. Owner sign-off is not implied by adding
+this checklist.
+
 ## Buddy 4 checklist
 
 What Buddy 4 brings to the system tests (details in
