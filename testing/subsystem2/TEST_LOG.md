@@ -105,14 +105,14 @@ This is planning, not completed execution. Video links remain blank until suppli
 
 | Test ID | Status | Laptop / serial log | Video link | Preparation |
 |---|---|---|---|---|
-| S2-U03 | NOT RUN for this log | | | Host motion suite |
-| S2-U04 | NOT RUN for this log | | | Same motion suite; safety coverage |
-| S2-U05 | NOT RUN for this log | | | Steering suite |
-| S2-U06 | NOT RUN for this log | | | Compact suite |
-| S2-U07 | NOT RUN for this log | | | Driver suite |
-| S2-U08 | NOT RUN for this log | | | Crash/restart suite |
-| S2-U09 | NOT RUN for this log | | | Motion timing cases |
-| S2-U10 | NOT RUN for this log | | | Motion and both IMU-wait suites |
+| S2-U03 | PASS (2026-11-24) | `logs/2026-11-24_codex_host_084339.txt` | | Host motion suite |
+| S2-U04 | PASS (2026-11-24) | `logs/2026-11-24_codex_host_084339.txt` | | Same motion suite; safety coverage |
+| S2-U05 | PASS (2026-11-24) | `logs/2026-11-24_codex_host_084339.txt` | | Steering suite |
+| S2-U06 | PASS (2026-11-24) | `logs/2026-11-24_codex_compact_driver_084338.txt` | | Compact suite |
+| S2-U07 | PASS (2026-11-24) | `logs/2026-11-24_codex_compact_driver_084338.txt` | | Driver suite |
+| S2-U08 | PASS (2026-11-24) | `logs/2026-11-24_codex_host_084339.txt` | | Crash/restart suite |
+| S2-U09 | PASS (2026-11-24) | `logs/2026-11-24_codex_host_084339.txt` | | Simulated timing cases only |
+| S2-U10 | PASS (2026-11-24) | `logs/2026-11-24_codex_host_084339.txt` | | Motion and both IMU-wait suites |
 | S2-H01 | NOT RUN | | | MQTT production/dashboard |
 | S2-H02 | NOT RUN | | | Raw-count viewer; motor power disconnected |
 | S2-H03 | NOT RUN | | | Serial targets/speeds/outputs; straight track |
@@ -130,4 +130,13 @@ For startup, encoder-direction and STOP/START demonstrations, record the observe
 
 | Date | Test ID / trial | Exact commit | Firmware build / profile | Tester | Result | Saved log / measurements | Video link | Notes / agreed criterion |
 |---|---|---|---|---|---|---|---|---|
-| | | | | | | | | |
+| 2026-11-24 | S2-U03 | `27eda0c9439075e4bbcf3c60ea9e4f68a385b443` | Native Zig 0.16.0 / Clang 21.1.0 host | Codex | PASS | [Host log](logs/2026-11-24_codex_host_084339.txt) | | `motion_tests`: 9633 synthetic checks; no hardware accuracy claim |
+| 2026-11-24 | S2-U04 | `27eda0c9439075e4bbcf3c60ea9e4f68a385b443` | Native Zig/Clang host | Codex | PASS | [Host log](logs/2026-11-24_codex_host_084339.txt) | | Safety/command coverage in the same motion suite; not a separate execution |
+| 2026-11-24 | S2-U05 | `27eda0c9439075e4bbcf3c60ea9e4f68a385b443` | Native Zig/Clang host | Codex | PASS | [Host log](logs/2026-11-24_codex_host_084339.txt) | | `steering_checks`: 126 checks |
+| 2026-11-24 | S2-U06 | `27eda0c9439075e4bbcf3c60ea9e4f68a385b443` | Native Zig/Clang host; undefined-behaviour instrumentation | Codex | PASS | [Compact/driver log](logs/2026-11-24_codex_compact_driver_084338.txt) | | 85465 compact checks; individual count precision retained |
+| 2026-11-24 | S2-U07 | `27eda0c9439075e4bbcf3c60ea9e4f68a385b443` | Native Zig/Clang host; fake registers; undefined-behaviour instrumentation | Codex | PASS | [Compact/driver log](logs/2026-11-24_codex_compact_driver_084338.txt) | | Polarity, independent reversal, inhibition, coherent capture and emergency stop |
+| 2026-11-24 | S2-U08 | `27eda0c9439075e4bbcf3c60ea9e4f68a385b443` | Native Zig/Clang host | Codex | PASS | [Host log](logs/2026-11-24_codex_host_084339.txt) | | `crash_restart_checks`: retained crash/encoder evidence and checked recovery |
+| 2026-11-24 | S2-U09 | `27eda0c9439075e4bbcf3c60ea9e4f68a385b443` | Native Zig/Clang host | Codex | PASS | [Host log](logs/2026-11-24_codex_host_084339.txt) | | Timing cases in the same motion suite; actual 10 ms scheduling not measured |
+| 2026-11-24 | S2-U10 | `27eda0c9439075e4bbcf3c60ea9e4f68a385b443` | Native Zig/Clang host | Codex | PASS | [Host log](logs/2026-11-24_codex_host_084339.txt) | | Motion plus IMU wait (2041 checks) and web START-gate IMU wait (3605 checks) |
+
+Run summary: selected host CTest batch 5/5 passed; standalone compact/driver batch 2/2 passed. All configure/build/CTest exit codes were zero. The root build emitted a pointer-width warning in `lib/libtm/libtm_printf.c:230` for a template formatter compiled on the host; compilation still succeeded. No firmware was flashed and no physical tests were performed. The pre-existing untracked `2026-11-24_084250_*` logs were preserved; the Codex-named logs above are evidence for this run.
