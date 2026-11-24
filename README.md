@@ -60,10 +60,11 @@ encoder-based 90-degree firmware, commands and results, see
 SMP is explicitly disabled for this motion integration. WiFi and networking are
 off by default; imported driver code is available for Buddy 1.
 
-See [build instructions](docs/BUILD.md), [integration changes](docs/TEMPLATE_INTEGRATION.md),
-[API](docs/API.md), [calibration](docs/CALIBRATION.md), [hardware assumptions](docs/HARDWARE.md)
-and [verification](docs/VERIFICATION.md). PID and accuracy report templates are in docs/.
-No firmware has been flashed or physically tested.
+See [build instructions](docs/BUILD.md), [API](docs/API.md),
+[calibration](docs/CALIBRATION.md) and [hardware assumptions](docs/HARDWARE.md).
+Buddy 2's test cases, recorded host results and hardware evidence belong in the
+[subsystem 2 test log](testing/subsystem2/TEST_LOG.md). Record measurements in its
+results table's Notes column; host results do not establish physical accuracy.
 
 The original template demo and README are preserved in docs/template_original/.
 The previous SDK-based integration is archived in docs/previous_integration/.

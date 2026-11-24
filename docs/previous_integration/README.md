@@ -10,11 +10,11 @@ channel encoders, odometry, independent speed PID, straight-distance control,
 encoder turns, continuous steering, finite manual pulses, cancellation/hold,
 guarded reset, terminal shutdown, local fault latching, and seven task entry points.
 
-Start with [build/flash instructions](docs/BUILD.md), [API and communication](docs/API.md),
-[hardware evidence](docs/HARDWARE.md), and [controlled calibration](docs/CALIBRATION.md).
-[Verification](docs/VERIFICATION.md) distinguishes executed tests from hardware work.
-Use the blank [PID report](docs/PID_REPORT_TEMPLATE.md) and
-[accuracy report](docs/MOTION_RESULTS_TEMPLATE.md) for measurements.
+This directory is an archived integration. For the current project, use the
+[build/flash instructions](../BUILD.md), [API and communication](../API.md),
+[hardware evidence](../HARDWARE.md) and [controlled calibration](../CALIBRATION.md).
+Current Buddy 2 tests, evidence and measurement notes are maintained in the
+[subsystem 2 test log](../../testing/subsystem2/TEST_LOG.md).
 
 | Owner | Files to extend |
 |---|---|
