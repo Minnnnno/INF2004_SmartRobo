@@ -99,22 +99,6 @@ Save verbose output including actual check counts. Earlier inspection runs repor
 6. Aim for 15-60 s per simple demonstration; repeated accuracy trials may be longer or separate labelled clips. Record surface, load, battery condition, instrument/uncertainty and all trials including failures.
 7. Later upload unlisted YouTube links and add them to results and `videos/README.md`. Links are deliberately blank below. Do not commit video files.
 
-## Measurements
-
-### Distance and angle
-
-| Date / test / trial | Commit / build / profile | Command ID / mode | Requested mm or degrees | Encoder delta | Physical settled result | Error (physical - requested) | Lateral / centre drift mm | Completion / fault | Evidence |
-|---|---|---|---|---|---|---|---|---|---|
-| | | | | | | | | | |
-
-### Wheel speed and stop
-
-| Date / test / trial | Commit / build | Surface / load / battery | Target L/R mm/s | Measured L/R mm/s and interval | Steady error / overshoot | STOP-to-rest s / extra travel mm | Hold / restart observation | Evidence |
-|---|---|---|---|---|---|---|---|---|
-| | | | | | | | | |
-
-Use full traces and specified windows for rise time, overshoot and steady error. Timed physical distance marks provide an independent speed cross-check. A single dashboard reading is not PI response evidence. Calculate sample count, mean, spread and worst absolute error only after data exists. Further templates: `docs/MOTION_RESULTS_TEMPLATE.md` and `docs/PID_REPORT_TEMPLATE.md`.
-
 ## Planned run status
 
 This is planning, not completed execution. Video links remain blank until supplied.
@@ -139,6 +123,10 @@ This is planning, not completed execution. Video links remain blank until suppli
 ## Results
 
 Append one row per actual run. Never overwrite/delete old results; record failures and append later retests. Retired template examples had no recorded result; their old placeholder row was not an actual run.
+
+Put readings in the **Notes / agreed criterion** column instead of separate measurement tables. For distance/angle accuracy, include requested value, encoder delta, physical settled measurement and error (physical minus requested), with units and trial number. For speed/stop tests, include target/measured speeds and the observation interval, or measured stopping time/distance when claimed. Link longer traces through the saved-log column. Example only: `Requested +300 mm; encoder +301 mm; physical +294 mm; error -6 mm; trial 1/3`.
+
+For startup, encoder-direction and STOP/START demonstrations, record the observed behaviour and video/log evidence. Retain measured values for any accuracy claim; do not infer accuracy from a single dashboard reading.
 
 | Date | Test ID / trial | Exact commit | Firmware build / profile | Tester | Result | Saved log / measurements | Video link | Notes / agreed criterion |
 |---|---|---|---|---|---|---|---|---|
