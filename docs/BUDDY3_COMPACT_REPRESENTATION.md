@@ -87,5 +87,10 @@ changing the test.
 
 `testing/subsystem3/logs/compact_representation_2026-11-24/`:
 - `host.txt`: line, barcode and route host tests on this branch.
+- `integration.txt`: integration check with all buddies' latest code (this branch
+  trial-merged onto main, not committed): no conflicts, 24/24 team host tests,
+  Buddy 1 dashboard selftest, all Buddy 4 suites, and the integrated firmware
+  with and without MQTT built with no warnings. Buddy 2's compact and
+  forward-console suites need tools this laptop lacks (UB sanitizer, clang).
 - Robot logs (line-following run on the packed reads, and the two open tests)
   are added when they are run.
