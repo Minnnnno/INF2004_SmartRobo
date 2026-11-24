@@ -11,8 +11,8 @@ Two kinds of test:
   simulated sensor data. They prove the **logic**. Evidence: the saved
   console output. No video.
 - **Video tests (S4-H..)** run on the robot. They prove the **requirement is
-  met on the real hardware**, read from the web dashboard. Evidence: a video,
-  plus the dashboard and serial logs.
+  met on the real hardware**, read from the web dashboard. Evidence: a video;
+  saved dashboard and serial logs are optional extra evidence.
 
 ## Requirements
 
@@ -74,46 +74,6 @@ the same video frame.
 | S4-H14 | Highest hump of the run is kept and reported | R4-5 | Measured hump under the right wheel in a line-following run; keep driving after it to the end of the run | After the hump **Highest hump** = its height (± 3 mm) and keeps that value for the rest of the run | `Hump completed` line; `run max=` equals the peak |
 | S4-H15 | No false hump on flat floor, including turns on the spot | R4-4, R4-11 | Flat course, no humps. Line-following run with a sharp curve, a barcode route turn and U-turn (spin on the spot) and a line-search pivot (lose the line on purpose); 3 runs, each from a standing START (acceleration). A dashboard STOP pauses hump recording, so braking after STOP is not what this tests | Card stays **WAITING** (never CLIMBING), also while spinning or pivoting; **Highest hump** stays *none yet*; never **LIFTED** | No `Hump completed` line; `[TILT] ... height=` stays below 5 mm while driving forward; around each spin/pivot `[TERRAIN] turning on the spot: hump recording paused` then `[TERRAIN] turn finished: hump recording resumed`, with `[TILT] ... terrain=TURNING` in between |
 | S4-H16 | Calibration recorded and applied | R4-2 | 1. Note the `mag_cal.h` constants (6 Nov 2026 self-pivot, fit 0.9 %) in *Notes*. 2. Place the robot level on the course, power up, press START and keep still. 3. Repeat step 2 three times, power-cycling between them (the reference is captured once per power-up) | After each capture: card **WAITING**, **Pitch** within ± 1° of 0° | `[B4] START: capturing level reference ...`, `[B4-STATE] INIT -> MONITORING`, `[TILT] pitch=` within ± 1.0 and `compass=..deg field=..` (not `n/a (uncal)`), field within ± 20 % of 348 |
-
-## Running the video tests
-
-1. **Commit first.** Note `git rev-parse --short HEAD`; it goes in the video
-   and the results row.
-2. **Build the MQTT production image**, e.g. VS Code "Compile Project" with
-   `ROBO_NETWORK=AUTO` and `config/wifi_secrets.h` present. `ROBO_REQUIRE_START`
-   (default ON in MQTT production images) makes the robot boot held, and
-   **START begins every run**: Buddy 4 calibrates, then line following
-   starts. Flash with motor power disconnected.
-3. **Start the broker and dashboard on the laptop:**
-   ```sh
-   mosquitto -c tools/mosquitto_robot.conf -v
-   python tools/web_dashboard.py --host 127.0.0.1 --log testing/subsystem4/logs/<date>_S4-Hxx_dashboard.log
-   ```
-   Open the address it prints (port 8080) and check it shows live frames
-   before testing.
-4. **Start the serial log** too (PuTTY *Session → Logging → All session
-   output*, `logs/<date>_S4-Hxx.txt`) for the console-only items.
-5. **Power up, place the robot level, then press START** for every run. The
-   tilt reference is captured after START, and a new run is a power-cycle.
-6. **Lift briskly** in S4-H01. A slow lift is only caught once
-   the robot passes 60° (OVERTURNED).
-
-**Video format** (see `videos/README.md`): one test per video, 15–60 s,
-landscape, unlisted YouTube. A longer video may cover several tests if each
-test's start is shown with its ID.
-
-1. Start: say or show the test ID and name, and the commit hash.
-2. Show the setup: ruler on the hump, stand, robot level on the course.
-3. Do the action.
-4. End holding on the dashboard value that proves the result, then say
-   PASS or FAIL.
-
-Keep the robot and the dashboard in one frame. Use OBS with the browser next
-to a phone camera (e.g. DroidCam), and add the serial terminal for the
-console-only items. For S4-H04, the evidence is that nothing
-happens: show the wheels still turning and the card never showing LIFTED.
-S4-H15 is the same kind: show the card staying WAITING and *Highest hump*
-staying *none yet* for the whole run.
 
 ## Results
 
