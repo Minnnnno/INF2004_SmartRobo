@@ -1079,6 +1079,7 @@ void obstacle_task(INT code, void *p_context)
 					  s5_round(s5_curve.swing_deg), S5_CURVE_WINDOW_MM, s5_round(S5_CURVE_MIN_DEG),
 					  s5_curve_recent(&s5_curve) ? "after a curve" : "not after a curve");
 				b_measured = s5_scan_run(&s5_scan, scan_measure, NULL);
+				s5_scan.width_mm *= 0.8;	/* scan reads wide; reported width only */
 				s5_scan.squared_deg = squared_deg;
 				if (b_measured) {
 					s5_avoidance(&s5_scan, &s5_scan.avoid);	/* knows the tilt it started with now */
