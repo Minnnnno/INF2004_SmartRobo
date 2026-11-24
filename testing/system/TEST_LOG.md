@@ -66,7 +66,9 @@ robot and the dashboard (and the serial console where needed) as evidence.
 Buddy 2's subsystem procedures are in `testing/subsystem2/TEST_LOG.md`;
 cross-buddy motion interfaces are INT-06 to INT-10 in
 `testing/integration/TEST_LOG.md`. This checklist adds responsibilities, not
-completed results. New Buddy 2 video links remain empty until supplied.
+completed results. Buddy 2 supplied S2-H01 to S2-H04 videos on 2026-11-24,
+reporting one passing subsystem trial each. The links below are supporting
+evidence; additional system coverage remains to be confirmed.
 
 - **SYS-09 (lead, B1/B4 support):** show the robot driving over the hump, dashboard STOP, physical wheel rest and held state, a 5 s wait with no restart, then deliberate START and resumed line following. B4 confirms Highest hump stays unchanged while stopped and a subsequent hump can be recorded. Record any fault; START is not a fault reset.
 - **SYS-01 (support B1/B4):** confirm wheels remain stopped during the specified 30 s pre-START wait and IMU reference qualification, then move only after valid requests are permitted.
@@ -85,14 +87,14 @@ and outcome; add the video link and timestamps to each applicable results row.
 
 | Existing footage | Can support | Additional coverage needed |
 |---|---|---|
-| S2-H01 startup | SYS-01 | Full 30 s wait, dashboard/IMU state and post-START qualification |
-| S2-H03 driving/speed feedback | Parts of SYS-02, SYS-06, SYS-07; INT-06/08/10 | Curves/clear turn, relevant motion-class/serial readings and feedback comparison; full-course completion for SYS-02 |
-| S2-H04 STOP/START | INT-09 line-following case; SYS-09 | At least 5 s held after settling; SYS-09 also needs hump recording pause/resume |
+| [S2-H01 startup](https://youtu.be/lzCOjuQXgig) | SYS-01 | Full 30 s wait, dashboard/IMU state and post-START qualification |
+| [S2-H03 driving/speed feedback](https://youtu.be/8NpKcqakr0c) | Parts of SYS-02, SYS-06, SYS-07; INT-06/08/10 | Curves/clear turn, relevant motion-class/serial readings and feedback comparison; full-course completion for SYS-02 |
+| [S2-H04 STOP/START](https://youtu.be/yS6CX1FzbrM) | INT-09 line-following case; SYS-09 | At least 5 s held after settling; SYS-09 also needs hump recording pause/resume |
 | Team/B5 obstacle footage | SYS-04; INT-07 | Stop/scan/detour/rejoin visible; required measured width/time and trial count for system performance claims |
 | Team full-mission footage | SYS-11 and demonstrated parts of other cases | All required course features and end-of-run behaviour visible; separate special-case tests where not demonstrated |
 
-S2-H02 encoder isolation and S2-H05/H06 finite-command measurements remain
-subsystem evidence. They do not replace integrated mission footage. Physical
+[S2-H02 encoder isolation](https://youtu.be/qB7hPMGxUTQ) is subsystem
+evidence. It does not replace integrated mission footage. Physical
 test evidence may be a video showing the robot and dashboard/serial readings;
 no separate Buddy 2 physical-test log file is required for video-visible claims.
 Preserve existing team results and append actual new runs with their tested

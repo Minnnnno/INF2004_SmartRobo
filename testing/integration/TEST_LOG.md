@@ -27,17 +27,6 @@ Define a test here before running it. Test IDs never change.
 *Method:* **auto (laptop)** = a host test suite (`ctest` or `run_tests.py`); evidence is the saved console output.
 **manual** = run on the robot; evidence is a video with the dashboard (and serial console where needed).
 
-## Buddy 2 evidence and video reuse
-
-INT-06 to INT-11 are defined but **not yet run** in this log. Leave video links empty until supplied; append actual results only after execution and owner review. These are test procedures, not firmware changes.
-
-- The same integrated video may support several subsystem, integration and system tests. Give the exact test IDs and timestamps in each result row; both interface owners confirm their parts.
-- S2-H01 startup footage can support system startup checks when it shows the full required wait and IMU qualification. S2-H03 footage supports INT-06 only when curves are also shown; add visible feedback comparisons for INT-08/INT-10.
-- Extend S2-H04's hold to at least **5 s after settling** to cover the line-following case of INT-09. For SYS-09, also include the hump/terrain pause and resume observations specified in the system procedure.
-- S2-H02 encoder hand-rotation and S2-H05/H06 finite-command accuracy clips do not replace an integrated obstacle-handover or full-mission run.
-- Use B5's or the team's obstacle/rejoin footage for INT-07 if it shows the required transitions and the actual tested commit is identifiable. No separate duplicate clip is needed.
-- A video link is sufficient physical evidence when robot, relevant readings and measurements are visible. A claim not visible or measured in the recording remains unverified. Existing results and partial-coverage notes below are preserved.
-
 ## Results
 
 Add a new row for every run. Never edit or delete old rows.
