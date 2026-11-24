@@ -27,28 +27,6 @@ Define a test here before running it. Test IDs never change.
 *Method:* **auto (laptop)** = a host test suite (`ctest` or `run_tests.py`); evidence is the saved console output.
 **manual** = run on the robot; evidence is a video with the dashboard (and serial console where needed).
 
-## Buddy 2 evidence and video reuse
-
-No complete, jointly signed-off result has been recorded for INT-06 to INT-11. Buddy 2 has supplied the subsystem footage below; it is supporting evidence, not automatic completion of every integration step. Append integration results after confirming the demonstrated steps and owner review. These are test procedures, not firmware changes.
-
-Buddy 2 reported S2-H01 to S2-H04 PASS with one trial each, submitted on 2026-11-24. The recording dates, tested commits and integration timestamps were not supplied, and the agent could not independently review the videos.
-
-| Supplied Buddy 2 video | Integration relevance | Coverage still to confirm |
-|---|---|---|
-| [S2-H01: startup and START](https://youtu.be/lzCOjuQXgig) | Supporting startup context; can support SYS-01 in the system log | Does not replace INT-05's laptop IMU-wait checks; confirm the actual startup wait/qualification before system sign-off |
-| [S2-H02: independent encoders](https://youtu.be/qB7hPMGxUTQ) | Subsystem acquisition evidence | Does not by itself show feedback reaching Buddy 1/Buddy 4 or test shared navigation ownership |
-| [S2-H03: wheel-speed control](https://youtu.be/8NpKcqakr0c) | Candidate evidence for INT-06 and INT-08; INT-10 only if classification is visible | INT-06 needs straight and curved steering; INT-08 needs matching serial/dashboard comparisons; INT-10 needs a clear turn, settled stop and class/yaw observations. One subsystem trial reported |
-| [S2-H04: STOP, hold and restart](https://youtu.be/yS6CX1FzbrM) | Candidate evidence for INT-09's line-following case | Confirm physical rest, at least 5 s held after settling and deliberate START. Does not establish the detour-interruption case. One subsystem trial reported |
-
-No Buddy 2 video for the obstacle stop/detour/rejoin sequence (INT-07) was supplied. Its result remains unrecorded. Existing INT-03 to INT-05 history below is unchanged; their stated partial coverage and pending owner sign-offs still apply.
-
-- The same integrated video may support several subsystem, integration and system tests. Give the exact test IDs and timestamps in each result row; both interface owners confirm their parts.
-- S2-H01 startup footage can support system startup checks when it shows the full required wait and IMU qualification. S2-H03 footage supports INT-06 only when curves are also shown; add visible feedback comparisons for INT-08/INT-10.
-- Extend S2-H04's hold to at least **5 s after settling** to cover the line-following case of INT-09. For SYS-09, also include the hump/terrain pause and resume observations specified in the system procedure.
-- S2-H02 encoder hand-rotation footage does not replace an integrated obstacle-handover or full-mission run. Finite-distance and finite-turn physical tests were not performed.
-- Use B5's or the team's obstacle/rejoin footage for INT-07 if it shows the required transitions and the actual tested commit is identifiable. No separate duplicate clip is needed.
-- A video link is sufficient physical evidence when robot, relevant readings and measurements are visible. A claim not visible or measured in the recording remains unverified. Existing results and partial-coverage notes below are preserved.
-
 ## Results
 
 Add a new row for every run. Never edit or delete old rows.
