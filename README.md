@@ -35,8 +35,7 @@ still requires an explicit network build and local credentials.
 `app_main.c` composes the application: it initializes components, creates/starts
 the existing task table and calls periodic supervision. Live motion state stays
 private to Buddy 2; the request bus and its mutex stay private to the controller.
-The excluded `subsystem2.c`/`subsystem2.h` producer examples are legacy template
-files; the production Buddy 2 entry points are declared in `motion_runtime.h`.
+The production Buddy 2 entry points are declared in `motion_runtime.h`.
 
 The standard VS Code build explicitly enables `ROBO_LINE_STEERING`,
 `ROBO_SUBSYSTEM4` and `ROBO_SUBSYSTEM5`, with motion fault latching enabled.
@@ -67,5 +66,4 @@ Buddy 2's test cases, recorded host results and hardware evidence belong in the
 results table's Notes column; host results do not establish physical accuracy.
 
 The original template demo and README are preserved in docs/template_original/.
-The previous SDK-based integration is archived in docs/previous_integration/.
 These reference files are excluded from the application source glob.

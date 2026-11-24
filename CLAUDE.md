@@ -59,7 +59,7 @@ ctest --test-dir build-host-cmake -R steering_checks --output-on-failure   # sin
 
 ## Architecture
 
-**Source globbing:** CMake globs `app_program/*.c` and `app_program/*/*.c` — active app sources must live at the root or exactly one subdirectory deep. Legacy demos (`task_producer|consumer|monitor.c`, `subsystem[2-5]_test.c`, `subsystem2/subsystem2.c`) are excluded by regex in CMakeLists.txt.
+**Source globbing:** CMake globs `app_program/*.c` and `app_program/*/*.c` — active app sources must live at the root or exactly one subdirectory deep. The exclusion regex in CMakeLists.txt keeps subsystem self-tests and legacy demo names out of firmware. Buddy 2's obsolete producer demo has been removed from the active application tree; its current entry points are in `subsystem2/motion_runtime.h`.
 
 **Ownership** ([TEAM.md](TEAM.md)): subsystem1 = WiFi/MQTT (Buddy 1), subsystem2 = motion/motors/encoders/PID/odometry (Buddy 2), subsystem3 = line + barcode, subsystem4 = IMU heading/terrain (GY-511 on I2C1 GP6/GP7), subsystem5 = obstacle avoidance. `app_program/controller/` is the Vehicle Controller.
 
@@ -82,4 +82,4 @@ ctest --test-dir build-host-cmake -R steering_checks --output-on-failure   # sin
 - Startup always leaves motors stopped; manual PWM is disabled in production; production output may use the full PWM range (the 25% cap was removed on 4 November 2026). Don't relax these limits or the CMake profile guards without explicit user direction.
 - Production images with MQTT (`ROBO_REQUIRE_START`, default ON) boot held and move only after the web dashboard START; a dashboard STOP/ESTOP sets `robot_bus_t.remote_hold`, which blocks every other `CONTROL_RELEASE` until START. Don't add code paths that release around it.
 - Flash with motor power disconnected (hold BOOTSEL, copy UF2 to `RPI-RP2`).
-- Kernel/driver code under `kernel/`, `lib/`, `device/` is imported template code with its own licenses; `docs/template_original/` and `docs/previous_integration/` are archived references, not built.
+- Kernel/driver code under `kernel/`, `lib/`, `device/` is imported template code with its own licenses; `docs/template_original/` contains archived references and is not built.

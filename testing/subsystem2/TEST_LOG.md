@@ -37,8 +37,8 @@ IDs are permanent. S2-U01/U02 are retired producer-template examples and must no
 
 | ID | What is tested | Executable / source | Expected result |
 |---|---|---|---|
-| S2-U01 | Retired: producer samples within 0..100 | Legacy `subsystem2_test.c`, excluded from production | Not applicable |
-| S2-U02 | Retired: producer pool/free-slot bounds | Legacy template example | Not applicable |
+| S2-U01 | Retired: producer samples within 0..100 | Removed legacy producer demo | Not applicable |
+| S2-U02 | Retired: producer pool/free-slot bounds | Removed legacy producer demo | Not applicable |
 | S2-U03 | States, signed moves/turns, odometry, quadrature, rollover, PI/PID, low-speed/breakaway simulation | `motion_tests`; `tests/test_motion.c` | Exit 0 and `PASS: <n> checks` |
 | S2-U04 | Validation, ownership, cancellation, expiry, hold/reset, faults, shutdown and buffers | `motion_tests`; `tests/test_motion.c` | Relevant checks pass; exit 0 |
 | S2-U05 | Steering helpers, units, speed scaling and feedback adapters | `steering_checks`; `tests/test_steering.c` | CTest Passed |
@@ -139,4 +139,4 @@ For startup, encoder-direction and STOP/START demonstrations, record the observe
 | 2026-11-24 | S2-U09 | `27eda0c9439075e4bbcf3c60ea9e4f68a385b443` | Codex | PASS | [Host log](logs/2026-11-24_motion_steering_startup_recovery.txt) | Timing cases in the same motion suite; actual 10 ms scheduling not measured |
 | 2026-11-24 | S2-U10 | `27eda0c9439075e4bbcf3c60ea9e4f68a385b443` | Codex | PASS | [Host log](logs/2026-11-24_motion_steering_startup_recovery.txt) | Motion plus IMU wait (2041 checks) and web START-gate IMU wait (3605 checks) |
 
-Run summary: selected host CTest batch 5/5 passed; standalone compact/driver batch 2/2 passed, using native Zig 0.16.0 / Clang 21.1.0 with undefined-behaviour instrumentation in the compact/driver batch. All configure/build/CTest exit codes were zero. The root build emitted a pointer-width warning in `lib/libtm/libtm_printf.c:230` for a template formatter compiled on the host; compilation still succeeded. No firmware was flashed and no physical tests were performed. The pre-existing untracked `2026-11-24_084250_*` logs were preserved; the linked motion/steering/startup/recovery and compact/driver logs are evidence for this run.
+Run summary: selected host CTest batch 5/5 passed; standalone compact/driver batch 2/2 passed, using native Zig 0.16.0 / Clang 21.1.0 with undefined-behaviour instrumentation in the compact/driver batch. All configure/build/CTest exit codes were zero. The root build emitted a pointer-width warning in `lib/libtm/libtm_printf.c:230` for a template formatter compiled on the host; compilation still succeeded. No firmware was flashed and no physical tests were performed. The linked motion/steering/startup/recovery and compact/driver logs are evidence for this run. Two incomplete metadata-only logs from the earlier attempt were subsequently removed during cleanup; the completed evidence logs are retained.
