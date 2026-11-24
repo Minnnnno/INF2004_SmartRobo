@@ -111,7 +111,13 @@ What Buddy 4 brings to the system tests (details in
 - **SYS-09 (support):** confirm hump recording pauses during STOP.
 - **SYS-11:** end the run by lifting the robot (the demo ending); Highest hump must
   stay frozen.
-- Already verified at subsystem level: S4-H01, H03, H04, H07 to H12, H14 to H16;
+- **SYS-03 and SYS-11 (support):** confirm barcode turns, U-turns and line-search
+  pivots record no hump: **Highest hump** unchanged across each turn (console
+  `[TERRAIN] turning on the spot: hump recording paused` / `turn finished`).
+  SYS-11 reports the final Highest hump, so a false hump from a turn would spoil it.
+- Already verified at subsystem level: S4-H01, H03, H04, H07 to H12, H14, H16;
+  S4-H15 (no false hump) failed on turns on the spot (2026-11-18) and is re-tested
+  with the hump pause while turning (see `testing/subsystem4/TEST_LOG.md`);
   at integration level: INT-03, INT-04, INT-05.
 
 ## Other logs in this folder

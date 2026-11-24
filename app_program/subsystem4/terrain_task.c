@@ -56,6 +56,14 @@ typedef struct
 static s4_compass_t s_compass; /* Task-owned. */
 static uint8_t s_start_gate;   /* Task-owned web Start gate, S4_START_* (terrain_wait_start). */
 static bool s_hump_paused;     /* Task-owned: hump recording paused while stopped. */
+static bool s_turn_paused;     /* Task-owned: hump recording paused while turning on the spot. */
+static bool s_turn_seen;       /* Task-owned: s_turn_ms holds the last pivot time. */
+static uint32_t s_turn_ms;     /* Task-owned: last cycle the wheels were commanded to pivot. */
+/* Turning on the spot (terrain_turning): the faster commanded wheel at least
+ * this fast, with the other stopped or opposite. Line-following steering keeps
+ * both wheels forward (about 70 +/- 37.5 mm/s), so it never matches. */
+#define S4_TURN_MIN_MM_S  (20)
+#define S4_TURN_SETTLE_MS (500U) /* Pause kept after the turn: braking jolt, filters settle. */
 #define S4_RAD_TO_DDEG   (572.95779513082323)    /* 1800 / pi */
 #define S4_HEADING_LIMIT_DDEG (2.0e9)            /* int32 range for the unwrapped heading */
 
@@ -79,6 +87,7 @@ typedef struct
     motion_state_t state;
     bool hold;            /* Controller holds the robot (STOP/fault): no motion until START. */
     int16_t speed_mm_s[2];
+    int16_t target_mm_s[2]; /* Commanded wheel speeds: they lead the real movement. */
     bool heading_valid;
     int32_t heading_ddeg; /* Buddy 2 odometry heading, unwrapped, 0.1 deg, + = left. */
 } s4_motion_t;
@@ -86,7 +95,11 @@ typedef struct
 static uint32_t terrain_time_ms(void);
 static void terrain_read_motion(s4_motion_t *p_motion);
 static bool terrain_wait_start(s4_motion_t const *p_motion);
-static uint8_t terrain_inputs(uint8_t state, s4_motion_t const *p_motion, bool wait_start);
+static uint8_t terrain_inputs(uint8_t state, s4_motion_t const *p_motion, bool wait_start,
+                              bool turning);
+static bool terrain_turning(buddy4_t const *p_context, s4_motion_t const *p_motion,
+                            uint32_t now_ms);
+static char const *terrain_hump_label(buddy4_t const *p_context, uint8_t terrain);
 static void terrain_classify(buddy4_t *p_context, motion_class_t *p_class,
                              s4_motion_t const *p_motion);
 static void terrain_lift(buddy4_t const *p_context, s4_motion_t const *p_motion,
@@ -136,6 +149,9 @@ void terrain_task(INT code, void *p_context)
     s_compass = (s4_compass_t){0};
     s_start_gate = 0U; /* S4_START_NONE */
     s_hump_paused = false;
+    s_turn_paused = false;
+    s_turn_seen = false;
+    s_turn_ms = 0U;
 #ifndef ROBO_IR_MONITOR /* Keep the IR monitor's single console line clean. */
 #ifdef ROBO_ENCODER_BUILD_ID
     /* Build ID next to the Buddy 4 start-up lines, to confirm which image is flashed. */
@@ -155,7 +171,9 @@ void terrain_task(INT code, void *p_context)
         bool class_valid = false;
 
         terrain_read_motion(&motion);
-        buddy4_step(&s_context, terrain_inputs(state, &motion, terrain_wait_start(&motion)));
+        buddy4_step(&s_context, terrain_inputs(state, &motion, terrain_wait_start(&motion),
+                                               terrain_turning(&s_context, &motion,
+                                                               terrain_time_ms())));
         terrain_lift(&s_context, &motion, &previous_lift);
         /* Pause before freeze: on the START that unfreezes, the pause still
          * sees the freeze and leaves the single "resumed" line to it. */
@@ -241,7 +259,8 @@ static uint32_t terrain_time_ms(void)
  * New run and fault reset are by design a power-up (statechart NEW_RUN): the
  * level reference needs a level, still boot before every run anyway.
  */
-static uint8_t terrain_inputs(uint8_t state, s4_motion_t const *p_motion, bool wait_start)
+static uint8_t terrain_inputs(uint8_t state, s4_motion_t const *p_motion, bool wait_start,
+                              bool turning)
 {
     uint8_t start = wait_start ? B4_WAIT_START : 0U;
 
@@ -251,8 +270,10 @@ static uint8_t terrain_inputs(uint8_t state, s4_motion_t const *p_motion, bool w
     }
     if (B4_INIT != state)
     {
-        /* Controller hold (dashboard STOP or any controlled stop): no humps. */
-        return (p_motion->available && p_motion->hold) ? B4_HUMP_PAUSE : 0U;
+        /* Controller hold (dashboard STOP or any controlled stop): no humps.
+         * Turning on the spot: no humps either (sideways jolt reads as tilt). */
+        uint8_t pause = (p_motion->available && p_motion->hold) ? B4_HUMP_PAUSE : 0U;
+        return (uint8_t)(pause | (turning ? B4_TURN_PAUSE : 0U));
     }
     if (!p_motion->available)
     {
@@ -315,6 +336,17 @@ static bool terrain_wait_start(s4_motion_t const *p_motion)
 #endif
 }
 
+/* m/s to rounded mm/s. Clamp before converting: a non-finite or huge speed
+ * never wraps (NaN becomes 0). */
+static int16_t terrain_mm_s(double m_s)
+{
+    double mm_s = m_s * 1000.0;
+
+    if (!(mm_s > -2000.0)) { mm_s = (mm_s < 0.0) ? -2000.0 : 0.0; }
+    if (mm_s > 2000.0) { mm_s = 2000.0; }
+    return (int16_t)((mm_s >= 0.0) ? (mm_s + 0.5) : (mm_s - 0.5));
+}
+
 /* One short copy of the Buddy 2 status under the bus mutex; speeds in mm/s. */
 static void terrain_read_motion(s4_motion_t *p_motion)
 {
@@ -331,11 +363,8 @@ static void terrain_read_motion(s4_motion_t *p_motion)
     p_motion->hold = status.motion.hold;
     for (uint8_t wheel = 0U; wheel < 2U; wheel++)
     {
-        double mm_s = status.motion.speed[wheel] * 1000.0;
-        /* Clamp before converting: a non-finite or huge speed never wraps. */
-        if (!(mm_s > -2000.0)) { mm_s = (mm_s < 0.0) ? -2000.0 : 0.0; }
-        if (mm_s > 2000.0) { mm_s = 2000.0; }
-        p_motion->speed_mm_s[wheel] = (int16_t)((mm_s >= 0.0) ? (mm_s + 0.5) : (mm_s - 0.5));
+        p_motion->speed_mm_s[wheel] = terrain_mm_s(status.motion.speed[wheel]);
+        p_motion->target_mm_s[wheel] = terrain_mm_s(status.motion.target[wheel]);
     }
     {
         double ddeg = status.motion.heading * S4_RAD_TO_DDEG;
@@ -416,6 +445,69 @@ static void terrain_hump_freeze(buddy4_t *p_context, s4_motion_t const *p_motion
 #endif
     }
     *p_previous = frozen;
+}
+
+/* Hump pause while turning on the spot (B4_TURN_PAUSE). The GY-511 has no
+ * gyroscope: when a pivot or spin starts or stops, the body's angular
+ * acceleration pushes the sensor sideways (about alpha x its distance from the
+ * pivot), and hump height is read from the sideways component, so the jolt
+ * looks like a 4-6 mm hump. A hump is crossed by driving forward, so nothing
+ * real is measured while turning on the spot. Turning = the faster commanded
+ * wheel at least S4_TURN_MIN_MM_S with the other stopped or opposite
+ * (left x right <= 0): route turns and U-turns (spin), the line search (one
+ * wheel pivot) and on-the-spot detour turns. The commanded speeds change before
+ * the wheels move, so the pause starts before the jolt; it lasts until
+ * S4_TURN_SETTLE_MS after the last such cycle (the stop at the end of the turn
+ * jolts too). Line-following steering keeps both wheels forward: not paused.
+ * Prints one line when the pause starts and one when it ends (MONITORING only;
+ * a frozen robot's freeze lines already say what happens). */
+static bool terrain_turning(buddy4_t const *p_context, s4_motion_t const *p_motion,
+                            uint32_t now_ms)
+{
+    int32_t left = p_motion->target_mm_s[0];
+    int32_t right = p_motion->target_mm_s[1];
+    int32_t fast = (left < 0) ? -left : left;
+    int32_t other = (right < 0) ? -right : right;
+    bool paused = false;
+
+    if (other > fast)
+    {
+        fast = other;
+    }
+    if (p_motion->available && (fast >= S4_TURN_MIN_MM_S) && ((left * right) <= 0))
+    {
+        s_turn_seen = true;
+        s_turn_ms = now_ms;
+    }
+    paused = s_turn_seen && ((now_ms - s_turn_ms) < S4_TURN_SETTLE_MS);
+#ifndef ROBO_IR_MONITOR
+    if ((paused != s_turn_paused) && (B4_MONITORING == buddy4_state(p_context)) &&
+        !buddy4_hump_frozen(p_context))
+    {
+        if (paused)
+        {
+            tm_printf((UB const *)"[TERRAIN] turning on the spot: hump recording paused (run max %d mm)\n",
+                      (INT)(terrain_run_max(&p_context->terrain) & TERRAIN_PEAK_MM_MASK));
+        }
+        else
+        {
+            tm_printf((UB const *)"[TERRAIN] turn finished: hump recording resumed\n");
+        }
+    }
+#else
+    (void)p_context;
+#endif
+    s_turn_paused = paused;
+    return paused;
+}
+
+/* [TILT] line terrain label: why humps are not measured, else the phase. */
+static char const *terrain_hump_label(buddy4_t const *p_context, uint8_t terrain)
+{
+    if (buddy4_hump_frozen(p_context)) { return "FROZEN"; }
+    if (s_hump_paused) { return "PAUSED"; }
+    if (s_turn_paused) { return "TURNING"; }
+    return terrain_phase_name(terrain);
 }
 
 /* Hump pause while stopped: same rule as the B4_HUMP_PAUSE input (MONITORING
@@ -614,7 +706,7 @@ static void terrain_report(buddy4_t const *p_context, motion_class_t const *p_cl
                       tilt_condition_name(p_context->result, 0U),
                       tilt_condition_name(p_context->result, 1U),
                       height / 10, height % 10, side,
-                      buddy4_hump_frozen(p_context) ? "FROZEN" : (s_hump_paused ? "PAUSED" : terrain_phase_name(terrain)),
+                      terrain_hump_label(p_context, terrain),
                       (INT)(terrain_run_max(&p_context->terrain) & TERRAIN_PEAK_MM_MASK),
                       motion_class_valid(p_class) ? motion_class_name(motion_class_get(p_class)) : "-",
                       (INT)motion_class_yaw_deg_s(p_class),
@@ -628,7 +720,7 @@ static void terrain_report(buddy4_t const *p_context, motion_class_t const *p_cl
                       tilt_condition_name(p_context->result, 0U),
                       tilt_condition_name(p_context->result, 1U),
                       height / 10, height % 10, side,
-                      buddy4_hump_frozen(p_context) ? "FROZEN" : (s_hump_paused ? "PAUSED" : terrain_phase_name(terrain)),
+                      terrain_hump_label(p_context, terrain),
                       (INT)(terrain_run_max(&p_context->terrain) & TERRAIN_PEAK_MM_MASK),
                       motion_class_valid(p_class) ? motion_class_name(motion_class_get(p_class)) : "-",
                       (INT)motion_class_yaw_deg_s(p_class),

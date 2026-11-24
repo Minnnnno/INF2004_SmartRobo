@@ -434,6 +434,37 @@ int main(void)
               (terrain_run_max(&c.terrain)&TERRAIN_PEAK_MM_MASK)>(kept&TERRAIN_PEAK_MM_MASK),
               "after START humps count again");
     }
+    /* Hump pause while turning on the spot: the turn's sideways jolt is never
+     * a hump, the one in progress is discarded, run max kept, lift still runs. */
+    {
+        uint8_t kept=0U;
+        ready(&c);
+        xyz[0]=259; xyz[1]=0; xyz[2]=-966; /* real ~30 mm hump while driving */
+        for (unsigned i=0;i<60;i++) { tick(&c,20U,0U); }
+        xyz[0]=0; xyz[2]=-1000;
+        for (unsigned i=0;i<60;i++) { tick(&c,20U,0U); }
+        check(terrain_take_completed(&c.terrain),"hump recorded before the turn");
+        kept=terrain_run_max(&c.terrain);
+        xyz[0]=52; xyz[2]=-999; /* spin jolt: ~6 mm sideways, then level */
+        for (unsigned i=0;i<30;i++) { tick(&c,20U,B4_TURN_PAUSE); }
+        check((terrain_status(&c.terrain)&TERRAIN_PHASE_MASK)==TERRAIN_WAITING,"turning: no hump phase");
+        xyz[0]=0; xyz[2]=-1000;
+        for (unsigned i=0;i<60;i++) { tick(&c,20U,B4_TURN_PAUSE); }
+        check(!terrain_take_completed(&c.terrain) && terrain_run_max(&c.terrain)==kept,
+              "turning: jolt not recorded, run max kept");
+        xyz[0]=348; xyz[2]=-937; /* a hump in progress when a turn starts */
+        for (unsigned i=0;i<30;i++) { tick(&c,20U,0U); }
+        check((terrain_status(&c.terrain)&TERRAIN_PHASE_MASK)==TERRAIN_CLIMBING,"hump started while driving");
+        tick(&c,20U,B4_TURN_PAUSE);
+        check((terrain_status(&c.terrain)&TERRAIN_PHASE_MASK)==TERRAIN_WAITING,"a turn discards the hump in progress");
+        xyz[0]=0; xyz[2]=-1300; /* lift detection still runs while turning */
+        for (unsigned i=0;i<4;i++) { tick(&c,20U,B4_TURN_PAUSE); }
+        check(buddy4_lift(&c)==LIFT_LIFTED,"turning: lift still detected");
+        xyz[2]=-1000;
+        for (unsigned i=0;i<30;i++) { tick(&c,20U,0U); }
+        check(buddy4_lift(&c)==LIFT_NONE && !terrain_take_completed(&c.terrain) &&
+              terrain_run_max(&c.terrain)==kept,"discarded hump never counts");
+    }
     /* Magnetometer: read while monitoring; busy/out-of-range never leave MONITORING. */
     {
         int16_t mx=0, my=0;

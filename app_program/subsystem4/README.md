@@ -241,6 +241,26 @@ class, the dashboard data and lift/overturn detection keep running while
 paused. (The overturn freeze above outlasts the pause: it also needs START,
 but only once the robot is back down.)
 
+**Hump pause while turning on the spot.** The GY-511 has no gyroscope, and
+hump height is read from the sideways component of the acceleration. When a
+pivot or spin starts or stops, the body's angular acceleration pushes the
+sensor sideways (about alpha x its distance from the pivot: a 0.3 m/s^2 wheel
+ramp spinning both wheels gives alpha ~5 rad/s^2, ~50 mg at 0.1 m, ~6 mm), so a
+turn used to record a false hump (seen on the robot when a pivot began, the
+same frame one wheel started). A hump is crossed by driving forward, so
+hump recording now pauses while the robot turns on the spot and for 0.5 s
+after (`S4_TURN_SETTLE_MS`; the stop at the end jolts too): the hump in
+progress is discarded and the run maximum kept (`B4_TURN_PAUSE`,
+`[TILT] ... terrain=TURNING`). Turning on the spot = Buddy 2's **commanded**
+wheel speeds (`motion.target`, which change before the wheels move) with the
+faster wheel at least 20 mm/s and the other stopped or opposite: route turns and
+U-turns (spin), the line search (one-wheel pivot) and on-the-spot detour turns.
+Line-following steering keeps both wheels forward, so humps crossed while
+following the line are still measured. Console: `[TERRAIN] turning on the spot:
+hump recording paused` / `[TERRAIN] turn finished: hump recording resumed`.
+Nothing new is published (no frame or T_STATE change). Limitation: a real hump
+crossed during a pivot is not recorded.
+
 **Limits.** Lift detection runs only in MONITORING: during sensor RECOVERY or
 after SENSOR_FAULT it is unavailable and any latch is cleared (sensor faults
 still never stop the motors). The GY-511 has no gyroscope, so a lift is only

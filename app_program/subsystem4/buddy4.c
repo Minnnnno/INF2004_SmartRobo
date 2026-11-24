@@ -93,7 +93,9 @@ void buddy4_step(buddy4_t *p_context, uint8_t inputs)
         }
         if ((LIFT_NONE != lift_state(&p_context->lift)) ||
             (B4_FREEZE_NONE != p_context->hump_freeze) ||
-            (0U != (inputs & B4_HUMP_PAUSE))) /* Stopped: no humps until START. */
+            /* Stopped (no humps until START) or turning on the spot (the
+             * turn's sideways jolt reads as tilt): no humps. */
+            (0U != (inputs & (B4_HUMP_PAUSE | B4_TURN_PAUSE))))
         {
             terrain_discard(&p_context->terrain);
             return;
