@@ -93,7 +93,7 @@ static void line_loop(void)
  *   LOST       the search gave up (or timed out): zero-speed refreshes until the line is seen again.
  *   HELD       someone else has the wheels: Motion Control held or faulted, or subsystem 5 avoiding.
  *   MANEUVER   a route action (route.h): brake, advance to the junction, pivot.
- *   STOPPED    a failed barcode read or a failed route action: stopped until power-cycle.
+ *   STOPPED    a failed route action: stopped until power-cycle (a failed barcode read only logs and carries on).
  *   CAL_WAIT   GP21 calibration finished (done or failed): stopped, no route action, until GP21 is pressed again.
  * The barcode reader has its own modes (barcode.c). */
 #include "steering.h"
@@ -509,7 +509,7 @@ typedef struct {
     double lost_since;            /* Last time the line was seen. */
     double next_report;           /* Next line_pid report. */
     bool baselined;               /* Barcode counters read once: earlier events cannot trigger anything. */
-    bool stopped;                 /* A failed read or route latched the car: STOPPED, not HELD. */
+    bool stopped;                 /* A failed route action latched the car: STOPPED, not HELD. */
     bool halted;                  /* A route action failed: hold still for good (zero-speed refreshes). */
     unsigned seen_junctions, seen_failures;
 #if ROBO_BARCODE_TASK
@@ -581,7 +581,7 @@ static bool line_calibration_step(line_ctx_t *c, const robot_status_t *status)
         if (!pressed) { return false; }
         c->cal_wait = false;
         /* Reads and junctions from the wait (robot handled) are forgotten; a failed read is not: it is
-         * acted on next tick (STOPPED), as always. The reader also drops a junction armed meanwhile. */
+         * reported next tick, as always. The reader also drops a junction armed meanwhile. */
         c->seen_reads = (unsigned)status->barcode.values[1];
         c->seen_junctions = (unsigned)status->barcode.values[2];
         c->route_pending = (uint8_t)ROUTE_NONE; /* A turn read before the wait has lost its junction. */
@@ -604,7 +604,7 @@ static bool line_calibration_step(line_ctx_t *c, const robot_status_t *status)
     tm_printf((const UB *)"calibration %s%s\n",
               (result == BARCODE_CAL_DONE) ? "done" : "FAILED, the sensor could not read the code",
               c->stopped ? "" : " - press GP21 to carry on");
-    if (c->stopped) { return true; } /* A failed read already stopped the car: STOPPED stays. */
+    if (c->stopped) { return true; } /* A failed route action already stopped the car: STOPPED stays. */
     c->cal_wait = true;
     (void)route_brake();
     (void)line_hold();
@@ -678,14 +678,14 @@ static bool line_barcode_events(line_ctx_t *c, const robot_status_t *status, boo
 #endif
         c->baselined = true;
     } else if (failures != c->seen_failures) {
-        /* The barcode task could not decode a pass: stop right there. The hold stays until power-cycle
-         * (this image has no Wi-Fi to release it); the junction's own bar is never counted (barcode.c). */
+        /* The barcode task could not decode a pass: no action, keep following the line. The reader arms
+         * no junction after a failed pass, and an older read's turn must not fire at this code's junction.
+         * The junction's own bar is never counted as a failure (barcode.c). */
         c->seen_failures = failures;
-        motion_stop();
-        c->stopped = true;
-        line_set_state(&c->state, LS_STOPPED);
-        tm_printf((const UB *)"route: barcode read failed, car stopped (power-cycle to rerun)\n");
-        return false;
+#if ROBO_BARCODE_TASK
+        c->route_pending = (uint8_t)ROUTE_NONE;
+#endif
+        tm_printf((const UB *)"route: barcode read failed, carrying on\n");
 #if ROBO_BARCODE_TASK
     } else if (reads != c->seen_reads || junctions != c->seen_junctions) {
         return line_route_event(c, status, owns, reads, junctions);
