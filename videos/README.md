@@ -42,3 +42,6 @@ Newest at the bottom. Never delete a row.
 | 2026-11-19 | S4 | S4-H03, S4-H01 | main after `610725f` | 2500910 | <https://youtu.be/b0VxlQ2r320> | Overturn and lift while driving stop the motors |
 | 2026-11-19 | S4 | S4-H08, S4-H11, S4-H04, S4-H12 | main after `610725f` | 2500910 | <https://youtu.be/O-3cIuu86ew> | Full run: calibration after START, 10 mm hump, motion classes and turn rate |
 | 2026-11-19 | S4 | S4-H10 | main after `610725f` | 2500910 | <https://youtu.be/OaEkDdhVMTM> | Hand tilt: pitch, uphill/downhill state, hump states |
+| 2026-11-24 | S3 | S3-H01 | not recorded | 2500622 | <https://youtu.be/t8ZaVSFGggE> | Line following and line recovery |
+| 2026-11-24 | S3 | S3-H02 | not recorded | 2500622 | <https://www.youtube.com/shorts/dHfarWP__Gw> | Barcode shuttle, both directions |
+| 2026-11-24 | S3 | S3-H03, S3-H04 | not recorded | 2500622 | <https://youtu.be/GsEvuXFR86U> | Route from the dashboard: `*Z*` → left at the junction, `*A*` → U-turn |

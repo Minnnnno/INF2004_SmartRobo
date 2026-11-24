@@ -1,0 +1,304 @@
+microT-Kernel Version 3.00
+
+firmware=smartrobo-integrated-v1-20261112T070114Z hardware_confirmed=1 manual_enabled=0 max_output_percent=100 production=1 line_task_enabled=1 subsystem4_enabled=1 subsystem5_enabled=1
+[MOTION] faults_enabled=1; failures stop motors and require checked reset/release; fault reports repeat every 2 s.
+[STACK] idle_capacity=2048 bytes (interrupts share the idle stack)
+barcode: reader running on GP28 (distance widths, 0.4 mm steps)
+[B4] firmware=smartrobo-integrated-v1-20261112T070114Z
+[B4] GY-511 on I2C1 SDA=GP6 SCL=GP7. Keep the robot LEVEL and STILL:
+[B4] tilt reference is captured about 1-2 s after boot (50 stable samples).
+[B4] INIT: capturing level reference 0/50; keep level and still
+[OBSTACLE] ready: servo GP15 at 90 deg, ultrasonic TRIG GP16 / ECHO GP17, slow zone 450 mm, stop at 150 mm
+[B4] INIT: capturing level reference 0/50; keep level and still
+[B4] INIT: capturing level reference 24/50; keep level and still
+[STACK] idle_used=252 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1300 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=380 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=844 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=280 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=1896 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=924 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=1028 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=terrain used=1048 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=10 name=kernel used=476 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=smartrobo-integrated-v1-20261112T070114Z
+[DEBUG] feed_age_ms=2 nmi_checks=42 usb_dropped=0 scheduler_guard=1
+[MOTION] START -> STATIONARY yaw=0 deg/s accel=0 mm/s2 imu_fwd=0 mg
+[B4-STATE] INIT -> MONITORING error=0
+[TILT] UNAVAILABLE (stale or unsuitable sample) | terrain last=WAITING
+line_imu_wait settled=1 waited_ms=43
+calibration: press GP21 before the first barcode to calibrate on *A*
+[S3-LINE] STARTUP -> WAITING
+line_pid centre_ir=0 right_ir=0 direction=0 lstate=WAITING sweep=IDLE request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0 target_mm_s=0,0
+[TILT] pitch=0.1 roll=0.0 deg | LEVEL, LEVEL | height=0.0 mm - | terrain=WAITING run_max=0 mm | class=STATIONARY yaw=0 deg/s | compass n/a (field) field=584
+line_pid centre_ir=0 right_ir=0 direction=1 lstate=WAITING sweep=IDLE request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0 target_mm_s=0,0
+[TILT] pitch=0.2 roll=0.0 deg | LEVEL, LEVEL | height=0.1 mm L | terrain=WAITING run_max=0 mm | class=STATIONARY yaw=0 deg/s | compass n/a (field) field=581
+line_pid centre_ir=0 right_ir=0 direction=1 lstate=WAITING sweep=IDLE request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0 target_mm_s=0,0
+[TILT] pitch=0.2 roll=-0.1 deg | LEVEL, LEVEL | height=0.1 mm L | terrain=WAITING run_max=0 mm | class=STATIONARY yaw=0 deg/s | compass n/a (field) field=583
+line_pid centre_ir=0 right_ir=0 direction=1 lstate=WAITING sweep=IDLE request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0 target_mm_s=0,0
+[STACK] idle_used=252 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1300 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=380 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=844 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=280 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=1908 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1076 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=1028 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=terrain used=1048 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=10 name=kernel used=604 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=smartrobo-integrated-v1-20261112T070114Z
+[DEBUG] feed_age_ms=6 nmi_checks=82 usb_dropped=0 scheduler_guard=1
+[TILT] pitch=0.1 roll=0.0 deg | LEVEL, LEVEL | height=0.0 mm - | terrain=WAITING run_max=0 mm | class=STATIONARY yaw=0 deg/s | compass n/a (field) field[TILT] pitch=0.2 roll=0.1 deg | LEVEL, LEVEL | height=0.1 mm R | terrain=WAITING run_max=0 mm | class=STATIONARY yaw=0 deg/s | compass n/a (field) field=587
+line_pid centre_ir=0 right_ir=0 direction=1 lstate=WAITING sweep=IDLE request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0 target_mm_s=0,0
+[TILT] pitch=0.2 roll=-0.1 deg | LEVEL, LEVEL | height=0.3 mm L | terrain=WAITING run_max=0 mm | class=STATIONARY yaw=0 deg/s | compass n/a (field) field=584
+line_pid centre_ir=0 right_ir=0 direction=1 lstate=WAITING sweep=IDLE request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0 target_mm_s=0,0
+[TILT] pitch=0.3 roll=0.0 deg | LEVEL, LEVEL | height=0.0 mm - | terrain=WAITING run_max=0 mm | class=STATIONARY yaw=0 deg/s | compass n/a (field) field=584
+line_pid centre_ir=0 right_ir=0 direction=1 lstate=WAITING sweep=IDLE request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0 target_mm_s=0,0
+[TILT] pitch=0.5 roll=0.0 deg | LEVEL, LEVEL | height=0.0 mm - | terrain=WAITING run_max=0 mm | class=STATIONARY yaw=0 deg/s | compass n/a (field) field=588
+line_pid centre_ir=0 right_ir=0 direction=1 lstate=WAITING sweep=IDLE request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0 target_mm_s=0,0
+[STACK] idle_used=252 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1300 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=384 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=948 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=304 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=1984 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1076 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=1040 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=terrain used=1048 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=10 name=kernel used=604 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=smartrobo-integrated-v1-20261112T070114Z
+[DEBUG] feed_age_ms=4 nmi_checks=162 usb_dropped=2029 scheduler_guard=1
+[TILT] pitch=0.3 roll=0.0 deg | LEVEL, LEVEL | height=0.0 mm - | terrain=WAITING run_max=0 mm | class=STATIONARY yaw=0 deg/s | compass n/a (field) field=583
+line_pid centre_ir=0 right_ir=0 direction=1 lstate=WAITING sweep=IDLE request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0 target_mm_s=0,0
+[TERRAIN-STATE] WAITING -> CLIMBING
+[MOTION] STATIONARY -> CLIMBING yaw=0 deg/s accel=0 mm/s2 imu_fwd=-24 mg
+[TERRAIN-STATE] CLIMBING -> DESCENDING
+[MOTION] CLIMBING -> DESCENDING yaw=0 deg/s accel=0 mm/s2 imu_fwd=-1 mg
+[TILT] pitch=0.0 roll=-0.4 deg | LEVEL, LEVEL | height=0.8 mm L | terrain=DESCENDING run_max=8 mm | class=DESCENDING yaw=0 deg/s | compass n/a (hump) field=584
+line_pid centre_ir=0 right_ir=0 direction=1 lstate=WAITING sweep=IDLE request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0 target_mm_s=0,0
+[TERRAIN] Hump completed: peak=8 mm under LEFT wheel | run max=8 mm
+[TERRAIN-STATE] DESCENDING -> WAITING
+[MOTION] DESCENDING -> STATIONARY yaw=0 deg/s accel=0 mm/s2 imu_fwd=-3 mg
+[TILT] pitch=0.0 roll=0.0 deg | LEVEL, LEVEL | height=0.1 mm R | terrain=WAITING run_max=8 mm | class=STATIONARY yaw=0 deg/s | compass n/a (field) field=583
+line_pid centre_ir=0 right_ir=0 direction=1 lstate=WAITING sweep=IDLE request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0 target_mm_s=0,0
+calibration: started; waiting for the line, then drive over *A*
+[S3-BARCODE] WATCHING -> CALIBRATING
+[TILT] pitch=0.3 roll=0.0 deg | LEVEL, LEVEL | height=0.1 mm L | terrain=WAITING run_max=8 mm | class=STATIONARY yaw=0 deg/s | compass n/a (field) field=584
+line_pid centre_ir=0 right_ir=0 direction=1 lstate=WAITING sweep=IDLE request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0 target_mm_s=0,0
+[STACK] idle_used=252 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1300 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=384 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=948 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=304 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=1984 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1076 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=1040 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=terrain used=1048 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=10 name=kernel used=604 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=smartrobo-integrated-v1-20261112T070114Z
+[DEBUG] feed_age_ms=7 nmi_checks=202 usb_dropped=2029 scheduler_guard=1
+[TILT] pitch=0.1 roll=0.0 deg | LEVEL, LEVEL | height=0.0 mm - | terrain=WAITING run_max=8 mm | class=STATIONARY yaw=0 deg/s | compass n/a (field) field=581
+line_pid centre_ir=0 right_ir=0 direction=1 lstate=WAITING sweep=IDLE request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0 target_mm_s=0,0
+[TILT] pitch=0.1 roll=-0.1 deg | LEVEL, LEVEL | height=0.2 mm L | terrain=WAITING run_max=8 mm | class=STATIONARY yaw=0 deg/s | compass n/a (field) field=582
+line_pid centre_ir=0 right_ir=0 direction=1 lstate=WAITING sweep=IDLE request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0 target_mm_s=0,0
+barcode: reading...
+[MOTION] STATIONARY -> MOVING yaw=0 deg/s accel=33 mm/s2 imu_fwd=0 mg
+[TILT] pitch=3.7 roll=-0.8 deg | LEVEL, LEVEL | height=1.5 mm L | terrain=WAITING run_max=8 mm | class=MOVING yaw=0 deg/s | compass n/a (field) field=576
+line_pid centre_ir=0 right_ir=0 direction=1 lstate=WAITING sweep=IDLE request=3 state=1 fault=0 speed_mm_s=0,0 output_permille=0,0 target_mm_s=0,0
+[S3-LINE] WAITING -> FOLLOWING
+barcode: reading...
+[MOTION] MOVING -> ACCELERATING yaw=0 deg/s accel=190 mm/s2 imu_fwd=49 mg
+[TILT] pitch=-3.4 roll=-2.7 deg | FRONT DOWN, LEVEL | height=5.4 mm L | terrain=WAITING run_max=8 mm | class=ACCELERATING yaw=4 deg/s | compass n/a (field) field=542
+line_pid centre_ir=1 right_ir=0 direction=3 lstate=BARCODE sweep=IDLE request=0 state=2 fault=0 speed_mm_s=22,45 output_permille=71,45 target_mm_s=43,58
+[MOTION] ACCELERATING -> MOVING yaw=0 deg/s accel=118 mm/s2 imu_fwd=-11 mg
+[STACK] idle_used=252 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1300 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=400 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=1024 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=352 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=1984 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1880 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=1040 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=terrain used=1160 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=10 name=kernel used=604 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=smartrobo-integrated-v1-20261112T070114Z
+[DEBUG] feed_age_ms=8 nmi_checks=243 usb_dropped=2029 scheduler_guard=1
+[TERRAIN-STATE] WAITING -> CLIMBING
+[MOTION] MOVING -> CLIMBING yaw=0 deg/s accel=0 mm/s2 imu_fwd=-9 mg
+[TILT] pitch=0.3 roll=-0.5 deg | LEVEL, LEVEL | height=1.0 mm L | terrain=CLIMBING run_max=8 mm | class=CLIMBING yaw=4 deg/s | compass n/a (hump) field=533
+[TERRAIN-STATE] CLIMBING -> DESCENDING
+line_pid centre_ir=0 right_ir=0 direction=1 lstate=BARCODE sweep=IDLE request=0 state=2 fault=0 speed_mm_s=27,18 output_permille=107,114 target_mm_s=52,48
+[MOTION] CLIMBING -> DESCENDING yaw=0 deg/s accel=-57 mm/s2 imu_fwd=18 mg
+[TERRAIN] Hump completed: peak=6 mm under LEFT wheel | run max=8 mm
+[TERRAIN-STATE] DESCENDING -> WAITING
+[MOTION] DESCENDING -> MOVING yaw=-8 deg/s accel=9 mm/s2 imu_fwd=-45 mg
+[TILT] pitch=4.0 roll=5.5 deg | LEVEL, LEFT SIDE LOWER | height=11.0 mm R | terrain=WAITING run_max=8 mm | class=MOVING yaw=-8 deg/s | compass n/a (field) field=530
+line_pid centre_ir=0 right_ir=1 direction=4 lstate=FOLLOWING sweep=IDLE request=0 state=2 fault=0 speed_mm_s=50,25 output_permille=111,62 target_mm_s=69,31
+[TILT] pitch=-6.8 roll=-0.4 deg | FRONT DOWN, LEVEL | height=0.8 mm L | terrain=WAITING run_max=8 mm | class=MOVING yaw=11 deg/s | compass n/a (field) field=521
+line_pid centre_ir=0 right_ir=1 direction=1 lstate=GRACE sweep=IDLE request=0 state=2 fault=0 speed_mm_s=25,50 output_permille=81,122 target_mm_s=31,69
+[TERRAIN-STATE] WAITING -> CLIMBING
+[MOTION] MOVING -> CLIMBING yaw=-4 deg/s accel=-60 mm/s2 imu_fwd=-62 mg
+[TILT] pitch=9.2 roll=10.1 deg | FRONT UP, LEFT SIDE LOWER | height=19.9 mm R | terrain=CLIMBING run_max=23 mm | class=CLIMBING yaw=-4 deg/s | compass n/a (hump) field=522
+line_pid centre_ir=1 right_ir=0 direction=3 lstate=FOLLOWING sweep=IDLE request=0 state=2 fault=0 speed_mm_s=45,45 output_permille=59,119 target_mm_s=38,61
+[TERRAIN-STATE] CLIMBING -> DESCENDING
+[MOTION] CLIMBING -> DESCENDING yaw=8 deg/s accel=89 mm/s2 imu_fwd=109 mg
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1300 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=496 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=1024 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=400 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=2016 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1880 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=1064 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=terrain used=1224 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=10 name=kernel used=604 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=smartrobo-integrated-v1-20261112T070114Z
+[DEBUG] feed_age_ms=3 nmi_checks=283 usb_dropped=2029 scheduler_guard=1
+[S3-LINE] GRACE -> SEARCHING
+[S3-LINE] SEARCHING -> FOLLOWING
+[TILT] pitch=1.5 roll=-2.2 deg | LEVEL, LEVEL | height=4.5 mm L | terrain=DESCENDING run_max=23 mm | class=DESCENDING yaw=4 deg/s | compass n/a (hump) field=517
+line_pid centre_ir=0 right_ir=1 direction=4 lstate=FOLLOWING sweep=IDLE request=0 state=2 fault=0 speed_mm_s=46,37 output_permille=145,75 target_mm_s=66,33
+barcode: reading...
+[TILT] pitch=-4.2 roll=-9.2 deg | LEVEL, RIGHT SIDE LOWER | height=18.4 mm L | terrain=DESCENDING run_max=23 mm | class=DESCENDING yaw=-4 deg/s | compass n/a (hump) field=513
+line_pid centre_ir=1 right_ir=0 direction=3 lstate=BARCODE sweep=IDLE request=0 state=2 fault=0 speed_mm_s=46,46 output_permille=87,123 target_mm_s=43,58
+[TILT] pitch=-0.1 roll=-0.5 deg | LEVEL, LEVEL | height=0.9 mm L | terrain=DESCENDING run_max=23 mm | class=DESCENDING yaw=7 deg/s | compass n/a (hump) field=505
+line_pid centre_ir=1 right_ir=0 direction=3 lstate=BARCODE sweep=IDLE request=0 state=2 fault=0 speed_mm_s=41,41 output_permille=103,148 target_mm_s=43,58
+[TERRAIN] Hump completed: peak=23 mm under RIGHT wheel | run max=23 mm
+[TERRAIN-STATE] DESCENDING -> WAITING
+[MOTION] DESCENDING -> MOVING yaw=5 deg/s accel=0 mm/s2 imu_fwd=21 mg
+[TILT] pitch=-0.8 roll=0.1 deg | LEVEL, LEVEL | height=0.1 mm R | terrain=WAITING run_max=23 mm | class=MOVING yaw=-4 deg/s | compass n/a (field) field=494
+line_pid centre_ir=0 right_ir=0 direction=1 lstate=BARCODE sweep=IDLE request=0 state=2 fault=0 speed_mm_s=46,46 output_permille=117,111 target_mm_s=51,49
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1300 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=496 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=1024 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=408 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=2024 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1904 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=1064 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=terrain used=1224 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=10 name=kernel used=632 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=smartrobo-integrated-v1-20261112T070114Z
+[DEBUG] feed_age_ms=6 nmi_checks=323 usb_dropped=2029 scheduler_guard=1
+[TILT] pitch=-0.9 roll=-0.5 deg | LEVEL, LEVEL | height=1.0 mm L | terrain=WAITING run_max=23 mm | class=MOVING yaw=5 deg/s | compass n/a (field) field=489
+line_pid centre_ir=0 right_ir=0 direction=1 lstate=BARCODE sweep=IDLE request=0 state=2 fault=0 speed_mm_s=46,46 output_permille=120,113 target_mm_s=51,49
+[TILT] pitch=-0.6 roll=-1.4 deg | LEVEL, LEVEL | height=2.8 mm L | terrain=WAITING run_max=23 mm | class=MOVING yaw=-4 deg/s | compass n/a (field) field=481
+line_pid centre_ir=0 right_ir=0 direction=1 lstate=BARCODE sweep=IDLE request=0 state=2 fault=0 speed_mm_s=46,46 output_permille=118,119 target_mm_s=50,50
+[TILT] pitch=0.1 roll=0.5 deg | LEVEL, LEVEL | height=1.0 mm R | terrain=WAITING run_max=23 mm | class=MOVING yaw=5 deg/s | compass n/a (field) field=478
+line_pid centre_ir=0 right_ir=0 direction=1 lstate=BARCODE sweep=IDLE request=0 state=2 fault=0 speed_mm_s=41,50 output_permille=136,105 target_mm_s=51,49
+[OBSTACLE] approaching: 441 mm ahead at 51 mm/s
+[TILT] pitch=0.0 roll=-0.1 deg | LEVEL, LEVEL | height=0.3 mm L | terrain=WAITING run_max=23 mm | class=MOVING yaw=5 deg/s | compass n/a (field) field=481
+line_pid centre_ir=0 right_ir=0 direction=1 lstate=BARCODE sweep=IDLE request=0 state=2 fault=0 speed_mm_s=50,50 output_permille=112,105 target_mm_s=51,49
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1300 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=496 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=1024 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=408 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=2024 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1928 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=1064 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=terrain used=1224 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=10 name=kernel used=632 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=smartrobo-integrated-v1-20261112T070114Z
+[DEBUG] feed_age_ms=6 nmi_checks=363 usb_dropped=2029 scheduler_guard=1
+[TILT] pitch=-0.2 roll=0.2 deg | LEVEL, LEVEL | height=0.3 mm R | terrain=WAITING run_max=23 mm | class=MOVING yaw=0 deg/s | compass n/a (field) field=470
+barcode: calibration done, read *A* at sensitivity div=32
+[S3-BARCODE] CALIBRATING -> WATCHING
+[MOTION] MOVING -> ACCELERATING yaw=0 deg/s accel=-230 mm/s2 imu_fwd=45 mg
+[MOTION] ACCELERATING -> MOVING yaw=0 deg/s accel=0 mm/s2 imu_fwd=-7 mg
+[TILT] pitch=0.0 roll=-0.1 deg | LEVEL, LEVEL | height=0.1 mm L | terrain=WAITING run_max=23 mm | class=MOVING yaw=0 deg/s | compass n/a (field) field=467
+[MOTION] MOVING -> STATIONARY yaw=0 deg/s accel=0 mm/s2 imu_fwd=0 mg
+[TILT] pitch=-0.3 roll=0.3 deg | LEVEL, LEVEL | height=0.6 mm R | terrain=WAITING run_max=23 mm | class=STATIONARY yaw=0 deg/s | compass n/a (field) field=469
+calibration done, carrying on
+[S3-LINE] BARCODE -> WAITING
+line_pid centre_ir=0 right_ir=0 direction=0 lstate=WAITING sweep=IDLE request=3 state=2 fault=0 speed_mm_s=0,0 output_permille=0,0 target_mm_s=0,0
+[S3-LINE] WAITING -> GRACE
+[MOTION] STATIONARY -> MOVING yaw=4 deg/s accel=0 mm/s2 imu_fwd=-51 mg
+[TILT] pitch=-0.6 roll=-0.6 deg | LEVEL, LEVEL | height=1.2 mm L | terrain=WAITING run_max=23 mm | class=MOVING yaw=4 deg/s | compass n/a (field) field=479
+[S3-LINE] GRACE -> SEARCHING
+[S3-LINE] SEARCHING -> FOLLOWING
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1300 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=496 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=1024 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=408 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=2040 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1928 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=1248 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=terrain used=1224 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=10 name=kernel used=632 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=smartrobo-integrated-v1-20261112T070114Z
+[DEBUG] feed_age_ms=10 nmi_checks=403 usb_dropped=2029 scheduler_guard=1
+line_pid centre_ir=0 right_ir=1 direction=4 lstate=FOLLOWING sweep=IDLE request=0 state=2 fault=0 speed_mm_s=33,33 output_permille=51,71 target_mm_s=48,47
+[TILT] pitch=-2.3 roll=-6.2 deg | LEVEL, RIGHT SIDE LOWER | height=12.3 mm L | terrain=WAITING run_max=23 mm | class=MOVING yaw=-3 deg/s | compass n/a (field) field=473
+[TERRAIN-STATE] WAITING -> CLIMBING
+[MOTION] MOVING -> CLIMBING yaw=-4 deg/s accel=69 mm/s2 imu_fwd=22 mg
+[TERRAIN-STATE] CLIMBING -> DESCENDING
+[MOTION] CLIMBING -> DESCENDING yaw=-9 deg/s accel=0 mm/s2 imu_fwd=-79 mg
+line_pid centre_ir=0 right_ir=1 direction=4 lstate=FOLLOWING sweep=IDLE request=0 state=2 fault=0 speed_mm_s=37,30 output_permille=131,42 target_mm_s=69,31
+[TERRAIN-STATE] DESCENDING -> CLIMBING
+[MOTION] DESCENDING -> CLIMBING yaw=-7 deg/s accel=19 mm/s2 imu_fwd=-57 mg
+[TERRAIN-STATE] CLIMBING -> DESCENDING
+[MOTION] CLIMBING -> DESCENDING yaw=-9 deg/s accel=0 mm/s2 imu_fwd=6 mg
+[TILT] pitch=-0.8 roll=-1.7 deg | LEVEL, LEVEL | height=3.5 mm L | terrain=DESCENDING run_max=23 mm | class=DESCENDING yaw=-9 deg/s | compass n/a (hump) field=471
+line_pid centre_ir=0 right_ir=0 direction=3 lstate=FOLLOWING sweep=IDLE request=0 state=2 fault=0 speed_mm_s=37,55 output_permille=39,95 target_mm_s=31,69
+[TERRAIN] Hump completed: peak=11 mm under LEFT wheel | run max=23 mm
+[TERRAIN-STATE] DESCENDING -> WAITING
+[MOTION] DESCENDING -> MOVING yaw=8 deg/s accel=33 mm/s2 imu_fwd=-1 mg
+[TILT] pitch=-1.3 roll=-1.8 deg | LEVEL, LEVEL | height=3.7 mm L | terrain=WAITING run_max=23 mm | class=MOVING yaw=15 deg/s | compass n/a (field) field=461
+line_pid centre_ir=0 right_ir=1 direction=4 lstate=FOLLOWING sweep=IDLE request=0 state=2 fault=0 speed_mm_s=46,27 output_permille=139,78 target_mm_s=69,31
+[TILT] pitch=0.5 roll=0.0 deg | LEVEL, LEVEL | height=0.0 mm - | terrain=WAITING run_max=23 mm | class=MOVING yaw=0 deg/s | compass n/a (field) field=458
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1300 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=496 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=1024 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=408 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=2040 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1928 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=1248 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=terrain used=1224 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=10 name=kernel used=632 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=smartrobo-integrated-v1-20261112T070114Z
+[DEBUG] feed_age_ms=4 nmi_checks=443 usb_dropped=2029 scheduler_guard=1
+[S3-LINE] GRACE -> SEARCHING
+line_pid centre_ir=0 right_ir=0 direction=1 lstate=SEARCHING sweep=FIRST_SIDE request=0 state=2 fault=0 speed_mm_s=27,55 output_permille=85,124 target_mm_s=31,69
+[S3-LINE] SEARCHING -> FOLLOWING
+[OBSTACLE] approaching: 368 mm ahead at 46 mm/s
+[TILT] pitch=-0.2 roll=-0.4 deg | LEVEL, LEVEL | height=0.8 mm L | terrain=WAITING run_max=23 mm | class=MOVING yaw=-4 deg/s | compass n/a (field) field=450
+line_pid centre_ir=0 right_ir=1 direction=4 lstate=FOLLOWING sweep=IDLE request=0 state=2 fault=0 speed_mm_s=55,37 output_permille=128,70 target_mm_s=69,31
+[TILT] pitch=-0.5 roll=-0.2 deg | LEVEL, LEVEL | height=0.5 mm L | terrain=WAITING run_max=23 mm | class=MOVING yaw=5 deg/s | compass n/a (field) field=440
+line_pid centre_ir=0 right_ir=1 direction=4 lstate=FOLLOWING sweep=IDLE request=0 state=2 fault=0 speed_mm_s=37,46 output_permille=69,168 target_mm_s=31,69
+[TILT] pitch=-1.4 roll=-0.8 deg | LEVEL, LEVEL | height=1.5 mm L | terrain=WAITING run_max=23 mm | class=MOVING yaw=-7 deg/s | compass n/a (field) field=440
+[OBSTACLE] approaching: 297 mm ahead at 46 mm/s
+line_pid centre_ir=1 right_ir=0 direction=3 lstate=FOLLOWING sweep=IDLE request=0 state=2 fault=0 speed_mm_s=27,55 output_permille=103,148 target_mm_s=31,69
+[TILT] pitch=-0.1 roll=0.4 deg | LEVEL, LEVEL | height=0.9 mm R | terrain=WAITING run_max=23 mm | class=MOVING yaw=13 deg/s | compass n/a (field) field=444
+[STACK] idle_used=264 capacity=2048 guard_ok=1
+[STACK] task=1 name=diagnostics used=1300 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=2 name=kernel used=496 capacity=2176 guard_ok=1 saved_sp_ok=1
+[STACK] task=3 name=motion used=1024 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=4 name=controller used=408 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=5 name=obstacle used=2040 capacity=8320 guard_ok=1 saved_sp_ok=1
+[STACK] task=6 name=line used=1928 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=7 name=barcode used=1248 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=8 name=terrain used=1232 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=9 name=wifi used=108 capacity=4224 guard_ok=1 saved_sp_ok=1
+[STACK] task=10 name=kernel used=632 capacity=2176 guard_ok=1 saved_sp_ok=1
+[DEBUG] firmware=smartrobo-integrated-v1-20261112T070114Z
+[DEBUG] feed_age_ms=7 nmi_checks=483 usb_dropped=2029 scheduler_guard=1
+line_pid centre_ir=0 right_ir=1 direction=4 lstate=FOLLOWING sweep=IDLE request=0 state=2 fault=0 speed_mm_s=58,33 output_permille=127,111 target_mm_s=69,31
+[TILT] pitch=-0.1 roll=0.7 deg | LEVEL, LEVEL | height=1.4 mm R | terrain=WAITING run_max=23 mm | class=MOVING yaw=-15 deg/s | compass n/a (field) field=447
+line_pid centre_ir=1 right_ir=0 direction=3 lstate=FOLLOWING sweep=IDLE request=0 state=2 fault=0 speed_mm_s=22,60 output_permille=124,160 target_mm_s=31,69
+[OBSTACLE] approaching: 211 mm ahead at 42 mm/s
+[TILT] pitch=-0.1 roll=-1.4 deg | LEVEL, LEVEL | height=2.7 mm L | terrain=WAITING run_max=23 mm | class=MOVING yaw=14 deg/s | compass n/a (field) field=452
+[S3-LINE] GRACE -> SEARCHING
+[S3-LINE] SEARCHING -> FOLLOWING
