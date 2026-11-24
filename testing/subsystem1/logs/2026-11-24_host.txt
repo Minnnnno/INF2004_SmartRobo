@@ -1,0 +1,5 @@
+commit b51982f
+golden frame: 30730394808dcbe69475b02a4bf7139a4a9dc807b0
+golden encoder frame: 010707200012d687000cfffffffe0001e2400000000000000003
+size: JSON 396 bytes, packed 21 bytes (167 bits used, 1 spare), 5.3% of JSON
+PASS: 947 checks, 0 failed

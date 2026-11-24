@@ -23,6 +23,10 @@ Define a test here before running it. Test IDs never change.
 | INT-09 | Remote STOP holds against navigation requests, then START releases (owners: B1, B2; B3/B5 support) | Remote command buffer -> controller `remote_hold`/STOP -> motion; checked START release | manual | During line following, press dashboard STOP. After physical settling, wait at least 5 s with no START, then START. Where practical repeat during a detour; label which case was actually run. | Both wheels stop and remain held despite navigation requests. Healthy stationary/trusted motion can resume after deliberate START; an existing motion fault must not be cleared by START. Record whether line following or detour was active. A line-only run does not verify the detour interruption case. |
 | INT-10 | Encoder motion feedback supports Buddy 4 classification (owners: B2, B4) | Buddy 2 wheel speed/heading/stationary snapshot -> B4 motion class and turn rate | manual | Integrated production image after IMU qualification. Film straight driving, a clear turn and a settled STOP with dashboard/serial motion-class and yaw readings. Repeat the other turn direction if checking both signs. | Straight driving reports movement, an observed turn produces TURNING when its configured threshold is reached, and settled stop reports STATIONARY after classification debounce. Yaw is positive left/negative right and corresponds to wheel feedback. This is interface/functional evidence, not an independent physical yaw-accuracy measurement. |
 
+| INT-11 | Buddy 3 line and barcode data reach the dashboard unchanged (owners: B3, B1) | FR2, FR16; line/barcode slot → status frame (`LINE_AVAIL`, `LINE_ERR`, `LINE_TRACK`, `BC_VALID`, `BC_CMD`, `BC_READ`) | manual | MQTT production image, dashboard and serial console side by side. 1. Robot on the line, START; follow a curve. 2. Lift the IR sensor off the line. 3. Drive over two barcodes (one twice) | Line & barcode card matches the console at each step: tracking **yes** on the line and **no (line lost)** when lifted, with an `event: line lost` log line; each `barcode read:` console line gives the same letter on the card, its route action, and the read count rising by 1 per pass (S1-H04 covers the mapping) |
+| INT-12 | Dashboard route reaches Buddy 3's route table and is used at the junction (owners: B1, B3) | FR3, FR17; `robot/route` → `comms_hook_route()` → `route_set()` (`app_program/subsystem3/route.c`) → barcode action | manual | 1. In the dashboard route boxes enter Left B, Right C, Straight D, U-turn A; send. 2. Place code B before a junction; START. 3. Send Left C, Right B, Straight D, U-turn A; power-cycle; repeat 2 | 1: log `robot route: ok L=B R=C S=D U=A`, console `route: ok ...`. 2: robot turns **left** at the junction after B; card shows `B → left`. 3: route acknowledged again after the reboot; robot turns **right** after B |
+| INT-13 | Buddy 5 obstacle results reach the dashboard unchanged (owners: B5, B1) | FR10–FR13, FR16; obstacle slot → status frame (`O_FLAGS`, `O_AVAIL`, `O_DIST_CM`, `O_WIDTH_CM`) and `robot/obstacle` text | manual | Box of ruler-measured width on the line; START; let the robot detect, scan and bypass it, with dashboard and serial console in the video | Obstacle card distance, width and side equal the console values; log shows `event: obstacle detected`, `event: obstacle scan finished` and `event: obstacle passed, handed back to the line follower` in the order the console prints them; nothing appears twice |
+
 *Method:* **auto (laptop)** = a host test suite (`ctest` or `run_tests.py`); evidence is the saved console output.
 **manual** = run on the robot; evidence is a video with the dashboard (and serial console where needed).
 
@@ -36,6 +40,18 @@ INT-06 to INT-10 are defined but **not yet run** in this log. Leave video links 
 - S2-H02 encoder hand-rotation and S2-H05/H06 finite-command accuracy clips do not replace an integrated obstacle-handover or full-mission run.
 - Use B5's or the team's obstacle/rejoin footage for INT-07 if it shows the required transitions and the actual tested commit is identifiable. No separate duplicate clip is needed.
 - A video link is sufficient physical evidence when robot, relevant readings and measurements are visible. A claim not visible or measured in the recording remains unverified. Existing results and partial-coverage notes below are preserved.
+
+## Buddy 1 interfaces
+
+Buddy 1 is on one side of every interface that reaches the dashboard. These
+tests check that a value leaves the other buddy's code and arrives on the
+dashboard unchanged; each buddy's own tests check that the value is right.
+INT-11 to INT-13 are defined but **not yet run**.
+
+- **B1 owns or co-owns:** INT-04 (B4 terrain), INT-08 (B2 feedback), INT-09 (remote STOP/START), INT-11 (B3 line/barcode), INT-12 (route), INT-13 (B5 obstacle).
+- **B1 sign-off still pending** on the INT-04 result above.
+- The field mapping for every interface is already checked on the laptop by S1-H01 to S1-H04 (`../subsystem1/TEST_LOG.md`); these integration runs add the real robot.
+- One integrated run with the dashboard and serial console in frame can give evidence for INT-04, INT-08, INT-11 and INT-13 together; list the timestamp of each part in the results row.
 
 ## Results
 
