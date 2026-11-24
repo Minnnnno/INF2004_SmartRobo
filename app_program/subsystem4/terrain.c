@@ -32,7 +32,7 @@ bool terrain_take_completed(terrain_t *p_terrain)
     return completed;
 }
 
-/* Read public phase/validity/request without exposing candidate bookkeeping. */
+/* Read public phase/validity without exposing candidate bookkeeping. */
 uint8_t terrain_status(terrain_t const *p_terrain)
 {
     return (NULL == p_terrain) ? 0U : (p_terrain->flags & TERRAIN_PUBLIC_MASK);

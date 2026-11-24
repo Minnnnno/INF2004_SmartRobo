@@ -75,7 +75,8 @@ may be copied into hardware configuration as if measured. The GPIO arrays and
 all tuning live in `app_program/subsystem2/board_config.c`; preserve the board's fixed motor
 links and check every changed encoder assignment against this reservation table.
 
-A magnetometer alone cannot provide pitch, lift/overturn detection or hump height.
-Buddy 4 must confirm whether an accelerometer/gyro is present; unavailable telemetry
-remains marked unavailable. Driver overcurrent/thermal diagnostics and independent
+The GY-511 (LSM303DLHC) provides an accelerometer and a magnetometer but no
+gyroscope (confirmed by Buddy 4): pitch, hump height and lift/overturn come from
+the accelerometer, turn rate from the wheel encoders, and the compass is only a
+console cross-check. Unavailable telemetry remains marked unavailable. Driver overcurrent/thermal diagnostics and independent
 wheel-slip detection are not provided by this code.

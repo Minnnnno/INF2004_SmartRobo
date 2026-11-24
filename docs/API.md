@@ -223,7 +223,8 @@ cannot prove zero speed below the encoder's measurable resolution.
 
 Subsystem 4 (when `ROBO_SUBSYSTEM4=ON`) supplies the Terrain snapshot every
 20 ms. The validity mask uses bit 1 (value 2) for pitch and bit 2 (value 4) for
-hump height; bit 0 (heading) stays clear because the magnetometer is not used.
+hump height; bit 0 stays clear (no heading is published: the compass is a
+console-only cross-check).
 `values[0]` is the turn rate in rad/s (+ = left), from Buddy 2 wheel speeds.
 Bits 6..8 of `values[3]` carry the motion class (0 STATIONARY, 1 MOVING,
 2 ACCELERATING (speed changing, braking included), 3 REVERSING, 4 TURNING, 5 CLIMBING, 6 DESCENDING, 7 OVERTURNED) and

@@ -59,7 +59,7 @@ static bool s_hump_paused;     /* Task-owned: hump recording paused while stoppe
 #define S4_RAD_TO_DDEG   (572.95779513082323)    /* 1800 / pi */
 #define S4_HEADING_LIMIT_DDEG (2.0e9)            /* int32 range for the unwrapped heading */
 
-/* T_STATE telemetry codes (0..6, 3 bits, include/telemetry_frame.h). Defined once
+/* T_STATE telemetry codes (0..7, 3 bits, include/telemetry_frame.h). Defined once
  * in terrain_status.h, which other subsystems use to decode this slot. */
 #define S4_TS_INIT       TERRAIN_TS_INIT
 #define S4_TS_WAITING    TERRAIN_TS_WAITING    /* MONITORING + terrain WAITING */

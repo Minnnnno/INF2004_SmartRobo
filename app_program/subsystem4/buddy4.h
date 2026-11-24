@@ -1,6 +1,6 @@
 /* Task-owned Buddy 4 lifecycle. No motor writes, queues or console calls.
- * Integration stage 1: acceleration, tilt and terrain phases only. Magnetic
- * heading and its calibration are deliberately not integrated yet.
+ * Reads acceleration (tilt, hump phases, lift/overturn latch) and the
+ * magnetometer (raw counts for the compass in terrain_task.c).
  */
 #ifndef BUDDY4_H
 #define BUDDY4_H
@@ -26,6 +26,9 @@
  * captured only after START and the capture timeout cannot fire while waiting.
  * Ignored once a reference exists (recovery goes straight to MONITORING). */
 #define B4_WAIT_START     (0x01U)
+/* MOTORS_STOPPED, CMD_RESET and CAUSE_CLEARED only drive the STOP/FAULT -> INIT
+ * reset. The firmware never sends RESET (terrain_inputs): a new run and a
+ * latched fault are cleared by power-up. Only the host tests use this path. */
 #define B4_MOTORS_STOPPED (0x02U)
 #define B4_CMD_STOP       (0x04U)
 #define B4_CMD_RESET      (0x08U)
@@ -94,7 +97,7 @@ typedef struct
 /* Cold-start a fresh context. Only call once; reset commands preserve reference. */
 void buddy4_begin(buddy4_t *p_context, uint32_t now_ms);
 /* Advance one state-machine step in task context. Checks STOP before I2C.
- * Monitoring reads acceleration only; no retry loops or delays.
+ * Monitoring reads acceleration and the magnetometer; no retry loops or delays.
  * Driver calls are synchronous and may exceed the nominal task period.
  * This context belongs to one task; external tasks must not mutate it directly.
  */

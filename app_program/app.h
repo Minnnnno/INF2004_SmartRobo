@@ -32,26 +32,22 @@
 IMPORT ID app_start_task(FP entry, PRI pri, UW prc, const char *name);
 
 /* ---------------------------------------------------------------------
- *  Every subsystem provides these.  usermain() calls ALL the _init()
- *  functions first and only then ALL the _start() functions, so every
- *  kernel object exists before any task can use it.
- *    subsystemN_init()   create this subsystem's kernel objects
- *    subsystemN_start()  create and start this subsystem's tasks
- *    subsystemN_test()   on-target tests, only in test builds (make TEST=1)
+ *  Subsystem hooks retained by the shared application interface.
+ *  Buddy 1 creates its communications objects before tasks are started.
+ *  Buddy 2 uses subsystem2/motion_runtime.h; its motion task is created
+ *  by usermain() in app_main.c. Legacy on-target test declarations below
+ *  are conditional; use CMake host tests for current software validation.
  * --------------------------------------------------------------------- */
 IMPORT ER subsystem1_init(void);
-IMPORT ER subsystem2_init(void);
 IMPORT ER subsystem4_init(void);
 IMPORT ER subsystem5_init(void);
 
 IMPORT ER subsystem1_start(void);
-IMPORT ER subsystem2_start(void);
 IMPORT ER subsystem4_start(void);
 IMPORT ER subsystem5_start(void);
 
 #if APP_TEST
 IMPORT void subsystem1_test(void);
-IMPORT void subsystem2_test(void);
 IMPORT void subsystem5_test(void);
 #endif
 

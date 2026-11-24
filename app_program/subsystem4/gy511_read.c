@@ -1,4 +1,4 @@
-/* LSM303DLHC acceleration acquisition; ST DocID018771 Rev 2, sections 5-7. */
+/* LSM303DLHC acceleration and magnetic acquisition; ST DocID018771 Rev 2, sections 5-7. */
 #include "gy511_read.h"
 #include <tk/device.h>
 

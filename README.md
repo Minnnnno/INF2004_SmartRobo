@@ -21,7 +21,7 @@ Pico SDK startup adapter is archived and is not linked.
 | Buddy 2 initialization, motion task and motor diagnostics | app_program/subsystem2/motion_runtime.c |
 | Watchdog, retained crash reports and system supervision | app_program/system/system_runtime.c |
 | Buddy 3 line and barcode | app_program/subsystem3/line_following.c, barcode.c |
-| Buddy 4 heading/terrain | app_program/subsystem4/subsystem4.c |
+| Buddy 4 IMU/terrain | app_program/subsystem4/terrain_task.c |
 | Buddy 5 obstacle avoidance | app_program/subsystem5/subsystem5.c |
 
 Shared interfaces remain in include/robot.h and include/motion.h. Requests pass
@@ -35,8 +35,7 @@ still requires an explicit network build and local credentials.
 `app_main.c` composes the application: it initializes components, creates/starts
 the existing task table and calls periodic supervision. Live motion state stays
 private to Buddy 2; the request bus and its mutex stay private to the controller.
-The excluded `subsystem2.c`/`subsystem2.h` producer examples are legacy template
-files; the production Buddy 2 entry points are declared in `motion_runtime.h`.
+The production Buddy 2 entry points are declared in `motion_runtime.h`.
 
 The standard VS Code build explicitly enables `ROBO_LINE_STEERING`,
 `ROBO_SUBSYSTEM4` and `ROBO_SUBSYSTEM5`, with motion fault latching enabled.
@@ -60,11 +59,11 @@ encoder-based 90-degree firmware, commands and results, see
 SMP is explicitly disabled for this motion integration. WiFi and networking are
 off by default; imported driver code is available for Buddy 1.
 
-See [build instructions](docs/BUILD.md), [integration changes](docs/TEMPLATE_INTEGRATION.md),
-[API](docs/API.md), [calibration](docs/CALIBRATION.md), [hardware assumptions](docs/HARDWARE.md)
-and [verification](docs/VERIFICATION.md). PID and accuracy report templates are in docs/.
-No firmware has been flashed or physically tested.
+See [build instructions](docs/BUILD.md), [API](docs/API.md),
+[calibration](docs/CALIBRATION.md) and [hardware assumptions](docs/HARDWARE.md).
+Buddy 2's test cases, recorded host results and hardware evidence belong in the
+[subsystem 2 test log](testing/subsystem2/TEST_LOG.md). Record measurements in its
+results table's Notes column; host results do not establish physical accuracy.
 
 The original template demo and README are preserved in docs/template_original/.
-The previous SDK-based integration is archived in docs/previous_integration/.
 These reference files are excluded from the application source glob.

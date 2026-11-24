@@ -1,6 +1,8 @@
 # Integration — test log
 
-Tests that two or more subsystems work together. There is one test (or more) for every interface listed in TEAM.md section 5. Both owners agree on the test and sign off the result.
+Tests that two or more subsystems work together: one test (or more) per interface between buddies (the interfaces are described in `docs/API.md`). Each test names its owners; both agree on the test and sign off the result.
+
+Sources: **FR/NFR** = the team's Week 6 Design Review; **CR** = the lecturer's Change Requirement of 11 November 2026 (lift/overturn stop replaces collision detection).
 
 See `testing/README.md` for how to run tests and record results.
 
@@ -10,11 +12,30 @@ Define a test here before running it. Test IDs never change.
 
 | ID | What is tested | Requirement / interface | Method | Steps / how | Expected result |
 |---|---|---|---|---|---|
-| INT-01 | samples flow from S2 to S3 (≥ 5 in 2 s) | IF-01, IF-02 | auto | `subsystem3_test.c` | `[TEST] INT-01 PASS` |
+| INT-01 | **Dropped 2026-11-24** (ID not reused): samples flow from S2 to S3 (≥ 5 in 2 s) | IF-01, IF-02 (old template interfaces) | auto | `subsystem3_test.c` (template demo test, no longer built; archived in `docs/template_original/`) | n/a |
 | INT-02 | **Dropped 2026-11-11** (ID not reused): summary lines flow from S3 to S4 (≥ 2 in 3.5 s) | IF-03 | auto | `subsystem4_test.c` (template demo test, deleted) | n/a |
+| INT-03 | Buddy 4 lift/overturn stop reaches Buddy 2: the motors stop and stay held until START (owners: B4, B2) | CR (lift/overturn stop); B4 `motion_stop()` → Vehicle Controller `CONTROL_STOP` → motion task | manual | MQTT production image, dashboard open. 1. START; mid-run lift the robot briskly. 2. Keep it up, press START. 3. Set it down level and still for 1 s, press START. 4. Repeat 1 with an overturn on a stand | 1: within ~0.3 s wheel speed **0 / 0**, Motion **STOPPED (held)**, IMU card **LIFTED (motors stopped)**; console `[LIFT] LIFTED ... -> motors stopped`. 2: wheels never turn; `[LIFT] still LIFTED: motors stopped again`. 3: `[LIFT] cleared ...`, START → **DRIVING**. 4: as 1 with *Motion class* **OVERTURNED (motors stopped)** |
+| INT-04 | Buddy 4 terrain data reaches the dashboard unchanged (owners: B4, B1) | FR8, FR9, FR16; terrain slot → status frame (`T_STATE`, `PITCH`, `HUMP_MM`, `M_CLASS`, `TURN_RATE`) | manual | MQTT production image, dashboard and serial console side by side in one video. 1. Hold the front up ~15°. 2. Line-following run over a hump with a turn. 3. Lift to end | Dashboard IMU & terrain card matches the console at each step: **Pitch** = `[TILT] pitch=` (± 1°); state CLIMBING/DESCENDING/WAITING = `[TERRAIN-STATE]`; **Highest hump** = `run max=` from `Hump completed`; *Motion class* = last `[MOTION] ... -> X`; *Turn rate* sign = `yaw=` sign; **LIFTED** with `[LIFT] LIFTED` |
+| INT-05 | Line following waits for Buddy 4's level reference after START (owners: B4, B3) | NFR9; B4 terrain slot (`terrain_published_state()`) → B3 line task `line_imu_wait` | auto (laptop) | `ctest --test-dir build-host-cmake -R line_imu_wait --output-on-failure` (S4-U04 command) | `line_imu_wait_checks` and `line_imu_wait_start_gate_checks` pass: the line task sends no motion until Buddy 4 leaves INIT/RECOVERY (at most 10 s; an IMU fault never blocks it) |
+| INT-06 | Line requests reach the motors through the controller (owners: B3, B2) | Line task `SOURCE_LINE` requests -> controller approval -> Buddy 2 wheel-speed control; `docs/API.md` | manual | Integrated MQTT production image. START on a straight line, then follow left/right curves. Keep robot, dashboard and serial target/measured wheel speeds visible. | Robot moves forward and steers in the requested direction; wheel targets and measured motion correspond to the line corrections; no unexpected motion fault or competing motor commands. Equal speed targets do not require equal PWM. Record any tracking error rather than claiming an unmeasured accuracy limit. |
+| INT-07 | Obstacle stop, motion ownership and return to line following (owners: B5, B2, B3) | Obstacle stop -> settled scan -> `SOURCE_OBSTACLE` detour commands -> B3 rejoin | manual | Integrated course with a box on the line. START, record approach/stop, scan, detour and rejoin. Show robot and dashboard/serial stage or ownership evidence through the transitions. | Stops before contact; scanning begins after rest; detour movements execute without line-following requests taking over; after confirmed rejoin, line following resumes. A failed/blocked detour leaves motion stopped/held. A held abort does not demonstrate successful rejoin. |
+| INT-08 | Buddy 2 feedback reaches the dashboard (owners: B2, B1) | Motion snapshot -> telemetry mapping -> binary status/encoder frames -> dashboard | manual | Film straight movement, a left/right turn and STOP, with robot, serial readings and live dashboard visible. Compare speed, raw encoder counts, heading and motion state at matching observations. | Displayed values/signs agree with serial feedback within the documented quantization and update delay; forward/reverse counts use modular interpretation; STOP eventually shows zero wheel speed and held state. Compare count values with an encoder-frame viewer if the browser does not expose them. No claim of 10 ms timing from the dashboard. |
+| INT-09 | Remote STOP holds against navigation requests, then START releases (owners: B1, B2; B3/B5 support) | Remote command buffer -> controller `remote_hold`/STOP -> motion; checked START release | manual | During line following, press dashboard STOP. After physical settling, wait at least 5 s with no START, then START. Where practical repeat during a detour; label which case was actually run. | Both wheels stop and remain held despite navigation requests. Healthy stationary/trusted motion can resume after deliberate START; an existing motion fault must not be cleared by START. Record whether line following or detour was active. A line-only run does not verify the detour interruption case. |
+| INT-10 | Encoder motion feedback supports Buddy 4 classification (owners: B2, B4) | Buddy 2 wheel speed/heading/stationary snapshot -> B4 motion class and turn rate | manual | Integrated production image after IMU qualification. Film straight driving, a clear turn and a settled STOP with dashboard/serial motion-class and yaw readings. Repeat the other turn direction if checking both signs. | Straight driving reports movement, an observed turn produces TURNING when its configured threshold is reached, and settled stop reports STATIONARY after classification debounce. Yaw is positive left/negative right and corresponds to wheel feedback. This is interface/functional evidence, not an independent physical yaw-accuracy measurement. |
 
-*Method:* **auto** = `TEST_CHECK` in code, result printed on the console;
-**manual** = a person observes the result (LED, scope, meter, phone app…).
+*Method:* **auto (laptop)** = a host test suite (`ctest` or `run_tests.py`); evidence is the saved console output.
+**manual** = run on the robot; evidence is a video with the dashboard (and serial console where needed).
+
+## Buddy 2 evidence and video reuse
+
+INT-06 to INT-10 are defined but **not yet run** in this log. Leave video links empty until supplied; append actual results only after execution and owner review. These are test procedures, not firmware changes.
+
+- The same integrated video may support several subsystem, integration and system tests. Give the exact test IDs and timestamps in each result row; both interface owners confirm their parts.
+- S2-H01 startup footage can support system startup checks when it shows the full required wait and IMU qualification. S2-H03 footage supports INT-06 only when curves are also shown; add visible feedback comparisons for INT-08/INT-10.
+- Extend S2-H04's hold to at least **5 s after settling** to cover the line-following case of INT-09. For SYS-09, also include the hump/terrain pause and resume observations specified in the system procedure.
+- S2-H02 encoder hand-rotation and S2-H05/H06 finite-command accuracy clips do not replace an integrated obstacle-handover or full-mission run.
+- Use B5's or the team's obstacle/rejoin footage for INT-07 if it shows the required transitions and the actual tested commit is identifiable. No separate duplicate clip is needed.
+- A video link is sufficient physical evidence when robot, relevant readings and measurements are visible. A claim not visible or measured in the recording remains unverified. Existing results and partial-coverage notes below are preserved.
 
 ## Results
 
@@ -22,4 +43,6 @@ Add a new row for every run. Never edit or delete old rows.
 
 | Date | Test ID | Commit | Tester | Result | Log / evidence | Notes |
 |---|---|---|---|---|---|---|
-| YYYY-MM-DD | INT-01 | `abc1234` | | PASS / FAIL | `logs/YYYY-MM-DD_….txt` | |
+| 2026-11-19 | INT-03 | main after `610725f` | 2500910 | PASS | <https://youtu.be/b0VxlQ2r320> | Steps 1 and 4 PASS (same video as S4-H01/H03). Steps 2–3 not run on the robot; host only (S4-U03 `../subsystem4/logs/2026-11-24_host.txt`). B2 sign-off pending |
+| 2026-11-19 | INT-04 | main after `610725f` | 2500910 | PASS | <https://youtu.be/OaEkDdhVMTM>, <https://youtu.be/O-3cIuu86ew>, <https://youtu.be/b0VxlQ2r320> | Evidence reused from S4-H10/H11/H12/H01; dashboard and console not compared side by side. Frame mapping: S1-H03 (2026-11-14). B1 sign-off pending |
+| 2026-11-19 | INT-05 | `fa36f67` | Claude Code for 2500910 | PASS | `../subsystem4/logs/2026-11-19_start_gate.txt` | `line_imu_wait_checks`, `line_imu_wait_start_gate_checks` passed (same run as S4-U04). B3 sign-off pending |
