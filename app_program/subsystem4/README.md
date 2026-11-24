@@ -247,7 +247,7 @@ still never stop the motors). The GY-511 has no gyroscope, so a lift is only
 seen as an upward push: a slow or careful lift (under +200 mg), or lifting by
 one end without that push, is caught only once the robot passes 60 deg
 (OVERTURNED). **In the demonstration, lift the robot briskly.** Tune the
-thresholds with hand lifts, overturns and hump runs (S4-H01..S4-H06): humps
+thresholds with hand lifts, overturns and hump runs (S4-H01, S4-H03, S4-H04): humps
 and tilts to one side must never stop the robot.
 
 The old INT1 inertial interrupt registers (CTRL_REG2_A, CTRL_REG5_A,
