@@ -100,7 +100,16 @@ static void line_loop(void)
 #include "motion_hal.h"
 #include "line_rejoin.h"
 #include "route.h"
-/* Both IR sensors read black (1) when centred on the line; GP26 sits slightly right of centre. */
+/* Both IR sensors read black (1) when centred on the line; GP26 sits slightly right of centre.
+ * Minimum-bit (Tribunal 1): one read gives both sensors as one bit each in a byte. */
+#define LINE_IR_RIGHT       (1U << 0)  /* GP26 */
+#define LINE_IR_CENTRE      (1U << 1)  /* GP27 */
+static uint8_t line_read_ir(void)
+{
+    unsigned ir = gpio_get(BOARD_LINE_R) ? LINE_IR_RIGHT : 0U; /* GP26 first, as before. */
+    if (gpio_get(BOARD_LINE_C)) { ir |= LINE_IR_CENTRE; }
+    return (uint8_t)ir;
+}
 #define DEG_TO_RAD          (0.017453292519943295)
 #define LINE_SESSION        3001U
 #define LINE_SPEED          0.07  /* Target centre speed in m/s while following the line. */
@@ -394,8 +403,9 @@ static bool route_pivot(double dir, double min_turn, double max_turn)
     if (!motion_get_status(&status)) { return false; }
     heading0 = status.motion.heading;
     while (motion_hal_time() - start < ROUTE_PIVOT_TIMEOUT) {
-        unsigned right = (unsigned)gpio_get(BOARD_LINE_R);
-        unsigned centre = (unsigned)gpio_get(BOARD_LINE_C);
+        uint8_t ir = line_read_ir();
+        unsigned right = (ir & LINE_IR_RIGHT) ? 1U : 0U;
+        unsigned centre = (ir & LINE_IR_CENTRE) ? 1U : 0U;
         bool black = right == 1U || centre == 1U;
         route_flag(true, black);
         if (!motion_get_status(&status) || !line_motion_ok(&status)) { break; }
@@ -860,8 +870,9 @@ static void line_loop(void)
             continue;
         }
 #endif
-        unsigned right = (unsigned)gpio_get(BOARD_LINE_R);
-        unsigned centre = (unsigned)gpio_get(BOARD_LINE_C);
+        uint8_t ir = line_read_ir();
+        unsigned right = (ir & LINE_IR_RIGHT) ? 1U : 0U;
+        unsigned centre = (ir & LINE_IR_CENTRE) ? 1U : 0U;
         /* Centre only black: robot drifted right, line is to the left -> LINE_LEFT.
          * Right only black: robot drifted left, line is to the right -> LINE_RIGHT. */
         line_direction_t direction = motion_line_direction(&c->filter, centre == 1U, right == 1U);
