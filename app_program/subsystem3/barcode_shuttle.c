@@ -60,27 +60,30 @@ shuttle_leg (uint32_t command_id, float64_t metres)
 
         if (!motion_get_status(&status))
         {
-            continue;
+            /* Nothing to do. */
         }
-
-        if ((status.motion.hold) || (F_NONE != status.motion.fault))
+        else
         {
-            return false;
-        }
+            if ((status.motion.hold) || (F_NONE != status.motion.fault))
+            {
+                return false;
+            }
 
-        if (status.last_event.id == command_id)
-        /* With motion faults disabled a missed goal still completes, so check
-         * the distance too. */
-        {
-            return (EV_COMPLETE == status.last_event.type)
-                   && (F_NONE == status.last_event.fault)
-                   && ((status.motion.path - path)
-                       >= (0.9 * SHUTTLE_DISTANCE_M));
-        }
+            if (status.last_event.id == command_id)
+            /* With motion faults disabled a missed goal still completes, so
+             * check the distance too. */
+            {
+                return (EV_COMPLETE == status.last_event.type)
+                       && (F_NONE == status.last_event.fault)
+                       && ((status.motion.path - path)
+                           >= (0.9 * SHUTTLE_DISTANCE_M));
+            }
 
-        if ((elapsed > SHUTTLE_IDLE_S) && ((status.motion.path - path) < 0.005))
-        {
-            return false;
+            if ((elapsed > SHUTTLE_IDLE_S)
+                && ((status.motion.path - path) < 0.005))
+            {
+                return false;
+            }
         }
     }
 }

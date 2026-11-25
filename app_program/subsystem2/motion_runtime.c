@@ -326,19 +326,23 @@ report_encoder_error (const motion_status_t * p_status)
         {
             if (0U == (p_debug->stalled_wheels & (1U << wheel)))
             {
-                continue;
+                /* Nothing to do. */
             }
+            else
+            {
+                const char * p_name = (0U == wheel) ? "LEFT" : "RIGHT";
 
-            const char * p_name = (0U == wheel) ? "LEFT" : "RIGHT";
-
-            tm_printf((const UB *)"[ERROR] %s ENCODER: wheel commanded to move "
-                                  "but no encoder count change for %ld ms "
-                                  "(limit %ld ms).\n",
-                      p_name, (int32_t)p_debug->no_progress_ms[wheel],
-                      (int32_t)p_debug->feedback_limit_ms[wheel]);
-            tm_printf((const UB *)"[ERROR] %s ENCODER: wheel may be stalled or "
-                                  "encoder/wiring may be faulty.\n",
-                      p_name);
+                tm_printf(
+                    (const UB *)"[ERROR] %s ENCODER: wheel commanded to move "
+                                "but no encoder count change for %ld ms "
+                                "(limit %ld ms).\n",
+                    p_name, (int32_t)p_debug->no_progress_ms[wheel],
+                    (int32_t)p_debug->feedback_limit_ms[wheel]);
+                tm_printf(
+                    (const UB *)"[ERROR] %s ENCODER: wheel may be stalled or "
+                                "encoder/wiring may be faulty.\n",
+                    p_name);
+            }
         }
     }
     else if (FB_INVALID_TRANSITION == p_status->feedback_cause)
@@ -348,13 +352,16 @@ report_encoder_error (const motion_status_t * p_status)
             if (p_status->feedback_fault_sample.invalid[wheel]
                 == p_status->feedback_previous_invalid[wheel])
             {
-                continue;
+                /* Nothing to do. */
             }
-
-            tm_printf((const UB *)"[ERROR] %s ENCODER: invalid A/B transition "
-                                  "detected; check encoder wiring and signal "
-                                  "quality.\n",
-                      (0U == wheel) ? "LEFT" : "RIGHT");
+            else
+            {
+                tm_printf(
+                    (const UB *)"[ERROR] %s ENCODER: invalid A/B transition "
+                                "detected; check encoder wiring and signal "
+                                "quality.\n",
+                    (0U == wheel) ? "LEFT" : "RIGHT");
+            }
         }
     }
     else if (FB_UNRELIABLE == p_status->feedback_cause)

@@ -1864,18 +1864,21 @@ escape_stall (const s5_detour_plan_t * p_plan, unsigned attempt)
                 return false;
             }
 
-            continue; /* blocked that way: tilt further */
+            /* blocked that way: tilt further */
         }
-
-        move = straight(S5_ESCAPE_MM, false, NULL);
-
-        if (S5_MOVE_STALLED == move)
+        else
         {
-            b_held = true; /* stuck again: tilt further */
-            continue;
-        }
+            move = straight(S5_ESCAPE_MM, false, NULL);
 
-        return (S5_MOVE_DONE == move) && (S5_MOVE_DONE == turn_to(0.0));
+            if (S5_MOVE_STALLED == move)
+            {
+                b_held = true; /* stuck again: tilt further */
+            }
+            else
+            {
+                return (S5_MOVE_DONE == move) && (S5_MOVE_DONE == turn_to(0.0));
+            }
+        }
     }
 
     tm_printf((const UB *)"[DETOUR] no way out of the stall; holding\n");

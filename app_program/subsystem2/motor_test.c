@@ -311,14 +311,16 @@ start_test (unsigned wheel_mask, int direction, bool b_sensor,
 
         if (0U == (wheel_mask & (1U << wheel)))
         {
-            continue;
+            /* Nothing to do. */
         }
-
-        gpio_set_function(g_motor_pins[wheel][0], GPIO_FUNC_PWM);
-        gpio_set_function(g_motor_pins[wheel][1], GPIO_FUNC_PWM);
-        pwm_set_both_levels(slice, (electrical_direction > 0) ? duty : 0U,
-                            (electrical_direction < 0) ? duty : 0U);
-        pwm_set_enabled(slice, true);
+        else
+        {
+            gpio_set_function(g_motor_pins[wheel][0], GPIO_FUNC_PWM);
+            gpio_set_function(g_motor_pins[wheel][1], GPIO_FUNC_PWM);
+            pwm_set_both_levels(slice, (electrical_direction > 0) ? duty : 0U,
+                                (electrical_direction < 0) ? duty : 0U);
+            pwm_set_enabled(slice, true);
+        }
     }
 
     restore_interrupts(irq_state);

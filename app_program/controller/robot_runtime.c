@@ -295,14 +295,16 @@ controller_task (INT code, void * p_context)
 
             if (received != (INT)sizeof(command))
             {
-                continue;
+                /* Nothing to do. */
             }
-
-            if (E_OK == tk_loc_mtx(g_status_mutex, TMO_FEVR))
+            else
             {
-                (void)vehicle_controller_remote(
-                    &g_bus, (robot_remote_command_t)command);
-                unlock_bus();
+                if (E_OK == tk_loc_mtx(g_status_mutex, TMO_FEVR))
+                {
+                    (void)vehicle_controller_remote(
+                        &g_bus, (robot_remote_command_t)command);
+                    unlock_bus();
+                }
             }
         }
 

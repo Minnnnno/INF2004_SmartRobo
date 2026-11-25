@@ -223,19 +223,21 @@ motion_hal_init (const motion_config_t * p_config)
 
             if ((1U == channel) && (!p_config->quadrature[wheel]))
             {
-                continue;
+                /* Nothing to do. */
             }
-
-            gpio_init(pin);
-            gpio_set_dir(pin, false);
-            /* External electrical interface must be confirmed. */
-            gpio_disable_pulls(pin);
-            gpio_set_irq_enabled(pin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL,
-                                 false);
-            g_encoder_event_mask[pin / 8U]
-                |= (p_config->quadrature[wheel] ? 12UL : 8UL)
-                   << ((pin % 8U) * 4U);
-            mask |= 1UL << pin;
+            else
+            {
+                gpio_init(pin);
+                gpio_set_dir(pin, false);
+                /* External electrical interface must be confirmed. */
+                gpio_disable_pulls(pin);
+                gpio_set_irq_enabled(
+                    pin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, false);
+                g_encoder_event_mask[pin / 8U]
+                    |= (p_config->quadrature[wheel] ? 12UL : 8UL)
+                       << ((pin % 8U) * 4U);
+                mask |= 1UL << pin;
+            }
         }
 
         g_neutral_since[wheel] = motion_hal_time();

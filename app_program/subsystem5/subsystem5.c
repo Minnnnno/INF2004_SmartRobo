@@ -1104,47 +1104,50 @@ drive_round (void)
         if (!s5_detour_plan_side(&g_s5_scan, side, p_attempt->max_out_deg,
                                  &plan))
         {
-            continue; /* no room that side, or too much reversing */
+            /* no room that side, or too much reversing */
         }
-
-        if ((0U == p_attempt->wait_ms) && b_have_last
-            && (same_plan(&plan, &last)))
+        else if ((0U == p_attempt->wait_ms) && b_have_last
+                 && (same_plan(&plan, &last)))
         {
-            continue;
+            /* Nothing to do. */
         }
-
-        if (p_attempt->wait_ms > 0U)
+        else
         {
-            tm_printf((const UB *)"[OBSTACLE] every way out was blocked; "
-                                  "waiting %u ms and trying again\n",
-                      p_attempt->wait_ms);
-            (void)tk_dly_tsk((RELTIM)p_attempt->wait_ms);
+            if (p_attempt->wait_ms > 0U)
+            {
+                tm_printf((const UB *)"[OBSTACLE] every way out was blocked; "
+                                      "waiting %u ms and trying again\n",
+                          p_attempt->wait_ms);
+                (void)tk_dly_tsk((RELTIM)p_attempt->wait_ms);
+            }
+
+            tries++;
+            tm_printf(
+                (const UB *)"[OBSTACLE] detour try %u: pass %s, back %d mm, "
+                            "turn %d deg, diagonal %d mm\n",
+                tries, avoid_name(plan.side), s5_round(plan.backup_mm),
+                s5_round(plan.turn_deg), s5_round(plan.diagonal_mm));
+            s5_detour_reason_clear();
+
+            if (s5_detour_run(&plan))
+            {
+                s5_servo_move(S5_ANGLE_CENTRE_DEG);
+                g_s5_task.phase   = S5_PHASE_IDLE;
+                g_s5_task.blocked = false;
+                g_s5_task.decided = false; /* this obstacle is behind us */
+                /* CLEAR: the line follower takes over */
+                (void)publish_verified();
+                return true;
+            }
+
+            if (!s5_detour_retryable())
+            {
+                break; /* it left the start, or something failed: stop here */
+            }
+
+            last        = plan;
+            b_have_last = true;
         }
-
-        tries++;
-        tm_printf((const UB *)"[OBSTACLE] detour try %u: pass %s, back %d mm, "
-                              "turn %d deg, diagonal %d mm\n",
-                  tries, avoid_name(plan.side), s5_round(plan.backup_mm),
-                  s5_round(plan.turn_deg), s5_round(plan.diagonal_mm));
-        s5_detour_reason_clear();
-
-        if (s5_detour_run(&plan))
-        {
-            s5_servo_move(S5_ANGLE_CENTRE_DEG);
-            g_s5_task.phase   = S5_PHASE_IDLE;
-            g_s5_task.blocked = false;
-            g_s5_task.decided = false; /* this obstacle is behind us */
-            (void)publish_verified();  /* CLEAR: the line follower takes over */
-            return true;
-        }
-
-        if (!s5_detour_retryable())
-        {
-            break; /* it left the start, or something failed: stop here */
-        }
-
-        last        = plan;
-        b_have_last = true;
     }
 
     motion_stop();

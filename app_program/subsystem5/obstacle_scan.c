@@ -241,43 +241,45 @@ s5_estimate (const float64_t range_mm[], uint16_t echo, unsigned count,
 
         if (!s5_echo_bit(echo, index))
         {
-            continue;
+            /* Nothing to do. */
         }
-
-        if ((0U == p_out->valid) || (range_mm[index] < p_out->nearest_mm))
+        else
         {
-            p_out->nearest_mm = range_mm[index];
-        }
-
-        if ((0U == p_out->valid) || (range_mm[index] > p_out->farthest_mm))
-        {
-            p_out->farthest_mm = range_mm[index];
-        }
-
-        p_out->valid++;
-
-        for (other = 0U; other < count; other++)
-        {
-            float64_t gap = fabs(range_mm[other] - range_mm[index]);
-
-            if ((s5_echo_bit(echo, other)) && (gap <= S5_CLUSTER_TOL_MM))
+            if ((0U == p_out->valid) || (range_mm[index] < p_out->nearest_mm))
             {
-                support++;
-                spread += gap;
+                p_out->nearest_mm = range_mm[index];
             }
-        }
 
-        /* Most agreeing pings wins, then the tightest group, then the
-           nearer echo (a multipath echo only ever travels further). */
-        if ((best == count) || (support > best_support)
-            || ((support == best_support)
-                && ((spread < best_spread)
-                    || ((spread == best_spread)
-                        && (range_mm[index] < range_mm[best])))))
-        {
-            best         = index;
-            best_support = support;
-            best_spread  = spread;
+            if ((0U == p_out->valid) || (range_mm[index] > p_out->farthest_mm))
+            {
+                p_out->farthest_mm = range_mm[index];
+            }
+
+            p_out->valid++;
+
+            for (other = 0U; other < count; other++)
+            {
+                float64_t gap = fabs(range_mm[other] - range_mm[index]);
+
+                if ((s5_echo_bit(echo, other)) && (gap <= S5_CLUSTER_TOL_MM))
+                {
+                    support++;
+                    spread += gap;
+                }
+            }
+
+            /* Most agreeing pings wins, then the tightest group, then the
+               nearer echo (a multipath echo only ever travels further). */
+            if ((best == count) || (support > best_support)
+                || ((support == best_support)
+                    && ((spread < best_spread)
+                        || ((spread == best_spread)
+                            && (range_mm[index] < range_mm[best])))))
+            {
+                best         = index;
+                best_support = support;
+                best_spread  = spread;
+            }
         }
     }
 
@@ -669,21 +671,23 @@ s5_face_walk (const s5_profile_t * p_profile, int start, int step,
     {
         if (!s5_profile_taken(p_profile, index))
         {
-            continue;
+            /* Nothing to do. */
         }
-
-        if ((!s5_profile_echo(p_profile, index))
-            || (fabs(s5_profile_mm(p_profile, index)
-                     - s5_profile_mm(p_profile, end))
-                > S5_FACE_JUMP_MM))
+        else
         {
-            *p_jump = true;
-            break;
-        }
+            if ((!s5_profile_echo(p_profile, index))
+                || (fabs(s5_profile_mm(p_profile, index)
+                         - s5_profile_mm(p_profile, end))
+                    > S5_FACE_JUMP_MM))
+            {
+                *p_jump = true;
+                break;
+            }
 
-        *p_before = end;
-        end       = index;
-        (*p_count)++;
+            *p_before = end;
+            end       = index;
+            (*p_count)++;
+        }
     }
 
     return end;
@@ -706,28 +710,31 @@ s5_face_extend (const s5_profile_t * p_profile, int end, int step,
 
         if (!s5_profile_taken(p_profile, index))
         {
-            continue;
+            /* Nothing to do. */
         }
-
-        if (!s5_profile_echo(p_profile, index))
+        else
         {
-            return end;
+            if (!s5_profile_echo(p_profile, index))
+            {
+                return end;
+            }
+
+            from_square = fabs((float64_t)(S5_FACE_CENTRE - index) - tilt);
+            axis        = s5_profile_mm(p_profile, index) + S5_SENSOR_OFFSET_MM;
+
+            if ((axis > ((S5_FACE_PLANE_OVER * distance)
+                         / cos(from_square * S5_DEG_TO_RAD)))
+                || (axis
+                    < (distance
+                       / cos(fmax(0.0, from_square - S5_FACE_PLANE_BEAM_DEG)
+                             * S5_DEG_TO_RAD))))
+            {
+                return end;
+            }
+
+            *p_before = end;
+            end       = index;
         }
-
-        from_square = fabs((float64_t)(S5_FACE_CENTRE - index) - tilt);
-        axis        = s5_profile_mm(p_profile, index) + S5_SENSOR_OFFSET_MM;
-
-        if ((axis > ((S5_FACE_PLANE_OVER * distance)
-                     / cos(from_square * S5_DEG_TO_RAD)))
-            || (axis < (distance
-                        / cos(fmax(0.0, from_square - S5_FACE_PLANE_BEAM_DEG)
-                              * S5_DEG_TO_RAD))))
-        {
-            return end;
-        }
-
-        *p_before = end;
-        end       = index;
     }
 
     *p_jump = false; /* still on the plane at the limit of the sweep */
@@ -757,20 +764,22 @@ s5_face_cross (const s5_profile_t * p_profile, int start, int end, int step,
     {
         if (!s5_profile_taken(p_profile, index))
         {
-            continue;
+            /* Nothing to do. */
         }
-
-        if (s5_profile_mm(p_profile, index) >= level)
+        else
         {
-            *p_index = (float64_t)previous
-                       + (((float64_t)(index - previous)
-                           * (level - s5_profile_mm(p_profile, previous)))
-                          / (s5_profile_mm(p_profile, index)
-                             - s5_profile_mm(p_profile, previous)));
-            return true;
-        }
+            if (s5_profile_mm(p_profile, index) >= level)
+            {
+                *p_index = (float64_t)previous
+                           + (((float64_t)(index - previous)
+                               * (level - s5_profile_mm(p_profile, previous)))
+                              / (s5_profile_mm(p_profile, index)
+                                 - s5_profile_mm(p_profile, previous)));
+                return true;
+            }
 
-        previous = index;
+            previous = index;
+        }
     }
 
     return false;

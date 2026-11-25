@@ -55,40 +55,43 @@ route_set (const char * p_text, int len)
         if ((' ' == key) || (',' == key))
         {
             ++index;
-            continue;
         }
-
-        if (((index + 2) >= len) || ('=' != p_text[index + 1]))
+        else
         {
-            return false;
-        }
+            if (((index + 2) >= len) || ('=' != p_text[index + 1]))
+            {
+                return false;
+            }
 
-        char     letter = route_upper(p_text[index + 2]);
-        unsigned slot   = 0U;
+            char     letter = route_upper(p_text[index + 2]);
+            unsigned slot   = 0U;
 
-        while ((slot < ROUTE_SLOTS) && (keys[slot] != key))
-        {
-            ++slot;
-        }
+            while ((slot < ROUTE_SLOTS) && (keys[slot] != key))
+            {
+                ++slot;
+            }
 
-        bool b_valid = ((letter >= 'A') && (letter <= 'Z'))
-                       || ((letter >= '0') && (letter <= '9'));
+            bool b_valid = ((letter >= 'A') && (letter <= 'Z'))
+                           || ((letter >= '0') && (letter <= '9'));
 
-        if ((4U == slot) || (!b_valid)
-            || (0U != ((route >> (8U * slot)) & 0xFFU))
-            || (ROUTE_NONE != route_action(route, letter)))
-        {
-            /* Unknown key, bad letter, key given twice, or letter used twice.
-             */
-            return false;
-        }
+            if ((4U == slot) || (!b_valid)
+                || (0U != ((route >> (8U * slot)) & 0xFFU))
+                || (ROUTE_NONE != route_action(route, letter)))
+            {
+                /* Unknown key, bad letter, key given twice, or letter used
+                 * twice.
+                 */
+                return false;
+            }
 
-        route |= (uint32_t)(uint8_t)letter << (8U * slot);
-        index += 3;
+            route |= (uint32_t)(uint8_t)letter << (8U * slot);
+            index += 3;
 
-        if ((index < len) && (' ' != p_text[index]) && (',' != p_text[index]))
-        {
-            return false;
+            if ((index < len) && (' ' != p_text[index])
+                && (',' != p_text[index]))
+            {
+                return false;
+            }
         }
     }
 
