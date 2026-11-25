@@ -6,6 +6,8 @@
 #include "subsystem4.h"
 #include <stdint.h>
 
+#define GY511_AXES 3U /* x, y, z */
+
 /* Three 12-bit two's-complement values, packed into 5 bytes (4 padding bits).
  * X: bits 0..11, Y: 12..23, Z: 24..35; least-significant byte first.
  * Owned by one task. Never publish this multi-byte object without protection.

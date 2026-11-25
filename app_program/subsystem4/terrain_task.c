@@ -437,7 +437,7 @@ terrain_read_motion (s4_motion_t * p_motion)
     p_motion->state      = status.motion.state;
     p_motion->hold       = status.motion.hold;
 
-    for (uint8_t wheel = 0U; wheel < 2U; wheel++)
+    for (uint8_t wheel = 0U; wheel < MOTION_WHEELS; wheel++)
     {
         p_motion->speed_mm_s[wheel] = terrain_mm_s(status.motion.speed[wheel]);
         p_motion->target_mm_s[wheel]

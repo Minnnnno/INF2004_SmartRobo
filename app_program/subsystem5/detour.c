@@ -38,6 +38,7 @@
 #include <math.h>
 
 #define S5_DEG_TO_RAD        (0.017453292519943295)
+#define S5_STATUS_TRIES      3U /* the shared status lock is only polled */
 #define S5_POLL_MS           20U
 #define S5_SETTLE_TIMEOUT_S  4.0 /* > Motion Control's 3 s stop timeout */
 #define S5_RELEASE_TIMEOUT_S 1.0
@@ -66,7 +67,7 @@ s5_status (robot_status_t * p_status)
 {
     unsigned attempt;
 
-    for (attempt = 0U; attempt < 3U; attempt++)
+    for (attempt = 0U; attempt < S5_STATUS_TRIES; attempt++)
     {
         if (motion_get_status(p_status))
         {

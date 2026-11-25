@@ -1398,7 +1398,7 @@ s5_avoidance (const s5_scan_t * p_scan, s5_avoid_t * p_out)
     order[0] = s5_preferred_side(p_scan);
     order[1] = (S5_AVOID_LEFT == order[0]) ? S5_AVOID_RIGHT : S5_AVOID_LEFT;
 
-    for (index = 0U; index < 2U; index++)
+    for (index = 0U; index < S5_SIDES; index++)
     {
         if (p_out->b_room[(S5_AVOID_LEFT == order[index]) ? S5_LEFT : S5_RIGHT])
         {

@@ -70,7 +70,7 @@ encoder_diagnostics (void)
               (unsigned)diagnostics.irq_registered,
               (unsigned)diagnostics.nvic_enabled);
 
-    for (wheel = 0; wheel < 2U; ++wheel)
+    for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
     {
         tm_printf(
             (const UB *)"%s A=GP%u level=%u edges=%lu irq_mask=%u func=%u "

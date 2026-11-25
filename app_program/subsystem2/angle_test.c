@@ -132,7 +132,7 @@ angle_test_poll (void)
     }
     else
     {
-        for (wheel = 0U; wheel < 2U; ++wheel)
+        for (wheel = 0U; wheel < MOTION_WHEELS; ++wheel)
         {
             float64_t output
                 = g_control.output[wheel] * g_control.config.motor_sign[wheel];

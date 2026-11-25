@@ -21,7 +21,7 @@ angle_control_init (angle_control_t *       p_control,
     p_control->config = *p_config;
     p_control->ready  = (isfinite(p_config->track)) && (p_config->track > 0.0);
 
-    for (wheel = 0U; wheel < 2U; ++wheel)
+    for (wheel = 0U; wheel < MOTION_WHEELS; ++wheel)
     {
         p_control->ready = (p_control->ready)
                            && (isfinite(p_config->diameter[wheel]))
@@ -97,7 +97,7 @@ angle_control_step (angle_control_t * p_control, encoder_sample_t sample,
         return;
     }
 
-    for (wheel = 0U; wheel < 2U; ++wheel)
+    for (wheel = 0U; wheel < MOTION_WHEELS; ++wheel)
     {
         int expected
             = (0U == wheel) ? -p_control->direction : p_control->direction;
@@ -164,7 +164,7 @@ angle_control_step (angle_control_t * p_control, encoder_sample_t sample,
         return;
     }
 
-    for (wheel = 0U; wheel < 2U; ++wheel)
+    for (wheel = 0U; wheel < MOTION_WHEELS; ++wheel)
     {
         float64_t remaining
             = fmax(0.0, 1.0 - (progress[wheel] / p_control->goal[wheel]));

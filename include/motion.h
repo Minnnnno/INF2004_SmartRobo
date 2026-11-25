@@ -6,6 +6,9 @@
 #include <stdint.h>
 #include "motion_storage.h"
 
+#define MOTION_WHEELS    2U /* left, right */
+#define ENCODER_CHANNELS 2U /* A, B */
+
 /* All distances metres, speeds m/s, angles radians, times seconds. */
 typedef enum
 {

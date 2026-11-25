@@ -183,7 +183,8 @@ arc (request_source_t source, uint32_t command_id, float64_t metres,
             return R_INVALID;
         }
 
-        for (unsigned wheel_index = 0U; wheel_index < 2U; ++wheel_index)
+        for (unsigned wheel_index = 0U; wheel_index < MOTION_WHEELS;
+             ++wheel_index)
         {
             wheel[wheel_index] = goal[wheel_index] / seconds;
 

@@ -64,7 +64,7 @@ zero_output (motion_t * p_motion)
 {
     unsigned wheel;
 
-    for (wheel = 0; wheel < 2U; ++wheel)
+    for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
     {
         p_motion->status.output[wheel] = 0.0;
         p_motion->status.target[wheel] = 0.0;
@@ -125,7 +125,7 @@ record_fault_context (motion_t * p_motion, float64_t now)
           && ((DISTANCE_MOVE == command.mode) || (ENCODER_TURN == command.mode)
               || (ARC_MOVE == command.mode));
 
-    for (unsigned wheel = 0U; wheel < 2U; ++wheel)
+    for (unsigned wheel = 0U; wheel < MOTION_WHEELS; ++wheel)
     {
         float64_t target = fabs(p_motion->status.target[wheel]);
         float64_t limit  = 0.0;
@@ -328,40 +328,38 @@ event (motion_t * p_motion, motion_event_type_t type)
         if (!MOTION_FAULTS_ENABLED)
         {
             motion_fault_record(p_motion, F_EVENT_OVERFLOW);
+            return;
         }
-        else
+
+        /* Local state remains authoritative even when notifications cannot be
+         * delivered. */
+        record_fault_context(p_motion, p_motion->last_time);
+        zero_output(p_motion);
+        p_motion->active       = false;
+        p_motion->status.hold  = true;
+        p_motion->status.state = FAULT;
+
+        if (F_NONE == p_motion->status.fault)
         {
-            /* Local state remains authoritative even when notifications cannot
-             * be delivered. */
-            record_fault_context(p_motion, p_motion->last_time);
-            zero_output(p_motion);
-            p_motion->active       = false;
-            p_motion->status.hold  = true;
-            p_motion->status.state = FAULT;
-
-            if (F_NONE == p_motion->status.fault)
-            {
-                p_motion->status.fault = F_EVENT_OVERFLOW;
-            }
-
-            motion_fault_record(p_motion, F_EVENT_OVERFLOW);
-            ++p_motion->status.generation;
+            p_motion->status.fault = F_EVENT_OVERFLOW;
         }
-    }
-    else
-    {
-        uint32_t index
-            = (motion_queue_head(p_motion) + motion_queue_count(p_motion))
-              % MOTION_EVENT_CAPACITY;
 
-        p_motion->events.id[index]         = motion_event.id;
-        p_motion->events.generation[index] = motion_event.generation;
-        p_motion->events.info[index]
-            = (uint8_t)((uint32_t)motion_event.type
-                        | ((uint32_t)motion_event.fault << 3u));
-        motion_queue_set(p_motion, motion_queue_head(p_motion),
-                         motion_queue_count(p_motion) + 1u);
+        motion_fault_record(p_motion, F_EVENT_OVERFLOW);
+        ++p_motion->status.generation;
+        return;
     }
+
+    uint32_t index
+        = (motion_queue_head(p_motion) + motion_queue_count(p_motion))
+          % MOTION_EVENT_CAPACITY;
+
+    p_motion->events.id[index]         = motion_event.id;
+    p_motion->events.generation[index] = motion_event.generation;
+    p_motion->events.info[index]
+        = (uint8_t)((uint32_t)motion_event.type
+                    | ((uint32_t)motion_event.fault << 3u));
+    motion_queue_set(p_motion, motion_queue_head(p_motion),
+                     motion_queue_count(p_motion) + 1u);
 }
 
 bool
@@ -398,42 +396,39 @@ motion_raise_fault (motion_t * p_motion, motion_fault_t fault, float64_t now)
 {
     if (SHUTDOWN == p_motion->status.state)
     {
-        /* Nothing to do. */
+        return;
     }
-    else
+
+    motion_fault_record(p_motion, fault);
+    record_fault_context(p_motion, now);
+
+    if (!MOTION_FAULTS_ENABLED)
     {
-        motion_fault_record(p_motion, fault);
-        record_fault_context(p_motion, now);
-
-        if (!MOTION_FAULTS_ENABLED)
-        {
-            motion_fault_unlatched(p_motion, fault, now);
-        }
-        else
-        {
-            zero_output(p_motion);
-            p_motion->status.hold = true;
-            p_motion->active      = false;
-            motion_flag_set(p_motion, MOTION_GOAL_PENDING, false);
-
-            if ((F_FEEDBACK == fault) || (F_TIMING == fault))
-            {
-                motion_flag_set(p_motion, MOTION_FEEDBACK_LATCHED, true);
-                p_motion->status.stationary       = false;
-                p_motion->status.feedback_trusted = false;
-            }
-
-            if (FAULT != p_motion->status.state)
-            {
-                p_motion->status.fault = fault;
-                event(p_motion, EV_FAULT);
-                ++p_motion->status.generation;
-            }
-
-            p_motion->status.state = FAULT;
-            p_motion->entered      = now;
-        }
+        motion_fault_unlatched(p_motion, fault, now);
+        return;
     }
+
+    zero_output(p_motion);
+    p_motion->status.hold = true;
+    p_motion->active      = false;
+    motion_flag_set(p_motion, MOTION_GOAL_PENDING, false);
+
+    if ((F_FEEDBACK == fault) || (F_TIMING == fault))
+    {
+        motion_flag_set(p_motion, MOTION_FEEDBACK_LATCHED, true);
+        p_motion->status.stationary       = false;
+        p_motion->status.feedback_trusted = false;
+    }
+
+    if (FAULT != p_motion->status.state)
+    {
+        p_motion->status.fault = fault;
+        event(p_motion, EV_FAULT);
+        ++p_motion->status.generation;
+    }
+
+    p_motion->status.state = FAULT;
+    p_motion->entered      = now;
 }
 
 static void
@@ -448,7 +443,7 @@ record_feedback (motion_t * p_motion, encoder_sample_t sample,
     p_motion->status.feedback_cause        = cause;
     p_motion->status.feedback_fault_sample = sample;
 
-    for (unsigned wheel = 0U; wheel < 2U; ++wheel)
+    for (unsigned wheel = 0U; wheel < MOTION_WHEELS; ++wheel)
     {
         p_motion->status.feedback_previous_count[wheel]
             = p_motion->odom.previous[wheel];
@@ -482,7 +477,7 @@ motion_init (motion_t * p_motion, const motion_config_t * p_config,
     p_motion->status.encoder_sample_time = now;
     p_motion->status.feedback_trusted    = sample.reliable;
 
-    for (wheel = 0; wheel < 2U; ++wheel)
+    for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
     {
         p_motion->odom.previous[wheel] = sample.count[wheel];
         p_motion->invalid[wheel]       = sample.invalid[wheel];
@@ -549,7 +544,7 @@ motion_begin_sampling (motion_t * p_motion, encoder_sample_t sample,
     }
     else
     {
-        for (wheel = 0U; wheel < 2U; ++wheel)
+        for (wheel = 0U; wheel < MOTION_WHEELS; ++wheel)
         {
             p_motion->odom.previous[wheel] = sample.count[wheel];
         }
@@ -577,41 +572,38 @@ motion_cancel (motion_t * p_motion, float64_t now)
 {
     if (SHUTDOWN == p_motion->status.state)
     {
-        /* Nothing to do. */
+        return;
+    }
+
+    p_motion->status.hold = true;
+
+    if (p_motion->active)
+    {
+        event(p_motion, EV_CANCELLED);
+    }
+
+    p_motion->active = false;
+    motion_flag_set(p_motion, MOTION_GOAL_PENDING, false);
+    ++p_motion->status.generation;
+
+    if (FAULT == p_motion->status.state)
+    {
+        zero_output(p_motion);
+        return;
+    }
+
+    if (DRIVING == p_motion->status.state)
+    {
+        stopping(p_motion, now);
+    }
+    else if (STOPPING != p_motion->status.state)
+    {
+        zero_output(p_motion);
+        p_motion->status.state = STOPPED;
     }
     else
     {
-        p_motion->status.hold = true;
-
-        if (p_motion->active)
-        {
-            event(p_motion, EV_CANCELLED);
-        }
-
-        p_motion->active = false;
-        motion_flag_set(p_motion, MOTION_GOAL_PENDING, false);
-        ++p_motion->status.generation;
-
-        if (FAULT == p_motion->status.state)
-        {
-            zero_output(p_motion);
-        }
-        else
-        {
-            if (DRIVING == p_motion->status.state)
-            {
-                stopping(p_motion, now);
-            }
-            else if (STOPPING != p_motion->status.state)
-            {
-                zero_output(p_motion);
-                p_motion->status.state = STOPPED;
-            }
-            else
-            {
-                /* Nothing to do in any other case. */
-            }
-        }
+        /* Nothing to do in any other case. */
     }
 }
 
@@ -819,7 +811,7 @@ motion_accept (motion_t * p_motion, const motion_command_t * p_command,
             return R_INVALID;
         }
 
-        for (wheel = 0U; wheel < 2U; ++wheel)
+        for (wheel = 0U; wheel < MOTION_WHEELS; ++wheel)
         {
             float64_t goal = p_command->value
                              + ((((0U == wheel) ? -1.0 : 1.0) * p_command->angle
@@ -847,7 +839,7 @@ motion_accept (motion_t * p_motion, const motion_command_t * p_command,
         }
     }
 
-    for (wheel = 0; wheel < 2U; ++wheel)
+    for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
     {
         float64_t limit = (MANUAL_OUTPUT == p_command->mode)
                               ? p_motion->config.manual_limit
@@ -891,7 +883,7 @@ motion_accept (motion_t * p_motion, const motion_command_t * p_command,
             return R_INVALID;
         }
 
-        for (wheel = 0u; wheel < 2u; ++wheel)
+        for (wheel = 0u; wheel < MOTION_WHEELS; ++wheel)
         {
             float64_t goal = decoded.value
                              + ((((0u == wheel) ? -1.0 : 1.0) * decoded.angle
@@ -919,7 +911,7 @@ motion_accept (motion_t * p_motion, const motion_command_t * p_command,
 
     if (!b_refresh)
     {
-        for (wheel = 0; wheel < 2U; ++wheel)
+        for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
         {
             p_motion->start_count[wheel]    = p_motion->odom.previous[wheel];
             p_motion->start[wheel]          = p_motion->odom.travel[wheel];
@@ -1047,7 +1039,7 @@ drive (motion_t * p_motion, float64_t now, float64_t delta_s,
             return;
         }
 
-        for (wheel = 0U; wheel < 2U; ++wheel)
+        for (wheel = 0U; wheel < MOTION_WHEELS; ++wheel)
         {
             float64_t goal = command.value
                              + ((((0U == wheel) ? -1.0 : 1.0) * command.angle
@@ -1163,7 +1155,7 @@ drive (motion_t * p_motion, float64_t now, float64_t delta_s,
         }
     }
 
-    for (wheel = 0; wheel < 2U; ++wheel)
+    for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
     {
         float64_t change;
         float64_t quantum
@@ -1331,7 +1323,7 @@ motion_step (motion_t * p_motion, encoder_sample_t sample, float64_t now)
 
         /* Rebase the pre-drive encoder/time sample. Do not feed an oversized
          * interval into odometry/PID, or count it as stationary settling. */
-        for (wheel = 0U; wheel < 2U; ++wheel)
+        for (wheel = 0U; wheel < MOTION_WHEELS; ++wheel)
         {
             p_motion->odom.previous[wheel] = sample.count[wheel];
             p_motion->odom.speed[wheel] = p_motion->status.speed[wheel] = 0.0;
@@ -1380,7 +1372,7 @@ motion_step (motion_t * p_motion, encoder_sample_t sample, float64_t now)
         record_feedback(p_motion, sample, FB_UNRELIABLE);
     }
 
-    for (wheel = 0; wheel < 2U; ++wheel)
+    for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
     {
         progressed[wheel]
             = sample.count[wheel] != p_motion->odom.previous[wheel];
@@ -1417,7 +1409,7 @@ motion_step (motion_t * p_motion, encoder_sample_t sample, float64_t now)
          * run. */
         if (sample.reliable)
         {
-            for (wheel = 0U; wheel < 2U; ++wheel)
+            for (wheel = 0U; wheel < MOTION_WHEELS; ++wheel)
             {
                 p_motion->odom.previous[wheel] = sample.count[wheel];
             }
@@ -1427,7 +1419,7 @@ motion_step (motion_t * p_motion, encoder_sample_t sample, float64_t now)
     p_motion->status.feedback_trusted
         = b_fresh && (!motion_flag_get(p_motion, MOTION_FEEDBACK_LATCHED));
 
-    for (wheel = 0; wheel < 2U; ++wheel)
+    for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
     {
         p_motion->status.speed[wheel]  = p_motion->odom.speed[wheel];
         p_motion->status.travel[wheel] = p_motion->odom.travel[wheel];

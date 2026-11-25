@@ -138,7 +138,7 @@ motion_compact_encode (const motion_command_t *   p_public,
         }
     }
 
-    for (uint32_t wheel = 0u; wheel < 2u; ++wheel)
+    for (uint32_t wheel = 0u; wheel < MOTION_WHEELS; ++wheel)
     {
         float64_t limit = (MANUAL_OUTPUT == p_public->mode)
                               ? p_config->manual_limit

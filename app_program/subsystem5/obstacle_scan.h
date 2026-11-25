@@ -209,6 +209,7 @@ enum
     S5_LEFT  = 0,
     S5_RIGHT = 1
 };
+#define S5_SIDES 2U
 
 typedef struct
 {

@@ -18,6 +18,7 @@
 /* Pause while a debugger halts the cores. */
 #define CRASH_CTRL_PAUSE   (7UL << 24U)
 #define CRASH_REASON_TIMER 1U
+#define CRASH_DATA_WORDS   3U /* scratch words after the magic */
 #define CRASH_MAGIC_FAULT  0xC0FFEE01U
 /* REASON.TIMER alone is not ours: the bootrom also reboots through a watchdog
  * timeout after a UF2 copy or picotool load. Only a timeout with this mark in
@@ -74,7 +75,7 @@ crash_log_capture (crash_snapshot_t * p_snapshot)
         = known_magic && (0U != (raw_magic & CRASH_ENCODER_LATCH));
     p_snapshot->encoder_cause = (raw_magic & CRASH_ENCODER_CAUSE_MASK) >> 4U;
 
-    for (UINT index = 0U; index < 3U; ++index)
+    for (UINT index = 0U; index < CRASH_DATA_WORDS; ++index)
     {
         p_snapshot->data[index]
             = in_w(CRASH_WDT_SCRATCH0 + (4U * (index + 1U)));

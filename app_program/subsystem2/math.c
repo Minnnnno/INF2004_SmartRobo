@@ -81,7 +81,7 @@ odometry_step (odometry_t * p_odom, const motion_config_t * p_config,
         return false;
     }
 
-    for (wheel = 0; wheel < 2U; ++wheel)
+    for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
     {
         float64_t quantum = (3.141592653589793 * p_config->diameter[wheel])
                             / p_config->counts_per_rev[wheel];
@@ -98,7 +98,7 @@ odometry_step (odometry_t * p_odom, const motion_config_t * p_config,
         }
     }
 
-    for (wheel = 0; wheel < 2U; ++wheel)
+    for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
     {
         p_odom->previous[wheel] = p_sample->count[wheel];
         p_odom->travel[wheel] += change[wheel];

@@ -21,7 +21,7 @@ route_get (void)
 route_action_t
 route_action (uint32_t route, char letter)
 {
-    for (unsigned index = 0U; ('\0' != letter) && (index < 4U);
+    for (unsigned index = 0U; ('\0' != letter) && (index < ROUTE_SLOTS);
          ++index, route >>= 8)
     {
         if ((char)(route & 0xFFU) == letter)
@@ -66,7 +66,7 @@ route_set (const char * p_text, int len)
         char     letter = route_upper(p_text[index + 2]);
         unsigned slot   = 0U;
 
-        while ((slot < 4U) && (keys[slot] != key))
+        while ((slot < ROUTE_SLOTS) && (keys[slot] != key))
         {
             ++slot;
         }
@@ -92,7 +92,7 @@ route_set (const char * p_text, int len)
         }
     }
 
-    for (unsigned slot = 0U; slot < 4U; ++slot)
+    for (unsigned slot = 0U; slot < ROUTE_SLOTS; ++slot)
     {
         if (0U == ((route >> (8U * slot)) & 0xFFU))
         {

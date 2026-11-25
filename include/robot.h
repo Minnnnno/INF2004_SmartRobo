@@ -3,6 +3,8 @@
 #include "float_types.h"
 #include "motion.h"
 
+#define ROBOT_STATUS_VALUES 4U /* values[] of a subsystem slot */
+
 typedef enum
 {
     SOURCE_MANUAL,

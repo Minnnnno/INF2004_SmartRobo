@@ -405,9 +405,10 @@ motion_class_step (motion_class_t *             p_context,
 
     if ((NULL == p_context) || (NULL == p_input))
     {
-        /* Nothing to do. */
+        return;
     }
-    else if (!p_input->valid)
+
+    if (!p_input->valid)
     {
         /* Also drops an unfinished turn (not reported). */
         p_context->flags       = 0U;
@@ -416,64 +417,62 @@ motion_class_step (motion_class_t *             p_context,
         p_context->packed      = mc_pack(MC_STATIONARY, MC_STATIONARY, 0U);
         p_context->yaw_deg_s   = 0;
         p_context->accel_mm_s2 = 0;
+        return;
+    }
+
+    centre = mc_clamp16(
+        ((int32_t)p_input->speed_mm_s[0] + (int32_t)p_input->speed_mm_s[1])
+        / 2);
+    p_context->yaw_deg_s = motion_class_yaw_from_speeds(
+        p_input->speed_mm_s[0], p_input->speed_mm_s[1], p_input->track_mm);
+    mc_update_acceleration(p_context, centre, now_ms);
+    b_window_full = mc_heading_window(p_context, p_input, now_ms, &net_ddeg,
+                                      &oldest_ddeg);
+    p_context->last_ms = now_ms;
+
+    reported = p_context->packed & MC_CLASS_MASK;
+    candidate
+        = (uint8_t)((p_context->packed >> MC_CANDIDATE_SHIFT) & MC_CLASS_MASK);
+    count = (uint8_t)((p_context->packed >> MC_COUNT_SHIFT) & MC_COUNT_MASK);
+    raw   = mc_raw_class(p_context, p_input, centre, b_window_full, net_ddeg);
+
+    if (0U == (p_context->flags & MC_FLAG_VALID))
+    {
+        /* First valid observation is reported directly (nothing to debounce
+         * against). */
+        reported  = raw;
+        candidate = raw;
+        count     = 0U;
+    }
+    else if ((raw == reported) || (MC_OVERTURNED == raw))
+    {
+        reported  = raw;
+        candidate = raw;
+        count     = 0U; /* OVERTURNED is never delayed. */
+    }
+    else if (raw == candidate)
+    {
+        count++;
+
+        if ((uint8_t)(count + 1U) >= MC_CONFIRM_SAMPLES)
+        {
+            reported = raw;
+            count    = 0U;
+        }
     }
     else
     {
-        centre = mc_clamp16(
-            ((int32_t)p_input->speed_mm_s[0] + (int32_t)p_input->speed_mm_s[1])
-            / 2);
-        p_context->yaw_deg_s = motion_class_yaw_from_speeds(
-            p_input->speed_mm_s[0], p_input->speed_mm_s[1], p_input->track_mm);
-        mc_update_acceleration(p_context, centre, now_ms);
-        b_window_full = mc_heading_window(p_context, p_input, now_ms, &net_ddeg,
-                                          &oldest_ddeg);
-        p_context->last_ms = now_ms;
-
-        reported  = p_context->packed & MC_CLASS_MASK;
-        candidate = (uint8_t)((p_context->packed >> MC_CANDIDATE_SHIFT)
-                              & MC_CLASS_MASK);
-        count
-            = (uint8_t)((p_context->packed >> MC_COUNT_SHIFT) & MC_COUNT_MASK);
-        raw = mc_raw_class(p_context, p_input, centre, b_window_full, net_ddeg);
-
-        if (0U == (p_context->flags & MC_FLAG_VALID))
-        {
-            /* First valid observation is reported directly (nothing to debounce
-             * against). */
-            reported  = raw;
-            candidate = raw;
-            count     = 0U;
-        }
-        else if ((raw == reported) || (MC_OVERTURNED == raw))
-        {
-            reported  = raw;
-            candidate = raw;
-            count     = 0U; /* OVERTURNED is never delayed. */
-        }
-        else if (raw == candidate)
-        {
-            count++;
-
-            if ((uint8_t)(count + 1U) >= MC_CONFIRM_SAMPLES)
-            {
-                reported = raw;
-                count    = 0U;
-            }
-        }
-        else
-        {
-            candidate = raw;
-            count     = 0U;
-        }
-
-        p_context->flags |= MC_FLAG_VALID;
-        p_context->packed = mc_pack(reported, candidate, count);
-        mc_track_turn(p_context, p_input,
-                      b_window_full
-                          && ((net_ddeg >= MC_TURN_NET_DDEG)
-                              || (net_ddeg <= -MC_TURN_NET_DDEG)),
-                      b_window_full, oldest_ddeg, now_ms);
+        candidate = raw;
+        count     = 0U;
     }
+
+    p_context->flags |= MC_FLAG_VALID;
+    p_context->packed = mc_pack(reported, candidate, count);
+    mc_track_turn(p_context, p_input,
+                  b_window_full
+                      && ((net_ddeg >= MC_TURN_NET_DDEG)
+                          || (net_ddeg <= -MC_TURN_NET_DDEG)),
+                  b_window_full, oldest_ddeg, now_ms);
 }
 
 bool

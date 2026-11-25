@@ -8,6 +8,8 @@
 #include <math.h>
 #include <stddef.h>
 
+#define GPIO_IRQ_BANKS 4U /* interrupt registers, 8 pins each */
+
 static motion_motor_storage_t     g_motor_config;
 static volatile encoder_capture_t g_capture;
 static uint32_t                   g_encoder_event_mask[4];
@@ -96,7 +98,7 @@ encoder_irq (void)
     unsigned bank;
     uint32_t levels;
 
-    for (bank = 0U; bank < 4U; ++bank)
+    for (bank = 0U; bank < GPIO_IRQ_BANKS; ++bank)
     {
         pending[bank] = in_w(IO_BANK0_BASE + 0x120U + (bank * 4U))
                         & g_encoder_event_mask[bank];
@@ -124,7 +126,7 @@ motion_hal_emergency_stop (void)
 {
     unsigned wheel;
 
-    for (wheel = 0; wheel < 2U; ++wheel)
+    for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
     {
         /* Fixed physical board links, even if edited configuration is invalid.
          */
@@ -201,7 +203,7 @@ motion_hal_init (const motion_config_t * p_config)
 
     g_configured_divider_16 = (uint16_t)(divider * 16.0);
 
-    for (wheel = 0; wheel < 2U; ++wheel)
+    for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
     {
         unsigned channel;
 
@@ -215,7 +217,7 @@ motion_hal_init (const motion_config_t * p_config)
         g_last_compare[wheel][0] = g_last_compare[wheel][1] = 0U;
         g_last_requested[wheel] = g_last_applied[wheel] = 0.0;
 
-        for (channel = 0; channel < 2U; ++channel)
+        for (channel = 0; channel < ENCODER_CHANNELS; ++channel)
         {
             unsigned pin = g_encoder_pins[wheel][channel];
 
@@ -249,7 +251,7 @@ motion_hal_init (const motion_config_t * p_config)
     motor_state_set(DRIVER_IRQ_REGISTERED, true);
     irq_state = save_and_disable_interrupts();
 
-    for (wheel = 0U; wheel < 4U; ++wheel)
+    for (wheel = 0U; wheel < GPIO_IRQ_BANKS; ++wheel)
     {
         out_w(IO_BANK0_BASE + 0xf0U + (wheel * 4U),
               g_encoder_event_mask[wheel]);
@@ -258,7 +260,7 @@ motion_hal_init (const motion_config_t * p_config)
     encoder_capture_init(&g_capture, g_encoder_pins, p_config->quadrature,
                          p_config->encoder_sign, in_w(GPIO_IN));
 
-    for (wheel = 0; wheel < 2U; ++wheel)
+    for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
     {
         gpio_set_irq_enabled(g_encoder_pins[wheel][0],
                              p_config->quadrature[wheel]
@@ -286,7 +288,7 @@ motion_hal_init (const motion_config_t * p_config)
         return true;
     }
 
-    for (wheel = 0; wheel < 2U; ++wheel)
+    for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
     {
         gpio_set_function(g_motor_pins[wheel][0], GPIO_FUNC_PWM);
         gpio_set_function(g_motor_pins[wheel][1], GPIO_FUNC_PWM);
@@ -334,14 +336,14 @@ motion_hal_encoder_diagnostics (encoder_diagnostics_t * p_diagnostics)
 #endif
     p_diagnostics->sample.reliable = motor_state_get(DRIVER_ENCODER_READY);
 
-    for (wheel = 0; wheel < 2U; ++wheel)
+    for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
     {
         p_diagnostics->sample.count[wheel]   = g_capture.count[wheel];
         p_diagnostics->sample.invalid[wheel] = g_capture.invalid[wheel];
         p_diagnostics->previous_ab[wheel]
             = encoder_capture_previous_ab(&g_capture, wheel);
 
-        for (channel = 0; channel < 2U; ++channel)
+        for (channel = 0; channel < ENCODER_CHANNELS; ++channel)
         {
             unsigned pin = g_encoder_pins[wheel][channel];
 
@@ -400,7 +402,7 @@ motion_hal_motor_diagnostics (motor_diagnostics_t * p_diagnostics)
     p_diagnostics->output_age_ms
         = (in_w(TIMER_TIMERAWL) - g_last_write_us) / 1000U;
 
-    for (unsigned wheel = 0U; wheel < 2U; ++wheel)
+    for (unsigned wheel = 0U; wheel < MOTION_WHEELS; ++wheel)
     {
         uint32_t base
             = PWM_BASE
@@ -423,7 +425,7 @@ motion_hal_motor_diagnostics (motor_diagnostics_t * p_diagnostics)
             p_diagnostics->enabled_mask |= (uint8_t)(1U << wheel);
         }
 
-        for (unsigned channel = 0U; channel < 2U; ++channel)
+        for (unsigned channel = 0U; channel < ENCODER_CHANNELS; ++channel)
         {
             p_diagnostics->pin_function[wheel][channel]
                 = (uint8_t)(in_w(GPIO_CTRL(g_motor_pins[wheel][channel]))
@@ -467,7 +469,7 @@ motion_hal_write (const float64_t output[2], bool b_inhibited, float64_t now)
     gb_last_inhibited    = b_inhibited;
     g_reversal_wait_mask = 0U;
 
-    for (wheel = 0; wheel < 2U; ++wheel)
+    for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
     {
         float64_t requested
             = isfinite(output[wheel])

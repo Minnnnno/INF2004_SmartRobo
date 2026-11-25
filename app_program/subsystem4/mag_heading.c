@@ -258,44 +258,34 @@ mag_heading_ddeg (mag_cal_t const * p_cal, int16_t axis_x, int16_t axis_y,
     int32_t   reference = 0;
     int32_t   ddeg      = 0;
 
-    bool b_result = false;
-
     if ((NULL == p_cal) || (NULL == p_heading_ddeg) || (!p_cal->calibrated)
         || (0U == p_cal->field))
     {
-        b_result = false;
+        return false;
     }
-    else
+
+    field     = (int32_t)mag_field(p_cal, axis_x, axis_y);
+    reference = (int32_t)p_cal->field;
+
+    if ((((field - reference) * 100) > (reference * MAG_FIELD_TOL_PERCENT))
+        || (((reference - field) * 100) > (reference * MAG_FIELD_TOL_PERCENT)))
     {
-        field     = (int32_t)mag_field(p_cal, axis_x, axis_y);
-        reference = (int32_t)p_cal->field;
-
-        if ((((field - reference) * 100) > (reference * MAG_FIELD_TOL_PERCENT))
-            || (((reference - field) * 100)
-                > (reference * MAG_FIELD_TOL_PERCENT)))
-        {
-            b_result = false;
-        }
-        else
-        {
-            mag_correct(p_cal, axis_x, axis_y, &centre_x, &centre_y);
-            heading = (float32_t)p_cal->sign * atan2f(centre_y, centre_x)
-                      * MAG_RAD_TO_DDEG;
-            ddeg    = (int32_t)((heading >= 0.0F) ? (heading + 0.5F)
-                                                  : (heading - 0.5F));
-            ddeg %= 3600;
-
-            if (ddeg < 0)
-            {
-                ddeg += 3600;
-            }
-
-            *p_heading_ddeg = (int16_t)ddeg;
-            b_result        = true;
-        }
+        return false;
     }
 
-    return b_result;
+    mag_correct(p_cal, axis_x, axis_y, &centre_x, &centre_y);
+    heading
+        = (float32_t)p_cal->sign * atan2f(centre_y, centre_x) * MAG_RAD_TO_DDEG;
+    ddeg = (int32_t)((heading >= 0.0F) ? (heading + 0.5F) : (heading - 0.5F));
+    ddeg %= 3600;
+
+    if (ddeg < 0)
+    {
+        ddeg += 3600;
+    }
+
+    *p_heading_ddeg = (int16_t)ddeg;
+    return true;
 }
 
 int32_t

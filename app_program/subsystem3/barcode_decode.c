@@ -2,6 +2,11 @@
 #include "../../include/float_types.h"
 #include "barcode_decode.h"
 
+#define CODE39_ELEMENTS    9U /* bars and spaces in a character */
+#define BARCODE_DIRECTIONS 2U /* read forwards, then backwards */
+#define BARCODE_TRIMS      4U
+#define BARCODE_FIT_CHARS  3U /* start, letter, stop */
+
 #ifndef BARCODE_SMOOTH
 /* Average over 1 step either side (1.2 mm on the 0.4 mm grid). */
 #define BARCODE_SMOOTH 1U
@@ -121,7 +126,7 @@ barcode_widest (const uint32_t * p_widths, unsigned first, unsigned count)
     {
         unsigned widest = 9U;
 
-        for (unsigned index = first; index < 9U; index += 2U)
+        for (unsigned index = first; index < CODE39_ELEMENTS; index += 2U)
         {
             bool b_taken = 0U != (pattern & (1U << (8U - index)));
 
@@ -162,7 +167,7 @@ barcode_nth (const uint32_t * p_widths, unsigned first, unsigned nth)
     uint16_t taken   = barcode_widest(p_widths, first, nth - 1U);
     uint32_t longest = 0U;
 
-    for (unsigned index = first; index < 9U; index += 2U)
+    for (unsigned index = first; index < CODE39_ELEMENTS; index += 2U)
     {
         if ((0U == (taken & (1U << (8U - index))))
             && (p_widths[index] > longest))
@@ -306,7 +311,8 @@ barcode_read (uint32_t * p_widths, unsigned count, char * p_out)
     }
     else
     {
-        for (unsigned side = 0U; (side < 4U) && (0U == chars); ++side)
+        for (unsigned side = 0U; (side < BARCODE_TRIMS) && (0U == chars);
+             ++side)
         {
             bool b_reversed = side >= 2U;
             bool b_at_start = 0U == (side % 2U);
@@ -814,7 +820,7 @@ barcode_mismatch (const uint32_t * p_widths, uint16_t letter)
     const uint16_t want[3] = {star, letter, star};
     unsigned       total   = 0U;
 
-    for (unsigned character = 0U; character < 3U; ++character)
+    for (unsigned character = 0U; character < BARCODE_FIT_CHARS; ++character)
     {
         uint16_t seen
             = (uint16_t)(barcode_widest(&p_widths[character * 10U], 0U, 2U)
@@ -851,7 +857,7 @@ barcode_best_fit (uint32_t * p_widths, unsigned count, const char * p_letters)
                 continue;
             }
 
-            for (unsigned dir = 0U; dir < 2U; ++dir)
+            for (unsigned dir = 0U; dir < BARCODE_DIRECTIONS; ++dir)
             { /* Forward, then reversed (restored below). */
 
                 if (1U == dir)

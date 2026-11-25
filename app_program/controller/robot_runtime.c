@@ -7,6 +7,8 @@
 #include "motion_hal.h"
 #include <math.h>
 
+#define ROBOT_COMMANDS_PER_CYCLE 4U
+
 _Static_assert(((int)COMMS_CMD_START == (int)REMOTE_START)
                    && ((int)COMMS_CMD_STOP == (int)REMOTE_STOP)
                    && ((int)COMMS_CMD_ESTOP == (int)REMOTE_ESTOP),
@@ -223,7 +225,7 @@ robot_update_subsystem (request_source_t           source,
         return false;
     }
 
-    for (index = 0; index < 4U; ++index)
+    for (index = 0; index < ROBOT_STATUS_VALUES; ++index)
     {
         if (!isfinite(p_status->values[index]))
         {
@@ -281,7 +283,7 @@ controller_task (INT code, void * p_context)
     {
         /* Consume Buddy 1's command buffer without blocking motion scheduling.
          */
-        for (unsigned budget = 0U; budget < 4U; ++budget)
+        for (unsigned budget = 0U; budget < ROBOT_COMMANDS_PER_CYCLE; ++budget)
         {
             comms_cmd_t command;
             INT received = tk_rcv_mbf(g_mbf_comms_cmd, &command, TMO_POL);

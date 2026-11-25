@@ -226,7 +226,7 @@ buddy4_read (int16_t xyz[3])
     gy511_acceleration_t sample = {{0}};
     ER                   status = gy511_read_acceleration(&sample);
 
-    for (uint8_t axis = 0U; (E_OK == status) && (axis < 3U); axis++)
+    for (uint8_t axis = 0U; (E_OK == status) && (axis < TILT_AXES); axis++)
     {
         status = gy511_acceleration_mg(&sample, axis, &xyz[axis]);
     }
@@ -391,63 +391,59 @@ buddy4_monitor (buddy4_t * p_context, uint32_t now_ms)
     if ((now_ms - p_context->last_fresh) >= B4_LOSS_MS)
     {
         buddy4_enter(p_context, B4_RECOVERY, now_ms, E_TMOUT);
+        return;
+    }
+
+    // read one x y z sample
+    status = buddy4_read(xyz);
+
+    if (!buddy4_clock(p_context, &now_ms))
+    {
+        return;
+    }
+
+    if ((now_ms - p_context->last_fresh) >= B4_STALE_MS)
+    {
+        tilt_discard_history(&p_context->tilt);
+    }
+
+    // Enter RECOVERY if bus or device failure
+    if ((E_OK != status) && (E_BUSY != status))
+    {
+        buddy4_enter(p_context, B4_RECOVERY, now_ms, status);
+    }
+
+    // Busy , but too long without data, Goes to recovery
+    else if ((now_ms - p_context->last_fresh) >= B4_LOSS_MS)
+    {
+        buddy4_enter(p_context, B4_RECOVERY, now_ms, E_TMOUT);
     }
     else
     {
-        // read one x y z sample
-        status = buddy4_read(xyz);
-
-        if (!buddy4_clock(p_context, &now_ms))
+        if (E_OK == status)
         {
-            /* Nothing to do. */
+            p_context->last_fresh = now_ms;
+            p_context->error      = E_OK;
+            p_context->result
+                = tilt_update(&p_context->tilt, xyz[0], xyz[1], xyz[2]);
+            p_context->forward_mg
+                = (0U != (p_context->result & TILT_RESULT_VALID))
+                      ? tilt_forward_dynamic_mg(&p_context->tilt, xyz[0],
+                                                xyz[1], xyz[2])
+                      : 0;
+            /* Raw sample, not the tilt result: tilt rejects these very poses.
+             */
+            (void)lift_step(&p_context->lift, &p_context->tilt, xyz[0], xyz[1],
+                            xyz[2], now_ms,
+                            (now_ms - p_context->phase_started)
+                                >= B4_LIFT_SETTLE_MS);
         }
         else
         {
-            if ((now_ms - p_context->last_fresh) >= B4_STALE_MS)
-            {
-                tilt_discard_history(&p_context->tilt);
-            }
-
-            // Enter RECOVERY if bus or device failure
-            if ((E_OK != status) && (E_BUSY != status))
-            {
-                buddy4_enter(p_context, B4_RECOVERY, now_ms, status);
-            }
-
-            // Busy , but too long without data, Goes to recovery
-            else if ((now_ms - p_context->last_fresh) >= B4_LOSS_MS)
-            {
-                buddy4_enter(p_context, B4_RECOVERY, now_ms, E_TMOUT);
-            }
-            else
-            {
-                if (E_OK == status)
-                {
-                    p_context->last_fresh = now_ms;
-                    p_context->error      = E_OK;
-                    p_context->result
-                        = tilt_update(&p_context->tilt, xyz[0], xyz[1], xyz[2]);
-                    p_context->forward_mg
-                        = (0U != (p_context->result & TILT_RESULT_VALID))
-                              ? tilt_forward_dynamic_mg(&p_context->tilt,
-                                                        xyz[0], xyz[1], xyz[2])
-                              : 0;
-                    /* Raw sample, not the tilt result: tilt rejects these very
-                     * poses.
-                     */
-                    (void)lift_step(&p_context->lift, &p_context->tilt, xyz[0],
-                                    xyz[1], xyz[2], now_ms,
-                                    (now_ms - p_context->phase_started)
-                                        >= B4_LIFT_SETTLE_MS);
-                }
-                else
-                {
-                    p_context->error = E_BUSY;
-                }
-
-                buddy4_poll_magnetic(p_context, now_ms);
-            }
+            p_context->error = E_BUSY;
         }
+
+        buddy4_poll_magnetic(p_context, now_ms);
     }
 }
 
@@ -464,7 +460,7 @@ buddy4_poll_magnetic (buddy4_t * p_context, uint32_t now_ms)
 
     if (E_OK == status)
     {
-        for (uint8_t axis = 0U; (E_OK == status) && (axis < 3U); axis++)
+        for (uint8_t axis = 0U; (E_OK == status) && (axis < TILT_AXES); axis++)
         {
             status
                 = gy511_magnetic_counts(&sample, axis, &p_context->mag[axis]);

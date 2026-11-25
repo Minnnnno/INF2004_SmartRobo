@@ -18,6 +18,8 @@ typedef enum
     ROUTE_UTURN
 } route_action_t;
 
+#define ROUTE_SLOTS 4U /* one byte of the route word per action */
+
 /* Fallback until MQTT supplies a route: X(letter, action), at most one letter
  * per action. */
 #define ROUTE_TABLE(X)  \

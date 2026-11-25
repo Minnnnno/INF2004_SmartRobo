@@ -2,6 +2,8 @@
 #ifndef TILT_H
 #define TILT_H
 #include "../../include/float_types.h"
+
+#define TILT_AXES 3U /* x, y, z */
 #include <stdbool.h>
 #include <stdint.h>
 

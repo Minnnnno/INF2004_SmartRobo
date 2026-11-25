@@ -44,7 +44,7 @@ tilt_normalise (float32_t vector[3])
     {
         // else divide each part by length
         // shrinks/streches the vector without turning it
-        for (uint8_t index = 0U; index < 3U; index++)
+        for (uint8_t index = 0U; index < TILT_AXES; index++)
         {
             vector[index] /= length;
         }
@@ -118,7 +118,7 @@ tilt_capture (tilt_context_t * p_context, int16_t axis_x, int16_t axis_y,
     // anchor = first sample of current window.
     count = p_context->progress & TILT_COUNT_MASK;
 
-    for (uint8_t index = 0U; index < 3U; index++)
+    for (uint8_t index = 0U; index < TILT_AXES; index++)
     {
         // if any axis of the reading >80mg away from anchor , count goes back
         // to 0 robot has moved
@@ -130,7 +130,7 @@ tilt_capture (tilt_context_t * p_context, int16_t axis_x, int16_t axis_y,
 
     if (0U == count)
     {
-        for (uint8_t index = 0U; index < 3U; index++)
+        for (uint8_t index = 0U; index < TILT_AXES; index++)
         {
             p_context->sum[index]    = 0.0F;
             p_context->anchor[index] = accel[index];
@@ -138,7 +138,7 @@ tilt_capture (tilt_context_t * p_context, int16_t axis_x, int16_t axis_y,
     }
 
     // build up running total for each axis
-    for (uint8_t index = 0U; index < 3U; index++)
+    for (uint8_t index = 0U; index < TILT_AXES; index++)
     {
         p_context->sum[index] += accel[index];
     }
@@ -152,7 +152,7 @@ tilt_capture (tilt_context_t * p_context, int16_t axis_x, int16_t axis_y,
     }
 
     // divide for average reading. (sampling)
-    for (uint8_t index = 0U; index < 3U; index++)
+    for (uint8_t index = 0U; index < TILT_AXES; index++)
     {
         p_context->up[index]
             = p_context->sum[index] / (float32_t)TILT_CAPTURE_SAMPLES;
@@ -171,7 +171,7 @@ tilt_capture (tilt_context_t * p_context, int16_t axis_x, int16_t axis_y,
     }
 
     // building of the front and side direction.
-    for (uint8_t index = 0U; index < 3U; index++)
+    for (uint8_t index = 0U; index < TILT_AXES; index++)
     {
         /* Start from sensor +Y, remove its component along up, leaving a level
          * forward direction even if the sensor is mounted slightly tilted.
@@ -270,7 +270,7 @@ tilt_update (tilt_context_t * p_context, int16_t axis_x, int16_t axis_y,
     else
     {
         // smoothing the reading (low-pass fliter)
-        for (uint8_t index = 0U; index < 3U; index++)
+        for (uint8_t index = 0U; index < TILT_AXES; index++)
         {
             // if fliter hasnt started yet, copy the reading straight in as its
             // starting value

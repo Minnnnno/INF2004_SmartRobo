@@ -1,6 +1,8 @@
 #include "../../include/float_types.h"
 #include "motion.h"
 #include "board_config.h"
+
+#define ENCODER_PIN_COUNT (MOTION_WHEELS * ENCODER_CHANNELS)
 #include <math.h>
 
 const unsigned g_motor_pins[2][2] = {{8U, 9U}, {10U, 11U}};
@@ -25,7 +27,7 @@ board_pins_valid (void)
         return false;
     }
 
-    for (index = 0; index < 4U; ++index)
+    for (index = 0; index < ENCODER_PIN_COUNT; ++index)
     {
         if (enc[index] > 29U)
         {
@@ -158,7 +160,7 @@ motion_config_valid (const motion_config_t * p_config)
         }
     }
 
-    for (wheel = 0; wheel < 2U; ++wheel)
+    for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
     {
         const pid_config_t * p_pid_config = &p_config->pid[wheel];
 

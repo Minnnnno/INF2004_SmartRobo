@@ -89,7 +89,7 @@ finish (bool b_timed_out)
 
     end = motion_hal_sample();
 
-    for (wheel = 0U; wheel < 2U; ++wheel)
+    for (wheel = 0U; wheel < MOTION_WHEELS; ++wheel)
     {
         g_completed.delta[wheel] = end.count[wheel] - g_baseline.count[wheel];
         g_completed.invalid_delta[wheel]
@@ -159,41 +159,38 @@ button_irq (void)
 
     if (0U == (start_events | stop_events))
     {
-        /* Nothing to do. */
+        return;
     }
-    else
-    {
-        ++g_button_irq_events;
 
-        if (!gb_active)
-        {
-            /* Nothing to do. */
-        }
-        else if (0U != (stop_events & GPIO_IRQ_EDGE_FALL))
+    ++g_button_irq_events;
+
+    if (!gb_active)
+    {
+        return;
+    }
+
+    if (0U != (stop_events & GPIO_IRQ_EDGE_FALL))
+    {
+        button_stop_now();
+        return;
+    }
+
+    now = time_us_64();
+
+    if (0U != (start_events & GPIO_IRQ_EDGE_RISE))
+    {
+        g_stop_released_at   = now;
+        gb_stop_release_seen = true;
+    }
+
+    if (0U != (start_events & GPIO_IRQ_EDGE_FALL))
+    {
+        if (gb_stop_release_seen && ((now - g_stop_released_at) >= 40000U))
         {
             button_stop_now();
         }
-        else
-        {
-            now = time_us_64();
 
-            if (0U != (start_events & GPIO_IRQ_EDGE_RISE))
-            {
-                g_stop_released_at   = now;
-                gb_stop_release_seen = true;
-            }
-
-            if (0U != (start_events & GPIO_IRQ_EDGE_FALL))
-            {
-                if (gb_stop_release_seen
-                    && ((now - g_stop_released_at) >= 40000U))
-                {
-                    button_stop_now();
-                }
-
-                gb_stop_release_seen = false;
-            }
-        }
+        gb_stop_release_seen = false;
     }
 }
 #endif
@@ -301,7 +298,7 @@ start_test (unsigned wheel_mask, int direction, bool b_sensor,
     g_cutoff_at = time_us_64() + duration_us;
     out_w(TIMER_ALARM3, (uint32_t)g_cutoff_at);
 
-    for (wheel = 0U; wheel < 2U; ++wheel)
+    for (wheel = 0U; wheel < MOTION_WHEELS; ++wheel)
     {
         unsigned slice                = 4U + wheel;
         int      electrical_direction = direction * g_motor_sign[wheel];
@@ -362,15 +359,17 @@ motor_test_poll_buttons (void)
 
     if (!gb_ready)
     {
-        /* Nothing to do. */
+        return;
     }
-    else if (!gpio_get(21U))
-    {
-        /* Stop wins immediately on the next 20 ms poll. */
+
+    if (!gpio_get(21U))
+    { /* Stop wins immediately on the next 20 ms poll. */
         disarm_buttons();
         button_stop_now();
+        return;
     }
-    else if (gpio_get(20U))
+
+    if (gpio_get(20U))
     {
         gb_press_tracking = false;
 
@@ -384,33 +383,35 @@ motor_test_poll_buttons (void)
         {
             gb_button_armed = true;
         }
-    }
-    else
-    {
-        gb_release_tracking = false;
 
-        if (!gb_button_armed)
-        {
-            /* Nothing to do. */
-        }
-        else if (gb_active)
-        {
-            /* GPIO interrupt also handles stop between task polls. */
-            button_stop_now();
-        }
-        else if (!gb_press_tracking)
-        {
-            g_pressed_since   = now;
-            gb_press_tracking = true;
-        }
-        else
-        {
-            if ((now - g_pressed_since) >= 40000U)
-            {
-                disarm_buttons();
-                (void)start_test(3U, 1, false, BUTTON_DURATION_US);
-            }
-        }
+        return;
+    }
+
+    gb_release_tracking = false;
+
+    if (!gb_button_armed)
+    {
+        return;
+    }
+
+    if (gb_active)
+    {
+        /* GPIO interrupt also handles stop between task polls. */
+        button_stop_now();
+        return;
+    }
+
+    if (!gb_press_tracking)
+    {
+        g_pressed_since   = now;
+        gb_press_tracking = true;
+        return;
+    }
+
+    if ((now - g_pressed_since) >= 40000U)
+    {
+        disarm_buttons();
+        (void)start_test(3U, 1, false, BUTTON_DURATION_US);
     }
 }
 
