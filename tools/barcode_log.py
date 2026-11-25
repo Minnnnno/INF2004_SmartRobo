@@ -18,8 +18,8 @@ Usage:
   python tools/barcode_log.py FILE [FILE ...]      chosen logs
   python tools/barcode_log.py --expect Z --since 20261105-2100
   python tools/barcode_log.py --selftest
-  python tools/barcode_log.py --export-fixture tests/barcode/replay.txt LOG,Z,15[,LINES[,FROM]] ...
-      (replay fixture for tests/test_barcode_decode.c; LOG must be a ROBO_BARCODE_STREAM log)
+  python tools/barcode_log.py --export-fixture tests/subsystem3/barcode/replay.txt LOG,Z,15[,LINES[,FROM]] ...
+      (replay fixture for tests/subsystem3/test_barcode_decode.c; LOG must be a ROBO_BARCODE_STREAM log)
 """
 import argparse
 import glob
@@ -251,7 +251,7 @@ STREAM = re.compile(r'^bc t=\d+ v=((?:\d+ ){9}\d+) ir=\S+ p=((?:\d+ ){9}\d+)\s*$
 
 
 def export_fixture(out, specs, keep=25, rise=25):
-    """Writes the replay fixture for tests/test_barcode_decode.c: for each LOG,LETTER,MIN[,LINES[,FROM]]
+    """Writes the replay fixture for tests/subsystem3/test_barcode_decode.c: for each LOG,LETTER,MIN[,LINES[,FROM]]
     spec, a '@run' header and the log's 'bc' stream lines (at most LINES of them, starting at stream
     line FROM, default 0), keeping only `keep` lines
     (0.1 s each) either side of activity (a reading `rise` above the log's floor level), so idle

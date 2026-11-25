@@ -8,7 +8,7 @@
  *	restored, the frame is 21 bytes, out-of-range values are clamped
  *	rather than wrapped.  Also prints the JSON vs packed size comparison.
  *
- *	Build: see tests/buddy1_frame/README.md, or ROBO_HOST_TESTS=ON.
+ *	Build: ROBO_HOST_TESTS=ON (CTest target buddy1_frame_checks).
  */
 
 #include "telemetry_frame.h"

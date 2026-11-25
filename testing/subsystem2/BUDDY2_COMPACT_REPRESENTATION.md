@@ -196,7 +196,7 @@ stack margin and control latency still need target measurement.
 
 Evidence: `build-buddy2-compact-before/{type-sizes,buddy2-symbols,image-size}.txt`
 and matching files in `build-buddy2-compact-after`. ARM object array probes in
-`tests/buddy2_compact/memory_probe.c` encode sizeof values as symbol lengths.
+`tests/subsystem2/compact/memory_probe.c` encode sizeof values as symbol lengths.
 
 ## Tests, builds and reproducibility
 
@@ -216,7 +216,7 @@ and matching files in `build-buddy2-compact-after`. ARM object array probes in
   not the standalone serial motion-test firmware used for the mat experiments.
 
 ```powershell
-cmake -S tests/buddy2_compact -B build-buddy2-compact-tests -G Ninja -DCMAKE_C_COMPILER="C:/Y2 Tri 1/Embedded Systems/Assignment/INF2004_SmartRobo/.tools/zig/ziglang/zig.exe" -DCMAKE_C_COMPILER_ARG1=cc
+cmake -S tests/subsystem2/compact -B build-buddy2-compact-tests -G Ninja -DCMAKE_C_COMPILER="C:/Y2 Tri 1/Embedded Systems/Assignment/INF2004_SmartRobo/.tools/zig/ziglang/zig.exe" -DCMAKE_C_COMPILER_ARG1=cc
 cmake --build build-buddy2-compact-tests -j4
 ctest --test-dir build-buddy2-compact-tests --output-on-failure
 cmake --build build-steering-host -j4

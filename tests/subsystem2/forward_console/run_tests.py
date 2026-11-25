@@ -1,6 +1,6 @@
 from pathlib import Path
 import subprocess
-root = Path(__file__).resolve().parents[2]
+root = Path(__file__).resolve().parents[3]
 tests = Path(__file__).resolve().parent
 out = root / "build/forward-console-host"
 out.mkdir(parents=True, exist_ok=True)

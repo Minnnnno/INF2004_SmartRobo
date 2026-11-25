@@ -44,7 +44,7 @@ With gcc 15 the line tests only build with `-DCMAKE_C_FLAGS=-Wno-error=float-con
 
 | ID | What is tested | Requirement | Expected result (in the log) |
 |---|---|---|---|
-| S3-U01 | Barcode decoder: small and big Code 39, both directions, 0.05/0.10 m/s, no misreads; synthetic passes and shuttle runs replayed from `tests/barcode/replay.txt`; letter sets AZ, A (reject), sensitivity ladder, four route letters | R3-4, R3-7 | `barcode decode checks passed`; all 6 `barcode_decode_*` tests pass |
+| S3-U01 | Barcode decoder: small and big Code 39, both directions, 0.05/0.10 m/s, no misreads; synthetic passes and shuttle runs replayed from `tests/subsystem3/barcode/replay.txt`; letter sets AZ, A (reject), sensitivity ladder, four route letters | R3-4, R3-7 | `barcode decode checks passed`; all 6 `barcode_decode_*` tests pass |
 | S3-U02 | Barcode route from MQTT text: any order/case/separator accepted; missing action, duplicate letter or key, bad character rejected and the last good route kept; `route.h` fallback until then | R3-5 | `route_checks passed (0 failures)` |
 | S3-U03 | Line sensor reading and line-following steering (`line_test_checks`, `line_pid_checks`, both built from `line_following.c`) | R3-1, R3-2 | Both tests `Passed`; `100% tests passed` |
 
