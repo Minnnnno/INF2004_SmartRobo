@@ -212,6 +212,7 @@ failed-barcode-read behavior still needs a fresh hardware run.
 
 ## Further instructions
 
+- [Coding standard (BARR-C:2018) and its tools](docs/CODING_STANDARD.md)
 - [Build options and toolchain](docs/BUILD.md), [integrated firmware](docs/INTEGRATED_FIRMWARE.md)
   and [production motion integration](docs/PRODUCTION_INTEGRATION.md)
 - [Shared API](docs/API.md), [motion API for buddies](docs/BUDDY_MOTION_API.md)
