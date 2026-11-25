@@ -1,5 +1,9 @@
-/* Application composition: initialize components, create/start tasks,
- * supervise. */
+/** @file app_main.c
+ *
+ * @brief Application composition: initialize components, create/start tasks,
+ * supervise.
+ */
+
 #include "robot_rtos.h"
 #include "app.h"
 #include "robot.h"
@@ -8,6 +12,8 @@
 #include "controller/robot_runtime.h"
 #include "system/system_runtime.h"
 
+/*! @brief Application entry: initialise, create and start the tasks, then
+ * supervise. */
 INT
 usermain (void)
 {

@@ -1,4 +1,6 @@
-/* Buddy 4 lift / overturn detection (Change Requirement: replaces IMU
+/** @file lift.h
+ *
+ * @brief Buddy 4 lift / overturn detection (Change Requirement: replaces IMU
  * collision detection). When the robot is lifted off the ground or
  * overturned, the owning task stops the motors; in the demonstration,
  * lifting the robot ends the run.
@@ -17,6 +19,7 @@
  *
  * Portable: no kernel calls; one owning task; lift_reset() before use.
  */
+
 #ifndef LIFT_H
 #define LIFT_H
 #include <stdbool.h>
@@ -77,8 +80,8 @@ typedef struct
 } lift_t;
 
 void lift_reset(lift_t * p_lift);
-/* One fresh accelerometer sample (mg). armed = false during the settle time
- * after entering MONITORING: values are computed, nothing is latched.
+/*! @brief One fresh accelerometer sample (mg). armed = false during the settle
+ * time after entering MONITORING: values are computed, nothing is latched.
  * Returns the latched condition. Does nothing before the tilt reference is
  * captured. The latch clears only after LIFT_CLEAR_MS upright and still.
  */
@@ -86,10 +89,10 @@ uint8_t lift_step(lift_t * p_lift, tilt_context_t const * p_tilt,
                   int16_t axis_x, int16_t axis_y, int16_t axis_z,
                   uint32_t now_ms, bool b_armed);
 uint8_t lift_state(lift_t const * p_lift);
-/* True while latched, while the robot is tilted more than ~35 deg (and for
- * ~0.5 s after), or while the overturned pose is being timed: hump measurement
- * is suspended meanwhile, so a robot lifted by one end does not record a fake
- * hump. Single vibration spikes never suspend it. */
+/*! @brief True while latched, while the robot is tilted more than ~35 deg (and
+ * for ~0.5 s after), or while the overturned pose is being timed: hump
+ * measurement is suspended meanwhile, so a robot lifted by one end does not
+ * record a fake hump. Single vibration spikes never suspend it. */
 bool         lift_suspect(lift_t const * p_lift);
 int16_t      lift_vertical_mg(lift_t const * p_lift);
 int16_t      lift_trigger_mg(lift_t const * p_lift);

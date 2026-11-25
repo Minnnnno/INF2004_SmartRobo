@@ -1,3 +1,8 @@
+/** @file angle_control.c
+ *
+ * @brief Encoder-based 90 degree turn controller (calibration image).
+ */
+
 #include "../../include/float_types.h"
 #include "angle_test.h"
 #include <math.h>
@@ -5,7 +10,10 @@
 static const float64_t g_pi_value = 3.141592653589793;
 
 static void finish(angle_control_t * p_control, angle_state_t state);
+static void step_braking(angle_control_t * p_control, float64_t now,
+                         bool b_changed);
 
+/*! @brief Set up the turn controller. */
 void
 angle_control_init (angle_control_t *       p_control,
                     const motion_config_t * p_config)
@@ -34,6 +42,7 @@ angle_control_init (angle_control_t *       p_control,
     }
 }
 
+/*! @brief Start a 90 degree turn in one direction. */
 bool
 angle_control_start (angle_control_t * p_control, int direction,
                      encoder_sample_t sample, float64_t now)
@@ -70,6 +79,7 @@ angle_control_start (angle_control_t * p_control, int direction,
     return b_result;
 }
 
+/*! @brief One control cycle of the turn. */
 void
 angle_control_step (angle_control_t * p_control, encoder_sample_t sample,
                     float64_t now)
@@ -133,29 +143,7 @@ angle_control_step (angle_control_t * p_control, encoder_sample_t sample,
 
     if (ANGLE_BRAKING == p_control->state)
     {
-        if (b_changed)
-        {
-            p_control->quiet_since = now;
-        }
-
-        if ((now - p_control->quiet_since) >= 0.3)
-        {
-            finish(p_control,
-                   (fabs(p_control->angle
-                         - ((p_control->direction * g_pi_value) / 2.0))
-                    <= (g_pi_value / 60.0))
-                       ? ANGLE_DONE
-                       : ANGLE_OVERSHOOT);
-        }
-        else if (now >= p_control->brake_deadline)
-        {
-            finish(p_control, ANGLE_TIMEOUT);
-        }
-        else
-        {
-            /* Nothing to do in any other case. */
-        }
-
+        step_braking(p_control, now, b_changed);
         return;
     }
 
@@ -200,18 +188,47 @@ angle_control_step (angle_control_t * p_control, encoder_sample_t sample,
     }
 }
 
+/*! @brief Stop the turn. */
 void
 angle_control_stop (angle_control_t * p_control)
 {
     finish(p_control, ANGLE_STOPPED);
 }
 
+/*! @brief End the run with a result, outputs off. */
 static void
 finish (angle_control_t * p_control, angle_state_t state)
 {
     p_control->state     = state;
     p_control->output[0] = 0.0;
     p_control->output[1] = 0.0;
+}
+
+/*! @brief Braking: done once the wheels have been quiet for long enough. */
+static void
+step_braking (angle_control_t * p_control, float64_t now, bool b_changed)
+{
+    if (b_changed)
+    {
+        p_control->quiet_since = now;
+    }
+
+    if ((now - p_control->quiet_since) >= 0.3)
+    {
+        finish(p_control, (fabs(p_control->angle
+                                - ((p_control->direction * g_pi_value) / 2.0))
+                           <= (g_pi_value / 60.0))
+                              ? ANGLE_DONE
+                              : ANGLE_OVERSHOOT);
+    }
+    else if (now >= p_control->brake_deadline)
+    {
+        finish(p_control, ANGLE_TIMEOUT);
+    }
+    else
+    {
+        /* Nothing to do in any other case. */
+    }
 }
 
 /*** end of file ***/

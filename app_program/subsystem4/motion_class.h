@@ -1,4 +1,6 @@
-/* Buddy 4 motion classification (brief: motion classification, turn-rate
+/** @file motion_class.h
+ *
+ * @brief Buddy 4 motion classification (brief: motion classification, turn-rate
  * monitoring, motion event reporting; collision detection was replaced by
  * lift/overturn detection, see lift.h).
  * Fusion by design: the IMU supplies what only it can sense (overturned pose,
@@ -8,6 +10,7 @@
  * noise, so encoder speed is the acceleration source (IMU logged alongside).
  * Portable: no kernel calls; one owning task; zero-fill or reset before use.
  */
+
 #ifndef MOTION_CLASS_H
 #define MOTION_CLASS_H
 #include <stdbool.h>
@@ -121,31 +124,33 @@ typedef struct
 } motion_class_t;
 
 void motion_class_reset(motion_class_t * p_context);
-/* One step per task cycle. Invalid input publishes STATIONARY with the valid
- * flag clear and discards the speed window.
+/*! @brief One step per task cycle. Invalid input publishes STATIONARY with the
+ * valid flag clear and discards the speed window.
  */
 void motion_class_step(motion_class_t *             p_context,
                        motion_class_input_t const * p_input, uint32_t now_ms);
 uint8_t motion_class_get(motion_class_t const * p_context);
 bool    motion_class_valid(motion_class_t const * p_context);
-/* True while a turn (net heading change) is in progress, before it is reported.
+/*! @brief True while a turn (net heading change) is in progress, before it is
+ * reported.
  */
 bool    motion_class_turn_active(motion_class_t const * p_context);
 int16_t motion_class_yaw_deg_s(motion_class_t const * p_context);
 int16_t motion_class_accel_mm_s2(motion_class_t const * p_context);
-/* Consume one completed turn (true at most once per turn): signed angle in
- * 0.1 deg (+ = left), duration in ms and peak |yaw| in deg/s. Any output
+/*! @brief Consume one completed turn (true at most once per turn): signed angle
+ * in 0.1 deg (+ = left), duration in ms and peak |yaw| in deg/s. Any output
  * pointer may be NULL. The angle comes from Buddy 2's encoders: wheel slip
  * inflates it. */
 bool motion_class_take_turn(motion_class_t * p_context, int16_t * p_angle_ddeg,
                             uint16_t * p_duration_ms, int16_t * p_peak_deg_s);
-/* Compass angle for the turn last returned by motion_class_take_turn():
+/*! @brief Compass angle for the turn last returned by motion_class_take_turn():
  * true with the angle (0.1 deg, + = left) when the compass was valid for the
  * whole turn; false = "compass n/a". Shown next to the encoder angle for a
  * by-eye comparison; no slip verdict is made (removed for now). */
 bool motion_class_turn_compass(motion_class_t const * p_context,
                                int16_t *              p_compass_ddeg);
-/* Yaw rate from wheel speeds: (right - left) / track, deg/s, rounded. */
+/*! @brief Yaw rate from wheel speeds: (right - left) / track, deg/s, rounded.
+ */
 int16_t      motion_class_yaw_from_speeds(int16_t left_mm_s, int16_t right_mm_s,
                                           uint16_t track_mm);
 char const * motion_class_name(uint8_t motion_class);

@@ -1,3 +1,8 @@
+/** @file terrain.c
+ *
+ * @brief Hump phases and peak height.
+ */
+
 #include "terrain.h"
 #include <stddef.h>
 #define TERRAIN_PENDING         (0x10U)
@@ -17,8 +22,8 @@ static int32_t terrain_drop(uint16_t peak_tenths);
 static bool    terrain_confirm(terrain_t * p_terrain, uint32_t now_ms,
                                uint32_t hold_ms);
 
-/* Reset the event, peaks and run maximum only when explicitly starting a new
- * run. */
+/*! @brief Reset the event, peaks and run maximum only when explicitly starting
+ * a new run. */
 void
 terrain_reset (terrain_t * p_terrain)
 {
@@ -28,7 +33,8 @@ terrain_reset (terrain_t * p_terrain)
     }
 }
 
-/* Take the event without disturbing phase, validity or pending confirmation. */
+/*! @brief Take the event without disturbing phase, validity or pending
+ * confirmation. */
 bool
 terrain_take_completed (terrain_t * p_terrain)
 {
@@ -50,7 +56,7 @@ terrain_take_completed (terrain_t * p_terrain)
     return b_result;
 }
 
-/* Read public phase/validity without exposing candidate bookkeeping. */
+/*! @brief Read public phase/validity without exposing candidate bookkeeping. */
 uint8_t
 terrain_status (terrain_t const * p_terrain)
 {
@@ -69,7 +75,8 @@ terrain_run_max (terrain_t const * p_terrain)
     return (NULL == p_terrain) ? 0U : p_terrain->run_max;
 }
 
-/* Fixed names for console reports; an invalid observation retains last phase.
+/*! @brief Fixed names for console reports; an invalid observation retains last
+ * phase.
  */
 char const *
 terrain_phase_name (uint8_t status)
@@ -98,9 +105,9 @@ terrain_phase_name (uint8_t status)
     return p_result;
 }
 
-/* Throw away the hump in progress: WAITING, not valid (the next sample reseeds
- * the smoothing), no pending confirmation. Completed humps, the run maximum and
- * an unconsumed completion event are kept. */
+/*! @brief Throw away the hump in progress: WAITING, not valid (the next sample
+ * reseeds the smoothing), no pending confirmation. Completed humps, the run
+ * maximum and an unconsumed completion event are kept. */
 void
 terrain_discard (terrain_t * p_terrain)
 {
@@ -111,14 +118,14 @@ terrain_discard (terrain_t * p_terrain)
     }
 }
 
-/* All tests use the smoothed height |h| (seeded from the first sample after a
- * gap or invalid observation, so no false ramp from zero).
- * WAITING: |h| >= 5 mm held 100 ms -> CLIMBING. CLIMBING: track the peak;
- * |h| <= peak - min(3 mm, peak/2) -> DESCENDING. DESCENDING: |h| >= peak + 2 mm
- * returns to CLIMBING (double hump; smaller rises are noise and do not move the
- * peak); |h| < 2.5 mm held 300 ms completes: the peak and its
- * side are stored, the run maximum is updated, an event latches and WAITING
- * rearms. An up-only ramp stays CLIMBING and is not counted until it completes.
+/*! @brief All tests use the smoothed height |h| (seeded from the first sample
+ * after a gap or invalid observation, so no false ramp from zero). WAITING: |h|
+ * >= 5 mm held 100 ms -> CLIMBING. CLIMBING: track the peak; |h| <= peak -
+ * min(3 mm, peak/2) -> DESCENDING. DESCENDING: |h| >= peak + 2 mm returns to
+ * CLIMBING (double hump; smaller rises are noise and do not move the peak); |h|
+ * < 2.5 mm held 300 ms completes: the peak and its side are stored, the run
+ * maximum is updated, an event latches and WAITING rearms. An up-only ramp
+ * stays CLIMBING and is not counted until it completes.
  */
 void
 terrain_step (terrain_t * p_terrain, bool b_valid, int16_t height_tenths,
@@ -242,7 +249,8 @@ terrain_step (terrain_t * p_terrain, bool b_valid, int16_t height_tenths,
     }
 }
 
-/* Whole millimetres from 0.1 mm, rounded, limited to the 7-bit field. */
+/*! @brief Whole millimetres from 0.1 mm, rounded, limited to the 7-bit field.
+ */
 static uint8_t
 terrain_mm (uint16_t tenths)
 {
@@ -252,8 +260,9 @@ terrain_mm (uint16_t tenths)
                                                         : height_mm);
 }
 
-/* Record a new live peak (and its side). The run maximum is only updated when
- * the hump completes, so a hump that is discarded (lift) never reaches it. */
+/*! @brief Record a new live peak (and its side). The run maximum is only
+ * updated when the hump completes, so a hump that is discarded (lift) never
+ * reaches it. */
 static void
 terrain_raise_peak (terrain_t * p_terrain, uint16_t magnitude, bool b_right)
 {
@@ -263,8 +272,8 @@ terrain_raise_peak (terrain_t * p_terrain, uint16_t magnitude, bool b_right)
                     | (b_right ? TERRAIN_SIDE_RIGHT : 0U));
 }
 
-/* Fall from the peak that counts as descending: 3 mm, or half the peak when
- * that is smaller, so a hump that peaks below ~3 mm can still complete.
+/*! @brief Fall from the peak that counts as descending: 3 mm, or half the peak
+ * when that is smaller, so a hump that peaks below ~3 mm can still complete.
  * Peaks are at least TERRAIN_ENTER_TENTHS, so the result is always positive.
  */
 static int32_t
@@ -275,7 +284,8 @@ terrain_drop (uint16_t peak_tenths)
     return (half < TERRAIN_DROP_TENTHS) ? half : TERRAIN_DROP_TENTHS;
 }
 
-/* Start or continue a timed confirmation; true once held for hold_ms. */
+/*! @brief Start or continue a timed confirmation; true once held for hold_ms.
+ */
 static bool
 terrain_confirm (terrain_t * p_terrain, uint32_t now_ms, uint32_t hold_ms)
 {

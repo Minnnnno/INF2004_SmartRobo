@@ -1,3 +1,8 @@
+/** @file manual_console.c
+ *
+ * @brief Calibration console, one profile per build option.
+ */
+
 #ifdef ROBO_MANUAL_CONSOLE
 #include "robot_rtos.h"
 #include "../../include/float_types.h"
@@ -16,6 +21,7 @@
 
 static const UB * angle_state_name(angle_state_t state);
 
+/*! @brief Name of a turn state. */
 static const UB *
 angle_state_name (angle_state_t state)
 {
@@ -38,18 +44,21 @@ static void       print_counts(const encoder_sample_t * p_sample);
 static void       encoder_diagnostics(void);
 static void       usb_diagnostics(void);
 
+/*! @brief "-" for a negative modular count, else nothing. */
 static const UB *
 count_sign (uint32_t raw)
 {
     return (const UB *)((raw > INT32_MAX) ? "-" : "");
 }
 
+/*! @brief Size of a modular count. */
 static uint32_t
 count_magnitude (uint32_t raw)
 {
     return (uint32_t)((raw > INT32_MAX) ? 0U - raw : raw);
 }
 
+/*! @brief Print both encoder counts. */
 static void
 print_counts (const encoder_sample_t * p_sample)
 {
@@ -64,6 +73,7 @@ print_counts (const encoder_sample_t * p_sample)
         (uint32_t)p_sample->invalid[0], (uint32_t)p_sample->invalid[1]);
 }
 
+/*! @brief Print the encoder diagnostics. */
 static void
 encoder_diagnostics (void)
 {
@@ -106,6 +116,7 @@ encoder_diagnostics (void)
                              "coalesce.\n");
 }
 
+/*! @brief Print the USB console state. */
 static void
 usb_diagnostics (void)
 {
@@ -142,6 +153,7 @@ usb_diagnostics (void)
 
 static void button_diagnostics(void);
 
+/*! @brief Print the test button state. */
 static void
 button_diagnostics (void)
 {
@@ -174,7 +186,8 @@ button_diagnostics (void)
 
 #endif
 
-/* Test-only task. No motor activation on USB connection or ARM alone. */
+/*! @brief Test-only task. No motor activation on USB connection or ARM alone.
+ */
 void
 manual_console (void)
 {

@@ -1,4 +1,8 @@
-/* Barcode decoding, see barcode_decode.h. */
+/** @file barcode_decode.c
+ *
+ * @brief Barcode decoding, see barcode_decode.h.
+ */
+
 #include "../../include/float_types.h"
 #include "barcode_decode.h"
 
@@ -129,8 +133,8 @@ static void     barcode_reverse(uint32_t * p_widths, unsigned count);
 static unsigned barcode_read_strict(uint32_t * p_widths, unsigned count,
                                     char * p_out);
 
-/* Marks the count longest elements among bars (first = 0) or spaces (first =
- * 1). */
+/*! @brief Marks the count longest elements among bars (first = 0) or spaces
+ * (first = 1). */
 static uint16_t
 barcode_widest (const uint32_t * p_widths, unsigned first, unsigned count)
 {
@@ -157,6 +161,7 @@ barcode_widest (const uint32_t * p_widths, unsigned first, unsigned count)
     return pattern;
 }
 
+/*! @brief Character of a wide/narrow pattern. */
 static char
 barcode_lookup (uint16_t pattern)
 {
@@ -173,7 +178,8 @@ barcode_lookup (uint16_t pattern)
     return '\0';
 }
 
-/* The nth longest (1 = longest) among bars (first = 0) or spaces (first = 1).
+/*! @brief The nth longest (1 = longest) among bars (first = 0) or spaces (first
+ * = 1).
  */
 static uint32_t
 barcode_nth (const uint32_t * p_widths, unsigned first, unsigned nth)
@@ -193,12 +199,12 @@ barcode_nth (const uint32_t * p_widths, unsigned first, unsigned nth)
     return longest;
 }
 
-/* Bars and spaces are compared only among themselves, because the sensor reads
- * black wider than white. Most characters have 2 wide bars and 1 wide space; $
- * / + % have 3 wide spaces and no wide bar. Each layout is scored by how well
- * it fits: 2 wide bars + 1 wide space: (bar 2nd / bar 3rd) * (space 1st / space
- * 2nd) 3 wide spaces:              (space 3rd / space 4th) * (bar 5th / bar
- * 1st, all bars even) No speed reference is needed. */
+/*! @brief Bars and spaces are compared only among themselves, because the
+ * sensor reads black wider than white. Most characters have 2 wide bars and 1
+ * wide space; $ / + % have 3 wide spaces and no wide bar. Each layout is scored
+ * by how well it fits: 2 wide bars + 1 wide space: (bar 2nd / bar 3rd) * (space
+ * 1st / space 2nd) 3 wide spaces:              (space 3rd / space 4th) * (bar
+ * 5th / bar 1st, all bars even) No speed reference is needed. */
 static char
 barcode_char (const uint32_t * p_widths)
 {
@@ -218,8 +224,9 @@ barcode_char (const uint32_t * p_widths)
                                            | barcode_widest(p_widths, 1U, 1U)));
 }
 
-/* Elements alternate bar/space starting with a bar; characters are separated by
- * a one-element gap. Returns true only for a complete *...* read. */
+/*! @brief Elements alternate bar/space starting with a bar; characters are
+ * separated by a one-element gap. Returns true only for a complete *...* read.
+ */
 static bool
 barcode_decode (const uint32_t * p_widths, unsigned count, char * p_out)
 {
@@ -245,9 +252,9 @@ barcode_decode (const uint32_t * p_widths, unsigned count, char * p_out)
     return ('*' == p_out[0]) && ('*' == p_out[chars - 1U]);
 }
 
-/* Finds a complete *...* anywhere in the elements, so stray marks before or
- * after the barcode are skipped. first is the index of the first bar. Returns
- * the character count. */
+/*! @brief Finds a complete *...* anywhere in the elements, so stray marks
+ * before or after the barcode are skipped. first is the index of the first bar.
+ * Returns the character count. */
 static unsigned
 barcode_search (const uint32_t * p_widths, unsigned count, unsigned first,
                 char * p_out)
@@ -269,6 +276,7 @@ barcode_search (const uint32_t * p_widths, unsigned count, unsigned first,
     return 0U;
 }
 
+/*! @brief Reverse the order of the widths. */
 static void
 barcode_reverse (uint32_t * p_widths, unsigned count)
 {
@@ -281,7 +289,7 @@ barcode_reverse (uint32_t * p_widths, unsigned count)
     }
 }
 
-/* Forward first, then reversed (in place, restored before returning).
+/*! @brief Forward first, then reversed (in place, restored before returning).
  * Elements alternate bar/space from a bar at index 0. */
 static unsigned
 barcode_read_strict (uint32_t * p_widths, unsigned count, char * p_out)
@@ -309,9 +317,9 @@ barcode_read_strict (uint32_t * p_widths, unsigned count, char * p_out)
 
 static unsigned barcode_read(uint32_t * p_widths, unsigned count, char * p_out);
 
-/* The outermost bar of the code, and the wide space inside it, can go missing
- * (that bar sits nearest the sheet's edge): the elements then start (or end)
- * two short. Start and stop are both
+/*! @brief The outermost bar of the code, and the wide space inside it, can go
+ * missing (that bar sits nearest the sheet's edge): the elements then start (or
+ * end) two short. Start and stop are both
  * '*', read the same way round, so the missing pair is copied from the '*' at
  * the other end and the whole code must still decode, both '*' included. Tried
  * only when the strict read fails. */
@@ -382,17 +390,20 @@ static void barcode_quiet_level(const uint16_t * p_samples, uint32_t * p_white,
 static void barcode_bar_span(const uint16_t * p_samples, unsigned first,
                              unsigned last, float64_t edge, unsigned * p_start,
                              unsigned * p_end);
-static unsigned barcode_elements(uint16_t * p_samples, unsigned count,
-                                 uint32_t * p_widths, unsigned contrast_div);
-static uint32_t barcode_prominence(uint32_t noise);
-static bool     barcode_flat(const barcode_seg_t * p_segment);
-static unsigned barcode_resample(const uint16_t * p_samples,
-                                 const uint32_t * p_path, unsigned count,
-                                 uint16_t * p_out);
-static uint16_t barcode_pattern_of(char letter);
-static unsigned barcode_bit_count(uint16_t bits);
-static unsigned barcode_mismatch(const uint32_t * p_widths, uint16_t letter);
-static bool     barcode_allowed(const char * p_letters, char letter);
+static unsigned  barcode_elements(uint16_t * p_samples, unsigned count,
+                                  uint32_t * p_widths, unsigned contrast_div);
+static uint32_t  barcode_prominence(uint32_t noise);
+static bool      barcode_flat(const barcode_seg_t * p_segment);
+static unsigned  barcode_resample(const uint16_t * p_samples,
+                                  const uint32_t * p_path, unsigned count,
+                                  uint16_t * p_out);
+static uint16_t  barcode_pattern_of(char letter);
+static unsigned  barcode_bit_count(uint16_t bits);
+static unsigned  barcode_mismatch(const uint32_t * p_widths, uint16_t letter);
+static bool      barcode_allowed(const char * p_letters, char letter);
+static float64_t barcode_bar_area(const uint16_t * p_samples, unsigned start,
+                                  unsigned end, float64_t base,
+                                  float64_t * p_moment);
 
 uint32_t
 barcode_level (const uint16_t * p_samples, unsigned count, uint32_t * p_noise)
@@ -417,6 +428,7 @@ barcode_level (const uint16_t * p_samples, unsigned count, uint32_t * p_noise)
     return mean;
 }
 
+/*! @brief Lowest and highest sample. */
 void
 barcode_range (const uint16_t * p_samples, unsigned count, uint16_t * p_low,
                uint16_t * p_high)
@@ -544,6 +556,7 @@ barcode_decode_stretch (const uint16_t * p_samples, const uint32_t * p_path,
     return chars;
 }
 
+/*! @brief Start the segmenter. */
 void
 barcode_seg_init (barcode_seg_t * p_segment)
 {
@@ -556,6 +569,7 @@ barcode_seg_init (barcode_seg_t * p_segment)
     p_segment->done       = false;
 }
 
+/*! @brief Feed one sample to the segmenter. */
 barcode_seg_event_t
 barcode_seg_feed (barcode_seg_t * p_segment, uint16_t sample, uint32_t path,
                   uint16_t heading)
@@ -644,6 +658,7 @@ barcode_seg_feed (barcode_seg_t * p_segment, uint16_t sample, uint32_t path,
     return event;
 }
 
+/*! @brief Sensitivity setting at a step of the ladder. */
 unsigned
 barcode_ladder_div (unsigned first, unsigned index)
 {
@@ -680,7 +695,8 @@ barcode_ladder_div (unsigned first, unsigned index)
  *      prominence above that white), divided by the scan's black-white range,
  *      centred on the area's centre; spaces are the gaps between bars.
  * White before the first bar and after the last is not stored. */
-/* Step 3: finds the bars that rise at least prominence. Returns their count. */
+/*! @brief Step 3: finds the bars that rise at least prominence. Returns their
+ * count. */
 static unsigned
 barcode_bars (const uint16_t * p_samples, unsigned count, uint32_t prominence,
               unsigned * p_peak, unsigned * p_trough)
@@ -742,7 +758,7 @@ barcode_bars (const uint16_t * p_samples, unsigned count, uint32_t prominence,
     return bars;
 }
 
-/* Median of the bars' peak heights above white (sorts a copy). */
+/*! @brief Median of the bars' peak heights above white (sorts a copy). */
 static uint32_t
 barcode_median_height (const uint16_t * p_samples, const unsigned * p_peak,
                        unsigned bars, uint32_t white)
@@ -773,7 +789,7 @@ barcode_median_height (const uint16_t * p_samples, const unsigned * p_peak,
     return (0U == bars) ? 0U : heights[bars / 2U];
 }
 
-/* Smooth in place: each sample becomes the mean of its neighbours. */
+/*! @brief Smooth in place: each sample becomes the mean of its neighbours. */
 static void
 barcode_smooth (uint16_t * p_samples, unsigned count)
 {
@@ -799,7 +815,7 @@ barcode_smooth (uint16_t * p_samples, unsigned count)
     }
 }
 
-/* Mean of the quiet zone and its mean deviation. */
+/*! @brief Mean of the quiet zone and its mean deviation. */
 static void
 barcode_quiet_level (const uint16_t * p_samples, uint32_t * p_white,
                      uint32_t * p_noise)
@@ -826,7 +842,7 @@ barcode_quiet_level (const uint16_t * p_samples, uint32_t * p_white,
     *p_noise = noise;
 }
 
-/* The samples of one bar above its edge level. */
+/*! @brief The samples of one bar above its edge level. */
 static void
 barcode_bar_span (const uint16_t * p_samples, unsigned first, unsigned last,
                   float64_t edge, unsigned * p_start, unsigned * p_end)
@@ -848,6 +864,7 @@ barcode_bar_span (const uint16_t * p_samples, unsigned first, unsigned last,
     *p_end   = end;
 }
 
+/*! @brief Bar and space widths of a stretch. */
 static unsigned
 barcode_elements (uint16_t * p_samples, unsigned count, uint32_t * p_widths,
                   unsigned contrast_div)
@@ -933,12 +950,12 @@ barcode_elements (uint16_t * p_samples, unsigned count, uint32_t * p_widths,
             }
         }
 #endif
-        float64_t base   = ((float64_t)p_samples[trough[position]]
-                            + (float64_t)p_samples[trough[position + 1U]])
-                           / 2.0;
-        float64_t edge   = base + ((float64_t)prominence / 2.0);
-        float64_t area   = 0.0;
-        float64_t moment = 0.0;
+        float64_t base = ((float64_t)p_samples[trough[position]]
+                          + (float64_t)p_samples[trough[position + 1U]])
+                         / 2.0;
+        float64_t edge = base + ((float64_t)prominence / 2.0);
+        float64_t area;
+        float64_t moment;
         float64_t width;
         float64_t centre;
         unsigned  start = peak[position];
@@ -947,16 +964,7 @@ barcode_elements (uint16_t * p_samples, unsigned count, uint32_t * p_widths,
         barcode_bar_span(p_samples, trough[position], trough[position + 1U],
                          edge, &start, &end);
 
-        for (unsigned index = start; index <= end; ++index)
-        {
-            float64_t above = (float64_t)p_samples[index] - base;
-
-            if (above > 0.0)
-            {
-                area += above;
-                moment += above * (float64_t)index;
-            }
-        }
+        area = barcode_bar_area(p_samples, start, end, base, &moment);
 
         if (area <= 0.0)
         {
@@ -981,18 +989,19 @@ barcode_elements (uint16_t * p_samples, unsigned count, uint32_t * p_widths,
     return sample_count;
 }
 
-/* How far a reading must leave the quiet level to count as a bar. */
+/*! @brief How far a reading must leave the quiet level to count as a bar. */
 static uint32_t
 barcode_prominence (uint32_t noise)
 {
     return (BARCODE_NOISE_GAIN * noise) + BARCODE_MIN_RISE;
 }
 
-/* True when the end of the stretch lies within two prominences (the range of 50
- * noisy samples is wider than the noise-based prominence; a bar rise is far
- * larger). The flat end is the last BARCODE_FLAT samples, and while the car
- * drives it must also span BARCODE_FLAT_PATH of floor, so a wide space crossed
- * slowly does not end the pass. Standing still (or a hand scan): time only. */
+/*! @brief True when the end of the stretch lies within two prominences (the
+ * range of 50 noisy samples is wider than the noise-based prominence; a bar
+ * rise is far larger). The flat end is the last BARCODE_FLAT samples, and while
+ * the car drives it must also span BARCODE_FLAT_PATH of floor, so a wide space
+ * crossed slowly does not end the pass. Standing still (or a hand scan): time
+ * only. */
 static bool
 barcode_flat (const barcode_seg_t * p_segment)
 {
@@ -1021,11 +1030,11 @@ barcode_flat (const barcode_seg_t * p_segment)
     return (uint32_t)(high - low) < (2U * p_segment->prominence);
 }
 
-/* Copies a stretch into out, resampled to equal steps of driven distance so
- * that a bar's width does not depend on the car's speed (it speeds up and slows
- * down while wiggling). The quiet lead-in is kept as it is: it is only the
- * noise reference. A stretch the car hardly moved through (hand scan, no path)
- * is copied unchanged. Returns the new length. */
+/*! @brief Copies a stretch into out, resampled to equal steps of driven
+ * distance so that a bar's width does not depend on the car's speed (it speeds
+ * up and slows down while wiggling). The quiet lead-in is kept as it is: it is
+ * only the noise reference. A stretch the car hardly moved through (hand scan,
+ * no path) is copied unchanged. Returns the new length. */
 static unsigned
 barcode_resample (const uint16_t * p_samples, const uint32_t * p_path,
                   unsigned count, uint16_t * p_out)
@@ -1100,6 +1109,7 @@ barcode_pattern_of (char letter)
     return 0U;
 }
 
+/*! @brief Number of bits set. */
 static unsigned
 barcode_bit_count (uint16_t bits)
 {
@@ -1113,9 +1123,9 @@ barcode_bit_count (uint16_t bits)
     return count;
 }
 
-/* Elements of the three characters at d that disagree with *letter* (letters
- * and '*' all have 2 wide bars and 1 wide space, so each character is marked
- * that way; a swapped pair costs 2). */
+/*! @brief Elements of the three characters at d that disagree with *letter*
+ * (letters and '*' all have 2 wide bars and 1 wide space, so each character is
+ * marked that way; a swapped pair costs 2). */
 static unsigned
 barcode_mismatch (const uint32_t * p_widths, uint16_t letter)
 {
@@ -1135,6 +1145,7 @@ barcode_mismatch (const uint32_t * p_widths, uint16_t letter)
     return total;
 }
 
+/*! @brief Is this letter one of the route's? */
 static bool
 barcode_allowed (const char * p_letters, char letter)
 {
@@ -1147,6 +1158,30 @@ barcode_allowed (const char * p_letters, char letter)
     }
 
     return false;
+}
+
+/*! @brief Area of a bar above its base, and its moment. */
+static float64_t
+barcode_bar_area (const uint16_t * p_samples, unsigned start, unsigned end,
+                  float64_t base, float64_t * p_moment)
+{
+    float64_t area   = 0.0;
+    float64_t moment = 0.0;
+
+    for (unsigned index = start; index <= end; ++index)
+    {
+        float64_t above = (float64_t)p_samples[index] - base;
+
+        if (above > 0.0)
+        {
+            area += above;
+            moment += above * (float64_t)index;
+        }
+    }
+
+    *p_moment = moment;
+
+    return area;
 }
 
 /*** end of file ***/

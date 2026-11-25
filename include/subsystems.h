@@ -1,3 +1,8 @@
+/** @file subsystems.h
+ *
+ * @brief Task entry points of the subsystems.
+ */
+
 #ifndef ROBO_SUBSYSTEMS_H
 #define ROBO_SUBSYSTEMS_H
 #include "robot_rtos.h"
@@ -36,12 +41,12 @@
 void line_task(INT code, void * p_context);
 #endif
 #ifdef ROBO_SAFE_MOTOR_TEST
-/* Serial stop blocks restart until sensor condition clears. */
+/*! @brief Serial stop blocks restart until sensor condition clears. */
 void line_forward_pause(void);
 #endif
 #if ROBO_BARCODE_TASK
 void barcode_task(INT code, void * p_context);
-/* A barcode pass is being captured (barcode.c). */
+/*! @brief A barcode pass is being captured (barcode.c). */
 bool barcode_code_pass(void);
 
 /* Sensitivity calibration (GP21, line_following.c): the next full pass must be
@@ -54,9 +59,9 @@ typedef enum
 } barcode_cal_t;
 
 void barcode_calibrate_begin(void);
-/* DONE or FAILED once when calibration ends, else NONE. */
+/*! @brief DONE or FAILED once when calibration ends, else NONE. */
 barcode_cal_t barcode_calibration_result(void);
-/* After a U-turn: no reads or junction for this distance. */
+/*! @brief After a U-turn: no reads or junction for this distance. */
 void barcode_ignore_for(float64_t metres);
 #endif
 #if ROBO_SHUTTLE_TASK

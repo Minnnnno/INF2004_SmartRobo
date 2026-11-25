@@ -1,16 +1,16 @@
-/*
- *  obstacle_scan.h
- *  Subsystem 5 -- obstacle width, position and which side to pass it on,
- *  from a servo-swept ultrasonic ranger.
+/** @file obstacle_scan.h
  *
- *  Pure computation, no hardware: the caller supplies the servo and ping
- *  callbacks, so the same code runs on the robot and in the host tests
- *  (subsystem5_test.c).
+ * @brief Subsystem 5 -- obstacle width, position and which side to pass it on,
+ * from a servo-swept ultrasonic ranger.
  *
- *  Servo angles are degrees as mounted on the robot: 20 = left,
- *  90 = straight ahead, 160 = right.  Distances are millimetres measured
- *  from the servo axis.  Lateral positions are positive to the LEFT, the
- *  same sign the robot uses for headings and turns (steering.h).
+ * Pure computation, no hardware: the caller supplies the servo and ping
+ * callbacks, so the same code runs on the robot and in the host tests
+ * (subsystem5_test.c).
+ *
+ * Servo angles are degrees as mounted on the robot: 20 = left,
+ * 90 = straight ahead, 160 = right.  Distances are millimetres measured
+ * from the servo axis.  Lateral positions are positive to the LEFT, the
+ * same sign the robot uses for headings and turns (steering.h).
  */
 
 #ifndef S5_OBSTACLE_SCAN_H
@@ -269,6 +269,7 @@ typedef struct
     float64_t far_mm;    /* longest range on the face */
 } s5_face_t;
 
+/*! @brief Has this corner been placed? */
 static inline bool
 s5_face_corner (const s5_face_t * p_face, unsigned side)
 {
@@ -330,56 +331,58 @@ typedef bool (*s5_measure_fn_t)(void * p_context, int angle_deg,
 float64_t s5_forward_mm(float64_t range_mm, float64_t angle_deg);
 float64_t s5_lateral_mm(float64_t range_mm, float64_t angle_deg);
 
-/* Robust "mode with a tolerance": the largest group of pings that agree
+/*! @brief Robust "mode with a tolerance": the largest group of pings that agree
    within S5_CLUSTER_TOL_MM wins and is averaged.  Missed pings count as
    votes for "nothing there".  echo: bit i set when ping i heard something. */
 void s5_estimate(const float64_t range_mm[], uint16_t echo, unsigned count,
                  s5_estimate_t * p_out);
-/* TRUE when the estimate is a usable echo (an unstable one counts only if
-   its group outvotes the silent pings). */
+/*! @brief TRUE when the estimate is a usable echo (an unstable one counts only
+   if its group outvotes the silent pings). */
 bool s5_estimate_usable(const s5_estimate_t * p_estimate);
 bool s5_point_is_object(const s5_estimate_t * p_estimate, int angle_deg,
                         float64_t centre_forward_mm);
 
-/* S5_SAMPLES_PER_POINT pings, plus S5_RETRY_SAMPLES more if they disagree. */
+/*! @brief S5_SAMPLES_PER_POINT pings, plus S5_RETRY_SAMPLES more if they
+ * disagree. */
 void s5_sample_point(s5_ping_fn_t p_ping, void * p_context,
                      s5_estimate_t * p_out);
 
-/* Centre reading, coarse sweep 20 -> 160 deg, then a 1 deg walk outward
+/*! @brief Centre reading, coarse sweep 20 -> 160 deg, then a 1 deg walk outward
    from each coarse edge until clear space is seen twice in a row, and back
    inward until the obstacle is seen twice in a row.
    Returns false only if measure() aborted; check p_scan->b_valid. */
 bool s5_scan_run(s5_scan_t * p_scan, s5_measure_fn_t p_measure,
                  void * p_context);
 
-/* Compare how far each edge is from straight ahead.  Within
+/*! @brief Compare how far each edge is from straight ahead.  Within
    S5_CENTRE_TOLERANCE_DEG is centre.  An edge beyond the sweep is only a
    minimum angle, so it can show the obstacle is to that side but never
    that it is centred.  s5_scan_run fills p_scan->placement with this. */
 void s5_placement(const s5_scan_t * p_scan, s5_placement_t * p_out);
 
-/* Pass on s5_preferred_side(), the other side if that one has no room, NONE
-   if neither has.  A side has room when its end is known and the nearest echo
-   beside the obstacle leaves the robot S5_PASS_MARGIN_MM.  With a valid face
-   all of it is measured square to the face, from the axle.  s5_scan_run fills
-   p_scan->avoid with this. */
+/*! @brief Pass on s5_preferred_side(), the other side if that one has no room,
+   NONE if neither has.  A side has room when its end is known and the nearest
+   echo beside the obstacle leaves the robot S5_PASS_MARGIN_MM.  With a valid
+   face all of it is measured square to the face, from the axle.  s5_scan_run
+   fills p_scan->avoid with this. */
 void s5_avoidance(const s5_scan_t * p_scan, s5_avoid_t * p_out);
 
-/* The side to try first: away from the way the obstacle reaches further; a
-   centred face on the side that was closer at the stop; else S5_DEFAULT_AVOID.
+/*! @brief The side to try first: away from the way the obstacle reaches
+   further; a centred face on the side that was closer at the stop; else
+   S5_DEFAULT_AVOID.
  */
 s5_avoid_side_t s5_preferred_side(const s5_scan_t * p_scan);
-/* Just enough to correct the robot's angle: the coarse sweep and the face fit,
-   with no fine scan, width or decision.  s5_scan_run() measures the obstacle.
-   False: the robot moved or the sensor failed. */
+/*! @brief Just enough to correct the robot's angle: the coarse sweep and the
+   face fit, with no fine scan, width or decision.  s5_scan_run() measures the
+   obstacle. False: the robot moved or the sensor failed. */
 bool s5_tilt_scan(s5_scan_t * p_scan, s5_measure_fn_t p_measure,
                   void * p_context);
-/* The tilt the robot stopped with: what is left, plus what it turned to square
- * up */
+/*! @brief The tilt the robot stopped with: what is left, plus what it turned to
+ * square up */
 float64_t s5_start_tilt_deg(const s5_scan_t * p_scan);
 
-/* The face from the coarse sweep and the outward fine walks.  s5_scan_run
-   fills p_scan->face with this. */
+/*! @brief The face from the coarse sweep and the outward fine walks.
+   s5_scan_run fills p_scan->face with this. */
 void s5_face_fit(const s5_scan_t * p_scan, s5_face_t * p_out);
 
 /* Recent heading changes, from Motion Control's path and heading.  Path is
@@ -400,7 +403,8 @@ typedef struct
 void s5_curve_reset(s5_curve_t * p_curve);
 void s5_curve_note(s5_curve_t * p_curve, float64_t path_mm,
                    float64_t heading_deg);
-/* Treat the next S5_CURVE_HOLD_MM as just after a curve, e.g. after a rejoin */
+/*! @brief Treat the next S5_CURVE_HOLD_MM as just after a curve, e.g. after a
+ * rejoin */
 void s5_curve_mark(s5_curve_t * p_curve, float64_t path_mm);
 bool s5_curve_recent(const s5_curve_t * p_curve);
 

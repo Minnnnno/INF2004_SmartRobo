@@ -1,13 +1,16 @@
-/* Buddy 4 terrain task: sole owner of the GY-511 and of the buddy4_t context.
- * Acceleration, tilt, hump phases and peak height, lift/overturn detection,
- * motion classification with turn rate (from Buddy 2 wheel speeds; no
- * gyroscope), and a calibrated compass whose angle is shown next to each
+/** @file terrain_task.c
+ *
+ * @brief Buddy 4 terrain task: sole owner of the GY-511 and of the buddy4_t
+ * context. Acceleration, tilt, hump phases and peak height, lift/overturn
+ * detection, motion classification with turn rate (from Buddy 2 wheel speeds;
+ * no gyroscope), and a calibrated compass whose angle is shown next to each
  * turn's encoder angle.
  * Motion commands: only motion_stop() when the robot is lifted or overturned
  * (Change Requirement: replaces IMU collision detection; lifting the robot
  * ends the run), and the self-pivot of the dedicated magnetometer
  * calibration build (ROBO_MAG_CAL), both through the Controller.
  */
+
 #include "robot_rtos.h" /* Standard size_t before the kernel headers. */
 #include "../../include/float_types.h"
 #include "robot.h"
@@ -188,7 +191,7 @@ static char const * terrain_mag_reason(uint8_t reason);
 static bool         terrain_compass(buddy4_t const * p_context, uint8_t phase,
                                     uint32_t now_ms, int32_t * p_ddeg);
 
-/* Started by usermain at priority 8 when ROBO_SUBSYSTEM4 is enabled.
+/*! @brief Started by usermain at priority 8 when ROBO_SUBSYSTEM4 is enabled.
  * One lifecycle step per 20 ms release. Missed releases are skipped, never
  * replayed. Startup contract: the robot is level and still when it boots.
  */
@@ -304,7 +307,7 @@ terrain_task (INT code, void * p_context)
     }
 }
 
-/* Build ID and how to place the robot. */
+/*! @brief Build ID and how to place the robot. */
 static void
 terrain_banner (void)
 {
@@ -322,8 +325,8 @@ terrain_banner (void)
 #endif
 }
 
-/* A finished hump: latch the event and print it.  Owning task consumes the
- * latch; the comms latch is interrupt-safe. */
+/*! @brief A finished hump: latch the event and print it.  Owning task consumes
+ * the latch; the comms latch is interrupt-safe. */
 static void
 terrain_hump_done (buddy4_t * p_context)
 {
@@ -343,7 +346,7 @@ terrain_hump_done (buddy4_t * p_context)
     }
 }
 
-/* Low monotonic milliseconds; unsigned differences handle wrap. A clock
+/*! @brief Low monotonic milliseconds; unsigned differences handle wrap. A clock
  * failure is handled by buddy4_step() (FAULT); here it only shortens a wait.
  */
 static uint32_t
@@ -354,8 +357,8 @@ terrain_time_ms (void)
     return (E_OK == tk_get_otm(&time)) ? (uint32_t)time.lo : 0U;
 }
 
-/* Lifecycle input facts, taken from Buddy 2's published motion status (one
- * short copy under the bus mutex per cycle, as line following does).
+/*! @brief Lifecycle input facts, taken from Buddy 2's published motion status
+ * (one short copy under the bus mutex per cycle, as line following does).
  * Motion SHUTDOWN -> B4 STOP (completed peaks kept, T_STATE 6 published).
  * In INIT, level permission for reference capture is withheld only when
  * motion reports that the wheels may be moving. Unavailable status means
@@ -403,6 +406,7 @@ terrain_inputs (uint8_t state, s4_motion_t const * p_motion, bool b_wait_start,
     return result;
 }
 
+/*! @brief True while the image waits for the dashboard START. */
 static bool
 terrain_wait_start (s4_motion_t const * p_motion)
 {
@@ -447,8 +451,8 @@ terrain_wait_start (s4_motion_t const * p_motion)
 #endif
 }
 
-/* m/s to rounded mm/s. Clamp before converting: a non-finite or huge speed
- * never wraps (NaN becomes 0). */
+/*! @brief m/s to rounded mm/s. Clamp before converting: a non-finite or huge
+ * speed never wraps (NaN becomes 0). */
 static int16_t
 terrain_mm_s (float64_t m_s)
 {
@@ -467,7 +471,8 @@ terrain_mm_s (float64_t m_s)
     return (int16_t)((mm_s >= 0.0) ? (mm_s + 0.5) : (mm_s - 0.5));
 }
 
-/* One short copy of the Buddy 2 status under the bus mutex; speeds in mm/s. */
+/*! @brief One short copy of the Buddy 2 status under the bus mutex; speeds in
+ * mm/s. */
 static void
 terrain_read_motion (s4_motion_t * p_motion)
 {
@@ -505,14 +510,14 @@ terrain_read_motion (s4_motion_t * p_motion)
     }
 }
 
-/* Lift/overturn stop (Change Requirement: replaces IMU collision detection).
- * On a new LIFTED or OVERTURNED latch: motion_stop() at once (controlled
- * STOP: Buddy 2 brakes and holds). While still latched, if the robot is no
- * longer held (START was pressed in the air), stop it again, so the wheels
- * never drive while lifted. After the latch clears (upright and still for
- * 0.5 s) nothing restarts automatically: START resumes the run.
- * Lift detection needs Buddy 4 MONITORING: while the IMU recovers or has
- * faulted it is unavailable (sensor faults still never stop the motors).
+/*! @brief Lift/overturn stop (Change Requirement: replaces IMU collision
+ * detection). On a new LIFTED or OVERTURNED latch: motion_stop() at once
+ * (controlled STOP: Buddy 2 brakes and holds). While still latched, if the
+ * robot is no longer held (START was pressed in the air), stop it again, so the
+ * wheels never drive while lifted. After the latch clears (upright and still
+ * for 0.5 s) nothing restarts automatically: START resumes the run. Lift
+ * detection needs Buddy 4 MONITORING: while the IMU recovers or has faulted it
+ * is unavailable (sensor faults still never stop the motors).
  */
 static void
 terrain_lift (buddy4_t const * p_context, s4_motion_t const * p_motion,
@@ -564,10 +569,10 @@ terrain_lift (buddy4_t const * p_context, s4_motion_t const * p_motion,
     }
 }
 
-/* Hump freeze after OVERTURNED (buddy4.h): the demo ends with the robot lifted
- * and turned over, so nothing measured while it is picked up or set down may
- * become a peak. buddy4_step() sets the freeze; START (controller hold seen,
- * then released with the robot back down) clears it. */
+/*! @brief Hump freeze after OVERTURNED (buddy4.h): the demo ends with the robot
+ * lifted and turned over, so nothing measured while it is picked up or set down
+ * may become a peak. buddy4_step() sets the freeze; START (controller hold
+ * seen, then released with the robot back down) clears it. */
 static void
 terrain_hump_freeze (buddy4_t * p_context, s4_motion_t const * p_motion,
                      bool * p_previous)
@@ -599,8 +604,8 @@ terrain_hump_freeze (buddy4_t * p_context, s4_motion_t const * p_motion,
     *p_previous = b_frozen;
 }
 
-/* Hump pause while turning on the spot (B4_TURN_PAUSE). The GY-511 has no
- * gyroscope: when a pivot or spin starts or stops, the body's angular
+/*! @brief Hump pause while turning on the spot (B4_TURN_PAUSE). The GY-511 has
+ * no gyroscope: when a pivot or spin starts or stops, the body's angular
  * acceleration pushes the sensor sideways (about alpha x its distance from the
  * pivot), and hump height is read from the sideways component, so the jolt
  * looks like a 4-6 mm hump. A hump is crossed by driving forward, so nothing
@@ -661,7 +666,8 @@ terrain_turning (buddy4_t const * p_context, s4_motion_t const * p_motion,
     return b_paused;
 }
 
-/* [TILT] line terrain label: why humps are not measured, else the phase. */
+/*! @brief [TILT] line terrain label: why humps are not measured, else the
+ * phase. */
 static char const *
 terrain_hump_label (buddy4_t const * p_context, uint8_t terrain)
 {
@@ -687,8 +693,8 @@ terrain_hump_label (buddy4_t const * p_context, uint8_t terrain)
     return p_result;
 }
 
-/* Hump pause while stopped: same rule as the B4_HUMP_PAUSE input (MONITORING
- * with the controller hold set). */
+/*! @brief Hump pause while stopped: same rule as the B4_HUMP_PAUSE input
+ * (MONITORING with the controller hold set). */
 static bool
 terrain_hump_paused (buddy4_t const * p_context, s4_motion_t const * p_motion)
 {
@@ -696,8 +702,8 @@ terrain_hump_paused (buddy4_t const * p_context, s4_motion_t const * p_motion)
            && (p_motion->hold);
 }
 
-/* Console lines for the pause. The overturn freeze has its own lines and
- * takes precedence, so a frozen robot never prints both. */
+/*! @brief Console lines for the pause. The overturn freeze has its own lines
+ * and takes precedence, so a frozen robot never prints both. */
 static void
 terrain_hump_pause (buddy4_t const * p_context, s4_motion_t const * p_motion,
                     bool * p_previous)
@@ -733,7 +739,7 @@ terrain_hump_pause (buddy4_t const * p_context, s4_motion_t const * p_motion,
     gb_s_hump_paused = b_paused;
 }
 
-/* Motion class from the IMU (overturned latch, hump phase) and Buddy 2
+/*! @brief Motion class from the IMU (overturned latch, hump phase) and Buddy 2
  * (stationary, wheel speeds). Valid only while MONITORING with motion status
  * available. */
 static void
@@ -804,7 +810,7 @@ terrain_classify (buddy4_t * p_context, motion_class_t * p_class,
     }
 }
 
-/* Lifecycle state and terrain phase combined into one 3-bit code. */
+/*! @brief Lifecycle state and terrain phase combined into one 3-bit code. */
 static uint8_t
 terrain_state_code (buddy4_t const * p_context)
 {
@@ -837,8 +843,8 @@ terrain_state_code (buddy4_t const * p_context)
     }
 }
 
-/* Publish the shared Terrain slot (docs/API.md): values[0] turn rate rad/s
- * (when motion-valid), [1] pitch rad, [2] highest hump peak this run, m,
+/*! @brief Publish the shared Terrain slot (docs/API.md): values[0] turn rate
+ * rad/s (when motion-valid), [1] pitch rad, [2] highest hump peak this run, m,
  * [3] validity bits (TF_TV_*) | state code << 3. The state itself is
  * genuine data, so the slot is available even while pitch is invalid.
  * The timestamp is the time of the last valid tilt sample, not publish time.
@@ -886,7 +892,8 @@ terrain_publish (buddy4_t const * p_context, motion_class_t const * p_class,
     (void)robot_update_subsystem(SOURCE_TERRAIN, &status);
 }
 
-/* Diagnostic console line only; the controller interface is the bus slot. */
+/*! @brief Diagnostic console line only; the controller interface is the bus
+ * slot. */
 static void
 terrain_report (buddy4_t const * p_context, motion_class_t const * p_class)
 {
@@ -999,6 +1006,7 @@ terrain_report (buddy4_t const * p_context, motion_class_t const * p_class)
 #endif
 }
 
+/*! @brief Name of a compass reason code. */
 static char const *
 terrain_mag_reason (uint8_t reason)
 {
@@ -1008,7 +1016,7 @@ terrain_mag_reason (uint8_t reason)
     return (reason <= S4_MAG_WINDOW) ? g_names[reason] : "?";
 }
 
-/* Calibrated compass heading for the turn cross-check. Usable only when
+/*! @brief Calibrated compass heading for the turn cross-check. Usable only when
  * calibrated, fresh, on level ground (not mid-hump) and with the field within
  * +/-20 % of the calibrated reference (no steel nearby). Unwrapped across
  * 0/360.
@@ -1119,6 +1127,7 @@ static void terrain_mag_cal_print(void);
 static void terrain_mag_cal(buddy4_t const *    p_context,
                             s4_motion_t const * p_motion);
 
+/*! @brief End the calibration drive. */
 static void
 terrain_mag_cal_stop (char const * p_failure)
 {
@@ -1136,6 +1145,7 @@ terrain_mag_cal_stop (char const * p_failure)
     g_s_cal.phase_ms = terrain_time_ms() - S4_CAL_REPEAT_MS;
 }
 
+/*! @brief Print the calibration constants. */
 static void
 terrain_mag_cal_print (void)
 {
@@ -1176,6 +1186,7 @@ terrain_mag_cal_print (void)
     }
 }
 
+/*! @brief Magnetometer calibration image: one step. */
 static void
 terrain_mag_cal (buddy4_t const * p_context, s4_motion_t const * p_motion)
 {

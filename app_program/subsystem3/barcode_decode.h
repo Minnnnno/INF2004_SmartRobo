@@ -1,11 +1,15 @@
-/* Barcode decoding: pure computation, no hardware or kernel, so the host replay
- * test (tests/subsystem3/test_barcode_decode.c) runs exactly the code the robot
- * runs. barcode.c samples the sensor, feeds each sample to the segmenter and
- * decodes every stretch it hands back.
+/** @file barcode_decode.h
+ *
+ * @brief Barcode decoding: pure computation, no hardware or kernel, so the host
+ * replay test (tests/subsystem3/test_barcode_decode.c) runs exactly the code
+ * the robot runs. barcode.c samples the sensor, feeds each sample to the
+ * segmenter and decodes every stretch it hands back.
  *
  * Readings: higher = darker (the TCRT5000 AO rises over black). Path: distance
  * driven, in 0.1 mm, never decreasing (motion status path). Heading: wrapping
- * milliradians, only kept for dumps. */
+ * milliradians, only kept for dumps.
+ */
+
 #ifndef BARCODE_DECODE_H
 #define BARCODE_DECODE_H
 #include <stdbool.h>
@@ -87,12 +91,12 @@ barcode_seg_event_t barcode_seg_feed(barcode_seg_t * p_segment, uint16_t sample,
 #define BARCODE_LADDER {32U, 64U, 16U, 128U}
 unsigned barcode_ladder_div(unsigned first, unsigned index);
 
-/* Decodes one stretch. work is scratch (BARCODE_SAMPLES); widths receives the
- * element widths (BARCODE_MAX_ELEMENTS, in BARCODE_SAMPLE_US units per decoding
- * step) and *elements their count. contrast_div sets the sensitivity
- * (BARCODE_CONTRAST_DIV by default; bigger = fainter bars kept). letters: NULL
- * or "" accepts any strict read; otherwise only those letters are reported, and
- * a pass the strict decoder cannot read is matched against them
+/*! @brief Decodes one stretch. work is scratch (BARCODE_SAMPLES); widths
+ * receives the element widths (BARCODE_MAX_ELEMENTS, in BARCODE_SAMPLE_US units
+ * per decoding step) and *elements their count. contrast_div sets the
+ * sensitivity (BARCODE_CONTRAST_DIV by default; bigger = fainter bars kept).
+ * letters: NULL or "" accepts any strict read; otherwise only those letters are
+ * reported, and a pass the strict decoder cannot read is matched against them
  * (barcode_best_fit). Returns the character count of a complete *...* read
  * (text holds it, '\0'-terminated), else 0. */
 unsigned barcode_decode_stretch(const uint16_t * p_samples,
@@ -101,15 +105,15 @@ unsigned barcode_decode_stretch(const uint16_t * p_samples,
                                 unsigned * p_elements, char * p_text,
                                 unsigned contrast_div, const char * p_letters);
 
-/* The allowed letter whose *X* pattern the elements fit best (either direction,
- * up to BARCODE_MAX_STRAY stray elements), if it is within
+/*! @brief The allowed letter whose *X* pattern the elements fit best (either
+ * direction, up to BARCODE_MAX_STRAY stray elements), if it is within
  * BARCODE_FIT_MAX_MISMATCH and strictly better than every other; else '\0'.
  * Needs one element per bar and space (29 for *X*); d is reversed and restored
  * in place. */
 char barcode_best_fit(uint32_t * p_widths, unsigned count,
                       const char * p_letters);
 
-/* Mean and mean absolute deviation (the noise) of n samples. */
+/*! @brief Mean and mean absolute deviation (the noise) of n samples. */
 uint32_t barcode_level(const uint16_t * p_samples, unsigned count,
                        uint32_t * p_noise);
 void barcode_range(const uint16_t * p_samples, unsigned count, uint16_t * p_low,

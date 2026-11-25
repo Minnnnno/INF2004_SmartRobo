@@ -1,6 +1,10 @@
-/* Barcode route (route.h). The MQTT callback is the only writer; the barcode
- * and line tasks read. One aligned 32-bit store with SMP off, so a reader
- * always sees a whole route. */
+/** @file route.c
+ *
+ * @brief Barcode route (route.h). The MQTT callback is the only writer; the
+ * barcode and line tasks read. One aligned 32-bit store with SMP off, so a
+ * reader always sees a whole route.
+ */
+
 #include <stdint.h>
 #include "route.h"
 
@@ -20,6 +24,7 @@ route_get (void)
     return (0U != route) ? route : g_route_fallback;
 }
 
+/*! @brief Action of a letter in a route. */
 route_action_t
 route_action (uint32_t route, char letter)
 {
@@ -102,6 +107,7 @@ route_set (const char * p_text, int len)
     return true;
 }
 
+/*! @brief Upper-case letter. */
 static char
 route_upper (char letter)
 {

@@ -1,4 +1,8 @@
-/* Explicit lifecycle around the existing sensor/tilt functions. */
+/** @file buddy4.c
+ *
+ * @brief Explicit lifecycle around the existing sensor/tilt functions.
+ */
+
 #include "buddy4.h"
 /* NULL and kernel types are supplied by tkernel.h; avoid libc size_t clash. */
 
@@ -28,7 +32,7 @@ static void buddy4_monitor(buddy4_t * p_context, uint32_t now_ms);
 static void buddy4_poll_magnetic(buddy4_t * p_context, uint32_t now_ms);
 static void buddy4_recover(buddy4_t * p_context, uint32_t now_ms);
 
-/* One bounded logical step; hardware transaction latency is documented.
+/*! @brief One bounded logical step; hardware transaction latency is documented.
  * STOP takes precedence over RESET and autonomous recovery. Commands are
  * ignored in states where they do not apply, so an old command must not be
  * queued/replayed.
@@ -140,21 +144,22 @@ buddy4_step (buddy4_t * p_context, uint8_t inputs)
     }
 }
 
-/* Extract the three-bit state. NULL is treated as a fault for diagnostics. */
+/*! @brief Extract the three-bit state. NULL is treated as a fault for
+ * diagnostics. */
 uint8_t
 buddy4_state (buddy4_t const * p_context)
 {
     return (NULL == p_context) ? B4_FAULT : p_context->control.state;
 }
 
-/* Number of reconfiguration attempts in this recovery episode, 0..3. */
+/*! @brief Number of reconfiguration attempts in this recovery episode, 0..3. */
 uint8_t
 buddy4_attempts (buddy4_t const * p_context)
 {
     return (NULL == p_context) ? 0U : p_context->control.attempts;
 }
 
-/* Initialise private state with no accepted reference. */
+/*! @brief Initialise private state with no accepted reference. */
 void
 buddy4_begin (buddy4_t * p_context, uint32_t now_ms)
 {
@@ -166,6 +171,7 @@ buddy4_begin (buddy4_t * p_context, uint32_t now_ms)
     }
 }
 
+/*! @brief Latest magnetometer reading. */
 bool
 buddy4_magnetic (buddy4_t const * p_context, uint32_t now_ms,
                  uint32_t max_age_ms, int16_t * p_x, int16_t * p_y)
@@ -197,8 +203,8 @@ buddy4_lift (buddy4_t const * p_context)
                : lift_state(&p_context->lift);
 }
 
-/* Unfreeze hump recording on START (see buddy4.h). The hold must be seen
- * first, so a stale "not held" from the cycle before motion_stop() takes
+/*! @brief Unfreeze hump recording on START (see buddy4.h). The hold must be
+ * seen first, so a stale "not held" from the cycle before motion_stop() takes
  * effect cannot unfreeze it. Unfreezing also needs MONITORING with the lift
  * latch clear (the robot is back down), so START in the air or during sensor
  * recovery keeps it frozen. No motion status: stays frozen (safe side). */
@@ -232,13 +238,14 @@ buddy4_hump_start (buddy4_t * p_context, bool b_available, bool b_held)
     return b_result;
 }
 
+/*! @brief True while hump measurement is frozen. */
 bool
 buddy4_hump_frozen (buddy4_t const * p_context)
 {
     return (NULL != p_context) && (B4_FREEZE_NONE != p_context->hump_freeze);
 }
 
-/* Constant names for diagnostics. No state transition occurs here. */
+/*! @brief Constant names for diagnostics. No state transition occurs here. */
 char const *
 buddy4_state_name (uint8_t state)
 {
@@ -274,7 +281,7 @@ buddy4_state_name (uint8_t state)
     return p_result;
 }
 
-/* Phase is private: INIT=config/wait/capture;
+/*! @brief Phase is private: INIT=config/wait/capture;
  * RECOVERY=configure/backoff/verify. */
 static uint8_t
 buddy4_phase (buddy4_t const * p_context)
@@ -282,7 +289,7 @@ buddy4_phase (buddy4_t const * p_context)
     return p_context->control.phase;
 }
 
-/* Change subphase without changing state, retry count. */
+/*! @brief Change subphase without changing state, retry count. */
 static void
 buddy4_set_phase (buddy4_t * p_context, uint8_t phase, uint32_t now_ms)
 {
@@ -290,9 +297,9 @@ buddy4_set_phase (buddy4_t * p_context, uint8_t phase, uint32_t now_ms)
     p_context->phase_started = now_ms;
 }
 
-/* Transition invalidates the current reading and transient filter/capture
- * history, retaining accepted calibration. A new episode starts at attempt
- * zero.
+/*! @brief Transition invalidates the current reading and transient
+ * filter/capture history, retaining accepted calibration. A new episode starts
+ * at attempt zero.
  */
 static void
 buddy4_enter (buddy4_t * p_context, uint8_t state, uint32_t now_ms, ER error)
@@ -307,8 +314,8 @@ buddy4_enter (buddy4_t * p_context, uint8_t state, uint32_t now_ms, ER error)
     lift_reset(&p_context->lift);
 }
 
-/* Monotonic time is sampled again after blocking device operations so timeout
- * decisions and sample timestamps do not use the pre-transfer time.
+/*! @brief Monotonic time is sampled again after blocking device operations so
+ * timeout decisions and sample timestamps do not use the pre-transfer time.
  */
 static bool
 buddy4_clock (buddy4_t * p_context, uint32_t * p_now_ms)
@@ -332,7 +339,8 @@ buddy4_clock (buddy4_t * p_context, uint32_t * p_now_ms)
     return b_result;
 }
 
-/* Acquire/convert one fresh sample. No value is used after a failed read. */
+/*! @brief Acquire/convert one fresh sample. No value is used after a failed
+ * read. */
 static ER
 buddy4_read (int16_t xyz[3])
 {
@@ -347,7 +355,8 @@ buddy4_read (int16_t xyz[3])
     return status;
 }
 
-/* Complete a failed retry: bound attempts, retain diagnostic and reference. */
+/*! @brief Complete a failed retry: bound attempts, retain diagnostic and
+ * reference. */
 static void
 buddy4_retry_failed (buddy4_t * p_context, uint32_t now_ms, ER error)
 {
@@ -370,6 +379,7 @@ buddy4_retry_failed (buddy4_t * p_context, uint32_t now_ms, ER error)
  */
 
 // INIT state handler
+/*! @brief INIT state: configure, wait, capture the reference. */
 static void
 buddy4_initialise (buddy4_t * p_context, uint8_t inputs, uint32_t now_ms)
 {
@@ -493,6 +503,7 @@ buddy4_initialise (buddy4_t * p_context, uint8_t inputs, uint32_t now_ms)
  * MONITORING with result=0; it is not a sensor communication failure.
  */
 // MONITORING STATE
+/*! @brief MONITORING state: one sample. */
 static void
 buddy4_monitor (buddy4_t * p_context, uint32_t now_ms)
 {
@@ -560,7 +571,7 @@ buddy4_monitor (buddy4_t * p_context, uint32_t now_ms)
     }
 }
 
-/* Read the magnetometer (30 Hz) every MONITORING cycle for the compass
+/*! @brief Read the magnetometer (30 Hz) every MONITORING cycle for the compass
  * cross-check. Not ready (E_BUSY) keeps the last sample; an out-of-range
  * reading (E_IO, e.g. a magnet nearby) only invalidates the compass. Other
  * driver errors are bus failures and start RECOVERY like the accelerometer.
@@ -606,6 +617,7 @@ buddy4_poll_magnetic (buddy4_t * p_context, uint32_t now_ms)
  */
 
 // RECOVERY STATE HANDLER
+/*! @brief RECOVERY state: wait, then try again. */
 static void
 buddy4_recover (buddy4_t * p_context, uint32_t now_ms)
 {

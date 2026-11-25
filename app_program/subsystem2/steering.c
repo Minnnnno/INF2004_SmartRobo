@@ -1,3 +1,8 @@
+/** @file steering.c
+ *
+ * @brief Steering requests in mm and degrees.
+ */
+
 #include "../../include/float_types.h"
 #include "steering.h"
 #include "board_config.h"
@@ -35,6 +40,7 @@ motion_move_mm (request_source_t source, uint32_t command_id,
     return result;
 }
 
+/*! @brief Submit a turn on the spot, degrees, + left. */
 motion_result_t
 motion_turn_degrees (request_source_t source, uint32_t command_id,
                      float64_t degrees)
@@ -85,6 +91,7 @@ motion_steer (request_source_t source, uint32_t command_id, float64_t speed,
     return result;
 }
 
+/*! @brief Steer to the left at a speed and turn rate. */
 motion_result_t
 motion_steer_left (request_source_t source, uint32_t command_id,
                    float64_t speed, float64_t correction)
@@ -104,6 +111,7 @@ motion_steer_left (request_source_t source, uint32_t command_id,
     return result;
 }
 
+/*! @brief Steer to the right at a speed and turn rate. */
 motion_result_t
 motion_steer_right (request_source_t source, uint32_t command_id,
                     float64_t speed, float64_t correction)
@@ -123,6 +131,7 @@ motion_steer_right (request_source_t source, uint32_t command_id,
     return result;
 }
 
+/*! @brief Submit an arc of a given length and turn. */
 motion_result_t
 motion_steer_distance (request_source_t source, uint32_t command_id,
                        float64_t metres, float64_t degrees, float64_t speed)
@@ -259,6 +268,7 @@ motion_line_direction (line_steering_t * p_state, bool b_left, bool b_right)
     return result;
 }
 
+/*! @brief True when the settings allow steering. */
 static bool
 geometry (const motion_config_t * p_config)
 {
@@ -266,6 +276,7 @@ geometry (const motion_config_t * p_config)
            && (isfinite(p_config->max_speed)) && (p_config->max_speed > 0.0);
 }
 
+/*! @brief Submit the wheel speeds of a steering request. */
 static motion_result_t
 wheel_request (request_source_t source, uint32_t command_id, float64_t left,
                float64_t right)
@@ -296,6 +307,7 @@ wheel_request (request_source_t source, uint32_t command_id, float64_t left,
     return result;
 }
 
+/*! @brief Submit an arc after checking it. */
 static motion_result_t
 arc (request_source_t source, uint32_t command_id, float64_t metres,
      float64_t degrees, float64_t seconds, float64_t speed)

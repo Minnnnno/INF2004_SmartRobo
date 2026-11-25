@@ -1,10 +1,13 @@
-/* Buddy 4 compass: 2D magnetometer calibration from a flat self-pivot, and a
- * calibrated heading used only to cross-check the encoder turn angle (wheel
- * slip). The robot rotates about its vertical axis on a level floor, so the
- * sensor's X/Y readings trace an ellipse; small mounting tilt is absorbed.
+/** @file mag_heading.h
+ *
+ * @brief Buddy 4 compass: 2D magnetometer calibration from a flat self-pivot,
+ * and a calibrated heading used only to cross-check the encoder turn angle
+ * (wheel slip). The robot rotates about its vertical axis on a level floor, so
+ * the sensor's X/Y readings trace an ellipse; small mounting tilt is absorbed.
  * Only heading CHANGES are used, so true north and declination are irrelevant.
  * Portable: no kernel calls. One owning task.
  */
+
 #ifndef MAG_HEADING_H
 #define MAG_HEADING_H
 #include <stdbool.h>
@@ -59,23 +62,28 @@ typedef struct
 } mag_cal_result_t;
 
 void mag_cal_begin(mag_cal_acc_t * p_acc);
-/* rel_heading_ddeg: encoder heading since the spin started, 0.1 deg, any sign.
+/*! @brief rel_heading_ddeg: encoder heading since the spin started, 0.1 deg,
+ * any sign.
  */
 void mag_cal_add(mag_cal_acc_t * p_acc, int16_t axis_x, int16_t axis_y,
                  int32_t rel_heading_ddeg);
-/* Fills *p_result (also on FAIL, for printing) and returns MAG_CAL_*. */
+/*! @brief Fills *p_result (also on FAIL, for printing) and returns MAG_CAL_*.
+ */
 uint8_t      mag_cal_finish(mag_cal_acc_t const * p_acc,
                             mag_cal_result_t *    p_result);
 char const * mag_cal_status_name(uint8_t status);
 
-/* Horizontal field magnitude, counts: corrected when calibrated, raw otherwise.
+/*! @brief Horizontal field magnitude, counts: corrected when calibrated, raw
+ * otherwise.
  */
 uint16_t mag_field(mag_cal_t const * p_cal, int16_t axis_x, int16_t axis_y);
-/* Calibrated heading 0..3599 (0.1 deg, + = left). False when uncalibrated or
- * the field is outside +/-20 % of the reference (steel nearby). */
+/*! @brief Calibrated heading 0..3599 (0.1 deg, + = left). False when
+ * uncalibrated or the field is outside +/-20 % of the reference (steel nearby).
+ */
 bool mag_heading_ddeg(mag_cal_t const * p_cal, int16_t axis_x, int16_t axis_y,
                       int16_t * p_heading_ddeg);
-/* Continue an unwrapped heading with a new 0..3599 reading (step < 180 deg). */
+/*! @brief Continue an unwrapped heading with a new 0..3599 reading (step < 180
+ * deg). */
 int32_t mag_unwrap(int32_t previous_ddeg, int16_t heading_ddeg);
 #endif
 

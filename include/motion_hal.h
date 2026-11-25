@@ -1,3 +1,8 @@
+/** @file motion_hal.h
+ *
+ * @brief Motor and encoder driver interface.
+ */
+
 #ifndef ROBO_MOTION_HAL_H
 #define ROBO_MOTION_HAL_H
 #include "float_types.h"

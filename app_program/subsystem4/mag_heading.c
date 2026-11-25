@@ -1,4 +1,8 @@
-/* Buddy 4 compass calibration and heading; see mag_heading.h. */
+/** @file mag_heading.c
+ *
+ * @brief Buddy 4 compass calibration and heading; see mag_heading.h.
+ */
+
 #include "../../include/float_types.h"
 #include "mag_heading.h"
 #include <math.h>
@@ -11,6 +15,7 @@ static void mag_correct(mag_cal_t const * p_cal, int16_t axis_x, int16_t axis_y,
                         float32_t * p_cx, float32_t * p_cy);
 static float32_t mag_wrap_deg(float32_t degrees);
 
+/*! @brief Start a calibration. */
 void
 mag_cal_begin (mag_cal_acc_t * p_acc)
 {
@@ -183,6 +188,7 @@ mag_cal_finish (mag_cal_acc_t const * p_acc, mag_cal_result_t * p_result)
     return MAG_CAL_PASS;
 }
 
+/*! @brief Name of a calibration result. */
 char const *
 mag_cal_status_name (uint8_t status)
 {
@@ -279,6 +285,7 @@ mag_unwrap (int32_t previous_ddeg, int16_t heading_ddeg)
     return previous_ddeg + step;
 }
 
+/*! @brief Number of bits set. */
 static uint8_t
 mag_popcount (uint64_t bits)
 {
@@ -293,7 +300,7 @@ mag_popcount (uint64_t bits)
     return count;
 }
 
-/* Corrected X/Y for a raw sample. */
+/*! @brief Corrected X/Y for a raw sample. */
 static void
 mag_correct (mag_cal_t const * p_cal, int16_t axis_x, int16_t axis_y,
              float32_t * p_cx, float32_t * p_cy)
@@ -303,6 +310,7 @@ mag_correct (mag_cal_t const * p_cal, int16_t axis_x, int16_t axis_y,
             * ((float32_t)p_cal->scale_y_q12 / (float32_t)MAG_SCALE_ONE_Q12);
 }
 
+/*! @brief Wrap an angle to +/- 180 degrees. */
 static float32_t
 mag_wrap_deg (float32_t degrees)
 {

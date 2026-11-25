@@ -1,3 +1,8 @@
+/** @file template_hal.h
+ *
+ * @brief RP2040 register adapter over the kernel BSP.
+ */
+
 #ifndef ROBO_TEMPLATE_HAL_H
 #define ROBO_TEMPLATE_HAL_H
 /* RP2040 register adapter using the template's genuine micro T-Kernel BSP.
@@ -16,6 +21,7 @@ typedef struct
 } pwm_config_t;
 
 bool board_gpio_irq_register(uint32_t mask, void (*p_handler)(void));
+/*! @brief Disable interrupts and return the old state. */
 static inline uint32_t
 save_and_disable_interrupts (void)
 {
@@ -26,6 +32,7 @@ save_and_disable_interrupts (void)
     return state;
 }
 
+/*! @brief Put the interrupt state back. */
 static inline void
 restore_interrupts (uint32_t state)
 {
@@ -34,6 +41,7 @@ restore_interrupts (uint32_t state)
     __asm__ volatile("" ::: "memory");
 }
 
+/*! @brief Make a pin a plain input. */
 static inline void
 gpio_init (unsigned pin)
 {
@@ -43,30 +51,35 @@ gpio_init (unsigned pin)
     out_w(GPIO(pin), GPIO_IE | GPIO_DRIVE_4MA | GPIO_SHEMITT);
 }
 
+/*! @brief Drive an output pin. */
 static inline void
 gpio_put (unsigned pin, bool b_high)
 {
     out_w(b_high ? GPIO_OUT_SET : GPIO_OUT_CLR, 1UL << pin);
 }
 
+/*! @brief Choose a pin's direction. */
 static inline void
 gpio_set_dir (unsigned pin, bool b_output)
 {
     out_w(b_output ? GPIO_OE_SET : GPIO_OE_CLR, 1UL << pin);
 }
 
+/*! @brief Read a pin. */
 static inline bool
 gpio_get (unsigned pin)
 {
     return 0U != (in_w(GPIO_IN) & (1UL << pin));
 }
 
+/*! @brief Pulls off. */
 static inline void
 gpio_disable_pulls (unsigned pin)
 {
     clr_w(GPIO(pin), GPIO_PUE | GPIO_PDE);
 }
 
+/*! @brief Pull-up on. */
 static inline void
 gpio_pull_up (unsigned pin)
 {
@@ -74,6 +87,7 @@ gpio_pull_up (unsigned pin)
     set_w(GPIO(pin), GPIO_PUE);
 }
 
+/*! @brief Choose a pin's peripheral. */
 static inline void
 gpio_set_function (unsigned pin, unsigned function)
 {
@@ -82,24 +96,28 @@ gpio_set_function (unsigned pin, unsigned function)
 #define GPIO_FUNC_PWM      GPIO_CTRL_FUNCSEL_PWM
 #define GPIO_IRQ_EDGE_FALL 4U
 #define GPIO_IRQ_EDGE_RISE 8U
+/*! @brief Interrupt register of a pin in one bank. */
 static inline UW
 irq_reg (unsigned pin, UW base)
 {
     return IO_BANK0_BASE + base + ((pin / 8U) * 4U);
 }
 
+/*! @brief Pending edges of a pin. */
 static inline uint32_t
 gpio_get_irq_event_mask (unsigned pin)
 {
     return (in_w(irq_reg(pin, 0x120U)) >> ((pin % 8U) * 4U)) & 15U;
 }
 
+/*! @brief Clear edges of a pin. */
 static inline void
 gpio_acknowledge_irq (unsigned pin, uint32_t events)
 {
     out_w(irq_reg(pin, 0xf0U), events << ((pin % 8U) * 4U));
 }
 
+/*! @brief Enable or disable edges of a pin. */
 static inline void
 gpio_set_irq_enabled (unsigned pin, uint32_t events, bool b_enable)
 {
@@ -117,12 +135,14 @@ gpio_set_irq_enabled (unsigned pin, uint32_t events, bool b_enable)
     }
 }
 
+/*! @brief PWM slice of a pin. */
 static inline unsigned
 pwm_gpio_to_slice_num (unsigned pin)
 {
     return (pin >> 1U) & 7U;
 }
 
+/*! @brief Default PWM settings. */
 static inline pwm_config_t
 pwm_get_default_config (void)
 {
@@ -131,18 +151,21 @@ pwm_get_default_config (void)
     return config;
 }
 
+/*! @brief Set the PWM period. */
 static inline void
 pwm_config_set_wrap (pwm_config_t * p_config, uint16_t wrap)
 {
     p_config->wrap = wrap;
 }
 
+/*! @brief Set the PWM clock divider. */
 static inline void
 pwm_config_set_clkdiv (pwm_config_t * p_config, float32_t divider)
 {
     p_config->divider = divider;
 }
 
+/*! @brief Set up a PWM slice. */
 static inline void
 pwm_init (unsigned slice, const pwm_config_t * p_config, bool b_enable)
 {
@@ -157,18 +180,21 @@ pwm_init (unsigned slice, const pwm_config_t * p_config, bool b_enable)
     out_w(base, b_enable ? 1U : 0U);
 }
 
+/*! @brief Set both channels of a slice. */
 static inline void
 pwm_set_both_levels (unsigned slice, uint16_t level_a, uint16_t level_b)
 {
     out_w(PWM_BASE + (slice * 0x14U) + 12U, ((UW)level_b << 16U) | level_a);
 }
 
+/*! @brief Start or stop a slice. */
 static inline void
 pwm_set_enabled (unsigned slice, bool b_enabled)
 {
     out_w(PWM_BASE + (slice * 0x14U), b_enabled ? 1U : 0U);
 }
 
+/*! @brief Microseconds since boot. */
 static inline uint64_t
 time_us_64 (void)
 {

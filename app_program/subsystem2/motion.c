@@ -1,3 +1,8 @@
+/** @file motion.c
+ *
+ * @brief Motion Control: command checks, control cycle, faults and events.
+ */
+
 #include "../../include/float_types.h"
 #include "motion.h"
 #include "motion_compact.h"
@@ -61,7 +66,9 @@ static bool step_odometry(motion_t * p_motion, encoder_sample_t sample,
 static void step_stationary(motion_t * p_motion, float64_t now);
 static void step_state(motion_t * p_motion, float64_t now, float64_t delta_s,
                        const bool progressed[2]);
+static void accept_start(motion_t * p_motion, float64_t now);
 
+/*! @brief Name of a fault. */
 const char *
 motion_fault_name (motion_fault_t fault)
 {
@@ -129,6 +136,7 @@ motion_fault_name (motion_fault_t fault)
     return p_result;
 }
 
+/*! @brief Name of a feedback fault cause. */
 const char *
 motion_feedback_name (motion_feedback_cause_t cause)
 {
@@ -168,6 +176,7 @@ motion_feedback_name (motion_feedback_cause_t cause)
     return p_result;
 }
 
+/*! @brief Name of a command mode. */
 const char *
 motion_mode_name (motion_mode_t mode)
 {
@@ -203,6 +212,7 @@ motion_mode_name (motion_mode_t mode)
     return p_result;
 }
 
+/*! @brief Take the oldest event. False: none. */
 bool
 motion_next_event (motion_t * p_motion, motion_event_t * p_event)
 {
@@ -229,6 +239,7 @@ motion_next_event (motion_t * p_motion, motion_event_t * p_event)
     return b_result;
 }
 
+/*! @brief Stop and latch a fault; the first cause is kept. */
 void
 motion_raise_fault (motion_t * p_motion, motion_fault_t fault, float64_t now)
 {
@@ -277,6 +288,7 @@ motion_restore_encoder_fault (motion_t * p_motion, encoder_sample_t sample,
     motion_raise_fault(p_motion, F_FEEDBACK, now);
 }
 
+/*! @brief Start from a configuration and an encoder sample. */
 void
 motion_init (motion_t * p_motion, const motion_config_t * p_config,
              encoder_sample_t sample, float64_t now, bool b_setup_ok)
@@ -361,6 +373,7 @@ motion_begin_sampling (motion_t * p_motion, encoder_sample_t sample,
     }
 }
 
+/*! @brief Cancel the active command with a controlled stop. */
 void
 motion_cancel (motion_t * p_motion, float64_t now)
 {
@@ -401,6 +414,7 @@ motion_cancel (motion_t * p_motion, float64_t now)
     }
 }
 
+/*! @brief Permanent stop. */
 void
 motion_shutdown (motion_t * p_motion, float64_t now)
 {
@@ -410,6 +424,7 @@ motion_shutdown (motion_t * p_motion, float64_t now)
     p_motion->status.hold  = true;
 }
 
+/*! @brief Release the hold when the checks allow it. */
 bool
 motion_release (motion_t * p_motion, bool b_checks_ok)
 {
@@ -434,6 +449,7 @@ motion_release (motion_t * p_motion, bool b_checks_ok)
     return b_result;
 }
 
+/*! @brief Clear a latched fault when the checks allow it. */
 bool
 motion_reset (motion_t * p_motion, bool b_cleared, bool b_external_rest,
               encoder_sample_t sample, float64_t now)
@@ -464,6 +480,7 @@ motion_reset (motion_t * p_motion, bool b_cleared, bool b_external_rest,
     return b_result;
 }
 
+/*! @brief Check a command and make it active. */
 motion_result_t
 motion_accept (motion_t * p_motion, const motion_command_t * p_command,
                float64_t now)
@@ -572,16 +589,7 @@ motion_accept (motion_t * p_motion, const motion_command_t * p_command,
 
     if (!b_refresh)
     {
-        for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
-        {
-            p_motion->start_count[wheel]    = p_motion->odom.previous[wheel];
-            p_motion->start[wheel]          = p_motion->odom.travel[wheel];
-            p_motion->last_progress[wheel]  = now;
-            p_motion->expected_since[wheel] = now;
-            pid_reset(&p_motion->pid[wheel]);
-        }
-
-        p_motion->entered = now;
+        accept_start(p_motion, now);
     }
 
     p_motion->command           = stored;
@@ -594,6 +602,7 @@ motion_accept (motion_t * p_motion, const motion_command_t * p_command,
     return R_OK;
 }
 
+/*! @brief One 10 ms control cycle. */
 void
 motion_step (motion_t * p_motion, encoder_sample_t sample, float64_t now)
 {
@@ -670,12 +679,14 @@ motion_step (motion_t * p_motion, encoder_sample_t sample, float64_t now)
     step_state(p_motion, now, delta_s, progressed);
 }
 
+/*! @brief Read one runtime flag. */
 static bool
 motion_flag_get (const motion_t * p_motion, uint8_t mask)
 {
     return (0u != ((uint32_t)p_motion->runtime_flags & mask));
 }
 
+/*! @brief Write one runtime flag. */
 static void
 motion_flag_set (motion_t * p_motion, uint8_t mask, bool b_value)
 {
@@ -685,24 +696,28 @@ motion_flag_set (motion_t * p_motion, uint8_t mask, bool b_value)
     p_motion->runtime_flags = (uint8_t)flags;
 }
 
+/*! @brief Events waiting. */
 static uint32_t
 motion_queue_count (const motion_t * p_motion)
 {
     return ((uint32_t)p_motion->event_queue >> 3u) & 15u;
 }
 
+/*! @brief Index of the oldest event. */
 static uint32_t
 motion_queue_head (const motion_t * p_motion)
 {
     return (uint32_t)p_motion->event_queue & 7u;
 }
 
+/*! @brief Store the queue's head and count. */
 static void
 motion_queue_set (motion_t * p_motion, uint32_t head, uint32_t count)
 {
     p_motion->event_queue = (uint8_t)(head | (count << 3u));
 }
 
+/*! @brief Add a fault to the record of all causes. */
 static void
 motion_fault_record (motion_t * p_motion, motion_fault_t fault)
 {
@@ -715,6 +730,7 @@ motion_fault_record (motion_t * p_motion, motion_fault_t fault)
     }
 }
 
+/*! @brief Outputs and targets to zero, controllers reset. */
 static void
 zero_output (motion_t * p_motion)
 {
@@ -730,6 +746,7 @@ zero_output (motion_t * p_motion)
     p_motion->status.inhibited = true;
 }
 
+/*! @brief A value scaled to an integer, saturating; INT32_MIN when invalid. */
 static int32_t
 debug_scaled (float64_t value, float64_t scale)
 {
@@ -756,6 +773,7 @@ debug_scaled (float64_t value, float64_t scale)
     return result;
 }
 
+/*! @brief Keep what the robot was doing at the first fault. */
 static void
 record_fault_context (motion_t * p_motion, float64_t now)
 {
@@ -831,6 +849,7 @@ record_fault_context (motion_t * p_motion, float64_t now)
     p_debug->recorded = true;
 }
 
+/*! @brief Queue an event for the active command. */
 static void
 event (motion_t * p_motion, motion_event_type_t type)
 {
@@ -877,6 +896,7 @@ event (motion_t * p_motion, motion_event_type_t type)
                      motion_queue_count(p_motion) + 1u);
 }
 
+/*! @brief Keep the cause and samples of a feedback fault. */
 static void
 record_feedback (motion_t * p_motion, encoder_sample_t sample,
                  motion_feedback_cause_t cause)
@@ -898,6 +918,7 @@ record_feedback (motion_t * p_motion, encoder_sample_t sample,
     }
 }
 
+/*! @brief Record an unusable control interval. */
 static void
 timing_fault (motion_t * p_motion, float64_t now, float64_t delta_s)
 {
@@ -911,6 +932,7 @@ timing_fault (motion_t * p_motion, float64_t now, float64_t delta_s)
     motion_raise_fault(p_motion, F_TIMING, now);
 }
 
+/*! @brief Start a controlled stop. */
 static void
 stopping (motion_t * p_motion, float64_t now)
 {
@@ -921,7 +943,8 @@ stopping (motion_t * p_motion, float64_t now)
     p_motion->status.stationary = false;
 }
 
-/* Only reached with faults disabled. Nothing here sets FAULT or status.fault.
+/*! @brief Only reached with faults disabled. Nothing here sets FAULT or
+ * status.fault.
  */
 static void
 motion_fault_unlatched (motion_t * p_motion, motion_fault_t fault,
@@ -988,7 +1011,7 @@ motion_fault_unlatched (motion_t * p_motion, motion_fault_t fault,
     }
 }
 
-/* An arc must be possible for both wheels.  */
+/*! @brief An arc must be possible for both wheels.  */
 static bool
 accept_arc (const motion_t * p_motion, const motion_command_t * p_command,
             float64_t now)
@@ -1036,8 +1059,8 @@ accept_arc (const motion_t * p_motion, const motion_command_t * p_command,
     return true;
 }
 
-/* Rounded ARC goals must remain physically valid. Timed targets are recomputed
- * by the adapter, never independently rounded from goal/time. */
+/*! @brief Rounded ARC goals must remain physically valid. Timed targets are
+ * recomputed by the adapter, never independently rounded from goal/time. */
 static bool
 accept_rounded_arc (const motion_t *         p_motion,
                     const motion_command_t * p_decoded)
@@ -1077,6 +1100,7 @@ accept_rounded_arc (const motion_t *         p_motion,
     return true;
 }
 
+/*! @brief True when the finished move is within tolerance. */
 static bool
 final_goal (const motion_t * p_motion)
 {
@@ -1121,7 +1145,7 @@ final_goal (const motion_t * p_motion)
     return b_result;
 }
 
-/* Out of time: the command ends here.  True: it did. */
+/*! @brief Out of time: the command ends here.  True: it did. */
 static bool
 drive_expired (motion_t * p_motion, const motion_command_t * p_command,
                float64_t now)
@@ -1148,8 +1172,8 @@ drive_expired (motion_t * p_motion, const motion_command_t * p_command,
     return false;
 }
 
-/* Keep the wheels of an arc matched on the way, not only at the end: a move
- * stopped early never gets an endpoint correction. Half the slower wheel's
+/*! @brief Keep the wheels of an arc matched on the way, not only at the end: a
+ * move stopped early never gets an endpoint correction. Half the slower wheel's
  * speed at most, so neither wheel reverses; none once a wheel is at its goal.
  */
 static void
@@ -1171,7 +1195,7 @@ drive_arc_match (const motion_t * p_motion, const motion_command_t * p_command,
     desired[1] -= correction;
 }
 
-/* Wheel speeds for an arc.  True: it is finished (stopping). */
+/*! @brief Wheel speeds for an arc.  True: it is finished (stopping). */
 static bool
 drive_arc (motion_t * p_motion, const motion_command_t * p_command,
            float64_t now, float64_t desired[2])
@@ -1253,8 +1277,8 @@ drive_arc (motion_t * p_motion, const motion_command_t * p_command,
     return false;
 }
 
-/* Wheel speeds for a straight move or a turn on the spot.  True: it is finished
- * (stopping). */
+/*! @brief Wheel speeds for a straight move or a turn on the spot.  True: it is
+ * finished (stopping). */
 static bool
 drive_finite (motion_t * p_motion, const motion_command_t * p_command,
               float64_t now, float64_t desired[2])
@@ -1309,7 +1333,8 @@ drive_finite (motion_t * p_motion, const motion_command_t * p_command,
     return false;
 }
 
-/* Target, output and no-progress check for one wheel.  True: it has stalled. */
+/*! @brief Target, output and no-progress check for one wheel.  True: it has
+ * stalled. */
 static bool
 drive_wheel (motion_t * p_motion, const motion_command_t * p_command,
              unsigned wheel, float64_t * p_desired, bool b_progressed,
@@ -1399,6 +1424,7 @@ drive_wheel (motion_t * p_motion, const motion_command_t * p_command,
     return b_stalled;
 }
 
+/*! @brief Wheel targets and outputs of the active command for one cycle. */
 static void
 drive (motion_t * p_motion, float64_t now, float64_t delta_s,
        const bool progressed[2])
@@ -1456,7 +1482,7 @@ drive (motion_t * p_motion, float64_t now, float64_t delta_s,
     }
 }
 
-/* A long gap while starting up, outputs still disabled. */
+/*! @brief A long gap while starting up, outputs still disabled. */
 static void
 step_startup_gap (motion_t * p_motion, encoder_sample_t sample, float64_t now,
                   float64_t delta_s)
@@ -1504,7 +1530,8 @@ step_startup_gap (motion_t * p_motion, encoder_sample_t sample, float64_t now,
     p_motion->status.feedback_trusted                  = false;
 }
 
-/* An unusable interval.  True: carry on with the interval given back. */
+/*! @brief An unusable interval.  True: carry on with the interval given back.
+ */
 static bool
 step_bad_interval (motion_t * p_motion, float64_t now, float64_t * p_delta_s)
 {
@@ -1534,7 +1561,8 @@ step_bad_interval (motion_t * p_motion, float64_t now, float64_t * p_delta_s)
     return true;
 }
 
-/* New encoder counts into odometry.  False: a fault, nothing more to do. */
+/*! @brief New encoder counts into odometry.  False: a fault, nothing more to
+ * do. */
 static bool
 step_odometry (motion_t * p_motion, encoder_sample_t sample, float64_t now,
                float64_t delta_s, bool progressed[2], bool * p_fresh)
@@ -1596,7 +1624,7 @@ step_odometry (motion_t * p_motion, encoder_sample_t sample, float64_t now,
     return true;
 }
 
-/* Standing still for long enough counts as stationary. */
+/*! @brief Standing still for long enough counts as stationary. */
 static void
 step_stationary (motion_t * p_motion, float64_t now)
 {
@@ -1620,7 +1648,7 @@ step_stationary (motion_t * p_motion, float64_t now)
     }
 }
 
-/* What this state does in one cycle. */
+/*! @brief What this state does in one cycle. */
 static void
 step_state (motion_t * p_motion, float64_t now, float64_t delta_s,
             const bool progressed[2])
@@ -1682,6 +1710,24 @@ step_state (motion_t * p_motion, float64_t now, float64_t delta_s,
         default:
         break;
     }
+}
+
+/*! @brief A new command starts from here. */
+static void
+accept_start (motion_t * p_motion, float64_t now)
+{
+    unsigned wheel;
+
+    for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
+    {
+        p_motion->start_count[wheel]    = p_motion->odom.previous[wheel];
+        p_motion->start[wheel]          = p_motion->odom.travel[wheel];
+        p_motion->last_progress[wheel]  = now;
+        p_motion->expected_since[wheel] = now;
+        pid_reset(&p_motion->pid[wheel]);
+    }
+
+    p_motion->entered = now;
 }
 
 /*** end of file ***/

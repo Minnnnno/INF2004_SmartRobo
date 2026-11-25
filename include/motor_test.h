@@ -1,3 +1,8 @@
+/** @file motor_test.h
+ *
+ * @brief Safe motor test interface.
+ */
+
 #ifndef ROBO_MOTOR_TEST_H
 #define ROBO_MOTOR_TEST_H
 #include "motion.h"
@@ -15,10 +20,11 @@ typedef struct
 bool motor_test_init(void);
 bool motor_test_start(unsigned wheel, int direction);
 bool motor_test_start_pair(int direction);
-/* Absolute-time cutoff fallback; task context, no output. */
+/*! @brief Absolute-time cutoff fallback; task context, no output. */
 void motor_test_poll(void);
 #ifdef ROBO_BATTERY_FORWARD_TEST
-/* GP20 toggles run/stop; GP21 also stops. Active LOW; two-second cap. */
+/*! @brief GP20 toggles run/stop; GP21 also stops. Active LOW; two-second cap.
+ */
 void motor_test_poll_buttons(void);
 
 typedef struct
@@ -38,12 +44,12 @@ typedef struct
     uint32_t remaining_ms;
 } motor_test_button_diag_t;
 
-/* Read-only GPIO/task snapshot. */
+/*! @brief Read-only GPIO/task snapshot. */
 bool motor_test_get_buttons(motor_test_button_diag_t * p_diagnostics);
 #endif
-/* Continuous forward while refreshed by IR task. */
+/*! @brief Continuous forward while refreshed by IR task. */
 bool motor_test_sensor_forward(void);
-/* Latch IR movement off until reboot; manual tests remain available. */
+/*! @brief Latch IR movement off until reboot; manual tests remain available. */
 void motor_test_pause_sensor(void);
 void motor_test_stop(void);
 void motor_test_shutdown(void);

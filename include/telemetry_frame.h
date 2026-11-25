@@ -1,17 +1,17 @@
-/*
- *  telemetry_frame.h
- *  Shared binary MQTT formats: status frame, command, acknowledgement,
- *  event frame and encoder frame.  Owned by Buddy 1; changed only by team
+/** @file telemetry_frame.h
+ *
+ * @brief Shared binary MQTT formats: status frame, command, acknowledgement,
+ * event frame and encoder frame.  Owned by Buddy 1; changed only by team
  * agreement (Week 8 Tribunal 1 decision log: "Pack all fields into one
  * bit-level status frame").
  *
- *  This is the ONE definition of every field's range, bit width and sign.
- *  The firmware codec (app_program/subsystem1/telemetry_frame.c), the host
- *  round-trip test (tests/subsystem1) and the dashboard decoder
- *  (tools/dashboard.py, which parses TF_FIELDS below) all read this table.
- *  Plain C only: no kernel headers, so mqtt_utk.c and host tests can use it.
+ * This is the ONE definition of every field's range, bit width and sign.
+ * The firmware codec (app_program/subsystem1/telemetry_frame.c), the host
+ * round-trip test (tests/subsystem1) and the dashboard decoder
+ * (tools/dashboard.py, which parses TF_FIELDS below) all read this table.
+ * Plain C only: no kernel headers, so mqtt_utk.c and host tests can use it.
  *
- *  Encoding rules
+ * Encoding rules
  *    - A field stores the unsigned offset (value - min) in `bits` bits.
  *      Signed values therefore never wrap: -1 with min -250 is sent as 249,
  *      and the decoder adds min back.
@@ -132,12 +132,12 @@ extern const tf_field_t g_tf_fields[TF_FIELD_COUNT];
    Keep on one line: tools/dashboard.py parses it. */
 #define TF_BC_CHARS "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-. *$/+%"
 
-/* Pack values[TF_FIELD_COUNT] into out[TF_FRAME_BYTES].  Out-of-range values
-   are clamped.  Returns a mask with bit i set if field i was clamped. */
+/*! @brief Pack values[TF_FIELD_COUNT] into out[TF_FRAME_BYTES].  Out-of-range
+   values are clamped.  Returns a mask with bit i set if field i was clamped. */
 uint32_t tf_pack(const int32_t values[TF_FIELD_COUNT],
                  uint8_t       out[TF_FRAME_BYTES]);
 
-/* Unpack a received frame.  Returns false (values untouched) if len is
+/*! @brief Unpack a received frame.  Returns false (values untouched) if len is
    wrong, the version differs, a code is above its field's range or a
    spare bit is set. */
 bool tf_unpack(const uint8_t * p_frame, size_t len,
@@ -264,11 +264,11 @@ typedef struct
     uint32_t invalid[2];
 } tf_encoder_t;
 
-/* Pack an encoder frame.  cause, state and fault above their range are
+/*! @brief Pack an encoder frame.  cause, state and fault above their range are
    clamped to the maximum.  Returns true if anything was clamped. */
 bool tf_enc_pack(const tf_encoder_t * p_enc, uint8_t out[TF_ENC_BYTES]);
 
-/* Unpack an encoder frame.  Returns false (enc untouched) if len or the
+/*! @brief Unpack an encoder frame.  Returns false (enc untouched) if len or the
    version is wrong, a reserved bit is set or a code is out of range. */
 bool tf_enc_unpack(const uint8_t * p_frame, size_t len, tf_encoder_t * p_enc);
 

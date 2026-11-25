@@ -15,6 +15,7 @@
 #define MOTION_ANGLE_LIMIT    360
 #define MOTION_RAD_PER_DEG    0.017453292519943295
 
+/*! @brief Field limits of the stored command. */
 static inline bool
 motion_compact_limits (const motion_config_t * p_config)
 {
@@ -26,8 +27,9 @@ motion_compact_limits (const motion_config_t * p_config)
            && (p_config->max_angle <= (360.0 * MOTION_RAD_PER_DEG));
 }
 
-/* Validate BEFORE rounding. round() specifies nearest, halfway away from zero.
- * No cast of NaN, infinity, or out-of-range floating values is permitted. */
+/*! @brief Validate BEFORE rounding. round() specifies nearest, halfway away
+ * from zero. No cast of NaN, infinity, or out-of-range floating values is
+ * permitted. */
 static inline bool
 motion_compact_quantize (float64_t value, float64_t scale, int32_t limit,
                          int32_t * p_result)
@@ -44,6 +46,7 @@ motion_compact_quantize (float64_t value, float64_t scale, int32_t limit,
     return b_valid;
 }
 
+/*! @brief Write a field of the packed payload. */
 static inline void
 motion_compact_put (uint8_t * p_bytes, uint32_t offset, uint32_t width,
                     int32_t value)
@@ -63,6 +66,7 @@ motion_compact_put (uint8_t * p_bytes, uint32_t offset, uint32_t width,
     }
 }
 
+/*! @brief Read a field of the packed payload. */
 static inline int32_t
 motion_compact_get (const uint8_t * p_bytes, uint32_t offset, uint32_t width)
 {
@@ -84,12 +88,14 @@ motion_compact_get (const uint8_t * p_bytes, uint32_t offset, uint32_t width)
                : (int32_t)encoded;
 }
 
+/*! @brief Mode of a stored command. */
 static inline motion_mode_t
 motion_compact_mode (const motion_storage_command_t * p_stored)
 {
     return (motion_mode_t)(((uint32_t)p_stored->payload[5] >> 2u) & 7u);
 }
 
+/*! @brief Pack a command. False: it does not fit. */
 static inline bool
 motion_compact_encode (const motion_command_t *   p_public,
                        const motion_config_t *    p_config,
@@ -180,6 +186,7 @@ motion_compact_encode (const motion_command_t *   p_public,
     return true;
 }
 
+/*! @brief Unpack a command. False: the payload is not valid. */
 static inline bool
 motion_compact_decode (const motion_storage_command_t * p_stored,
                        const motion_config_t *          p_config,

@@ -1,14 +1,14 @@
-/*
- *  comms_hooks.h
- *  Subsystem 1 -- the link between the comms queues and the MQTT client.
+/** @file comms_hooks.h
  *
- *  Included by comms.c (which implements the hooks) and by
- *  lib/liblwip/sysdepend/pico_rp2040/mqtt_utk.c (which calls them from
- *  the kernel's WiFi service task).  Plain C types only: mqtt_utk.c must
- *  not see tk/tkernel.h.  Other subsystems use comms.h, not this file.
+ * @brief Subsystem 1 -- the link between the comms queues and the MQTT client.
  *
- *  Payloads are binary (include/telemetry_frame.h): they are passed with
- *  an explicit length and are NOT '\0'-terminated.
+ * Included by comms.c (which implements the hooks) and by
+ * lib/liblwip/sysdepend/pico_rp2040/mqtt_utk.c (which calls them from
+ * the kernel's WiFi service task).  Plain C types only: mqtt_utk.c must
+ * not see tk/tkernel.h.  Other subsystems use comms.h, not this file.
+ *
+ * Payloads are binary (include/telemetry_frame.h): they are passed with
+ * an explicit length and are NOT '\0'-terminated.
  */
 
 #ifndef COMMS_HOOKS_H
@@ -37,22 +37,22 @@
 #define COMMS_TOPIC_MAX   32 /* full topic, including the '\0' */
 #define COMMS_PAYLOAD_MAX 96 /* payload bytes */
 
-/* Next queued message, events before telemetry.  Never waits.  topic must
-   hold COMMS_TOPIC_MAX bytes and payload COMMS_PAYLOAD_MAX bytes.
-   Returns the payload length in bytes, or -1 if nothing is queued. */
+/*! @brief Next queued message, events before telemetry.  Never waits.  topic
+   must hold COMMS_TOPIC_MAX bytes and payload COMMS_PAYLOAD_MAX bytes. Returns
+   the payload length in bytes, or -1 if nothing is queued. */
 int comms_hook_next(char * p_topic, uint8_t * p_payload, int * p_qos);
 
-/* A message arrived on COMMS_TOPIC_CMD (len < 0: truncated).  Valid
+/*! @brief A message arrived on COMMS_TOPIC_CMD (len < 0: truncated).  Valid
    commands are passed on to the Vehicle Controller; either way a binary
    acknowledgement is queued. */
 void comms_hook_command(const uint8_t * p_payload, int len);
 
-/* A message arrived on COMMS_TOPIC_ROUTE (len < 0: truncated).  A valid
+/*! @brief A message arrived on COMMS_TOPIC_ROUTE (len < 0: truncated).  A valid
    route replaces the barcode route (subsystem3/route.h); either way a text
    acknowledgement is queued. */
 void comms_hook_route(const uint8_t * p_payload, int len);
 
-/* The MQTT connection came up (1) or went down (0). */
+/*! @brief The MQTT connection came up (1) or went down (0). */
 void comms_hook_online(int online);
 
 #endif /* COMMS_HOOKS_H */

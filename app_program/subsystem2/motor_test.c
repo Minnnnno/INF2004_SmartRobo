@@ -1,3 +1,8 @@
+/** @file motor_test.c
+ *
+ * @brief Safe motor test image: short timed pulses with a hardware cut-off.
+ */
+
 #ifdef ROBO_SAFE_MOTOR_TEST
 #include "motor_test.h"
 #include "motion_hal.h"
@@ -28,6 +33,7 @@ static bool              gb_button_irq_registered;
 static volatile bool     gb_stop_release_seen;
 static volatile uint64_t g_stop_released_at;
 static volatile uint32_t g_button_irq_events;
+/*! @brief Ignore the buttons until they are released. */
 static void
 disarm_buttons (void)
 {
@@ -57,6 +63,7 @@ enum
     BUTTON_DURATION_US = 2000000
 };
 
+/*! @brief Both motor pins low. */
 static void
 stop_outputs (void)
 {
@@ -70,6 +77,7 @@ stop_outputs (void)
     ClearInt(3U);
 }
 
+/*! @brief End the run with a result, outputs off. */
 static void
 finish (bool b_timed_out)
 {
@@ -103,6 +111,7 @@ finish (bool b_timed_out)
     gb_result_pending     = true;
 }
 
+/*! @brief Hardware deadline: cut the motors. */
 static void
 deadline_irq (UINT number)
 {
@@ -126,6 +135,7 @@ motor_test_poll (void)
 }
 
 #ifdef ROBO_BATTERY_FORWARD_TEST
+/*! @brief Stop from a button press. */
 static void
 button_stop_now (void)
 {
@@ -140,6 +150,7 @@ button_stop_now (void)
     restore_interrupts(irq_state);
 }
 
+/*! @brief Button edges. */
 static void
 button_irq (void)
 {
@@ -195,6 +206,7 @@ button_irq (void)
 }
 #endif
 
+/*! @brief Set up the motor test. */
 bool
 motor_test_init (void)
 {
@@ -260,6 +272,7 @@ motor_test_init (void)
     return true;
 }
 
+/*! @brief Start a timed test of one or both wheels. */
 static bool
 start_test (unsigned wheel_mask, int direction, bool b_sensor,
             uint32_t duration_us)
@@ -327,6 +340,7 @@ start_test (unsigned wheel_mask, int direction, bool b_sensor,
     return true;
 }
 
+/*! @brief Start one wheel. */
 bool
 motor_test_start (unsigned wheel, int direction)
 {
@@ -344,6 +358,7 @@ motor_test_start (unsigned wheel, int direction)
     return b_result;
 }
 
+/*! @brief Start both wheels. */
 bool
 motor_test_start_pair (int direction)
 {
@@ -500,6 +515,7 @@ motor_test_pause_sensor (void)
     restore_interrupts(irq_state);
 }
 
+/*! @brief Stop the test. */
 void
 motor_test_stop (void)
 {
@@ -509,12 +525,14 @@ motor_test_stop (void)
     restore_interrupts(irq_state);
 }
 
+/*! @brief True while a test runs. */
 bool
 motor_test_active (void)
 {
     return gb_active;
 }
 
+/*! @brief Stop and allow no more tests. */
 void
 motor_test_shutdown (void)
 {
@@ -526,6 +544,7 @@ motor_test_shutdown (void)
     restore_interrupts(irq_state);
 }
 
+/*! @brief Take the result of the last test. False: none. */
 bool
 motor_test_result (motor_test_result_t * p_result)
 {

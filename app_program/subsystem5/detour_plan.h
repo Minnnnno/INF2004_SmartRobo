@@ -1,25 +1,25 @@
-/*
- *  detour_plan.h
- *  Subsystem 5 -- the geometry of driving round a scanned obstacle and back
- *  to the line.
+/** @file detour_plan.h
  *
- *  Pure computation, no hardware, so the host tests (subsystem5_test.c)
- *  run the same code as the robot.  detour.c drives the plan.
+ * @brief Subsystem 5 -- the geometry of driving round a scanned obstacle and
+ * back to the line.
  *
- *  Frame: square to the obstacle's face where the scan could tell (tilt_deg),
- *  else the robot's pose when it stopped.  x is forward along the line, taken
- *  to run square to the face, y is to the LEFT (the sign obstacle_scan.h and
- *  steering.h use) with the line at 0, headings are degrees, positive left.
- *  Positions are of the axle centre, the point Motion Control turns about.
- *  The robot starts at x 0, y start_y_mm (its line sensors on the line),
- *  heading -tilt_deg.
+ * Pure computation, no hardware, so the host tests (subsystem5_test.c)
+ * run the same code as the robot.  detour.c drives the plan.
  *
- *  1. Back up if there is no room to turn, turn out by turn_deg, drive
+ * Frame: square to the obstacle's face where the scan could tell (tilt_deg),
+ * else the robot's pose when it stopped.  x is forward along the line, taken
+ * to run square to the face, y is to the LEFT (the sign obstacle_scan.h and
+ * steering.h use) with the line at 0, headings are degrees, positive left.
+ * Positions are of the axle centre, the point Motion Control turns about.
+ * The robot starts at x 0, y start_y_mm (its line sensors on the line),
+ * heading -tilt_deg.
+ *
+ * 1. Back up if there is no room to turn, turn out by turn_deg, drive
  *     diagonal_mm, turn back parallel to the line: the robot's centre is
  *     then shift_mm to the side, clear of the obstacle's edge.
- *  2. Step forward, looking sideways at the obstacle; s5_pass_observe()
+ * 2. Step forward, looking sideways at the obstacle; s5_pass_observe()
  *     finds where it ends.  A missed echo alone never ends it.
- *  3. Drive on until the robot's rear corner clears that end
+ * 3. Drive on until the robot's rear corner clears that end
  *     (s5_pass_clear_x), turn in by S5_RETURN_DEG and drive back across
  *     the line, stopping when the line sensors see it.
  */
@@ -151,24 +151,24 @@ typedef struct
     float64_t start_y_mm; /* axle's y at the start */
 } s5_detour_plan_t;
 
-/* Plan step 1 from a finished scan.  Needs a pass side with room. */
+/*! @brief Plan step 1 from a finished scan.  Needs a pass side with room. */
 bool s5_detour_plan(const s5_scan_t * p_scan, s5_detour_plan_t * p_plan);
-/* The same for a chosen side, turning out by at most max_out_deg
+/*! @brief The same for a chosen side, turning out by at most max_out_deg
    (S5_OUT_MIN_DEG..S5_OUT_MAX_DEG): a shallower turn backs up further first.
    s5_detour_plan() is this with the scan's side and S5_OUT_MAX_DEG. */
 bool s5_detour_plan_side(const s5_scan_t * p_scan, s5_avoid_side_t side,
                          float64_t max_out_deg, s5_detour_plan_t * p_plan);
 
-/* Axis range (from the servo axis) of the scanned obstacle's nearest point
-   within S5_KNOWN_BEAM_HALF_DEG of a look at servo angle_deg, with the axle at
-   (x_mm, y_mm) and heading heading_deg in the plan's frame.  The obstacle is
-   everything beyond its face on its side of the passed end.  INFINITY: not in
-   that beam. */
+/*! @brief Axis range (from the servo axis) of the scanned obstacle's nearest
+   point within S5_KNOWN_BEAM_HALF_DEG of a look at servo angle_deg, with the
+   axle at (x_mm, y_mm) and heading heading_deg in the plan's frame.  The
+   obstacle is everything beyond its face on its side of the passed end.
+   INFINITY: not in that beam. */
 float64_t s5_obstacle_range(const s5_detour_plan_t * p_plan, float64_t x_mm,
                             float64_t y_mm, float64_t heading_deg,
                             int angle_deg);
-/* TRUE when an echo (range_mm from the transducer, as s5_us_ping returns it)
-   is the scanned obstacle rather than something new: see
+/*! @brief TRUE when an echo (range_mm from the transducer, as s5_us_ping
+   returns it) is the scanned obstacle rather than something new: see
    S5_KNOWN_BEAM_HALF_DEG. */
 bool s5_echo_on_obstacle(const s5_detour_plan_t * p_plan, float64_t x_mm,
                          float64_t y_mm, float64_t heading_deg, int angle_deg,
@@ -187,21 +187,22 @@ typedef struct
 } s5_pass_t;
 
 void s5_pass_init(s5_pass_t * p_pass, const s5_detour_plan_t * p_plan);
-/* One look at S5_SIDE_LOOK_DEG towards the obstacle with the robot parallel
-   to the line at (x_mm, y_mm).  b_echo/range_mm: the agreed reading, range
-   from the transducer (as returned by s5_us_ping). The sensor's offset from
-   the servo axis is applied here. Returns true once the obstacle has ended. */
+/*! @brief One look at S5_SIDE_LOOK_DEG towards the obstacle with the robot
+   parallel to the line at (x_mm, y_mm).  b_echo/range_mm: the agreed reading,
+   range from the transducer (as returned by s5_us_ping). The sensor's offset
+   from the servo axis is applied here. Returns true once the obstacle has
+   ended. */
 bool s5_pass_observe(s5_pass_t * p_pass, const s5_detour_plan_t * p_plan,
                      float64_t x_mm, float64_t y_mm, bool b_echo,
                      float64_t range_mm);
-/* Centre x from which turning in cannot swing the rear into the obstacle
-   (once s5_pass_observe has returned true) */
+/*! @brief Centre x from which turning in cannot swing the rear into the
+   obstacle (once s5_pass_observe has returned true) */
 float64_t s5_pass_clear_x(const s5_pass_t * p_pass);
 
-/* Length of the return leg from lateral y_mm at S5_RETURN_DEG, with
+/*! @brief Length of the return leg from lateral y_mm at S5_RETURN_DEG, with
    S5_RETURN_EXTRA_MM to spare */
 float64_t s5_return_length(float64_t y_mm);
-/* TRUE when the line sensors are near enough where the line should be
+/*! @brief TRUE when the line sensors are near enough where the line should be
    for black under them to be the line */
 bool s5_line_expected(float64_t y_mm, float64_t heading_deg);
 

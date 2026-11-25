@@ -1,3 +1,8 @@
+/** @file stack_debug.h
+ *
+ * @brief Stack use of tasks, read from the kernel.
+ */
+
 #ifndef ROBO_STACK_DEBUG_H
 #define ROBO_STACK_DEBUG_H
 #include <tk/tkernel.h>
@@ -12,8 +17,9 @@ typedef struct
     BOOL saved_sp_ok;
 } stack_debug_t;
 
-/* Diagnostic snapshot of a public task's painted stack (single-core port).
- * E_NOEXS: no such task; E_SYS: corrupted stack metadata. No console I/O. */
+/*! @brief Diagnostic snapshot of a public task's painted stack (single-core
+ * port). E_NOEXS: no such task; E_SYS: corrupted stack metadata. No console
+ * I/O. */
 ER knl_task_stack_debug(ID task_id, stack_debug_t * p_info);
 #endif
 

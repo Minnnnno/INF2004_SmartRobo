@@ -1,21 +1,21 @@
-/*
- *  subsystem5.h
- *  Subsystem 5 -- obstacle detection, width, which side to pass on, and
- *  driving round it back to the line.
+/** @file subsystem5.h
  *
- *  obstacle_task (include/subsystems.h) is created by usermain at priority 4.
- *  Hardware: ultrasonic TRIG GP16 / ECHO GP17, mounted on the servo on GP15.
- *  Active in production builds only; idle (pins untouched) in calibration
- *  profiles and in ROBO_IR_MONITOR.
+ * @brief Subsystem 5 -- obstacle detection, width, which side to pass on, and
+ * driving round it back to the line.
  *
- *  While watching it only calls motion_stop(), which latches a hold that
- *  the line follower respects.  After the scan it releases that hold and
- *  drives round the obstacle itself (SOURCE_OBSTACLE finite moves,
- *  detour.c); values[3] = S5_STATE_AVOIDING tells the line follower to
- *  keep off the wheels meanwhile.  Back on the line it publishes
- *  S5_STATE_CLEAR and the line follower drives on.
+ * obstacle_task (include/subsystems.h) is created by usermain at priority 4.
+ * Hardware: ultrasonic TRIG GP16 / ECHO GP17, mounted on the servo on GP15.
+ * Active in production builds only; idle (pins untouched) in calibration
+ * profiles and in ROBO_IR_MONITOR.
  *
- *  Shared status, written with robot_update_subsystem(SOURCE_OBSTACLE):
+ * While watching it only calls motion_stop(), which latches a hold that
+ * the line follower respects.  After the scan it releases that hold and
+ * drives round the obstacle itself (SOURCE_OBSTACLE finite moves,
+ * detour.c); values[3] = S5_STATE_AVOIDING tells the line follower to
+ * keep off the wheels meanwhile.  Back on the line it publishes
+ * S5_STATE_CLEAR and the line follower drives on.
+ *
+ * Shared status, written with robot_update_subsystem(SOURCE_OBSTACLE):
  *    values[0]  distance straight ahead, m (S5_US_MAX_MM / 1000 when clear)
  *    values[1]  centre of the last measured obstacle, m, positive = left
  *    values[2]  width of the last measured obstacle, m (0 before the first)
@@ -24,19 +24,19 @@
  *               stopped from outside (STOP / lifted)
  *    available  FALSE while the ultrasonic sensor is not answering
  *
- *  Two bounded MQTT text diagnostics when online (robot/telemetry/obstacle):
+ * Two bounded MQTT text diagnostics when online (robot/telemetry/obstacle):
  *    "obstacle width_mm=<w> dist_mm=<d> offset_mm=<o> complete=<0|1>
  *     position=<centre|left|right|unknown>"
  *    "obstacle avoid=<left|right|none> shift_l_mm=<l> shift_r_mm=<r>"
- *  and, when a scan or detour ends without driving round it:
+ * and, when a scan or detour ends without driving round it:
  *    "obstacle abort=<code> a=<a> b=<b> x=<x> y=<y> tries=<n>
  * state=<failed|stopped>" "obstacle spurious_stop ahead_mm=<d> resumed=<0|1>"
- *  (codes and their a/b: README.md "Why a detour stopped").
- *  offset is the obstacle centre, + left; complete=0 means an edge lay
- *  beyond the 20..160 deg sweep, so the width is a lower bound.
- *  position compares how far each edge is from 90 deg (obstacle_scan.h);
- *  avoid is the side to pass on, shift_* how far the robot's centre must
- *  move sideways to pass that side with S5_PASS_MARGIN_MM to spare.
+ * (codes and their a/b: README.md "Why a detour stopped").
+ * offset is the obstacle centre, + left; complete=0 means an edge lay
+ * beyond the 20..160 deg sweep, so the width is a lower bound.
+ * position compares how far each edge is from 90 deg (obstacle_scan.h);
+ * avoid is the side to pass on, shift_* how far the robot's centre must
+ * move sideways to pass that side with S5_PASS_MARGIN_MM to spare.
  */
 
 #ifndef SUBSYSTEM5_H

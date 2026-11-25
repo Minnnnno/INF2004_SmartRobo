@@ -1,4 +1,8 @@
-/* Shared watchdog/crash handling and low-priority system supervision. */
+/** @file system_runtime.c
+ *
+ * @brief Shared watchdog/crash handling and low-priority system supervision.
+ */
+
 #include "../../include/float_types.h"
 #include "system_runtime.h"
 #include "../app.h"
@@ -55,6 +59,7 @@ __asm__("   .syntax unified         \n"
 
 static void freeze_catcher_start(void);
 
+/*! @brief Freeze catcher: record a stall before the watchdog fires. */
 __attribute__((used)) void
 robo_freeze_check (const UW * p_frame)
 {
@@ -91,6 +96,7 @@ system_watchdog_start (void)
     freeze_catcher_start();
 }
 
+/*! @brief Feed the watchdog. */
 void
 system_watchdog_feed (float64_t now)
 {
@@ -99,6 +105,7 @@ system_watchdog_feed (float64_t now)
     crash_mark(CRASH_MARK_FEED_MS, (UW)(now * 1000.0));
 }
 
+/*! @brief Print the crash record of the last run. */
 void
 system_report_previous_crash (void)
 {
@@ -147,18 +154,21 @@ system_boot_init (void)
     system_report_previous_crash();
 }
 
+/*! @brief Was an encoder fault latched before this restart? */
 bool
 system_encoder_fault_latched (void)
 {
     return g_previous_crash.encoder_latched;
 }
 
+/*! @brief Cause of that encoder fault. */
 UW
 system_encoder_fault_cause (void)
 {
     return g_previous_crash.encoder_cause;
 }
 
+/*! @brief Print the start-up lines. */
 void
 system_report_startup (void)
 {
@@ -169,6 +179,7 @@ system_report_startup (void)
 #endif
 }
 
+/*! @brief Arm the freeze catcher. */
 static void
 freeze_catcher_start (void)
 {
@@ -197,6 +208,7 @@ freeze_catcher_start (void)
 
 static bool report_task_stack(ID task_id, const char * p_name);
 
+/*! @brief Print one task's stack use. */
 static bool
 report_task_stack (ID task_id, const char * p_name)
 {
@@ -231,6 +243,7 @@ report_task_stack (ID task_id, const char * p_name)
 
 #endif
 
+/*! @brief Low-priority supervision: stacks, guards and faults. */
 void
 system_supervise (const app_task_spec_t * p_tasks, const ID * p_ids,
                   unsigned task_count, void (*p_report_motion_fault)(void))

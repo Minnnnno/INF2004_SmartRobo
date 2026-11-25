@@ -1,4 +1,9 @@
-/* Robot orientation relative to a stationary, known-level startup reference. */
+/** @file tilt.h
+ *
+ * @brief Robot orientation relative to a stationary, known-level startup
+ * reference.
+ */
+
 #ifndef TILT_H
 #define TILT_H
 #include "../../include/float_types.h"
@@ -38,39 +43,41 @@ typedef struct
 #define TILT_COUNT_MASK      (0x3FU)
 #define TILT_CAPTURE_SAMPLES (50U)
 
-/* Collect 50 fresh, stable samples; restart on motion/invalid acceleration.
- * Returns true when a reference is ready. Stability cannot prove levelness:
- * the user MUST place the board on known level ground. No flash persistence.
+/*! @brief Collect 50 fresh, stable samples; restart on motion/invalid
+ * acceleration. Returns true when a reference is ready. Stability cannot prove
+ * levelness: the user MUST place the board on known level ground. No flash
+ * persistence.
  */
 bool tilt_capture(tilt_context_t * p_context, int16_t axis_x, int16_t axis_y,
                   int16_t axis_z);
-/* Compute a filtered result from one fresh sample. Zero means unavailable.
- * Invalid input resets filter/conditions, but preserves the level reference.
+/*! @brief Compute a filtered result from one fresh sample. Zero means
+ * unavailable. Invalid input resets filter/conditions, but preserves the level
+ * reference.
  */
 uint32_t tilt_update(tilt_context_t * p_context, int16_t axis_x, int16_t axis_y,
                      int16_t axis_z);
-/* Discard pending capture/filter history after a long gap, preserve
+/*! @brief Discard pending capture/filter history after a long gap, preserve
  * calibration. */
 void tilt_discard_history(tilt_context_t * p_context);
-/* Right wheel contact height above the left, 0.1 mm, for an axle of track_mm
- * (track_mm <= 3276). Independent of pitch; positive = right wheel higher.
- * Zero before calibration. Call only after tilt_update() returned a valid
- * result.
+/*! @brief Right wheel contact height above the left, 0.1 mm, for an axle of
+ * track_mm (track_mm <= 3276). Independent of pitch; positive = right wheel
+ * higher. Zero before calibration. Call only after tilt_update() returned a
+ * valid result.
  */
 int16_t tilt_side_height_tenths(tilt_context_t const * p_context,
                                 uint16_t               track_mm);
-/* Forward dynamic acceleration, mg (+ = speeding up forward): the fresh sample
- * minus the smoothed gravity vector, projected on the reference forward axis.
- * A high-passed diagnostic for comparing with encoder acceleration; it is not
- * used for classification. Zero before calibration/filtering. Call only after
- * tilt_update() returned a valid result for the same x, y, z.
+/*! @brief Forward dynamic acceleration, mg (+ = speeding up forward): the fresh
+ * sample minus the smoothed gravity vector, projected on the reference forward
+ * axis. A high-passed diagnostic for comparing with encoder acceleration; it is
+ * not used for classification. Zero before calibration/filtering. Call only
+ * after tilt_update() returned a valid result for the same x, y, z.
  */
 int16_t tilt_forward_dynamic_mg(tilt_context_t const * p_context,
                                 int16_t axis_x, int16_t axis_y, int16_t axis_z);
-/* Decode pitch (axis 0) or roll (axis 1); caller requires a valid packed
- * result. */
+/*! @brief Decode pitch (axis 0) or roll (axis 1); caller requires a valid
+ * packed result. */
 int16_t tilt_angle_tenths(uint32_t result, uint8_t axis);
-/* Return display labels for axis 0=pitch or 1=roll; invalid result ->
+/*! @brief Return display labels for axis 0=pitch or 1=roll; invalid result ->
  * UNAVAILABLE. */
 char const * tilt_condition_name(uint32_t result, uint8_t axis);
 #endif

@@ -1,3 +1,8 @@
+/** @file board_config.h
+ *
+ * @brief Board pins and settings.
+ */
+
 #ifndef ROBO_BOARD_CONFIG_H
 #define ROBO_BOARD_CONFIG_H
 #include "motion.h"

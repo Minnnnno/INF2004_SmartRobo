@@ -1,6 +1,10 @@
-/* Subsystem 3 IR sensor pins: shared by the line task, the barcode reader, the
- * IR monitor and the shuttle test. Self-contained: pulls in the robot HAL, or
- * the host tests' fake HAL. */
+/** @file ir_io.h
+ *
+ * @brief Subsystem 3 IR sensor pins: shared by the line task, the barcode
+ * reader, the IR monitor and the shuttle test. Self-contained: pulls in the
+ * robot HAL, or the host tests' fake HAL.
+ */
+
 #ifndef ROBO_IR_IO_H
 #define ROBO_IR_IO_H
 #include <stdbool.h>
@@ -11,7 +15,7 @@
 #include "../subsystem2/template_hal.h"
 #endif
 
-/* Plain digital input, pulls off (the IR modules drive the line). */
+/*! @brief Plain digital input, pulls off (the IR modules drive the line). */
 static inline void
 ir_input_init (unsigned pin)
 {
@@ -31,8 +35,8 @@ ir_input_init (unsigned pin)
 /* Register polls before giving up: a conversion takes ~2 us (~250 cycles). */
 #define IR_ADC_SPINS 100000U
 
-/* Polls 'reg' until any of 'mask' is set; false after IR_ADC_SPINS polls (a
- * dead peripheral never hangs). */
+/*! @brief Polls 'reg' until any of 'mask' is set; false after IR_ADC_SPINS
+ * polls (a dead peripheral never hangs). */
 static inline bool
 ir_reg_wait (uint32_t reg, uint32_t mask)
 {
@@ -47,8 +51,8 @@ ir_reg_wait (uint32_t reg, uint32_t mask)
     return false;
 }
 
-/* Takes the ADC out of reset, turns it on, and makes 'pin' an analog input
- * (digital input and pulls off). False if the ADC never became ready. */
+/*! @brief Takes the ADC out of reset, turns it on, and makes 'pin' an analog
+ * input (digital input and pulls off). False if the ADC never became ready. */
 static inline bool
 ir_adc_init (unsigned analog_pin)
 {
@@ -71,7 +75,7 @@ ir_adc_init (unsigned analog_pin)
     return b_result;
 }
 
-/* Average of 'count' conversions (about 2 us each) on 'pin', 0..4095; a
+/*! @brief Average of 'count' conversions (about 2 us each) on 'pin', 0..4095; a
  * conversion that never finishes ends the average early (0 if none finished).
  */
 static inline unsigned

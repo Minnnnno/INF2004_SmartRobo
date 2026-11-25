@@ -1,9 +1,10 @@
-/*
- *  servo.c
- *  Subsystem 5 -- hobby servo on GP15: 50 Hz, 500..2500 us for 0..180 deg.
+/** @file servo.c
  *
- *  The ultrasonic sensor rides on the horn, so every move waits long enough
- *  for the horn to arrive AND the sensor to stop swinging before a ping.
+ * @brief Subsystem 5 -- hobby servo on GP15: 50 Hz, 500..2500 us for 0..180
+ * deg.
+ *
+ * The ultrasonic sensor rides on the horn, so every move waits long enough
+ * for the horn to arrive AND the sensor to stop swinging before a ping.
  */
 
 #include "../../include/float_types.h"
@@ -81,12 +82,14 @@ s5_servo_move (int angle_deg)
     }
 }
 
+/*! @brief Last commanded angle. */
 int
 s5_servo_angle (void)
 {
     return g_servo_deg;
 }
 
+/*! @brief Write the pulse for an angle. */
 static void
 servo_write (int angle_deg)
 {
@@ -105,6 +108,7 @@ servo_write (int angle_deg)
                         (S5_SERVO_PIN & 1U) ? level : 0U);
 }
 
+/*! @brief Limit an angle to the mechanical range. */
 static int
 servo_clamp (int angle_deg)
 {

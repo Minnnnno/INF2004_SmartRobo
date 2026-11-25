@@ -1,8 +1,10 @@
-/*
- * Buddy 4 sensor startup using micro T-Kernel's device API.
+/** @file subsystem4.c
+ *
+ * @brief Buddy 4 sensor startup using micro T-Kernel's device API.
  * Register definitions: ST LSM303DLHC datasheet, DocID018771 Rev 2.
  * Kernel API types are retained at the kernel boundary.
  */
+
 #include "subsystem4.h"
 #include <stdint.h>
 #include <tk/device.h>
@@ -64,8 +66,7 @@ static ER subsystem4_check_identity(ID h_device);
 static ER subsystem4_apply_setting(ID                      h_device,
                                    gy511_setting_t const * p_setting);
 
-/*
- * Function: subsystem4_init
+/*! @brief * Function: subsystem4_init
  * Purpose: Perform the complete stage-1 sensor startup sequence.
  * Inputs: None. I2C1 must already be registered by the kernel as "iicb".
  * Returns: E_OK, E_IO for a mismatched value, or the original driver error.
@@ -119,8 +120,7 @@ subsystem4_init (void)
     return result;
 }
 
-/*
- * Function: subsystem4_check_identity
+/*! @brief * Function: subsystem4_check_identity
  * Purpose: Verify the documented magnetic identity bytes before writing.
  * Input: h_device is the successfully opened I2C1 handle.
  * Returns: E_OK for "H43", E_IO for a mismatch, or the failed read's error.
@@ -159,8 +159,7 @@ subsystem4_check_identity (ID h_device)
     return status;
 }
 
-/*
- * Function: subsystem4_apply_setting
+/*! @brief * Function: subsystem4_apply_setting
  * Purpose: Write one configuration byte and verify that it was retained.
  * Inputs: Valid open handle and non-NULL pointer into the private settings
  *         table. The caller guarantees these preconditions.

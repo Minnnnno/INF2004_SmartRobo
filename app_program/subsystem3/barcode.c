@@ -1,3 +1,8 @@
+/** @file barcode.c
+ *
+ * @brief Barcode reader task: sampling, calibration and reports.
+ */
+
 #include "../../include/float_types.h"
 #include <stdint.h>
 #include "subsystems.h"
@@ -138,6 +143,7 @@ static void     barcode_take_requests(void);
 static uint16_t barcode_sample(uint64_t * p_next);
 static uint32_t barcode_path(void);
 
+/*! @brief Start a calibration. */
 void
 barcode_calibrate_begin (void)
 {
@@ -175,6 +181,7 @@ barcode_code_pass (void)
     return gb_bc_code_pass;
 }
 
+/*! @brief Change the reader's mode and say so. */
 static void
 barcode_set_mode (barcode_mode_t next)
 {
@@ -192,8 +199,8 @@ barcode_set_mode (barcode_mode_t next)
     }
 }
 
-/* Applies the line task's requests (this task only). A U-turn also disarms the
- * junction check. */
+/*! @brief Applies the line task's requests (this task only). A U-turn also
+ * disarms the junction check. */
 static void
 barcode_take_requests (void)
 {
@@ -215,9 +222,9 @@ barcode_take_requests (void)
 }
 
 /* ---- Sampling ---- */
-/* Each sample averages an ADC read every 1 ms tick across its whole period, so
- * light flicker (the white-level spread that a 64 us burst does not remove)
- * cancels out. */
+/*! @brief Each sample averages an ADC read every 1 ms tick across its whole
+ * period, so light flicker (the white-level spread that a 64 us burst does not
+ * remove) cancels out. */
 static uint16_t
 barcode_sample (uint64_t * p_next)
 {
@@ -239,9 +246,9 @@ barcode_sample (uint64_t * p_next)
     return (uint16_t)(sum / reads);
 }
 
-/* Distance the car has driven, in 0.1 mm. Holds the last value if the status is
- * unavailable, so a stretch then looks like the car did not move and is decoded
- * by time. */
+/*! @brief Distance the car has driven, in 0.1 mm. Holds the last value if the
+ * status is unavailable, so a stretch then looks like the car did not move and
+ * is decoded by time. */
 static uint32_t
 barcode_path (void)
 {
@@ -303,6 +310,7 @@ static void barcode_dump(const uint16_t * p_samples, const uint32_t * p_path,
 static void barcode_finish(const uint16_t * p_samples, const uint32_t * p_path,
                            const uint16_t * p_heading, unsigned count);
 
+/*! @brief Publish the reader's status slot. */
 static void
 barcode_publish (void)
 {
@@ -316,8 +324,8 @@ barcode_publish (void)
 }
 
 /* ---- End of a pass ---- */
-/* One number of a prefixed dump line (20 per line); the pause lets the USB
- * buffer drain. */
+/*! @brief One number of a prefixed dump line (20 per line); the pause lets the
+ * USB buffer drain. */
 static void
 barcode_dump_num (const char * p_tag, unsigned index, unsigned count,
                   int32_t value)
@@ -336,9 +344,9 @@ barcode_dump_num (const char * p_tag, unsigned index, unsigned count,
     }
 }
 
-/* Decodes a pass at 'first', then (a full pass only) down the sensitivity
- * ladder until one reads. *used = the setting of the last attempt. Returns the
- * character count, 0 if every setting failed. */
+/*! @brief Decodes a pass at 'first', then (a full pass only) down the
+ * sensitivity ladder until one reads. *used = the setting of the last attempt.
+ * Returns the character count, 0 if every setting failed. */
 static unsigned
 barcode_decode_any (const uint16_t * p_samples, const uint32_t * p_path,
                     unsigned count, unsigned * p_count, char * p_text,
@@ -373,6 +381,7 @@ barcode_decode_any (const uint16_t * p_samples, const uint32_t * p_path,
     return chars;
 }
 
+/*! @brief Can this pass be judged, and how far did the car turn on it? */
 static barcode_pass_t
 barcode_pass_check (const uint32_t * p_path, const uint16_t * p_heading,
                     unsigned count, int * p_turned)
@@ -410,10 +419,11 @@ barcode_pass_check (const uint32_t * p_path, const uint16_t * p_heading,
     return result;
 }
 
-/* CALIBRATING: the first usable full pass is the calibration code. It must read
- * as that letter at some setting of the ladder (default first); that setting is
- * kept. Never counted as a read, a failure or a junction. An unusable pass (not
- * driving, or turning) leaves the reader waiting for the next one. */
+/*! @brief CALIBRATING: the first usable full pass is the calibration code. It
+ * must read as that letter at some setting of the ladder (default first); that
+ * setting is kept. Never counted as a read, a failure or a junction. An
+ * unusable pass (not driving, or turning) leaves the reader waiting for the
+ * next one. */
 static void
 barcode_calibrate_pass (const uint16_t * p_samples, const uint32_t * p_path,
                         const uint16_t * p_heading, unsigned count)
@@ -469,10 +479,10 @@ barcode_calibrate_pass (const uint16_t * p_samples, const uint32_t * p_path,
     barcode_set_mode(BC_WATCHING);
 }
 
-/* A full pass that did not decode: counted as a failure (line images stop the
- * car) unless the car hardly drove, was turning (a bend), or was at the
- * junction just armed. Reported before the slow dump below, so the car stops as
- * early as it can. */
+/*! @brief A full pass that did not decode: counted as a failure (line images
+ * stop the car) unless the car hardly drove, was turning (a bend), or was at
+ * the junction just armed. Reported before the slow dump below, so the car
+ * stops as early as it can. */
 static void
 barcode_count_failure (const uint32_t * p_path, const uint16_t * p_heading,
                        unsigned count)
@@ -513,10 +523,10 @@ barcode_count_failure (const uint32_t * p_path, const uint16_t * p_heading,
 #endif
 }
 
-/* bv = readings, bp = distance driven in mm since the first sample, bh =
- * heading change in milliradians (the sensor sits to one side of the wheels, so
- * steering changes how far it travels), bw = the decoded element widths in 0.1
- * mm. tools/barcode_log.py reads these. */
+/*! @brief bv = readings, bp = distance driven in mm since the first sample, bh
+ * = heading change in milliradians (the sensor sits to one side of the wheels,
+ * so steering changes how far it travels), bw = the decoded element widths in
+ * 0.1 mm. tools/barcode_log.py reads these. */
 static void
 barcode_dump (const uint16_t * p_samples, const uint32_t * p_path,
               const uint16_t * p_heading, unsigned count, unsigned sample_count)
@@ -557,6 +567,7 @@ barcode_dump (const uint16_t * p_samples, const uint32_t * p_path,
 #endif
 }
 
+/*! @brief Decode one finished stretch. */
 static void
 barcode_finish (const uint16_t * p_samples, const uint32_t * p_path,
                 const uint16_t * p_heading, unsigned count)
@@ -672,9 +683,9 @@ barcode_finish (const uint16_t * p_samples, const uint32_t * p_path,
 
 static void barcode_stream(uint16_t sample, uint32_t path);
 
-/* Analysis build: prints every reading, 10 per line (0.1 s), with the time in
- * ms, the line IR state of each sample ('0' + centre + 2 * right) and the
- * distance the car has driven at each sample (0.1 mm units), to see how the
+/*! @brief Analysis build: prints every reading, 10 per line (0.1 s), with the
+ * time in ms, the line IR state of each sample ('0' + centre + 2 * right) and
+ * the distance the car has driven at each sample (0.1 mm units), to see how the
  * car's wiggle and speed line up with the sensor.
  * tests/subsystem3/test_barcode_decode.c replays exactly this format. */
 static void
@@ -712,6 +723,7 @@ barcode_stream (uint16_t sample, uint32_t path)
 
 static void barcode_stream(uint16_t sample, uint32_t path);
 
+/*! @brief Not in this image. */
 static void
 barcode_stream (uint16_t sample, uint32_t path)
 {
@@ -725,8 +737,8 @@ barcode_stream (uint16_t sample, uint32_t path)
 
 static void barcode_idle(uint16_t sample);
 
-/* Barcode-only image: shows the sensor level every 2 s while idle so it never
- * looks dead. */
+/*! @brief Barcode-only image: shows the sensor level every 2 s while idle so it
+ * never looks dead. */
 static void
 barcode_idle (uint16_t sample)
 {
@@ -744,6 +756,7 @@ barcode_idle (uint16_t sample)
 
 static void barcode_idle(uint16_t sample);
 
+/*! @brief Not in this image. */
 static void
 barcode_idle (uint16_t sample)
 {
@@ -765,6 +778,7 @@ static unsigned g_cap_target;
 static void barcode_record_sample(uint16_t sample);
 static void barcode_record_junction(void);
 
+/*! @brief Keep the last samples before a junction. */
 static void
 barcode_record_sample (uint16_t sample)
 {
@@ -799,6 +813,7 @@ barcode_record_sample (uint16_t sample)
     }
 }
 
+/*! @brief Start the junction record. */
 static void
 barcode_record_junction (void)
 {
@@ -816,6 +831,7 @@ barcode_record_junction (void)
 
 static void barcode_record_sample(uint16_t sample);
 
+/*! @brief Keep the last samples before a junction. */
 static void
 barcode_record_sample (uint16_t sample)
 {
@@ -826,6 +842,7 @@ barcode_record_sample (uint16_t sample)
 
 static void barcode_record_junction(void);
 
+/*! @brief Start the junction record. */
 static void
 barcode_record_junction (void)
 {
@@ -840,10 +857,10 @@ barcode_record_junction (void)
 static void barcode_check_junction(const barcode_seg_t * p_seg, uint16_t sample,
                                    uint32_t sample_time);
 
-/* ARMED: the first black after a valid read (clearly above the quiet level for
- * two samples in a row) is the junction. Reported at once; the line task
- * decides what to do about it. The quiet level is the one from the last sample
- * taken while no stretch was running. */
+/*! @brief ARMED: the first black after a valid read (clearly above the quiet
+ * level for two samples in a row) is the junction. Reported at once; the line
+ * task decides what to do about it. The quiet level is the one from the last
+ * sample taken while no stretch was running. */
 static void
 barcode_check_junction (const barcode_seg_t * p_seg, uint16_t sample,
                         uint32_t sample_time)
@@ -881,6 +898,7 @@ barcode_check_junction (const barcode_seg_t * p_seg, uint16_t sample,
 static void barcode_check_junction(const barcode_seg_t * p_seg, uint16_t sample,
                                    uint32_t sample_time);
 
+/*! @brief Not in this image. */
 static void
 barcode_check_junction (const barcode_seg_t * p_seg, uint16_t sample,
                         uint32_t sample_time)
@@ -892,6 +910,7 @@ barcode_check_junction (const barcode_seg_t * p_seg, uint16_t sample,
 
 #endif
 
+/*! @brief Barcode reader task. */
 void
 barcode_task (INT code, void * p_context)
 {

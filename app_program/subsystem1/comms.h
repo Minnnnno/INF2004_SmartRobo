@@ -1,17 +1,17 @@
-/*
- *  comms.h
- *  Subsystem 1 -- communication API for the other subsystems.
- *  Include it as "../subsystem1/comms.h".
+/** @file comms.h
  *
- *  Dashboard data is NOT sent through this API.  Subsystem 1 copies the
- *  shared robot status (robot_update_subsystem / motion_get_status) every
- *  100 ms, packs it into the 21-byte status frame and the 26-byte encoder
- *  frame in include/telemetry_frame.h and publishes them.  To get a value onto
+ * @brief Subsystem 1 -- communication API for the other subsystems.
+ * Include it as "../subsystem1/comms.h".
+ *
+ * Dashboard data is NOT sent through this API.  Subsystem 1 copies the
+ * shared robot status (robot_update_subsystem / motion_get_status) every
+ * 100 ms, packs it into the 21-byte status frame and the 26-byte encoder
+ * frame in include/telemetry_frame.h and publishes them.  To get a value onto
  * the dashboard, write it to your subsystem_status_t slot as described in
  * docs/API.md and app_program/subsystem1/telemetry_map.c.
  *
- *  Nothing in this API ever waits, so it is safe to call from a
- *  time-critical task.
+ * Nothing in this API ever waits, so it is safe to call from a
+ * time-critical task.
  */
 
 #ifndef COMMS_H
@@ -32,18 +32,18 @@ typedef enum
     COMMS_CMD_ESTOP
 } comms_cmd_t;
 
-/* Latch one or more TF_EV_* events.  They are published once, together,
+/*! @brief Latch one or more TF_EV_* events.  They are published once, together,
    at QoS 1 within 100 ms of the broker being reachable.  Safe from tasks
    and interrupt handlers (interrupts are disabled for a few instructions). */
 IMPORT void comms_latch_event(UB events);
 
-/* Text diagnostics on robot/telemetry/<name>, QoS 0.  Not decoded by the
-   dashboard; prefer the console log.  payload is '\0'-terminated text of
-   at most COMMS_PAYLOAD_MAX - 1 characters.
-   Errors: E_PAR name or payload missing or too long, E_TMOUT queue full. */
+/*! @brief Text diagnostics on robot/telemetry/<name>, QoS 0.  Not decoded by
+   the dashboard; prefer the console log.  payload is '\0'-terminated text of at
+   most COMMS_PAYLOAD_MAX - 1 characters. Errors: E_PAR name or payload missing
+   or too long, E_TMOUT queue full. */
 IMPORT ER comms_send_telemetry(const char * p_name, const char * p_payload);
 
-/* TRUE while connected to the MQTT broker */
+/*! @brief TRUE while connected to the MQTT broker */
 IMPORT BOOL comms_is_online(void);
 
 /* IF-07: each message is one comms_cmd_t.  The Vehicle Controller reads it:
@@ -71,7 +71,7 @@ typedef struct
 
 IMPORT void comms_stats(comms_stats_t * p_stats);
 
-/* Private to subsystem 1 */
+/*! @brief Private to subsystem 1 */
 IMPORT ER comms_init(void);
 IMPORT ER comms_start(void);
 IMPORT UW comms_dropped(void);

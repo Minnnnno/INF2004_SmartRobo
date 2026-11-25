@@ -1,3 +1,8 @@
+/** @file crash_log.h
+ *
+ * @brief Crash record in the watchdog scratch registers.
+ */
+
 #ifndef ROBO_CRASH_LOG_H
 #define ROBO_CRASH_LOG_H
 /* Crash log that survives a reboot (RP2040). A hard fault cannot reach the USB
@@ -60,6 +65,7 @@ typedef struct
     UW   encoder_cause;
 } crash_snapshot_t;
 
+/*! @brief Read the crash record left by the last run. */
 static inline void
 crash_log_capture (crash_snapshot_t * p_snapshot)
 {
@@ -82,8 +88,9 @@ crash_log_capture (crash_snapshot_t * p_snapshot)
     }
 }
 
-/* Motion owner only. Repeated calls retain the first encoder cause. Clear only
- * after the controller has accepted a checked reset and cleared fault_flags. */
+/*! @brief Motion owner only. Repeated calls retain the first encoder cause.
+ * Clear only after the controller has accepted a checked reset and cleared
+ * fault_flags. */
 static inline void
 crash_encoder_fault_update (BOOL latched, UW cause)
 {
@@ -104,6 +111,7 @@ crash_encoder_fault_update (BOOL latched, UW cause)
     }
 }
 
+/*! @brief Is there a crash record? */
 static inline BOOL
 crash_log_present (const crash_snapshot_t * p_snapshot)
 {
@@ -137,19 +145,21 @@ enum
     CRASH_OBSTACLE_RETURN_DRIVE,
     CRASH_OBSTACLE_ALIGN
 };
+/*! @brief Store a progress mark that survives a restart. */
 static inline void
 crash_mark (UW mark, UW value)
 {
     out_w(mark, value);
 }
 
-/* RP2040-E1: the counter decrements twice per tick. */
+/*! @brief RP2040-E1: the counter decrements twice per tick. */
 static inline void
 crash_watchdog_feed (UW timeout_ms)
 {
     out_w(CRASH_WDT_LOAD, timeout_ms * 2000U);
 }
 
+/*! @brief Start the hardware watchdog. */
 static inline void
 crash_watchdog_start (UW timeout_ms)
 {
@@ -165,15 +175,16 @@ crash_watchdog_start (UW timeout_ms)
     out_w(CRASH_WDT_CTRL, CRASH_CTRL_ENABLE | CRASH_CTRL_PAUSE);
 }
 
-/* Watchdog registers survive their own reset: stop it before anything else. */
+/*! @brief Watchdog registers survive their own reset: stop it before anything
+ * else. */
 static inline void
 crash_watchdog_stop (void)
 {
     out_w(CRASH_WDT_CTRL, 0U);
 }
 
-/* Save first: anything after this in a fault handler may hang, and the watchdog
- * timeout then still reboots with the details kept. */
+/*! @brief Save first: anything after this in a fault handler may hang, and the
+ * watchdog timeout then still reboots with the details kept. */
 static inline void
 crash_log_save (UW magic, UW fault_pc, UW fault_lr, UW task)
 {
@@ -185,6 +196,7 @@ crash_log_save (UW magic, UW fault_pc, UW fault_lr, UW task)
     out_w(CRASH_WDT_SCRATCH0 + 12U, task);
 }
 
+/*! @brief Store a crash record and restart. */
 static inline void
 crash_log_reboot (void)
 {

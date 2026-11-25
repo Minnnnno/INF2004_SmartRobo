@@ -1,3 +1,8 @@
+/** @file drv_motion.c
+ *
+ * @brief Motor PWM and encoder driver on the RP2040 registers.
+ */
+
 #include "../../include/float_types.h"
 #include "motion_hal.h"
 #include "board_config.h"
@@ -44,6 +49,7 @@ static void    init_wheel(const motion_config_t * p_config, unsigned wheel,
 static void    enable_encoders(const motion_config_t * p_config);
 static int32_t diagnostic_permille(float64_t value);
 
+/*! @brief Cut both motor outputs at once. */
 void
 motion_hal_emergency_stop (void)
 {
@@ -79,6 +85,7 @@ motion_hal_emergency_stop (void)
     g_last_applied[0] = g_last_applied[1] = 0.0;
 }
 
+/*! @brief Set up the PWM and the encoder interrupts. */
 bool
 motion_hal_init (const motion_config_t * p_config)
 {
@@ -162,6 +169,7 @@ motion_hal_init (const motion_config_t * p_config)
 #endif
 }
 
+/*! @brief Coherent copy of the encoder counts. */
 encoder_sample_t
 motion_hal_sample (void)
 {
@@ -177,6 +185,7 @@ motion_hal_sample (void)
     return sample;
 }
 
+/*! @brief Encoder pins, levels, edges and interrupt masks. */
 void
 motion_hal_encoder_diagnostics (encoder_diagnostics_t * p_diagnostics)
 {
@@ -222,6 +231,7 @@ motion_hal_encoder_diagnostics (encoder_diagnostics_t * p_diagnostics)
     restore_interrupts(irq_state);
 }
 
+/*! @brief PWM registers against the last driver write. */
 void
 motion_hal_motor_diagnostics (motor_diagnostics_t * p_diagnostics)
 {
@@ -291,6 +301,7 @@ motion_hal_motor_diagnostics (motor_diagnostics_t * p_diagnostics)
     }
 }
 
+/*! @brief Write both wheel outputs, with reversal dead time. */
 void
 motion_hal_write (const float64_t output[2], bool b_inhibited, float64_t now)
 {
@@ -384,17 +395,20 @@ motion_hal_write (const float64_t output[2], bool b_inhibited, float64_t now)
 #endif
 }
 
+/*! @brief Seconds since boot. */
 float64_t
 motion_hal_time (void)
 {
     return (float64_t)time_us_64() / 1000000.0;
 }
 
+/*! @brief The kernel already starts the console. */
 void
 motion_hal_console_init (void)
 { /* Template starts the console service. */
 }
 
+/*! @brief One console character, or a negative code. */
 int
 motion_hal_console_read (void)
 {
@@ -411,12 +425,14 @@ motion_hal_console_read (void)
 #endif
 }
 
+/*! @brief Read one driver state flag. */
 static bool
 motor_state_get (uint8_t mask)
 {
     return (0u != ((uint32_t)g_driver_flags & mask));
 }
 
+/*! @brief Write one driver state flag. */
 static void
 motor_state_set (uint8_t mask, bool b_value)
 {
@@ -426,12 +442,14 @@ motor_state_set (uint8_t mask, bool b_value)
     g_driver_flags = (uint8_t)flags;
 }
 
+/*! @brief True when this wheel's output is off. */
 static bool
 motor_is_neutral (uint32_t wheel)
 {
     return (0u != ((uint32_t)g_wheel_flags & (UINT32_C(1) << wheel)));
 }
 
+/*! @brief Record whether this wheel's output is off. */
 static void
 motor_neutral_set (uint32_t wheel, bool b_value)
 {
@@ -442,6 +460,7 @@ motor_neutral_set (uint32_t wheel, bool b_value)
     g_wheel_flags = (uint8_t)flags;
 }
 
+/*! @brief Last driven direction of a wheel. */
 static int32_t
 motor_direction_get (uint32_t wheel)
 {
@@ -450,6 +469,7 @@ motor_direction_get (uint32_t wheel)
     return (1u == encoded) ? 1 : ((2u == encoded) ? -1 : 0);
 }
 
+/*! @brief Record the driven direction of a wheel. */
 static void
 motor_direction_set (uint32_t wheel, int32_t direction)
 {
@@ -461,6 +481,7 @@ motor_direction_set (uint32_t wheel, int32_t direction)
         = (uint8_t)((flags & ~(UINT32_C(3) << shift)) | (encoded << shift));
 }
 
+/*! @brief Wiring sign of a wheel's motor. */
 static int32_t
 motor_sign_get (uint32_t wheel)
 {
@@ -470,6 +491,7 @@ motor_sign_get (uint32_t wheel)
                : 1;
 }
 
+/*! @brief Encoder edges: capture and acknowledge them. */
 static void
 encoder_irq (void)
 {
@@ -501,7 +523,8 @@ encoder_irq (void)
     encoder_capture_events(&g_capture, pending, levels);
 }
 
-/* PWM and encoder pins of one wheel, outputs off.  Adds its pins to the mask.
+/*! @brief PWM and encoder pins of one wheel, outputs off.  Adds its pins to the
+ * mask.
  */
 static void
 init_wheel (const motion_config_t * p_config, unsigned wheel, float64_t divider,
@@ -544,7 +567,7 @@ init_wheel (const motion_config_t * p_config, unsigned wheel, float64_t divider,
     g_neutral_since[wheel] = motion_hal_time();
 }
 
-/* Start counting encoder edges from a clean state. */
+/*! @brief Start counting encoder edges from a clean state. */
 static void
 enable_encoders (const motion_config_t * p_config)
 {
@@ -582,6 +605,7 @@ enable_encoders (const motion_config_t * p_config)
     restore_interrupts(irq_state);
 }
 
+/*! @brief An output as permille for a report. */
 static int32_t
 diagnostic_permille (float64_t value)
 {

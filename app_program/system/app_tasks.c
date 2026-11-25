@@ -1,4 +1,8 @@
-/* Shared task-creation helper used by Buddy 1. */
+/** @file app_tasks.c
+ *
+ * @brief Shared task-creation helper used by Buddy 1.
+ */
+
 #include "robot_rtos.h"
 #include "../app.h"
 

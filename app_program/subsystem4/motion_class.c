@@ -1,5 +1,9 @@
-/* Buddy 4 motion classification; see motion_class.h for the fusion rationale.
+/** @file motion_class.c
+ *
+ * @brief Buddy 4 motion classification; see motion_class.h for the fusion
+ * rationale.
  */
+
 #include "motion_class.h"
 #include "terrain.h"
 #include <stddef.h>
@@ -44,6 +48,7 @@ static uint8_t mc_raw_class(motion_class_t const *       p_context,
 static void    mc_update_acceleration(motion_class_t * p_context,
                                       int16_t centre_mm_s, uint32_t now_ms);
 
+/*! @brief Start again. */
 void
 motion_class_reset (motion_class_t * p_context)
 {
@@ -224,6 +229,7 @@ motion_class_take_turn (motion_class_t * p_context, int16_t * p_angle_ddeg,
     return b_result;
 }
 
+/*! @brief Present class. */
 uint8_t
 motion_class_get (motion_class_t const * p_context)
 {
@@ -231,6 +237,7 @@ motion_class_get (motion_class_t const * p_context)
                                : (uint8_t)(p_context->packed & MC_CLASS_MASK);
 }
 
+/*! @brief True when the class can be used. */
 bool
 motion_class_valid (motion_class_t const * p_context)
 {
@@ -243,18 +250,21 @@ motion_class_turn_active (motion_class_t const * p_context)
     return (NULL != p_context) && (0U != (p_context->flags & MC_FLAG_TURN));
 }
 
+/*! @brief Turn rate, deg/s. */
 int16_t
 motion_class_yaw_deg_s (motion_class_t const * p_context)
 {
     return (NULL == p_context) ? 0 : p_context->yaw_deg_s;
 }
 
+/*! @brief Forward acceleration, mm/s^2. */
 int16_t
 motion_class_accel_mm_s2 (motion_class_t const * p_context)
 {
     return (NULL == p_context) ? 0 : p_context->accel_mm_s2;
 }
 
+/*! @brief Name of a class. */
 char const *
 motion_class_name (uint8_t motion_class)
 {
@@ -265,6 +275,7 @@ motion_class_name (uint8_t motion_class)
     return g_names[motion_class & MC_CLASS_MASK];
 }
 
+/*! @brief Pack the reported and candidate classes. */
 static uint8_t
 mc_pack (uint8_t reported, uint8_t candidate, uint8_t count)
 {
@@ -273,6 +284,7 @@ mc_pack (uint8_t reported, uint8_t candidate, uint8_t count)
                      | ((count & MC_COUNT_MASK) << MC_COUNT_SHIFT));
 }
 
+/*! @brief Limit to 16 bits. */
 static int16_t
 mc_clamp16 (int32_t value)
 {
@@ -294,19 +306,21 @@ mc_clamp16 (int32_t value)
     return result;
 }
 
+/*! @brief Size of a 16-bit value. */
 static int16_t
 mc_abs16 (int16_t value)
 {
     return (value < 0) ? mc_clamp16(-(int32_t)value) : value;
 }
 
+/*! @brief Entries in the speed ring. */
 static uint8_t
 mc_ring_count (motion_class_t const * p_context)
 {
     return (uint8_t)((p_context->ring >> MC_RING_COUNT_SHIFT) & 0x07U);
 }
 
-/* Start the heading window again from one sample. */
+/*! @brief Start the heading window again from one sample. */
 static void
 mc_ring_seed (motion_class_t * p_context, motion_class_input_t const * p_input,
               uint32_t now_ms)
@@ -319,9 +333,9 @@ mc_ring_seed (motion_class_t * p_context, motion_class_input_t const * p_input,
     p_context->ring = (uint8_t)(1U | (1U << MC_RING_COUNT_SHIFT));
 }
 
-/* Add a heading sample every 100 ms. Reseeds after a gap, an invalid heading
- * or an impossible jump (Buddy 2 reset its odometry). Returns true with the
- * net change over the full window when 5 samples are held.
+/*! @brief Add a heading sample every 100 ms. Reseeds after a gap, an invalid
+ * heading or an impossible jump (Buddy 2 reset its odometry). Returns true with
+ * the net change over the full window when 5 samples are held.
  */
 static bool
 mc_heading_window (motion_class_t *             p_context,
@@ -398,7 +412,7 @@ mc_heading_window (motion_class_t *             p_context,
     return true;
 }
 
-/* Record the compass angle over the finished turn (same interval as the
+/*! @brief Record the compass angle over the finished turn (same interval as the
  * encoder angle), when the compass stayed valid for the whole turn. */
 static void
 mc_record_compass (motion_class_t *             p_context,
@@ -417,10 +431,10 @@ mc_record_compass (motion_class_t *             p_context,
     p_context->turn_info |= MC_TI_LAST_COMPASS;
 }
 
-/* Track one turn from the heading condition itself, independent of which
- * class is shown on top, so a hump during a turn does not split it.
- * Start and end use the same 3-cycle debounce as the class. The start is
- * backdated to the window start; the result is latched when the turn ends. */
+/*! @brief Track one turn from the heading condition itself, independent of
+ * which class is shown on top, so a hump during a turn does not split it. Start
+ * and end use the same 3-cycle debounce as the class. The start is backdated to
+ * the window start; the result is latched when the turn ends. */
 static void
 mc_track_turn (motion_class_t * p_context, motion_class_input_t const * p_input,
                bool b_turning_now, bool b_window_full, int32_t oldest_ddeg,
@@ -518,7 +532,8 @@ mc_track_turn (motion_class_t * p_context, motion_class_input_t const * p_input,
     }
 }
 
-/* Unconfirmed classification of this one observation, highest priority first.
+/*! @brief Unconfirmed classification of this one observation, highest priority
+ * first.
  */
 static uint8_t
 mc_raw_class (motion_class_t const *       p_context,
@@ -568,8 +583,8 @@ mc_raw_class (motion_class_t const *       p_context,
     return result;
 }
 
-/* Change of centre speed SIZE over a ~100 ms window, so reversing away is
- * speeding up (+), not braking. The last value is held between updates. */
+/*! @brief Change of centre speed SIZE over a ~100 ms window, so reversing away
+ * is speeding up (+), not braking. The last value is held between updates. */
 static void
 mc_update_acceleration (motion_class_t * p_context, int16_t centre_mm_s,
                         uint32_t now_ms)

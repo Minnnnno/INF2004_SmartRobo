@@ -1,3 +1,8 @@
+/** @file gpio_dispatch.c
+ *
+ * @brief One GPIO interrupt shared by handlers that own separate pins.
+ */
+
 #include "template_hal.h"
 
 static struct
@@ -11,6 +16,7 @@ static unsigned g_owner_count;
 
 static void dispatch(UINT number);
 
+/*! @brief Register a handler for a set of GPIO pins. */
 bool
 board_gpio_irq_register (uint32_t mask, void (*p_handler)(void))
 {
@@ -45,6 +51,7 @@ board_gpio_irq_register (uint32_t mask, void (*p_handler)(void))
     return true;
 }
 
+/*! @brief GPIO interrupt: call every registered handler. */
 static void
 dispatch (UINT number)
 {

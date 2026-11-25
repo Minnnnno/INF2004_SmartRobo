@@ -1,3 +1,8 @@
+/** @file line_following.c
+ *
+ * @brief Line follower task, with route actions and the line test images.
+ */
+
 /* Only images with a working line_loop() build and create line_task
  * (ROBO_LINE_TASK in subsystems.h; host tests define the same macros). */
 #if defined(ROBO_SAFE_MOTOR_TEST) || defined(ROBO_LINE_STEERING)
@@ -31,8 +36,8 @@ line_forward_pause (void)
     gb_sensor_paused = true;
 }
 
-/* Either sensor HIGH drives forward; both LOW stops. A console pause lasts
- * until both read LOW. */
+/*! @brief Either sensor HIGH drives forward; both LOW stops. A console pause
+ * lasts until both read LOW. */
 static void
 line_loop (void)
 {
@@ -92,6 +97,7 @@ line_loop (void)
 
 static void line_loop(void);
 
+/*! @brief Loop of this image: read the sensors, then act or report. */
 static void
 line_loop (void)
 {
@@ -125,6 +131,7 @@ line_loop (void)
 
 static void line_loop(void);
 
+/*! @brief Loop of this image: read the sensors, then act or report. */
 static void
 line_loop (void)
 {
@@ -310,6 +317,7 @@ static void line_report(unsigned centre, unsigned right,
                         line_search_phase_t phase, motion_result_t result,
                         const motion_status_t * p_motion);
 
+/*! @brief Start the search towards one side. */
 static void
 search_toward (line_search_t * p_search, line_direction_t last_side)
 {
@@ -318,23 +326,23 @@ search_toward (line_search_t * p_search, line_direction_t last_side)
     p_search->dir = (LINE_RIGHT == last_side) ? -1.0 : 1.0;
 }
 
-/* Zero-speed refresh on the line session: keeps ownership without a latched
- * hold, and never lets the tracking command expire (an expiry is a latched
- * F_EXPIRED fault in production). */
+/*! @brief Zero-speed refresh on the line session: keeps ownership without a
+ * latched hold, and never lets the tracking command expire (an expiry is a
+ * latched F_EXPIRED fault in production). */
 static motion_result_t
 line_hold (void)
 {
     return motion_steer(SOURCE_LINE, LINE_SESSION, 0.0, 0.0);
 }
 
-/* Motion Control neither held nor faulted. */
+/*! @brief Motion Control neither held nor faulted. */
 static bool
 line_motion_ok (const robot_status_t * p_status)
 {
     return (!p_status->motion.hold) && (F_NONE == p_status->motion.fault);
 }
 
-/* Inner wheel stopped, outer wheel at LINE_SEARCH_SPEED. */
+/*! @brief Inner wheel stopped, outer wheel at LINE_SEARCH_SPEED. */
 static motion_result_t
 line_pivot (float64_t dir)
 {
@@ -345,9 +353,9 @@ line_pivot (float64_t dir)
                : motion_steer_left(SOURCE_LINE, LINE_SESSION, half, half);
 }
 
-/* Pivot towards the last side seen up to the sweep angle, then the other way
- * past the original heading. If both miss, turn back to the heading on the
- * line, reverse past the overshoot and sweep once more, then hold still.
+/*! @brief Pivot towards the last side seen up to the sweep angle, then the
+ * other way past the original heading. If both miss, turn back to the heading
+ * on the line, reverse past the overshoot and sweep once more, then hold still.
  * Zero-speed refreshes keep ownership without a latched hold, so following
  * resumes when the line is seen again. Stopping the refreshes instead would
  * raise F_EXPIRED. */
@@ -442,6 +450,7 @@ line_search_step (line_search_t * p_search, const motion_status_t * p_motion,
     return line_pivot(p_search->dir);
 }
 
+/*! @brief One steering request towards the line. */
 static motion_result_t
 line_follow (line_direction_t drive, float64_t correction)
 {
@@ -460,9 +469,9 @@ line_follow (line_direction_t drive, float64_t correction)
     return motion_steer(SOURCE_LINE, LINE_SESSION, LINE_SPEED, 0.0);
 }
 
-/* Line error/confidence slots, plus both-sensors-black for line_rejoin_seen()
- * (values[3] stays 0; route_flag() sets it while a route pivots). Junctions
- * come from the barcode reader. */
+/*! @brief Line error/confidence slots, plus both-sensors-black for
+ * line_rejoin_seen() (values[3] stays 0; route_flag() sets it while a route
+ * pivots). Junctions come from the barcode reader. */
 static void
 line_publish (line_direction_t direction, float64_t now)
 {
@@ -492,6 +501,7 @@ line_publish (line_direction_t direction, float64_t now)
     (void)robot_update_subsystem(SOURCE_LINE, &line_status);
 }
 
+/*! @brief Name of a line state. */
 static const char *
 line_state_name (line_state_t state)
 {
@@ -504,6 +514,7 @@ line_state_name (line_state_t state)
     return names[state];
 }
 
+/*! @brief Name of a search phase. */
 static const char *
 line_search_name (line_search_phase_t phase)
 {
@@ -516,8 +527,8 @@ line_search_name (line_search_phase_t phase)
     return names[phase];
 }
 
-/* FOLLOWING, BARCODE and GRACE alternate several times a second: only the
- * line_pid report shows them. */
+/*! @brief FOLLOWING, BARCODE and GRACE alternate several times a second: only
+ * the line_pid report shows them. */
 static bool
 line_state_coarse (line_state_t state)
 {
@@ -525,6 +536,7 @@ line_state_coarse (line_state_t state)
            && (LS_GRACE != state);
 }
 
+/*! @brief Change the state, printing the coarse changes. */
 static void
 line_set_state (line_state_t * p_state, line_state_t next)
 {
@@ -539,6 +551,7 @@ line_set_state (line_state_t * p_state, line_state_t next)
     *p_state = next;
 }
 
+/*! @brief Print the follower's state. */
 static void
 line_report (unsigned centre, unsigned right, line_direction_t direction,
              line_state_t lstate, line_search_phase_t phase,
@@ -620,14 +633,15 @@ static bool      route_advance(float64_t metres);
 static void      route_flag(bool b_pivoting, bool b_black);
 static bool route_pivot(float64_t dir, float64_t min_turn, float64_t max_turn);
 
+/*! @brief Absolute value. */
 static float64_t
 route_abs (float64_t value)
 {
     return (value < 0.0) ? -value : value;
 }
 
-/* Zero-speed refreshes keep the session (no expiry) until both wheels are
- * nearly still. */
+/*! @brief Zero-speed refreshes keep the session (no expiry) until both wheels
+ * are nearly still. */
 static bool
 route_brake (void)
 {
@@ -655,9 +669,9 @@ route_brake (void)
     return false;
 }
 
-/* Drives straight on the line session (refreshed every 20 ms, so it never
- * expires) until the path has moved 'metres', then brakes. The session is never
- * given up: an expired tracking command is a latched F_EXPIRED fault in
+/*! @brief Drives straight on the line session (refreshed every 20 ms, so it
+ * never expires) until the path has moved 'metres', then brakes. The session is
+ * never given up: an expired tracking command is a latched F_EXPIRED fault in
  * production (motion.c), and only COMPLETE/CANCELLED/FAULT drop the owner. */
 static bool
 route_advance (float64_t metres)
@@ -693,9 +707,9 @@ route_advance (float64_t metres)
     return false;
 }
 
-/* Line status with values[3] = 1 while the route pivots: subsystem 5 then skips
- * its 150 mm stop. line_publish() writes 0 on every pass of the line loop, so
- * the flag clears itself once following resumes. */
+/*! @brief Line status with values[3] = 1 while the route pivots: subsystem 5
+ * then skips its 150 mm stop. line_publish() writes 0 on every pass of the line
+ * loop, so the flag clears itself once following resumes. */
 static void
 route_flag (bool b_pivoting, bool b_black)
 {
@@ -707,10 +721,10 @@ route_flag (bool b_pivoting, bool b_black)
     (void)robot_update_subsystem(SOURCE_LINE, &line_status);
 }
 
-/* Spins on the spot (dir +1 left, -1 right; both wheels driven, opposite ways,
- * session 3001) until a line IR sees black, having first left the line and
- * turned at least min_turn. Returns at once on the black, without braking, so
- * the line loop takes over the same session immediately. */
+/*! @brief Spins on the spot (dir +1 left, -1 right; both wheels driven,
+ * opposite ways, session 3001) until a line IR sees black, having first left
+ * the line and turned at least min_turn. Returns at once on the black, without
+ * braking, so the line loop takes over the same session immediately. */
 static bool
 route_pivot (float64_t dir, float64_t min_turn, float64_t max_turn)
 {
@@ -811,8 +825,8 @@ route_pivot (float64_t dir, float64_t min_turn, float64_t max_turn)
     return false;
 }
 
-/* One route action. Returns true when following can resume; *side is where the
- * line will be after it. */
+/*! @brief One route action. Returns true when following can resume; *side is
+ * where the line will be after it. */
 static bool
 route_run (route_action_t action, bool b_at_junction, float64_t path_seen,
            line_direction_t * p_side)
@@ -877,6 +891,7 @@ route_run (route_action_t action, bool b_at_junction, float64_t path_seen,
 #define LINE_TERRAIN_INIT     0U
 #define LINE_TERRAIN_RECOVERY 4U
 
+/*! @brief True when Buddy 4 has finished its start-up reference. */
 static bool
 line_imu_settled (const robot_status_t * p_status)
 {
@@ -899,7 +914,7 @@ line_imu_settled (const robot_status_t * p_status)
     return b_result;
 }
 
-/* Runs once before the first motion request; nothing is driving yet.
+/*! @brief Runs once before the first motion request; nothing is driving yet.
  * With the web Start gate (ROBO_REQUIRE_START) Buddy 4 captures its reference
  * only after the dashboard START, so the wait (and its cap) starts at START:
  * the robot stays still ~2 s after START while Buddy 4 captures. */
@@ -991,15 +1006,15 @@ typedef struct
 #endif
 } line_ctx_t;
 
-/* Drive on owning the line session (not READY, not someone else's). */
+/*! @brief Drive on owning the line session (not READY, not someone else's). */
 static bool
 line_driving (const robot_status_t * p_status, bool b_owns)
 {
     return b_owns && (DRIVING == p_status->motion.state);
 }
 
-/* May start or continue a line command: Motion Control idle, or already driving
- * for this task. */
+/*! @brief May start or continue a line command: Motion Control idle, or already
+ * driving for this task. */
 static bool
 line_can_drive (const robot_status_t * p_status, bool b_owns)
 {
@@ -1008,8 +1023,8 @@ line_can_drive (const robot_status_t * p_status, bool b_owns)
 }
 
 #if ROBO_BARCODE_TASK
-/* After something else had the wheels (a route action, the calibration stop):
- * start afresh. */
+/*! @brief After something else had the wheels (a route action, the calibration
+ * stop): start afresh. */
 static void
 line_restart (line_ctx_t * p_context)
 {
@@ -1022,8 +1037,8 @@ line_restart (line_ctx_t * p_context)
 #endif
 }
 
-/* GP21, active low: true once per press (two polls = 40 ms down); holding it
- * does not repeat. */
+/*! @brief GP21, active low: true once per press (two polls = 40 ms down);
+ * holding it does not repeat. */
 static bool
 line_cal_pressed (line_ctx_t * p_context)
 {
@@ -1042,10 +1057,10 @@ line_cal_pressed (line_ctx_t * p_context)
     return b_result;
 }
 
-/* GP21 calibration: press, drive over the calibration code, stop (CAL_WAIT, no
- * route action), press again to carry on. A sensor check: the reader proves it
- * can read the code, and keeps the sensitivity that read it. Returns false when
- * this tick was used up (stopped, or just resumed). */
+/*! @brief GP21 calibration: press, drive over the calibration code, stop
+ * (CAL_WAIT, no route action), press again to carry on. A sensor check: the
+ * reader proves it can read the code, and keeps the sensitivity that read it.
+ * Returns false when this tick was used up (stopped, or just resumed). */
 static bool
 line_calibration_step (line_ctx_t * p_context, const robot_status_t * p_status)
 {
@@ -1115,9 +1130,9 @@ line_calibration_step (line_ctx_t * p_context, const robot_status_t * p_status)
     return false;
 }
 
-/* A new read or junction: run its route action if it is due now (route.h).
- * Returns false when an action ran (this tick was used up). A failed action
- * holds still for good (STOPPED). */
+/*! @brief A new read or junction: run its route action if it is due now
+ * (route.h). Returns false when an action ran (this tick was used up). A failed
+ * action holds still for good (STOPPED). */
 static bool
 line_route_event (line_ctx_t * p_context, const robot_status_t * p_status,
                   bool b_owns, unsigned reads, unsigned junctions)
@@ -1202,8 +1217,8 @@ line_route_event (line_ctx_t * p_context, const robot_status_t * p_status,
 }
 #endif
 
-/* Calibration, failed reads, reads and junctions. Returns false when this tick
- * was used up and the line must not be driven. */
+/*! @brief Calibration, failed reads, reads and junctions. Returns false when
+ * this tick was used up and the line must not be driven. */
 static bool
 line_barcode_events (line_ctx_t * p_context, const robot_status_t * p_status,
                      bool b_owns)
@@ -1265,9 +1280,9 @@ line_barcode_events (line_ctx_t * p_context, const robot_status_t * p_status,
     return true;
 }
 
-/* While a barcode pass is read: the steering correction to use, and *hold =
- * hold the heading through a short loss (BARCODE state). Both end at a bend
- * (LINE_BC_MAX_TURN) or after LINE_BC_HOLD_MAX. */
+/*! @brief While a barcode pass is read: the steering correction to use, and
+ * *hold = hold the heading through a short loss (BARCODE state). Both end at a
+ * bend (LINE_BC_MAX_TURN) or after LINE_BC_HOLD_MAX. */
 static float64_t
 line_barcode_window (line_ctx_t * p_context, const robot_status_t * p_status,
                      line_direction_t direction, bool * p_window, bool * p_hold)
@@ -1323,7 +1338,7 @@ line_barcode_window (line_ctx_t * p_context, const robot_status_t * p_status,
 #endif
 }
 
-/* One tick of line following: picks the command and the state. */
+/*! @brief One tick of line following: picks the command and the state. */
 static void
 line_drive (line_ctx_t * p_context, const robot_status_t * p_status,
             bool b_owns, line_direction_t direction, unsigned centre,
@@ -1504,6 +1519,7 @@ line_drive (line_ctx_t * p_context, const robot_status_t * p_status,
     }
 }
 
+/*! @brief Loop of this image: read the sensors, then act or report. */
 static void
 line_loop (void)
 {
@@ -1621,6 +1637,7 @@ line_loop (void)
 }
 #endif
 
+/*! @brief Line follower task. */
 void
 line_task (INT code, void * p_context)
 {

@@ -1,21 +1,21 @@
-/*
- *  subsystem5_test.c
- *  Host tests for the subsystem 5 width, position and pass-side
- *  algorithm (obstacle_scan.c) and the detour geometry (detour_plan.c).
- *  Not part of the firmware: CMakeLists.txt excludes subsystem*_test.c.
+/** @file subsystem5_test.c
  *
- *  Build and run with any native C compiler, from the repository root.
- *  The beam correction is calibrated for the real sensor's cone; the ideal
- *  ray here needs none, so it is overridden to 0:
+ * @brief Host tests for the subsystem 5 width, position and pass-side
+ * algorithm (obstacle_scan.c) and the detour geometry (detour_plan.c).
+ * Not part of the firmware: CMakeLists.txt excludes subsystem*_test.c.
+ *
+ * Build and run with any native C compiler, from the repository root.
+ * The beam correction is calibrated for the real sensor's cone; the ideal
+ * ray here needs none, so it is overridden to 0:
  *    gcc -std=c11 -Wall -Wextra -Werror -Wconversion -Wshadow \
  *        -DS5_BEAM_CORRECTION_DEG=0.0 \
  *        app_program/subsystem5/obstacle_scan.c \
  *        app_program/subsystem5/detour_plan.c \
  *        app_program/subsystem5/subsystem5_test.c -lm -o s5_tests && ./s5_tests
  *
- *  A simulated box face sits in front of the servo, optionally with a second
- *  object beside it; each ping is traced along the servo bearing, with
- *  optional noise, stray echoes, a beam cone and servo gear backlash.
+ * A simulated box face sits in front of the servo, optionally with a second
+ * object beside it; each ping is traced along the servo bearing, with
+ * optional noise, stray echoes, a beam cone and servo gear backlash.
  */
 
 #include "../../include/float_types.h"
@@ -59,6 +59,7 @@ static float64_t curve_drive(s5_curve_t * p_curve, float64_t path_mm,
 static unsigned g_failures;
 static unsigned g_checks;
 
+/*! @brief Count one check. */
 static void
 check (bool b_ok, const char * p_name)
 {
@@ -71,6 +72,7 @@ check (bool b_ok, const char * p_name)
     }
 }
 
+/*! @brief Check a value against a tolerance. */
 static void
 check_near (float64_t actual, float64_t expected, float64_t tolerance,
             const char * p_name)
@@ -85,7 +87,7 @@ check_near (float64_t actual, float64_t expected, float64_t tolerance,
     }
 }
 
-/* s5_estimate() takes the echoes as a mask */
+/*! @brief s5_estimate() takes the echoes as a mask */
 static void
 estimate (const float64_t range_mm[], const bool echo[], unsigned count,
           s5_estimate_t * p_out)
@@ -104,6 +106,7 @@ estimate (const float64_t range_mm[], const bool echo[], unsigned count,
     s5_estimate(range_mm, mask, count, p_out);
 }
 
+/*! @brief Repeatable random number, 0 to 1. */
 static float64_t
 world_random (world_t * p_world) /* 0..1, deterministic */
 {
@@ -111,7 +114,7 @@ world_random (world_t * p_world) /* 0..1, deterministic */
     return (float64_t)((p_world->seed >> 8) & 0xffffU) / 65535.0;
 }
 
-/* Echo from one flat face square to the robot: the nearest point of it
+/*! @brief Echo from one flat face square to the robot: the nearest point of it
    inside the beam answers first. */
 static bool
 face_echo (const world_t * p_world, float64_t depth_mm, float64_t left_mm,
@@ -139,6 +142,7 @@ face_echo (const world_t * p_world, float64_t depth_mm, float64_t left_mm,
     return true;
 }
 
+/*! @brief One ping into the simulated world. */
 static bool
 world_ping (void * p_context, float64_t * p_range_mm)
 {
@@ -191,6 +195,7 @@ world_ping (void * p_context, float64_t * p_range_mm)
     return true;
 }
 
+/*! @brief Aim and measure in the simulated world. */
 static bool
 world_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
 {
@@ -228,6 +233,7 @@ typedef struct
     float64_t centre_mm;
 } yawed_t;
 
+/*! @brief Measure a box the robot points away from. */
 static bool
 yawed_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
 {
@@ -257,6 +263,7 @@ yawed_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
     return true;
 }
 
+/*! @brief A simulated box. */
 static world_t
 box (float64_t depth_mm, float64_t left_mm, float64_t right_mm,
      float64_t wall_mm)
@@ -271,6 +278,7 @@ box (float64_t depth_mm, float64_t left_mm, float64_t right_mm,
     return world;
 }
 
+/*! @brief Checks of the ping vote. */
 static void
 test_estimate (void)
 {
@@ -317,6 +325,7 @@ test_estimate (void)
           "estimate: no pings");
 }
 
+/*! @brief Checks of the basic geometry. */
 static void
 test_geometry (void)
 {
@@ -332,6 +341,7 @@ test_geometry (void)
         400.0, 1e-9, "geometry: flat face has constant forward distance");
 }
 
+/*! @brief Scan one box and check its width. */
 static void
 run_box (world_t * p_world, float64_t tolerance_mm, const char * p_name)
 {
@@ -358,6 +368,7 @@ run_box (world_t * p_world, float64_t tolerance_mm, const char * p_name)
            scan.width_mm, width, p_world->pings);
 }
 
+/*! @brief Checks of whole scans. */
 static void
 test_scans (void)
 {
@@ -426,6 +437,7 @@ test_scans (void)
     }
 }
 
+/*! @brief Scan one box and check its position. */
 static void
 run_placement (world_t * p_world, s5_position_t expected, bool b_bounded,
                const char * p_name)
@@ -441,6 +453,7 @@ run_placement (world_t * p_world, s5_position_t expected, bool b_bounded,
            scan.placement.difference_deg);
 }
 
+/*! @brief Checks of the position. */
 static void
 test_placement (void)
 {
@@ -511,8 +524,8 @@ test_placement (void)
           "placement: no obstacle");
 }
 
-/* Gear backlash shifts every edge outward on the walk out and inward on the
-   walk back; the mean of the two must cancel it. */
+/*! @brief Gear backlash shifts every edge outward on the walk out and inward on
+   the walk back; the mean of the two must cancel it. */
 static void
 test_backlash (void)
 {
@@ -542,6 +555,7 @@ test_backlash (void)
           "backlash: centred box still centre");
 }
 
+/*! @brief Scan one box and check the pass side. */
 static void
 run_avoid (world_t * p_world, s5_avoid_side_t expected, const char * p_name)
 {
@@ -560,6 +574,7 @@ run_avoid (world_t * p_world, s5_avoid_side_t expected, const char * p_name)
            scan.avoid.clear_mm[S5_LEFT], scan.avoid.clear_mm[S5_RIGHT]);
 }
 
+/*! @brief Checks of the pass side. */
 static void
 test_avoidance (void)
 {
@@ -616,7 +631,8 @@ test_avoidance (void)
 static void check_plan_geometry(const s5_detour_plan_t * p_plan,
                                 const char *             p_name);
 
-/* The face, from an ideal ray: tilt, distance, corners and the side passed on
+/*! @brief The face, from an ideal ray: tilt, distance, corners and the side
+ * passed on
  */
 static void
 test_face (void)
@@ -764,6 +780,7 @@ test_face (void)
     check(!scan.face.b_valid, "face: nothing ahead");
 }
 
+/*! @brief A stored reading from a log line. */
 static s5_point_t
 logged_point (int angle_deg, float64_t range_mm)
 {
@@ -780,7 +797,7 @@ logged_point (int angle_deg, float64_t range_mm)
     return s5_point_pack(angle_deg, &reading, false);
 }
 
-/* Fill a scan's readings from a logged one */
+/*! @brief Fill a scan's readings from a logged one */
 static void
 face_fill (s5_scan_t * p_scan, const face_scan_t * p_logged)
 {
@@ -808,7 +825,8 @@ face_fill (s5_scan_t * p_scan, const face_scan_t * p_logged)
     }
 }
 
-/* Every field of a stored reading comes back, at both ends of its range */
+/*! @brief Every field of a stored reading comes back, at both ends of its range
+ */
 static void
 test_point_pack (void)
 {
@@ -919,7 +937,8 @@ test_point_pack (void)
     check((16U + 56U) == votes, "point: every vote tried");
 }
 
-/* Paths and headings are kept modulo 2^16: crossing the wrap changes nothing */
+/*! @brief Paths and headings are kept modulo 2^16: crossing the wrap changes
+ * nothing */
 static void
 test_curve_wrap (void)
 {
@@ -955,7 +974,7 @@ test_curve_wrap (void)
     check(s5_curve_recent(&curve), "curve wrap: negative headings");
 }
 
-/* Scans from the robot, as logged: the fit on real echoes */
+/*! @brief Scans from the robot, as logged: the fit on real echoes */
 static void
 test_face_logged (void)
 {
@@ -1006,8 +1025,8 @@ test_face_logged (void)
     }
 }
 
-/* Drive this far at this heading rate (deg per mm), noting every 6 mm as the
-   task does at line speed.  Returns the path reached. */
+/*! @brief Drive this far at this heading rate (deg per mm), noting every 6 mm
+   as the task does at line speed.  Returns the path reached. */
 static float64_t
 curve_drive (s5_curve_t * p_curve, float64_t path_mm, float64_t * p_heading_deg,
              float64_t distance_mm, float64_t deg_per_mm)
@@ -1024,6 +1043,7 @@ curve_drive (s5_curve_t * p_curve, float64_t path_mm, float64_t * p_heading_deg,
     return path_mm;
 }
 
+/*! @brief Checks of the heading history. */
 static void
 test_curve (void)
 {
@@ -1125,6 +1145,7 @@ static const replay_t g_replay_scan[]
        {89, 163.0},  {90, 159.0},  {100, 121.0}, {106, 125.0}, {107, 111.0},
        {120, 111.0}, {140, 115.0}, {150, 118.0}, {160, 117.0}};
 
+/*! @brief Replay of a logged scan. */
 static bool
 replay_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
 {
@@ -1157,6 +1178,7 @@ replay_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
     return true;
 }
 
+/*! @brief Checks on a logged scan of a tilted box. */
 static void
 test_sloping_surface (void)
 {
@@ -1215,6 +1237,7 @@ static const replay_t g_bend_scan[]
        {150, 641.0}, {160, 1423.0}};
 static float64_t g_bend_128_mm;
 
+/*! @brief Replay of a logged scan after a bend. */
 static bool
 bend_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
 {
@@ -1245,6 +1268,7 @@ bend_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
     return true;
 }
 
+/*! @brief Checks on that scan. */
 static void
 test_bend_scan (void)
 {
@@ -1272,8 +1296,8 @@ test_bend_scan (void)
     check(S5_AVOID_LEFT == scan.avoid.side, "bend: so it goes the other way");
 }
 
-/* A box in front of a wall at about its own range still ends where the range
- * jumps */
+/*! @brief A box in front of a wall at about its own range still ends where the
+ * range jumps */
 static void
 test_edge_still_ends (void)
 {
@@ -1290,6 +1314,7 @@ test_edge_still_ends (void)
 
 /* ---- detour ---- */
 
+/*! @brief Checks of one detour plan. */
 static void
 check_plan_geometry (const s5_detour_plan_t * p_plan, const char * p_name)
 {
@@ -1315,6 +1340,7 @@ check_plan_geometry (const s5_detour_plan_t * p_plan, const char * p_name)
           p_name);
 }
 
+/*! @brief Checks of the detour plans. */
 static void
 test_detour_plan (void)
 {
@@ -1373,7 +1399,7 @@ test_detour_plan (void)
     check(!s5_detour_plan(&scan, &plan), "plan: no side refused");
 }
 
-/* A box face_mm..face_mm + depth_mm along x beside the robot, driving
+/*! @brief A box face_mm..face_mm + depth_mm along x beside the robot, driving
    S5_PASS_STEP_MM between looks with an ideal side ray.  Every
    miss_every-th echo from it is lost; far_mm > 0 puts a wall that far
    beyond its side, heard whenever the box is not. */
@@ -1416,6 +1442,7 @@ simulate_pass (const s5_detour_plan_t * p_plan, float64_t depth_mm,
     return false;
 }
 
+/*! @brief Checks of one pass along the obstacle. */
 static void
 check_pass (const s5_detour_plan_t * p_plan, float64_t depth_mm,
             unsigned miss_every, float64_t far_mm, const char * p_name)
@@ -1450,6 +1477,7 @@ check_pass (const s5_detour_plan_t * p_plan, float64_t depth_mm,
            (past * sin(back)) + (gap * cos(back)) - S5_ROBOT_HALF_WIDTH_MM);
 }
 
+/*! @brief Checks of the pass. */
 static void
 test_detour_pass (void)
 {
@@ -1491,8 +1519,8 @@ test_detour_pass (void)
           "line: too far out to be it");
 }
 
-/* The retry ladder's plans, and telling the obstacle's own echoes from new
-   ones.  A centred 200 mm box at the 150 mm stop, as in the 18 November run
+/*! @brief The retry ladder's plans, and telling the obstacle's own echoes from
+   new ones.  A centred 200 mm box at the 150 mm stop, as in the 18 November run
    whose detour was abandoned (194 mm, 148 mm away, passed right). */
 static void
 test_detour_retry (void)
@@ -1608,6 +1636,7 @@ test_detour_retry (void)
            shallow.turn_deg, shallow.backup_mm, echo);
 }
 
+/*! @brief Run every check. */
 int
 main (void)
 {

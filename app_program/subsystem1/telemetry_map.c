@@ -1,9 +1,9 @@
-/*
- *  telemetry_map.c
- *  Subsystem 1 -- robot_status_t snapshot -> status frame values.
+/** @file telemetry_map.c
  *
- *  Slot meanings follow docs/API.md "Snapshot for other buddies", with the
- *  Tribunal 1 packing decisions:
+ * @brief Subsystem 1 -- robot_status_t snapshot -> status frame values.
+ *
+ * Slot meanings follow docs/API.md "Snapshot for other buddies", with the
+ * Tribunal 1 packing decisions:
  *    line     values[0] error -1/0/+1, values[1] trackable (> 0.5)
  *    barcode  values[0] letter (ASCII), [1] valid-read counter,
  *             [2] junction counter, [3] failed-read counter (robot.h)
@@ -182,7 +182,7 @@ tm_edge_events (const robot_status_t * p_prev, const robot_status_t * p_cur)
     return (uint8_t)events;
 }
 
-/* TRUE for a finite double.  NaN fails both comparisons.  (Avoids the
+/*! @brief TRUE for a finite double.  NaN fails both comparisons.  (Avoids the
    isfinite macro, which warns under -Wconversion on some host libcs.) */
 static bool
 tm_finite (float64_t value)
@@ -190,8 +190,8 @@ tm_finite (float64_t value)
     return (value > -1.0e300) && (value < 1.0e300);
 }
 
-/* Round half away from zero; non-finite -> 0.  The double is limited first
-   so the conversion is always defined; tf_pack() does the real clamp. */
+/*! @brief Round half away from zero; non-finite -> 0.  The double is limited
+   first so the conversion is always defined; tf_pack() does the real clamp. */
 static int32_t
 to_int (float64_t value)
 {
@@ -222,13 +222,14 @@ to_int (float64_t value)
     return result;
 }
 
+/*! @brief Limit a count to a field's maximum. */
 static int32_t
 saturate (uint32_t value, uint32_t max)
 {
     return (int32_t)((value > max) ? max : value);
 }
 
-/* Degrees wrapped into [lo, lo + 360). */
+/*! @brief Degrees wrapped into [lo, lo + 360). */
 static int32_t
 wrap_deg (float64_t rad, int32_t low)
 {
@@ -259,8 +260,8 @@ wrap_deg (float64_t rad, int32_t low)
     return result;
 }
 
-/* B3 barcode slot letter (ASCII code) -> BC_CHAR: 0 none or not a Code 39
-   character, n = TF_BC_CHARS[n - 1]. */
+/*! @brief B3 barcode slot letter (ASCII code) -> BC_CHAR: 0 none or not a Code
+   39 character, n = TF_BC_CHARS[n - 1]. */
 static int32_t
 bc_char_code (float64_t ascii)
 {
@@ -284,8 +285,8 @@ bc_char_code (float64_t ascii)
     return 0;
 }
 
-/* B3 barcode slot counter (values[1] valid reads, [3] failed reads); 0 when
-   the slot is unavailable.  Only differences and the low bit are used, so
+/*! @brief B3 barcode slot counter (values[1] valid reads, [3] failed reads); 0
+   when the slot is unavailable.  Only differences and the low bit are used, so
    wrapping is harmless. */
 static uint32_t
 bc_count (const subsystem_status_t * p_slot, unsigned slot)
@@ -295,6 +296,7 @@ bc_count (const subsystem_status_t * p_slot, unsigned slot)
     return ((p_slot->available) && (value > 0)) ? (uint32_t)value : 0U;
 }
 
+/*! @brief Validity bits in a slot value; 0 when unavailable. */
 static uint32_t
 bits_of (const subsystem_status_t * p_slot, unsigned slot)
 {
@@ -303,6 +305,7 @@ bits_of (const subsystem_status_t * p_slot, unsigned slot)
     return ((p_slot->available) && (value > 0)) ? (uint32_t)value : 0U;
 }
 
+/*! @brief True when the line slot can be used. */
 static bool
 line_ok (const robot_status_t * p_status)
 {

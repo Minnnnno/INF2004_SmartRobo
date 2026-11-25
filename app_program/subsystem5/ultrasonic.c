@@ -1,16 +1,16 @@
-/*
- *  ultrasonic.c
- *  Subsystem 5 -- HC-SR04 style ultrasonic ranger.
+/** @file ultrasonic.c
  *
- *  The echo pulse is timed in hardware.  GP17 is the B pin of PWM slice 0;
- *  in "level" divider mode the slice counter advances once per microsecond
- *  only while that pin is high.  The task sleeps until the pulse is over and
- *  then reads the counter, so interrupt latency and scheduling never change
- *  the measured width (1 us = 0.17 mm).
+ * @brief Subsystem 5 -- HC-SR04 style ultrasonic ranger.
  *
- *  Timing: 10+ us trigger; echo accepted for 30 ms (5 m round trip, beyond
- *  the 4 m range); triggers at least 60 ms apart so late echoes of one ping
- *  cannot be heard by the next.
+ * The echo pulse is timed in hardware.  GP17 is the B pin of PWM slice 0;
+ * in "level" divider mode the slice counter advances once per microsecond
+ * only while that pin is high.  The task sleeps until the pulse is over and
+ * then reads the counter, so interrupt latency and scheduling never change
+ * the measured width (1 us = 0.17 mm).
+ *
+ * Timing: 10+ us trigger; echo accepted for 30 ms (5 m round trip, beyond
+ * the 4 m range); triggers at least 60 ms apart so late echoes of one ping
+ * cannot be heard by the next.
  */
 
 #include "../../include/float_types.h"
@@ -39,6 +39,7 @@ static bool     gb_us_ready;
 static UW us_reg(UW offset);
 static UW us_counter(void);
 
+/*! @brief Set up the ultrasonic sensor. */
 bool
 s5_us_init (void)
 {
@@ -154,12 +155,14 @@ s5_us_ping (float64_t * p_range_mm, float64_t * p_time_s)
     return S5_US_OK;
 }
 
+/*! @brief Register of the pulse timer. */
 static UW
 us_reg (UW offset)
 {
     return PWM_BASE + (US_SLICE * 0x14U) + offset; /* 0 CSR, 8 CTR */
 }
 
+/*! @brief Pulse width so far, microseconds. */
 static UW
 us_counter (void)
 {

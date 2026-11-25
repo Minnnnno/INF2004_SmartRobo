@@ -1,14 +1,14 @@
-/*
- *  subsystem1_test.c
- *  On-target tests for subsystem 1.  Built only with: make TEST=1
+/** @file subsystem1_test.c
  *
- *  Each TEST_CHECK prints a PASS/FAIL line on the console.  Save the
- *  console output to testing/subsystem1/logs/ and record the result
- *  in testing/subsystem1/TEST_LOG.md.  Test IDs: S1-U01, S1-U02, ...
- *  The same frame/command checks also run on the PC: tests/subsystem1.
+ * @brief On-target tests for subsystem 1.  Built only with: make TEST=1
  *
- *  Run these before the Vehicle Controller task starts: S1-U04/U09 put
- *  commands on mbf_comms_cmd, and a running controller would act on them.
+ * Each TEST_CHECK prints a PASS/FAIL line on the console.  Save the
+ * console output to testing/subsystem1/logs/ and record the result
+ * in testing/subsystem1/TEST_LOG.md.  Test IDs: S1-U01, S1-U02, ...
+ * The same frame/command checks also run on the PC: tests/subsystem1.
+ *
+ * Run these before the Vehicle Controller task starts: S1-U04/U09 put
+ * commands on mbf_comms_cmd, and a running controller would act on them.
  */
 
 #include <stdint.h>
@@ -17,6 +17,7 @@
 
 #if APP_TEST
 
+/*! @brief Send one command frame to the hook under test. */
 LOCAL void
 send_cmd (UB opcode, UB session, UB seq)
 {
@@ -27,12 +28,14 @@ send_cmd (UB opcode, UB session, UB seq)
     comms_hook_command(raw, TF_CMD_BYTES);
 }
 
+/*! @brief Take one forwarded command without waiting. */
 LOCAL INT
 take_cmd (comms_cmd_t * p_cmd)
 {
     return tk_rcv_mbf(g_mbf_comms_cmd, p_cmd, TMO_POL);
 }
 
+/*! @brief Empty the queues before a check. */
 LOCAL void
 drain (void)
 {
@@ -52,6 +55,7 @@ drain (void)
     }
 }
 
+/*! @brief Subsystem 1 self-test. */
 EXPORT void
 subsystem1_test (void)
 {
@@ -62,7 +66,7 @@ subsystem1_test (void)
 
     /* S1-U01: a diagnostic message is accepted while the queue has room */
     result = comms_send_telemetry("test", "hello");
-    TEST_CHECK("S1-U01", result == E_OK, "telemetry is queued");
+    TEST_CHECK("S1-U01", E_OK == result, "telemetry is queued");
 
     /* S1-U02: a full queue drops the message at once instead of waiting */
     {
@@ -76,7 +80,7 @@ subsystem1_test (void)
             result = comms_send_telemetry("test", "fill");
         }
 
-        TEST_CHECK("S1-U02", result == E_TMOUT && comms_dropped() > before,
+        TEST_CHECK("S1-U02", E_TMOUT == result && comms_dropped() > before,
                    "full queue drops and counts");
     }
 

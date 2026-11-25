@@ -1,9 +1,9 @@
-/*
- *  telemetry_map.h
- *  Subsystem 1 -- converts a copied robot_status_t snapshot into status
- *  frame field values (telemetry_frame.h units).  No kernel calls, no
- *  locks: the caller copies the snapshot under the bus mutex, releases
- *  it, and only then calls these functions.
+/** @file telemetry_map.h
+ *
+ * @brief Subsystem 1 -- converts a copied robot_status_t snapshot into status
+ * frame field values (telemetry_frame.h units).  No kernel calls, no
+ * locks: the caller copies the snapshot under the bus mutex, releases
+ * it, and only then calls these functions.
  */
 
 #ifndef TELEMETRY_MAP_H
@@ -21,18 +21,18 @@ typedef struct
     uint32_t  dropped;  /* comms drops since last frame */
 } tm_frame_info_t;
 
-/* Fill values[] from a snapshot.  Values may be out of range; tf_pack()
+/*! @brief Fill values[] from a snapshot.  Values may be out of range; tf_pack()
    clamps them.  Non-finite inputs become 0 before clamping. */
 void tm_fill(const robot_status_t * p_status, const tm_frame_info_t * p_info,
              int32_t values[TF_FIELD_COUNT]);
 
-/* Fill an encoder frame from a snapshot copied at now_s (robot clock,
+/*! @brief Fill an encoder frame from a snapshot copied at now_s (robot clock,
    seconds).  Freshness and age are judged on the robot's clock only.
    seq is the status frame counter of the same period (low 8 bits sent). */
 void tm_fill_encoder(const robot_status_t * p_status, uint32_t seq,
                      float64_t now_s, tf_encoder_t * p_enc);
 
-/* Events that can be seen by comparing two consecutive snapshots:
+/*! @brief Events that can be seen by comparing two consecutive snapshots:
    TF_EV_MOTION_FAULT, TF_EV_LINE_LOST, TF_EV_BARCODE. */
 uint8_t tm_edge_events(const robot_status_t * p_previous,
                        const robot_status_t * p_current);

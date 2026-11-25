@@ -1,17 +1,22 @@
-/* Barcode-only serial log (analysis image, -DROBO_BARCODE_LOG_ONLY=1 on the
- * integrated build). tm_printf (lib/libtm/libtm_printf.c) asks this filter
+/** @file log_filter.c
+ *
+ * @brief Barcode-only serial log (analysis image, -DROBO_BARCODE_LOG_ONLY=1 on
+ * the integrated build). tm_printf (lib/libtm/libtm_printf.c) asks this filter
  * about every message, by its format string. Kept: the barcode reader,
  * line/barcode state changes, route actions and calibration, plus the firmware
  * banner, crash reports and errors, so a stop never goes unexplained. Also
  * kept: the raw sensor stream ("bc t=" lines, with -DROBO_BARCODE_STREAM=1),
  * which tests/subsystem3/test_barcode_decode.c replays. Dropped: everything
  * else (line_pid, IMU, obstacle, stack reports); the bv/bp/bh/bw dumps are off
- * when the stream is on (barcode.c). */
+ * when the stream is on (barcode.c).
+ */
+
 #ifdef ROBO_BARCODE_LOG_ONLY
 #include <tk/tkernel.h>
 
 static BOOL log_starts_with(const UB * p_text, const char * p_prefix);
 
+/*! @brief Should this message be printed in the barcode-only log? */
 BOOL
 robo_log_allowed (const UB * p_format)
 {
@@ -35,6 +40,7 @@ robo_log_allowed (const UB * p_format)
     return FALSE;
 }
 
+/*! @brief Does the text begin with the prefix? */
 static BOOL
 log_starts_with (const UB * p_text, const char * p_prefix)
 {

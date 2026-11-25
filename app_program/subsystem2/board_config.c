@@ -1,3 +1,8 @@
+/** @file board_config.c
+ *
+ * @brief Pins and measured robot settings.
+ */
+
 #include "../../include/float_types.h"
 #include "motion.h"
 #include "board_config.h"
@@ -13,6 +18,7 @@ const unsigned g_encoder_pins[2][2] = {
     {BOARD_ENC_R_A, BOARD_ENC_R_B}  /* M2: ENC_R_A -> GP4; ENC_R_B -> GP5 */
 };
 
+/*! @brief True when the pin table matches the wiring the drivers support. */
 bool
 board_pins_valid (void)
 {
@@ -56,6 +62,7 @@ board_pins_valid (void)
     return true;
 }
 
+/*! @brief The measured robot settings. */
 motion_config_t
 board_motion_config (void)
 {
@@ -126,6 +133,7 @@ board_motion_config (void)
     return config;
 }
 
+/*! @brief True when every setting is usable. */
 bool
 motion_config_valid (const motion_config_t * p_config)
 {

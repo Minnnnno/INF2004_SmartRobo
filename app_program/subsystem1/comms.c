@@ -1,15 +1,15 @@
-/*
- *  comms.c
- *  Subsystem 1 -- status frame, events, commands and their queues.
+/** @file comms.c
  *
- *  comms_task (lowest application priority) copies the shared robot status
- *  every 100 ms with motion_get_status(), which holds the priority-
- *  inheritance bus mutex only for the copy and never waits for it.  The
- *  frame is then built and packed with no lock held, and queued.  The MQTT
- *  client (mqtt_utk.c, in the kernel's WiFi service task) empties the
- *  queues through the hooks in comms_hooks.h.  Every queue access uses
- *  TMO_POL, so neither side can hold the other up, and nothing here can
- *  delay the 10 ms motion task beyond one snapshot copy.
+ * @brief Subsystem 1 -- status frame, events, commands and their queues.
+ *
+ * comms_task (lowest application priority) copies the shared robot status
+ * every 100 ms with motion_get_status(), which holds the priority-
+ * inheritance bus mutex only for the copy and never waits for it.  The
+ * frame is then built and packed with no lock held, and queued.  The MQTT
+ * client (mqtt_utk.c, in the kernel's WiFi service task) empties the
+ * queues through the hooks in comms_hooks.h.  Every queue access uses
+ * TMO_POL, so neither side can hold the other up, and nothing here can
+ * delay the 10 ms motion task beyond one snapshot copy.
  */
 
 #include "../../include/float_types.h"
@@ -62,7 +62,8 @@ LOCAL UB   g_cmd_seq;
 LOCAL robot_status_t g_snap;
 LOCAL robot_status_t g_prev;
 
-/* Copy a string into dst[max].  Returns its length, or -1 if it does not fit.
+/*! @brief Copy a string into dst[max].  Returns its length, or -1 if it does
+ * not fit.
  */
 LOCAL INT
 copy_text (char * p_dst, const char * p_src, INT max)
@@ -82,6 +83,7 @@ copy_text (char * p_dst, const char * p_src, INT max)
     return -1;
 }
 
+/*! @brief Queue one MQTT message without waiting. */
 LOCAL ER
 queue_message (ID mbf, UB qos, const char * p_topic, const char * p_name,
                const UB * p_data, INT len)
@@ -165,6 +167,7 @@ comms_latch_event (UB events)
     EI(intsts);
 }
 
+/*! @brief Take and clear the latched events. */
 LOCAL UB
 take_events (void)
 {
@@ -184,12 +187,14 @@ comms_is_online (void)
     return g_comms_online;
 }
 
+/*! @brief Messages dropped since boot. */
 EXPORT UW
 comms_dropped (void)
 {
     return g_comms_drops;
 }
 
+/*! @brief Copy the communication statistics. */
 EXPORT void
 comms_stats (comms_stats_t * p_out)
 {
@@ -226,7 +231,7 @@ comms_hook_next (char * p_topic, uint8_t * p_payload, int * p_qos)
     return result;
 }
 
-/* TRUE if seq is after cmd_seq in 8-bit serial-number order. */
+/*! @brief TRUE if seq is after cmd_seq in 8-bit serial-number order. */
 LOCAL BOOL
 seq_newer (UB seq)
 {
@@ -328,6 +333,7 @@ comms_hook_online (int online)
 
 /* ---- task ---- */
 
+/*! @brief Microseconds between two times, saturating. */
 LOCAL UW
 elapsed_us (float64_t from, float64_t until)
 {
@@ -338,6 +344,7 @@ elapsed_us (float64_t from, float64_t until)
                : ((microseconds >= 4.0e9) ? 0xFFFFFFFFU : (UW)microseconds);
 }
 
+/*! @brief Publish the latched events once. */
 LOCAL void
 publish_events (void)
 {
@@ -366,6 +373,7 @@ publish_events (void)
     }
 }
 
+/*! @brief Subsystem 1 task: status and encoder frames every 100 ms. */
 LOCAL void
 comms_task (INT stacd, void * p_exinf)
 {
@@ -482,6 +490,7 @@ comms_task (INT stacd, void * p_exinf)
     }
 }
 
+/*! @brief Create one message buffer. */
 LOCAL ID
 create_queue (INT depth, INT msgsz)
 {
@@ -523,6 +532,7 @@ comms_init (void)
     return result;
 }
 
+/*! @brief Start the communication task. */
 EXPORT ER
 comms_start (void)
 {

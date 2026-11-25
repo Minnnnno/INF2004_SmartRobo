@@ -1,3 +1,8 @@
+/** @file encoder_capture.h
+ *
+ * @brief Encoder edge capture.
+ */
+
 #ifndef ROBO_ENCODER_CAPTURE_H
 #define ROBO_ENCODER_CAPTURE_H
 #include <stdbool.h>
@@ -19,6 +24,7 @@ typedef struct
 _Static_assert(40u == sizeof(encoder_capture_t),
                "Encoder storage layout changed");
 
+/*! @brief Stored A/B state of a wheel. */
 static inline uint8_t
 encoder_capture_previous_ab (const volatile encoder_capture_t * p_capture,
                              uint32_t                           wheel)
@@ -26,7 +32,8 @@ encoder_capture_previous_ab (const volatile encoder_capture_t * p_capture,
     return (uint8_t)(((uint32_t)p_capture->previous_ab >> (wheel * 2u)) & 3u);
 }
 
-/* Caller must hold the existing interrupt exclusion when shared with an ISR. */
+/*! @brief Caller must hold the existing interrupt exclusion when shared with an
+ * ISR. */
 static inline void
 encoder_capture_set_direction (volatile encoder_capture_t * p_capture,
                                uint32_t wheel, int direction)

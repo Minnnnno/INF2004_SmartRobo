@@ -1,7 +1,7 @@
-/*
- *  telemetry_frame.c
- *  Subsystem 1 -- bit-level codec for the formats in telemetry_frame.h.
- *  Plain C, no kernel calls: also built by the host test.
+/** @file telemetry_frame.c
+ *
+ * @brief Subsystem 1 -- bit-level codec for the formats in telemetry_frame.h.
+ * Plain C, no kernel calls: also built by the host test.
  */
 
 #include "telemetry_frame.h"
@@ -117,6 +117,7 @@ tf_unpack (const uint8_t * p_frame, size_t len, int32_t values[TF_FIELD_COUNT])
     return true;
 }
 
+/*! @brief Decode a command frame. */
 bool
 tf_cmd_decode (const uint8_t * p_data, size_t len, tf_command_t * p_cmd)
 {
@@ -145,6 +146,7 @@ tf_cmd_decode (const uint8_t * p_data, size_t len, tf_command_t * p_cmd)
     return b_result;
 }
 
+/*! @brief Encode a command frame. */
 void
 tf_cmd_encode (const tf_command_t * p_cmd, uint8_t out[TF_CMD_BYTES])
 {
@@ -155,6 +157,7 @@ tf_cmd_encode (const tf_command_t * p_cmd, uint8_t out[TF_CMD_BYTES])
     out[1] = (uint8_t)(word & 0xFFU);
 }
 
+/*! @brief Encode an acknowledgement frame. */
 void
 tf_ack_encode (tf_ack_t result, const tf_command_t * p_cmd,
                uint8_t out[TF_ACK_BYTES])
@@ -241,6 +244,7 @@ tf_enc_unpack (const uint8_t * p_frame, size_t len, tf_encoder_t * p_encoder)
     return b_result;
 }
 
+/*! @brief Decode an acknowledgement frame. */
 bool
 tf_ack_decode (const uint8_t * p_data, size_t len, tf_ack_t * p_result,
                tf_command_t * p_cmd)
@@ -274,7 +278,8 @@ tf_ack_decode (const uint8_t * p_data, size_t len, tf_ack_t * p_result,
     return b_result;
 }
 
-/* Write the low `bits` bits of code, most significant first, at bit *pos. */
+/*! @brief Write the low `bits` bits of code, most significant first, at bit
+ * *pos. */
 static void
 put_bits (uint8_t * p_buf, unsigned * p_pos, uint32_t code, unsigned bits)
 {
@@ -291,6 +296,7 @@ put_bits (uint8_t * p_buf, unsigned * p_pos, uint32_t code, unsigned bits)
     }
 }
 
+/*! @brief Read an unsigned field, most significant bit first. */
 static uint32_t
 get_bits (const uint8_t * p_buf, unsigned * p_pos, unsigned bits)
 {
@@ -307,6 +313,7 @@ get_bits (const uint8_t * p_buf, unsigned * p_pos, unsigned bits)
     return code;
 }
 
+/*! @brief Store 32 bits in frame byte order. */
 static void
 put_u32 (uint8_t * p_bytes, uint32_t value)
 {
@@ -316,6 +323,7 @@ put_u32 (uint8_t * p_bytes, uint32_t value)
     p_bytes[3] = (uint8_t)value;
 }
 
+/*! @brief Load 32 bits in frame byte order. */
 static uint32_t
 get_u32 (const uint8_t * p_bytes)
 {
@@ -323,6 +331,7 @@ get_u32 (const uint8_t * p_bytes)
            | ((uint32_t)p_bytes[2] << 8) | p_bytes[3];
 }
 
+/*! @brief Limit a value to a field's maximum and note that it was limited. */
 static uint8_t
 clamp_u8 (uint8_t value, unsigned max, bool * p_clamped)
 {

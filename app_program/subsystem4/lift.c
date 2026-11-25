@@ -1,4 +1,8 @@
-/* Buddy 4 lift / overturn detection; see lift.h for the rules. */
+/** @file lift.c
+ *
+ * @brief Buddy 4 lift / overturn detection; see lift.h for the rules.
+ */
+
 #include "lift.h"
 #include <math.h>
 #include <stddef.h>
@@ -18,6 +22,7 @@ static float32_t lift_upright(float32_t up_mg, float32_t magnitude,
 static uint8_t lift_decide(lift_t * p_lift, uint8_t condition, bool b_oriented,
                            float32_t still, uint32_t now_ms);
 
+/*! @brief Start again with nothing latched. */
 void
 lift_reset (lift_t * p_lift)
 {
@@ -118,6 +123,7 @@ lift_step (lift_t * p_lift, tilt_context_t const * p_tilt, int16_t axis_x,
     return condition;
 }
 
+/*! @brief Latched condition. */
 uint8_t
 lift_state (lift_t const * p_lift)
 {
@@ -134,24 +140,28 @@ lift_suspect (lift_t const * p_lift)
                || (0U != p_lift->steep_hold));
 }
 
+/*! @brief Vertical acceleration beyond gravity, mg. */
 int16_t
 lift_vertical_mg (lift_t const * p_lift)
 {
     return (NULL == p_lift) ? 0 : p_lift->vertical_mg;
 }
 
+/*! @brief Vertical acceleration that latched the condition, mg. */
 int16_t
 lift_trigger_mg (lift_t const * p_lift)
 {
     return (NULL == p_lift) ? 0 : p_lift->trigger_mg;
 }
 
+/*! @brief How upright, percent. */
 int8_t
 lift_upright_pct (lift_t const * p_lift)
 {
     return (NULL == p_lift) ? 100 : p_lift->upright_pct;
 }
 
+/*! @brief Name of a condition. */
 char const *
 lift_name (uint8_t condition)
 {
@@ -179,6 +189,7 @@ lift_name (uint8_t condition)
     return p_result;
 }
 
+/*! @brief Limit to 16 bits. */
 static int16_t
 lift_clamp16 (float32_t value)
 {
@@ -200,6 +211,7 @@ lift_clamp16 (float32_t value)
     return result;
 }
 
+/*! @brief Store the condition in the flags. */
 static void
 lift_set_state (lift_t * p_lift, uint8_t condition)
 {
@@ -207,7 +219,8 @@ lift_set_state (lift_t * p_lift, uint8_t condition)
                               | (condition & LIFT_STATE_MASK));
 }
 
-/* Start or keep a timer while the condition holds; true once it held hold_ms.
+/*! @brief Start or keep a timer while the condition holds; true once it held
+ * hold_ms.
  */
 static bool
 lift_timer (lift_t * p_lift, uint8_t flag, uint32_t * p_since, bool b_condition,
@@ -234,8 +247,8 @@ lift_timer (lift_t * p_lift, uint8_t flag, uint32_t * p_since, bool b_condition,
     return b_result;
 }
 
-/* How upright the robot is, 1 to -1; false in *p_oriented when the reading says
- * nothing. */
+/*! @brief How upright the robot is, 1 to -1; false in *p_oriented when the
+ * reading says nothing. */
 static float32_t
 lift_upright (float32_t up_mg, float32_t magnitude, bool * p_oriented)
 {
@@ -265,7 +278,7 @@ lift_upright (float32_t up_mg, float32_t magnitude, bool * p_oriented)
     return upright;
 }
 
-/* The next condition from this sample. */
+/*! @brief The next condition from this sample. */
 static uint8_t
 lift_decide (lift_t * p_lift, uint8_t condition, bool b_oriented,
              float32_t still, uint32_t now_ms)

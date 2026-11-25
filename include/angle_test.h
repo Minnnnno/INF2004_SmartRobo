@@ -1,3 +1,8 @@
+/** @file angle_test.h
+ *
+ * @brief Angle test image interface.
+ */
+
 #ifndef ROBO_ANGLE_TEST_H
 #define ROBO_ANGLE_TEST_H
 #include "float_types.h"

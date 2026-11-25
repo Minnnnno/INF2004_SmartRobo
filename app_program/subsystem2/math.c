@@ -1,3 +1,8 @@
+/** @file math.c
+ *
+ * @brief PID, quadrature and odometry arithmetic.
+ */
+
 #include "../../include/float_types.h"
 #include "motion.h"
 #include <math.h>
@@ -5,12 +10,14 @@
 
 static float64_t clamp(float64_t value, float64_t limit);
 
+/*! @brief Clear the controller's history. */
 void
 pid_reset (pid_t * p_pid)
 {
     memset(p_pid, 0, sizeof(*p_pid));
 }
 
+/*! @brief One PID cycle, output limited. */
 float64_t
 pid_step (pid_t * p_pid, const pid_config_t * p_config, float64_t target,
           float64_t measured, float64_t delta_s, float64_t limit)
@@ -41,6 +48,7 @@ pid_step (pid_t * p_pid, const pid_config_t * p_config, float64_t target,
                  limit);
 }
 
+/*! @brief Signed difference of two modular counts. */
 int64_t
 encoder_delta (uint32_t now, uint32_t before)
 {
@@ -51,6 +59,7 @@ encoder_delta (uint32_t now, uint32_t before)
                : (int64_t)difference - INT64_C(4294967296);
 }
 
+/*! @brief Step from one A/B state to the next; invalid jumps are flagged. */
 int
 encoder_quadrature (uint8_t before, uint8_t after, bool * p_invalid)
 {
@@ -64,6 +73,7 @@ encoder_quadrature (uint8_t before, uint8_t after, bool * p_invalid)
     return transitions[(before * 4U) + after];
 }
 
+/*! @brief Update travel, speed and heading from new counts. */
 bool
 odometry_step (odometry_t * p_odom, const motion_config_t * p_config,
                const encoder_sample_t * p_sample, float64_t delta_s)
@@ -107,6 +117,7 @@ odometry_step (odometry_t * p_odom, const motion_config_t * p_config,
     return true;
 }
 
+/*! @brief Limit a value to a range. */
 static float64_t
 clamp (float64_t value, float64_t limit)
 {

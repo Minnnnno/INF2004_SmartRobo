@@ -1,5 +1,9 @@
-/* Gravity-based robot tilt (no gyroscope fitted); hump phases are in terrain.c.
+/** @file tilt.c
+ *
+ * @brief Gravity-based robot tilt (no gyroscope fitted); hump phases are in
+ * terrain.c.
  */
+
 #include "tilt.h"
 #include <math.h>
 #include <stddef.h>
@@ -17,7 +21,7 @@ static bool      tilt_normalise(float32_t vector[3]);
 static bool      tilt_plausible(float32_t const acceleration[3]);
 static uint8_t   tilt_classify(int16_t angle, uint8_t previous);
 
-/* Clear transient history without redefining level after a data gap. */
+/*! @brief Clear transient history without redefining level after a data gap. */
 void
 tilt_discard_history (tilt_context_t * p_context)
 {
@@ -144,10 +148,10 @@ tilt_capture (tilt_context_t * p_context, int16_t axis_x, int16_t axis_y,
     return true;
 }
 
-/* Project smoothed gravity onto the reference axes, then compute pitch/roll.
- * Filter: new = old + 0.25*(sample-old). Seed from the first valid sample;
- * do not ramp up from zero. Refuse inverted/near-vertical poses to avoid
- * ambiguous roll at pitch poles. Out-of-envelope values are unavailable.
+/*! @brief Project smoothed gravity onto the reference axes, then compute
+ * pitch/roll. Filter: new = old + 0.25*(sample-old). Seed from the first valid
+ * sample; do not ramp up from zero. Refuse inverted/near-vertical poses to
+ * avoid ambiguous roll at pitch poles. Out-of-envelope values are unavailable.
  */
 uint32_t
 tilt_update (tilt_context_t * p_context, int16_t axis_x, int16_t axis_y,
@@ -248,8 +252,8 @@ tilt_update (tilt_context_t * p_context, int16_t axis_x, int16_t axis_y,
     return outcome;
 }
 
-/* Height of the right wheel contact above the left one, in 0.1 mm, for a
- * two-wheel axle of the given track. Uses the pure sideways component of the
+/*! @brief Height of the right wheel contact above the left one, in 0.1 mm, for
+ * a two-wheel axle of the given track. Uses the pure sideways component of the
  * smoothed gravity unit vector, so body pitch does not change it (roll from
  * atan2(side, up) would). Positive = right wheel higher ("LEFT SIDE LOWER").
  * Zero unless calibrated with a ready filter; call after a valid tilt_update().
@@ -322,7 +326,8 @@ tilt_forward_dynamic_mg (tilt_context_t const * p_context, int16_t axis_x,
     return result;
 }
 
-/* Convert packed unsigned offset back to signed tenths. Valid result required.
+/*! @brief Convert packed unsigned offset back to signed tenths. Valid result
+ * required.
  */
 int16_t
 tilt_angle_tenths (uint32_t result, uint8_t axis)
@@ -332,7 +337,7 @@ tilt_angle_tenths (uint32_t result, uint8_t axis)
     return (int16_t)((int32_t)code - 900);
 }
 
-/* These labels describe orientation, not movement or hump states. */
+/*! @brief These labels describe orientation, not movement or hump states. */
 char const *
 tilt_condition_name (uint32_t result, uint8_t axis)
 {
@@ -368,6 +373,7 @@ tilt_condition_name (uint32_t result, uint8_t axis)
 /* Dot product in the sensor coordinate system. Inputs are private 3-vectors. */
 // The dot product converts gravity from sensor axes into robot axes using the
 // reference saved at startup.
+/*! @brief Dot product. */
 static float32_t
 tilt_dot (float32_t const first[3], float32_t const second[3])
 {
@@ -379,6 +385,7 @@ tilt_dot (float32_t const first[3], float32_t const second[3])
 // normalize needed because if If the axis were, say, length 1000, every
 // projection would come out 1000 times too big, and pitch and roll would be
 // wrong.
+/*! @brief Scale to unit length. False: too short. */
 static bool
 tilt_normalise (float32_t vector[3])
 {
@@ -413,6 +420,7 @@ tilt_normalise (float32_t vector[3])
  * Reject near-freefall and large acceleration. Constant acceleration can pass.
  */
 //(Flitering)
+/*! @brief Is this a believable gravity reading? */
 static bool
 tilt_plausible (float32_t const acceleration[3])
 {
@@ -425,8 +433,9 @@ tilt_plausible (float32_t const acceleration[3])
            && (square <= (1300.0F * 1300.0F));
 }
 
-/* Schmitt-trigger classification: enter tilt at +/-5 deg, leave below 3 deg.
- * A direct strong opposite tilt switches direction. Conditions are independent.
+/*! @brief Schmitt-trigger classification: enter tilt at +/-5 deg, leave below 3
+ * deg. A direct strong opposite tilt switches direction. Conditions are
+ * independent.
  */
 static uint8_t
 tilt_classify (int16_t angle, uint8_t previous)

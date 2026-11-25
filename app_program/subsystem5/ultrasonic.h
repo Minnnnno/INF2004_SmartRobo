@@ -1,7 +1,8 @@
-/*
- *  ultrasonic.h
- *  Subsystem 5 -- HC-SR04 style ultrasonic ranger on TRIG GP16, ECHO GP17.
- *  Task context only (it sleeps while the echo travels).  Owner: obstacle_task.
+/** @file ultrasonic.h
+ *
+ * @brief Subsystem 5 -- HC-SR04 style ultrasonic ranger on TRIG GP16, ECHO
+ * GP17. Task context only (it sleeps while the echo travels).  Owner:
+ * obstacle_task.
  */
 
 #ifndef S5_ULTRASONIC_H
@@ -25,8 +26,8 @@ typedef enum
 } s5_us_status_t;
 
 bool s5_us_init(void);
-/* One ping.  Waits for the 60 ms cycle, triggers, and sleeps until the echo
-   pulse ends (<= ~31 ms).  *p_time_s is when the sound hit the obstacle,
+/*! @brief One ping.  Waits for the 60 ms cycle, triggers, and sleeps until the
+   echo pulse ends (<= ~31 ms).  *p_time_s is when the sound hit the obstacle,
    on the motion_hal_time() clock. */
 s5_us_status_t s5_us_ping(float64_t * p_range_mm, float64_t * p_time_s);
 

@@ -1,7 +1,11 @@
-/* Barcode shuttle test (analysis image only, -DROBO_BARCODE_SHUTTLE=1 on the
- * line steering profile). Drives the car straight forward and back over the
+/** @file barcode_shuttle.c
+ *
+ * @brief Barcode shuttle test (analysis image only, -DROBO_BARCODE_SHUTTLE=1 on
+ * the line steering profile). Drives the car straight forward and back over the
  * barcode so the reader can be scored again and again, in both directions. The
- * line task is off in this image; nothing here ships in production. */
+ * line task is off in this image; nothing here ships in production.
+ */
+
 #include "../../include/float_types.h"
 #include "subsystems.h"
 #if ROBO_SHUTTLE_TASK
@@ -27,6 +31,7 @@
 
 static bool shuttle_leg(uint32_t command_id, float64_t metres);
 
+/*! @brief Shuttle test: back and forth over a code. */
 void
 shuttle_task (INT code, void * p_context)
 {
@@ -73,7 +78,8 @@ shuttle_task (INT code, void * p_context)
     } /* A task must never return (pc=0 hard fault). */
 }
 
-/* One finite straight move (negative = backward). True when it completed. */
+/*! @brief One finite straight move (negative = backward). True when it
+ * completed. */
 static bool
 shuttle_leg (uint32_t command_id, float64_t metres)
 {

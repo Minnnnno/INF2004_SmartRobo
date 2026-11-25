@@ -1,27 +1,27 @@
-/*
- *  detour.c
- *  Subsystem 5 -- drive round a scanned obstacle and back onto the line.
+/** @file detour.c
  *
- *  1. Release the hold obstacle_task latched to scan.
- *  2. Back up if needed, turn out, drive the diagonal, turn back parallel.
- *  3. Drive forward without stopping, the sensor alternating between sideways
+ * @brief Subsystem 5 -- drive round a scanned obstacle and back onto the line.
+ *
+ * 1. Release the hold obstacle_task latched to scan.
+ * 2. Back up if needed, turn out, drive the diagonal, turn back parallel.
+ * 3. Drive forward without stopping, the sensor alternating between sideways
  *     and ahead, until the obstacle has ended and the rear clears it.
- *  4. Turn in and drive back slowly until Buddy 3's sensors find the line.
+ * 4. Turn in and drive back slowly until Buddy 3's sensors find the line.
  *
- *  From S5_REJOIN_AFTER_MM into step 3, once parallel again after the diagonal,
- *  and during step 4, Buddy 3's centre and right sensors both seeing black
- *  (line_rejoin_seen) where odometry puts the straight line (within
- *  S5_LINE_WINDOW_MM) interrupts the detour: the robot stops, makes sure the
- *  line is under the sensors and hands straight back to the line follower.
- *  It does not line itself up first: the follower's search finds it from here.
- *  Both black anywhere else is a junction's branch or the line curving away:
- *  the robot notes where and carries on, so that the straight path ahead wins.
- *  Only if step 4 then finds no line does it go back to the last black it
- *  noted (return_to_noted) and hand over there.
+ * From S5_REJOIN_AFTER_MM into step 3, once parallel again after the diagonal,
+ * and during step 4, Buddy 3's centre and right sensors both seeing black
+ * (line_rejoin_seen) where odometry puts the straight line (within
+ * S5_LINE_WINDOW_MM) interrupts the detour: the robot stops, makes sure the
+ * line is under the sensors and hands straight back to the line follower.
+ * It does not line itself up first: the follower's search finds it from here.
+ * Both black anywhere else is a junction's branch or the line curving away:
+ * the robot notes where and carries on, so that the straight path ahead wins.
+ * Only if step 4 then finds no line does it go back to the last black it
+ * noted (return_to_noted) and hand over there.
  *
- *  Positions are tracked from the encoders (detour_plan.h frame).  Every
- *  step has a limit; anything unexpected returns false and the caller
- *  stops the robot.
+ * Positions are tracked from the encoders (detour_plan.h frame).  Every
+ * step has a limit; anything unexpected returns false and the caller
+ * stops the robot.
  */
 
 #include "robot_rtos.h" /* first: kernel types with the C library's size_t */
@@ -96,6 +96,7 @@ s5_still_mark (void)
     }
 }
 
+/*! @brief Has the robot moved since s5_still_mark()? */
 bool
 s5_still_moved (const robot_status_t * p_status)
 {
@@ -381,6 +382,7 @@ s5_log_encoders (const char * p_phase, uint32_t command_id)
     return sample;
 }
 
+/*! @brief Name of an abort code. */
 const char *
 s5_why_name (s5_why_t why)
 {
@@ -395,6 +397,7 @@ s5_detour_reason_clear (void)
     g_s5_why_b = 0;
 }
 
+/*! @brief Why the detour gave up, with its two numbers. */
 s5_why_t
 s5_detour_reason (int * p_a, int * p_b)
 {
@@ -542,12 +545,14 @@ s5_detour_run (const s5_detour_plan_t * p_plan)
     return true;
 }
 
+/*! @brief May another plan be tried? */
 bool
 s5_detour_retryable (void)
 {
     return g_s5_leg.out_blocked;
 }
 
+/*! @brief Print the encoder counts after a move. */
 static void
 log_encoder_after (uint32_t command_id, const encoder_sample_t * p_before,
                    s5_move_t result)
@@ -568,13 +573,14 @@ log_encoder_after (uint32_t command_id, const encoder_sample_t * p_before,
                                       : "failed");
 }
 
-/* 14 bits, clamped */
+/*! @brief 14 bits, clamped */
 static int16_t
 why_number (int value)
 {
     return (int16_t)((value < -8192) ? -8192 : ((value > 8191) ? 8191 : value));
 }
 
+/*! @brief Keep the first reason for giving up. */
 static void
 detour_why (s5_why_t why, int detail_a, int detail_b)
 {
@@ -586,12 +592,14 @@ detour_why (s5_why_t why, int detail_a, int detail_b)
     }
 }
 
+/*! @brief Round to whole millimetres. */
 static int
 s5_mm (float64_t value)
 {
     return (int)((value < 0.0) ? (value - 0.5) : (value + 0.5));
 }
 
+/*! @brief Mark and print the stage reached. */
 static void
 detour_stage (UW marker, const char * p_name)
 {
@@ -600,7 +608,7 @@ detour_stage (UW marker, const char * p_name)
               s5_mm(g_s5_x), s5_mm(g_s5_y));
 }
 
-/* Buddy 3's values[1]: 1 while a sensor sees black (debounced) */
+/*! @brief Buddy 3's values[1]: 1 while a sensor sees black (debounced) */
 static bool
 line_seen (const robot_status_t * p_status, float64_t now)
 {
@@ -608,14 +616,16 @@ line_seen (const robot_status_t * p_status, float64_t now)
            && (p_status->line.values[1] > 0.5);
 }
 
+/*! @brief Heading relative to the stop, degrees. */
 static float64_t
 heading_deg (const robot_status_t * p_status)
 {
     return (p_status->motion.heading - g_s5_heading0) / S5_DEG_TO_RAD;
 }
 
-/* Where the axle is during a move: the pass keeps s5_x/s5_y up to date as it
-   goes (drive_track); a straight move from centre travel centre0_m does not. */
+/*! @brief Where the axle is during a move: the pass keeps s5_x/s5_y up to date
+   as it goes (drive_track); a straight move from centre travel centre0_m does
+   not. */
 static void
 move_pose (const robot_status_t * p_status, bool b_straight,
            float64_t centre0_m, float64_t * p_x, float64_t * p_y)
@@ -628,8 +638,9 @@ move_pose (const robot_status_t * p_status, bool b_straight,
     *p_y = g_s5_y + (travelled * sin(heading));
 }
 
-/* Black under the line sensors, with the axle at (x_mm, y_mm), is the line
-   being looked for: the straight line (y 0), or the noted point when going back
+/*! @brief Black under the line sensors, with the axle at (x_mm, y_mm), is the
+   line being looked for: the straight line (y 0), or the noted point when going
+   back
  */
 static bool
 line_where_expected (float64_t x_mm, float64_t y_mm, float64_t heading_now_deg)
@@ -653,7 +664,8 @@ line_where_expected (float64_t x_mm, float64_t y_mm, float64_t heading_now_deg)
     return b_result;
 }
 
-/* Both black, but not where the straight line is: remember it and carry on */
+/*! @brief Both black, but not where the straight line is: remember it and carry
+ * on */
 static void
 note_line (float64_t x_mm, float64_t y_mm, float64_t heading_now_deg,
            float64_t centre_m)
@@ -675,6 +687,7 @@ note_line (float64_t x_mm, float64_t y_mm, float64_t heading_now_deg,
     gb_s5_noted_here    = true;
 }
 
+/*! @brief Next move ID. */
 static uint32_t
 next_id (void)
 {
@@ -684,7 +697,7 @@ next_id (void)
     return g_s5_move_id;
 }
 
-/* Only the hold this task latched is released, and only once Motion
+/*! @brief Only the hold this task latched is released, and only once Motion
    Control reports the robot still; motion_release() checks that too. */
 static bool
 release_hold (void)
@@ -719,7 +732,8 @@ release_hold (void)
     return false;
 }
 
-/* The move was stopped from outside, or Motion Control ended it unfinished. */
+/*! @brief The move was stopped from outside, or Motion Control ended it
+ * unfinished. */
 static s5_move_t
 poll_failure (uint32_t command_id, const robot_status_t * p_status)
 {
@@ -761,8 +775,8 @@ poll_failure (uint32_t command_id, const robot_status_t * p_status)
     return S5_MOVE_RUNNING;
 }
 
-/* Both sensors black, once armed: the line where it is expected stops the
-   robot, anywhere else it is only noted. */
+/*! @brief Both sensors black, once armed: the line where it is expected stops
+   the robot, anywhere else it is only noted. */
 static s5_move_t
 poll_rejoin (const robot_status_t * p_status, float64_t now, bool b_watch_line,
              float64_t centre0_m)
@@ -789,7 +803,7 @@ poll_rejoin (const robot_status_t * p_status, float64_t now, bool b_watch_line,
     return S5_MOVE_RUNNING;
 }
 
-/* Watching the line: see move_poll(). */
+/*! @brief Watching the line: see move_poll(). */
 static s5_move_t
 poll_watch (uint32_t command_id, const robot_status_t * p_status, float64_t now,
             float64_t centre0_m, float64_t * p_line_centre_m)
@@ -825,7 +839,7 @@ poll_watch (uint32_t command_id, const robot_status_t * p_status, float64_t now,
     return S5_MOVE_RUNNING;
 }
 
-/* The wheels are asked to turn but do not. */
+/*! @brief The wheels are asked to turn but do not. */
 static s5_move_t
 poll_stall (uint32_t command_id, const robot_status_t * p_status, float64_t now)
 {
@@ -868,7 +882,7 @@ poll_stall (uint32_t command_id, const robot_status_t * p_status, float64_t now)
     return S5_MOVE_RUNNING;
 }
 
-/* Finished, never accepted, or out of time. */
+/*! @brief Finished, never accepted, or out of time. */
 static s5_move_t
 poll_end (uint32_t command_id, const robot_status_t * p_status,
           float64_t elapsed, float64_t timeout_s)
@@ -901,12 +915,12 @@ poll_end (uint32_t command_id, const robot_status_t * p_status,
     return S5_MOVE_RUNNING;
 }
 
-/* One check of move id.  Both sensors black, once armed, stops the robot at
-   once. Watching the line, one sensor black where odometry expects the line
-   does not: the sensors do not reach the line together, so it keeps going for
-   the other one. If it comes off the line without both ever having been black,
-   or the move ends, it stops then (*p_line_centre_m: centre travel in the
-   middle of the black). */
+/*! @brief One check of move id.  Both sensors black, once armed, stops the
+   robot at once. Watching the line, one sensor black where odometry expects the
+   line does not: the sensors do not reach the line together, so it keeps going
+   for the other one. If it comes off the line without both ever having been
+   black, or the move ends, it stops then (*p_line_centre_m: centre travel in
+   the middle of the black). */
 static s5_move_t
 move_poll (uint32_t command_id, float64_t start, float64_t timeout_s,
            bool b_watch_line, float64_t centre0_m, float64_t * p_line_centre_m)
@@ -952,6 +966,7 @@ move_poll (uint32_t command_id, float64_t start, float64_t timeout_s,
     return result;
 }
 
+/*! @brief Poll a move until it ends. */
 static s5_move_t
 wait_move (uint32_t command_id, float64_t timeout_s, bool b_watch_line,
            float64_t centre0_m, float64_t * p_line_centre_m)
@@ -971,9 +986,10 @@ wait_move (uint32_t command_id, float64_t timeout_s, bool b_watch_line,
     return move;
 }
 
-/* R_BUSY means the nonblocking command-bus lock was unavailable; no command
- * was queued. Retry only that case, with a deadline, and never across a stop,
- * reset, fault, or another command starting. R_OK is submitted only once. */
+/*! @brief R_BUSY means the nonblocking command-bus lock was unavailable; no
+ * command was queued. Retry only that case, with a deadline, and never across a
+ * stop, reset, fault, or another command starting. R_OK is submitted only once.
+ */
 static bool
 retry_busy (float64_t start, uint32_t generation)
 {
@@ -998,9 +1014,9 @@ retry_busy (float64_t start, uint32_t generation)
     return b_result;
 }
 
-/* Straight at S5_DRIVE_SPEED_MM_S (S5_LINE_SEARCH_SPEED_MM_S when watching
-   for the line), negative = reverse.  The pose follows
-   what the encoders measured, not what was asked for. */
+/*! @brief Straight at S5_DRIVE_SPEED_MM_S (S5_LINE_SEARCH_SPEED_MM_S when
+   watching for the line), negative = reverse.  The pose follows what the
+   encoders measured, not what was asked for. */
 static s5_move_t
 straight (float64_t distance_mm, bool b_watch_line, float64_t * p_line_centre_m)
 {
@@ -1098,7 +1114,7 @@ straight (float64_t distance_mm, bool b_watch_line, float64_t * p_line_centre_m)
     return move;
 }
 
-/* Turn in place to a heading relative to the one at the stop, so turn
+/*! @brief Turn in place to a heading relative to the one at the stop, so turn
    errors do not add up over the detour. */
 static s5_move_t
 turn_to (float64_t target_deg)
@@ -1157,6 +1173,7 @@ turn_to (float64_t target_deg)
     return move;
 }
 
+/*! @brief One ping for a look, latching a sensor failure. */
 static bool
 detour_ping (void * p_context, float64_t * p_range_mm)
 {
@@ -1180,9 +1197,10 @@ detour_ping (void * p_context, float64_t * p_range_mm)
     return b_result;
 }
 
-/* Measurements are only useful while still at the same command generation.
-   In particular, never resume a detour across a user stop/reset during a sweep.
-   READY with no move active means the motors are off: see s5_still_moved(). */
+/*! @brief Measurements are only useful while still at the same command
+   generation. In particular, never resume a detour across a user stop/reset
+   during a sweep. READY with no move active means the motors are off: see
+   s5_still_moved(). */
 static bool
 look_still (uint32_t generation)
 {
@@ -1194,7 +1212,8 @@ look_still (uint32_t generation)
            && (status.motion.generation == generation);
 }
 
-/* code is what detour_why() records unless STOP or a fault explains it */
+/*! @brief code is what detour_why() records unless STOP or a fault explains it
+ */
 static s5_look_t
 look_failed (int angle_deg, s5_why_t code, const char * p_why,
              const s5_estimate_t * p_estimate)
@@ -1230,7 +1249,7 @@ look_failed (int angle_deg, s5_why_t code, const char * p_why,
     return S5_LOOK_FAILED;
 }
 
-/* A silent but responding sensor differs from a disconnected/stuck one.
+/*! @brief A silent but responding sensor differs from a disconnected/stuck one.
    Do not turn sensor failures or conflicting readings into permission to drive.
    b_unsure: pings that disagree (an edge or a slanted face, half the beam on
    it) return S5_LOOK_UNSURE with the estimate in *p_estimate, for a caller
@@ -1298,13 +1317,15 @@ look_ex (int angle_deg, float64_t * p_range_mm, bool b_unsure,
                        &estimate);
 }
 
+/*! @brief One look that must give a clear answer. */
 static s5_look_t
 look (int angle_deg, float64_t * p_range_mm)
 {
     return look_ex(angle_deg, p_range_mm, false, NULL);
 }
 
-/* Nothing ahead within the move plus the front overhang and the margin */
+/*! @brief Nothing ahead within the move plus the front overhang and the margin
+ */
 static bool
 path_clear (float64_t distance_mm)
 {
@@ -1344,8 +1365,9 @@ path_clear (float64_t distance_mm)
    the beam's uncertain echo bearing; normal no-echo permits progress, while
    an unusable sensor or a close echo refuses the move. Distances include the
    sensor's offset from the servo axis, as in the original scan. */
-/* An echo at range_mm (from the transducer) seen at servo angle_deg could be in
-   the corridor: needed_mm ahead of the servo axis, half_width_mm either side */
+/*! @brief An echo at range_mm (from the transducer) seen at servo angle_deg
+   could be in the corridor: needed_mm ahead of the servo axis, half_width_mm
+   either side */
 static bool
 echo_in_path (float64_t range_mm, int angle_deg, float64_t needed_mm,
               float64_t half_width_mm)
@@ -1360,6 +1382,7 @@ echo_in_path (float64_t range_mm, int angle_deg, float64_t needed_mm,
                <= half_width_mm);
 }
 
+/*! @brief Is this echo the obstacle being driven round? */
 static bool
 echo_is_known (const robot_status_t * p_status, int angle_deg,
                float64_t range_mm)
@@ -1369,7 +1392,7 @@ echo_is_known (const robot_status_t * p_status, int angle_deg,
                                    heading_deg(p_status), angle_deg, range_mm));
 }
 
-/* Why the robot cannot be looked from: STOP, a fault, or it moved. */
+/*! @brief Why the robot cannot be looked from: STOP, a fault, or it moved. */
 static s5_why_t
 sweep_why (bool b_status, const robot_status_t * p_status, s5_why_t otherwise)
 {
@@ -1395,7 +1418,7 @@ sweep_why (bool b_status, const robot_status_t * p_status, s5_why_t otherwise)
     return result;
 }
 
-/* A look in the sweep failed, or the robot moved during it. */
+/*! @brief A look in the sweep failed, or the robot moved during it. */
 static void
 sweep_failed (const char * p_phase, int angle, s5_look_t look)
 {
@@ -1414,6 +1437,7 @@ sweep_failed (const char * p_phase, int angle, s5_look_t look)
     detour_why(sweep_why(b_now, &now, S5_WHY_MOVED), angle, 0);
 }
 
+/*! @brief Remember where the sweep was blocked. */
 static void
 sweep_block (int angle, float64_t range_mm)
 {
@@ -1422,9 +1446,10 @@ sweep_block (int angle, float64_t range_mm)
     g_s5_block_range       = (uint16_t)s5_mm(range_mm);
 }
 
-/* The pings disagree: some heard nothing, the rest no one range.  The nearest
-   decides; the obstacle being passed excuses them only if it explains the
-   nearest and the furthest (and so all between).  True: nothing in the way. */
+/*! @brief The pings disagree: some heard nothing, the rest no one range.  The
+   nearest decides; the obstacle being passed excuses them only if it explains
+   the nearest and the furthest (and so all between).  True: nothing in the way.
+ */
 static bool
 sweep_unsure_clear (const char * p_phase, int angle,
                     const s5_estimate_t *  p_estimate,
@@ -1465,7 +1490,8 @@ sweep_unsure_clear (const char * p_phase, int angle,
     return b_clear;
 }
 
-/* An agreed echo.  True: not in the way, or the obstacle being passed. */
+/*! @brief An agreed echo.  True: not in the way, or the obstacle being passed.
+ */
 static bool
 sweep_echo_clear (const char * p_phase, int angle, float64_t range_mm,
                   const robot_status_t * p_status, float64_t needed,
@@ -1501,6 +1527,7 @@ sweep_echo_clear (const char * p_phase, int angle, float64_t range_mm,
     return b_clear;
 }
 
+/*! @brief Three looks ahead before a move. True: nothing in the way. */
 static bool
 clearance_sweep (float64_t distance_mm, const char * p_phase)
 {
@@ -1583,6 +1610,7 @@ clearance_sweep (float64_t distance_mm, const char * p_phase)
     return true;
 }
 
+/*! @brief Servo angle towards the obstacle while passing. */
 static int
 obstacle_look_angle (const s5_detour_plan_t * p_plan)
 {
@@ -1590,6 +1618,7 @@ obstacle_look_angle (const s5_detour_plan_t * p_plan)
                                            : S5_ANGLE_LEFT_DEG;
 }
 
+/*! @brief Room ahead and beside before passing. */
 static bool
 passing_clearance (const s5_detour_plan_t * p_plan)
 {
@@ -1635,8 +1664,9 @@ passing_clearance (const s5_detour_plan_t * p_plan)
     return true;
 }
 
-/* The diagonal is blocked: turn further out, keeping the sideways shift.  A
-   fault is not blocked.  False: no further to turn, or the turn failed. */
+/*! @brief The diagonal is blocked: turn further out, keeping the sideways
+   shift.  A fault is not blocked.  False: no further to turn, or the turn
+   failed. */
 static bool
 turn_further (float64_t sign, bool b_travelled, float64_t * p_heading_deg,
               float64_t * p_remaining)
@@ -1678,6 +1708,7 @@ turn_further (float64_t sign, bool b_travelled, float64_t * p_heading_deg,
     return b_turned;
 }
 
+/*! @brief Turn out, drive the diagonal and turn back parallel. */
 static bool
 go_out (const s5_detour_plan_t * p_plan)
 {
@@ -1752,7 +1783,7 @@ go_out (const s5_detour_plan_t * p_plan)
     return (S5_MOVE_DONE == turn_to(0.0)) && (passing_clearance(p_plan));
 }
 
-/* Wait for a sensor on the line, debounced, while stationary */
+/*! @brief Wait for a sensor on the line, debounced, while stationary */
 static bool
 line_confirm (void)
 {
@@ -1773,9 +1804,9 @@ line_confirm (void)
 }
 
 /* Already standing on the line, not held: nothing to stop or back out of */
-/* A move was stopped on the line and left the hold latched.  Braking can carry
-   the sensors past it, and the line follower does not search for a line it
-   never owned, so reverse onto it if it is no longer there. */
+/*! @brief A move was stopped on the line and left the hold latched.  Braking
+   can carry the sensors past it, and the line follower does not search for a
+   line it never owned, so reverse onto it if it is no longer there. */
 static bool
 rejoin_after_stop (void)
 {
@@ -1824,6 +1855,7 @@ rejoin_after_stop (void)
     return b_result;
 }
 
+/*! @brief Bring the pose up to date with the encoders. */
 static void
 drive_track (s5_drive_t * p_drive, const robot_status_t * p_status)
 {
@@ -1838,6 +1870,7 @@ drive_track (s5_drive_t * p_drive, const robot_status_t * p_status)
     p_drive->heading_deg = heading;
 }
 
+/*! @brief Start the long pass move. */
 static bool
 drive_start (s5_drive_t * p_drive, float64_t distance_mm)
 {
@@ -1893,6 +1926,7 @@ drive_start (s5_drive_t * p_drive, float64_t distance_mm)
     return b_result;
 }
 
+/*! @brief One check of the pass move. */
 static s5_move_t
 drive_poll (s5_drive_t * p_drive)
 {
@@ -1912,6 +1946,7 @@ drive_poll (s5_drive_t * p_drive)
     return p_drive->result;
 }
 
+/*! @brief Poll the pass move for some time. */
 static void
 drive_wait (s5_drive_t * p_drive, unsigned wait_ms)
 {
@@ -1924,7 +1959,8 @@ drive_wait (s5_drive_t * p_drive, unsigned wait_ms)
     }
 }
 
-/* Between pings, so that a fault or the line is seen within one ping (60 ms) */
+/*! @brief Between pings, so that a fault or the line is seen within one ping
+ * (60 ms) */
 static bool
 drive_ping (void * p_context, float64_t * p_range_mm)
 {
@@ -1949,9 +1985,9 @@ drive_ping (void * p_context, float64_t * p_range_mm)
     return b_result;
 }
 
-/* *p_x: where the robot was, halfway through the pings.  Pings that disagree
-   are S5_LOOK_UNSURE, normal while passing an edge: stopping for them would
-   abandon detours, and the next look is about 100 mm on. */
+/*! @brief *p_x: where the robot was, halfway through the pings.  Pings that
+   disagree are S5_LOOK_UNSURE, normal while passing an edge: stopping for them
+   would abandon detours, and the next look is about 100 mm on. */
 static s5_look_t
 drive_look (s5_drive_t * p_drive, int angle_deg, float64_t * p_range_mm,
             float64_t * p_x)
@@ -1983,7 +2019,8 @@ drive_look (s5_drive_t * p_drive, int angle_deg, float64_t * p_range_mm,
     return outcome;
 }
 
-/* Wait for the stop, then log and bring the pose up to date.  Leaves it held.
+/*! @brief Wait for the stop, then log and bring the pose up to date.  Leaves it
+ * held.
  */
 static bool
 drive_settle (s5_drive_t * p_drive)
@@ -2009,7 +2046,8 @@ drive_settle (s5_drive_t * p_drive)
     return b_result;
 }
 
-/* The move ended by itself: the line interrupted it, or something went wrong */
+/*! @brief The move ended by itself: the line interrupted it, or something went
+ * wrong */
 static bool
 drive_ended (s5_drive_t * p_drive)
 {
@@ -2040,7 +2078,8 @@ drive_ended (s5_drive_t * p_drive)
     return b_result;
 }
 
-/* Sensor failed, or something ahead: the caller stops too, but this is moving
+/*! @brief Sensor failed, or something ahead: the caller stops too, but this is
+ * moving
  */
 static bool
 drive_refuse (s5_why_t code, const char * p_reason, int value_mm)
@@ -2052,8 +2091,8 @@ drive_refuse (s5_why_t code, const char * p_reason, int value_mm)
     return false;
 }
 
-/* True: go on.  An unsure look ahead counts if its nearest agreeing echo is
- * close. */
+/*! @brief True: go on.  An unsure look ahead counts if its nearest agreeing
+ * echo is close. */
 static bool
 drive_look_ahead (s5_drive_t * p_drive)
 {
@@ -2090,7 +2129,7 @@ drive_look_ahead (s5_drive_t * p_drive)
     return b_result;
 }
 
-/* One sideways look while passing: where the obstacle has got to. */
+/*! @brief One sideways look while passing: where the obstacle has got to. */
 static void
 pass_note_look (s5_pass_t * p_pass, const s5_detour_plan_t * p_plan,
                 s5_look_t result, float64_t range_mm, float64_t look_x)
@@ -2113,6 +2152,7 @@ pass_note_look (s5_pass_t * p_pass, const s5_detour_plan_t * p_plan,
     }
 }
 
+/*! @brief Drive past the obstacle until the rear clears it. */
 static bool
 pass_steps (const s5_detour_plan_t * p_plan)
 {
@@ -2200,9 +2240,9 @@ pass_steps (const s5_detour_plan_t * p_plan)
     return (drive_settle(&drive)) && (release_hold());
 }
 
-/* The pass stopped against something (the held robot is still).  Tilt away from
-   the obstacle, a step more each time, look that way, back out along it, and
-   turn parallel again so that the pass can start over from further out.
+/*! @brief The pass stopped against something (the held robot is still).  Tilt
+   away from the obstacle, a step more each time, look that way, back out along
+   it, and turn parallel again so that the pass can start over from further out.
    True: ready to resume. */
 static bool
 escape_stall (const s5_detour_plan_t * p_plan, unsigned attempt)
@@ -2263,8 +2303,9 @@ escape_stall (const s5_detour_plan_t * p_plan, unsigned attempt)
     return false;
 }
 
-/* The line can interrupt this and the return leg, but not the way out, nor a
-   stall escape: only once parallel again and S5_REJOIN_AFTER_MM further on. */
+/*! @brief The line can interrupt this and the return leg, but not the way out,
+   nor a stall escape: only once parallel again and S5_REJOIN_AFTER_MM further
+   on. */
 static bool
 pass_obstacle (const s5_detour_plan_t * p_plan)
 {
@@ -2307,9 +2348,9 @@ pass_obstacle (const s5_detour_plan_t * p_plan)
     return b_ok;
 }
 
-/* Drive mm (negative: reverse) watching for the noted line: black under the
-   sensors within S5_LINE_WINDOW_MM of the noted point ends it there.
-   True: stopped on it, s5_rejoin_centre_m set, for rejoin_after_stop(). */
+/*! @brief Drive mm (negative: reverse) watching for the noted line: black under
+   the sensors within S5_LINE_WINDOW_MM of the noted point ends it there. True:
+   stopped on it, s5_rejoin_centre_m set, for rejoin_after_stop(). */
 static bool
 drive_onto_noted (float64_t distance_mm)
 {
@@ -2341,9 +2382,10 @@ drive_onto_noted (float64_t distance_mm)
     }
 }
 
-/* The way back found no line where the straight path should be, so the line
-   curved: drive back to where both sensors last saw it and hand over there.
-   The obstacle is not excused on this leg (s5_known): it was not planned. */
+/*! @brief The way back found no line where the straight path should be, so the
+   line curved: drive back to where both sensors last saw it and hand over
+   there. The obstacle is not excused on this leg (s5_known): it was not
+   planned. */
 static bool
 return_to_noted (void)
 {
@@ -2402,12 +2444,12 @@ return_to_noted (void)
     return drive_onto_noted(length);
 }
 
-/* The line was crossed on the way back itself, away from the straight path,
-   and there was none on the straight path: the line curved.  Reverse along the
-   track just driven, over where it was crossed, rather than turning round: no
-   turn, so no new heading error (a spin of 180 deg on 18 Nov missed a 2 cm
-   line by more than the overshoot).  The robot has just driven this track, so
-   it is not checked again; the ultrasonic only looks forward. */
+/*! @brief The line was crossed on the way back itself, away from the straight
+   path, and there was none on the straight path: the line curved.  Reverse
+   along the track just driven, over where it was crossed, rather than turning
+   round: no turn, so no new heading error (a spin of 180 deg on 18 Nov missed a
+   2 cm line by more than the overshoot).  The robot has just driven this track,
+   so it is not checked again; the ultrasonic only looks forward. */
 static bool
 reverse_to_noted (void)
 {
@@ -2435,6 +2477,7 @@ reverse_to_noted (void)
     return b_result;
 }
 
+/*! @brief Turn in and drive until the line is found. */
 static bool
 return_to_line (const s5_detour_plan_t * p_plan)
 {
@@ -2500,9 +2543,9 @@ return_to_line (const s5_detour_plan_t * p_plan)
     return rejoin_after_stop();
 }
 
-/* Held, still and fully STOPPED, the state the scan requires.  s5_wait_still()
-   also accepts READY, which Motion Control reports for a few ms after
-   motion_stop() on a robot that was already still. */
+/*! @brief Held, still and fully STOPPED, the state the scan requires.
+   s5_wait_still() also accepts READY, which Motion Control reports for a few ms
+   after motion_stop() on a robot that was already still. */
 static bool
 wait_stopped (void)
 {
@@ -2524,10 +2567,10 @@ wait_stopped (void)
     return false;
 }
 
-/* The way out was blocked before any of the diagonal was driven: turn back to
-   the heading it stopped at and drive forward over the reversing, so that the
-   next plan starts from the pose the scan was taken at.  True: held and still
-   there. */
+/*! @brief The way out was blocked before any of the diagonal was driven: turn
+   back to the heading it stopped at and drive forward over the reversing, so
+   that the next plan starts from the pose the scan was taken at.  True: held
+   and still there. */
 static bool
 back_to_start (const s5_detour_plan_t * p_plan)
 {

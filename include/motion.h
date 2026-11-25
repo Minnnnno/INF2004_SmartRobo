@@ -1,3 +1,8 @@
+/** @file motion.h
+ *
+ * @brief Motion Control types and interface.
+ */
+
 #ifndef ROBO_MOTION_H
 #define ROBO_MOTION_H
 
@@ -287,7 +292,8 @@ bool      odometry_step(odometry_t * p_odom, const motion_config_t * p_config,
                         const encoder_sample_t * p_sample, float64_t delta_s);
 void      motion_init(motion_t * p_motion, const motion_config_t * p_config,
                       encoder_sample_t sample, float64_t now, bool b_setup_ok);
-/* Call once at task startup, before the first update. Never clears a fault. */
+/*! @brief Call once at task startup, before the first update. Never clears a
+ * fault. */
 void motion_begin_sampling(motion_t * p_motion, encoder_sample_t sample,
                            float64_t now);
 void motion_step(motion_t * p_motion, encoder_sample_t sample, float64_t now);
@@ -297,7 +303,8 @@ motion_result_t motion_accept(motion_t *               p_motion,
 void            motion_cancel(motion_t * p_motion, float64_t now);
 void            motion_raise_fault(motion_t * p_motion, motion_fault_t fault,
                                    float64_t now);
-/* Restore a known pre-reboot encoder fault; a quiet startup cannot clear it. */
+/*! @brief Restore a known pre-reboot encoder fault; a quiet startup cannot
+ * clear it. */
 void motion_restore_encoder_fault(motion_t * p_motion, encoder_sample_t sample,
                                   float64_t now);
 bool motion_release(motion_t * p_motion, bool b_checks_ok);

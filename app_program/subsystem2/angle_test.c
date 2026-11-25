@@ -1,3 +1,8 @@
+/** @file angle_test.c
+ *
+ * @brief Angle test image: drives the turn controller on the hardware.
+ */
+
 #ifdef ROBO_ANGLE_TEST
 #include "../../include/float_types.h"
 #include "angle_test.h"
@@ -12,6 +17,7 @@
 static angle_control_t g_control;
 static volatile bool   gb_expired;
 static bool            gb_timer_ready;
+/*! @brief Stop both motors. */
 static void
 brake (void)
 {
@@ -22,6 +28,7 @@ brake (void)
     motion_hal_emergency_stop();
 }
 
+/*! @brief Hardware deadline: cut the motors. */
 static void
 deadline_irq (UINT number)
 {
@@ -32,6 +39,7 @@ deadline_irq (UINT number)
     ClearInt(3U);
 }
 
+/*! @brief Set up the angle test. */
 bool
 angle_test_init (void)
 {
@@ -72,6 +80,7 @@ angle_test_init (void)
     return b_result;
 }
 
+/*! @brief Start one test turn. */
 bool
 angle_test_start (int direction)
 {
@@ -101,6 +110,7 @@ angle_test_start (int direction)
     return b_result;
 }
 
+/*! @brief Poll the running test. */
 void
 angle_test_poll (void)
 {
@@ -149,6 +159,7 @@ angle_test_poll (void)
     restore_interrupts(irq_state);
 }
 
+/*! @brief Stop the test. */
 void
 angle_test_stop (void)
 {
@@ -164,12 +175,14 @@ angle_test_stop (void)
     restore_interrupts(irq_state);
 }
 
+/*! @brief Copy of the turn controller's state. */
 angle_control_t
 angle_test_status (void)
 {
     return g_control;
 }
 
+/*! @brief True while a turn is running. */
 bool
 angle_test_active (void)
 {

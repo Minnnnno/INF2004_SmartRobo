@@ -1,7 +1,10 @@
-/* Task-owned Buddy 4 lifecycle. No motor writes, queues or console calls.
- * Reads acceleration (tilt, hump phases, lift/overturn latch) and the
+/** @file buddy4.h
+ *
+ * @brief Task-owned Buddy 4 lifecycle. No motor writes, queues or console
+ * calls. Reads acceleration (tilt, hump phases, lift/overturn latch) and the
  * magnetometer (raw counts for the compass in terrain_task.c).
  */
+
 #ifndef BUDDY4_H
 #define BUDDY4_H
 #include "gy511_read.h"
@@ -110,20 +113,20 @@ typedef struct
     buddy4_control_t control; /* Readable fields, one byte total. */
 } buddy4_t;
 
-/* Cold-start a fresh context. Only call once; reset commands preserve
+/*! @brief Cold-start a fresh context. Only call once; reset commands preserve
  * reference. */
 void buddy4_begin(buddy4_t * p_context, uint32_t now_ms);
-/* Advance one state-machine step in task context. Checks STOP before I2C.
- * Monitoring reads acceleration and the magnetometer; no retry loops or delays.
- * Driver calls are synchronous and may exceed the nominal task period.
+/*! @brief Advance one state-machine step in task context. Checks STOP before
+ * I2C. Monitoring reads acceleration and the magnetometer; no retry loops or
+ * delays. Driver calls are synchronous and may exceed the nominal task period.
  * This context belongs to one task; external tasks must not mutate it directly.
  */
 void    buddy4_step(buddy4_t * p_context, uint8_t inputs);
 uint8_t buddy4_state(buddy4_t const * p_context);
 uint8_t buddy4_attempts(buddy4_t const * p_context);
-/* Latched lift/overturn condition (LIFT_NONE/LIFTED/OVERTURNED). Detection
- * runs only in MONITORING; any state change clears it (lift detection is
- * unavailable while the sensor recovers or has faulted). */
+/*! @brief Latched lift/overturn condition (LIFT_NONE/LIFTED/OVERTURNED).
+ * Detection runs only in MONITORING; any state change clears it (lift detection
+ * is unavailable while the sensor recovers or has faulted). */
 uint8_t buddy4_lift(buddy4_t const * p_context);
 /* Hump freeze (demo: the run ends with the robot lifted and turned over). An
  * OVERTURNED latch freezes hump recording: no hump is measured and the run

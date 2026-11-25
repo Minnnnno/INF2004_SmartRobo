@@ -1,4 +1,6 @@
-/* Buddy 4 terrain slot decoder for other subsystems (owner: Buddy 4).
+/** @file terrain_status.h
+ *
+ * @brief Buddy 4 terrain slot decoder for other subsystems (owner: Buddy 4).
  * Read-only: these helpers only interpret the published Terrain snapshot;
  * they never command motion. (Buddy 4 itself stops the motors when the robot
  * is lifted or overturned; see app_program/subsystem4/lift.h.)
@@ -8,6 +10,7 @@
  * Slot layout (docs/API.md): values[0] = turn rate rad/s; values[3] =
  * validity bits 0..2 | T_STATE << 3 | motion class << 6 | motion valid << 9.
  */
+
 #ifndef ROBO_TERRAIN_STATUS_H
 #define ROBO_TERRAIN_STATUS_H
 #include "float_types.h"
@@ -32,7 +35,8 @@
  * 3-bit range. */
 #define TERRAIN_TS_UNKNOWN (0xFFU)
 
-/* Published T_STATE, or TERRAIN_TS_UNKNOWN when the slot holds no usable data.
+/*! @brief Published T_STATE, or TERRAIN_TS_UNKNOWN when the slot holds no
+ * usable data.
  */
 static inline uint8_t
 terrain_published_state (subsystem_status_t const * p_terrain)
@@ -77,7 +81,7 @@ terrain_published_state (subsystem_status_t const * p_terrain)
 #define TERRAIN_MC_SHIFT      (6U)
 #define TERRAIN_MOTION_VALID  (0x200U)
 
-/* True with *p_class set when the slot carries a valid motion class. */
+/*! @brief True with *p_class set when the slot carries a valid motion class. */
 static inline bool
 terrain_motion_class (subsystem_status_t const * p_terrain, uint8_t * p_class)
 {
@@ -108,7 +112,7 @@ terrain_motion_class (subsystem_status_t const * p_terrain, uint8_t * p_class)
     return b_result;
 }
 
-/* IMU fault indicator (CR1): Buddy 4 latched SENSOR_FAULT, published as
+/*! @brief IMU fault indicator (CR1): Buddy 4 latched SENSOR_FAULT, published as
  * T_STATE 5. The robot keeps driving; only terrain data is unavailable.
  * A latched fault clears by power-up (level reference needs a level boot). */
 static inline bool

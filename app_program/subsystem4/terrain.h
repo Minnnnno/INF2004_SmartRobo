@@ -1,9 +1,12 @@
-/* Hump phases and peak height, nested inside Buddy 4 MONITORING.
+/** @file terrain.h
+ *
+ * @brief Hump phases and peak height, nested inside Buddy 4 MONITORING.
  * Course model: 2 driven wheels + centre caster, each hump under ONE wheel
  * side. The input is the right-minus-left wheel contact height from the
  * sideways component of gravity (tilt_side_height_tenths), so body pitch and
  * the caster do not affect it. A hump under both wheels at once cancels out.
  */
+
 #ifndef TERRAIN_H
 #define TERRAIN_H
 #include <stdbool.h>
@@ -58,36 +61,40 @@ typedef struct
     uint8_t run_max;
 } terrain_t;
 
-/* Explicit new-run reset: clears phases, peaks and the run maximum.
+/*! @brief Explicit new-run reset: clears phases, peaks and the run maximum.
  * Cold initialisation is also a zero-filled context. Completion automatically
  * rearms.
  */
 void terrain_reset(terrain_t * p_terrain);
-/* Consume a latched completion once, from the owning task. Consume after each
- * update; multiple events coalesce if ignored. Not an inter-task event queue.
+/*! @brief Consume a latched completion once, from the owning task. Consume
+ * after each update; multiple events coalesce if ignored. Not an inter-task
+ * event queue.
  */
 bool terrain_take_completed(terrain_t * p_terrain);
-/* One fresh observation per call: valid=false (stale/unsuitable tilt) cancels
- * pending timing and keeps the confirmed phase and peaks.
+/*! @brief One fresh observation per call: valid=false (stale/unsuitable tilt)
+ * cancels pending timing and keeps the confirmed phase and peaks.
  * height_tenths: right-minus-left wheel contact height, 0.1 mm (sign = side).
  * The run maximum changes only when a hump completes.
  */
 void terrain_step(terrain_t * p_terrain, bool b_valid, int16_t height_tenths,
                   uint32_t now_ms);
-/* Discard the hump in progress (robot lifted/overturned: the tilt is the hand,
- * not the course): back to WAITING with no completion event. Completed humps,
- * the run maximum and an unconsumed event are kept. Safe to call every sample.
+/*! @brief Discard the hump in progress (robot lifted/overturned: the tilt is
+ * the hand, not the course): back to WAITING with no completion event.
+ * Completed humps, the run maximum and an unconsumed event are kept. Safe to
+ * call every sample.
  */
 void terrain_discard(terrain_t * p_terrain);
-/* Coherent three-bit status value; copy through a protected interface across
- * tasks. Internal flags/padding must not be transmitted directly. NULL gives
- * UNKNOWN.
+/*! @brief Coherent three-bit status value; copy through a protected interface
+ * across tasks. Internal flags/padding must not be transmitted directly. NULL
+ * gives UNKNOWN.
  */
 uint8_t terrain_status(terrain_t const * p_terrain);
-/* Last completed hump peak byte (mm | TERRAIN_PEAK_RIGHT); 0 before the first.
+/*! @brief Last completed hump peak byte (mm | TERRAIN_PEAK_RIGHT); 0 before the
+ * first.
  */
 uint8_t terrain_last_peak(terrain_t const * p_terrain);
-/* Highest completed peak this run (mm | TERRAIN_RUN_VALID); 0 before the first.
+/*! @brief Highest completed peak this run (mm | TERRAIN_RUN_VALID); 0 before
+ * the first.
  */
 uint8_t      terrain_run_max(terrain_t const * p_terrain);
 char const * terrain_phase_name(uint8_t status);

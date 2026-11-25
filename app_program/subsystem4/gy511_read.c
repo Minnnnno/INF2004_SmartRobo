@@ -1,5 +1,9 @@
-/* LSM303DLHC acceleration and magnetic acquisition; ST DocID018771 Rev 2,
- * sections 5-7. */
+/** @file gy511_read.c
+ *
+ * @brief LSM303DLHC acceleration and magnetic acquisition; ST DocID018771 Rev
+ * 2, sections 5-7.
+ */
+
 #include "gy511_read.h"
 #include <tk/device.h>
 
@@ -18,7 +22,7 @@
  * polling, not a lossless stream. Magnetic status is never consulted.
  */
 
-/* Get one fresh X/Y/Z sample from accelerator*/
+/*! @brief Get one fresh X/Y/Z sample from accelerator*/
 ER
 gy511_read_acceleration (gy511_acceleration_t * p_sample)
 {
@@ -167,8 +171,8 @@ gy511_acceleration_mg (gy511_acceleration_t const * p_sample, uint8_t axis,
     return result;
 }
 
-/* Magnetic registers auto-increment from 0x03, in big-endian X,Z,Y order.
- * Read all six bytes, including when LOCK is set, to finish a previously
+/*! @brief Magnetic registers auto-increment from 0x03, in big-endian X,Z,Y
+ * order. Read all six bytes, including when LOCK is set, to finish a previously
  * interrupted output read. Discard that locked set; wait for a fresh one.
  * Datasheet table 75 permits only signed 12-bit values. Reject all other
  * words (including 0xF000 overflow), before packing away sign-extension bits.
@@ -286,15 +290,16 @@ gy511_read_magnetic_diagnostic (gy511_magnetic_t * p_sample,
     return status;
 }
 
-/* Ordinary acquisition API for callers that do not need diagnostics. */
+/*! @brief Ordinary acquisition API for callers that do not need diagnostics. */
 ER
 gy511_read_magnetic (gy511_magnetic_t * p_sample)
 {
     return gy511_read_magnetic_diagnostic(p_sample, NULL);
 }
 
-/* Share the existing signed 12-bit decoder, without aliasing different types.
- * The temporary copies packed bits only; no acceleration scaling is applied.
+/*! @brief Share the existing signed 12-bit decoder, without aliasing different
+ * types. The temporary copies packed bits only; no acceleration scaling is
+ * applied.
  */
 ER
 gy511_magnetic_counts (gy511_magnetic_t const * p_sample, uint8_t axis,

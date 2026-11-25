@@ -1,20 +1,20 @@
-/*
- *  subsystem5.c
- *  Subsystem 5 -- obstacle detection and width measurement.
+/** @file subsystem5.c
  *
- *  1. Watch straight ahead (servo 90 deg) while the line follower drives.
- *  2. Stop the robot with the sensor 150 mm from the obstacle.
- *  3. Sweep 20 -> 160 deg in 10 deg steps, then walk 1 deg at a time out
+ * @brief Subsystem 5 -- obstacle detection and width measurement.
+ *
+ * 1. Watch straight ahead (servo 90 deg) while the line follower drives.
+ * 2. Stop the robot with the sensor 150 mm from the obstacle.
+ * 3. Sweep 20 -> 160 deg in 10 deg steps, then walk 1 deg at a time out
  *     from each coarse edge until clear space is confirmed.
- *  4. Print the width, where the obstacle sits and which side to pass it
+ * 4. Print the width, where the obstacle sits and which side to pass it
  *     on (and publish them).
- *  5. Drive round it on that side and back onto the line (detour.c), then
+ * 5. Drive round it on that side and back onto the line (detour.c), then
  *     hand the wheels back to the line follower.  If anything about the
  *     detour is uncertain, the robot stays stopped instead.
  *
- *  The work is split: obstacle_scan.c and detour_plan.c (the algorithms),
- *  detour.c (the detour's moves), ultrasonic.c and servo.c (the hardware).
- *  This file is the task and its motion rules.
+ * The work is split: obstacle_scan.c and detour_plan.c (the algorithms),
+ * detour.c (the detour's moves), ultrasonic.c and servo.c (the hardware).
+ * This file is the task and its motion rules.
  */
 
 #include "../../include/float_types.h"
@@ -147,30 +147,35 @@ static bool         robot_lifted(void);
 static void         report_abort(s5_why_t why, int detail_a, int detail_b,
                                  unsigned tries, bool b_pose);
 
+/*! @brief Round to the nearest integer. */
 static int
 s5_round (float64_t value)
 {
     return (int)((value < 0.0) ? (value - 0.5) : (value + 0.5));
 }
 
+/*! @brief Absolute value. */
 static int
 s5_magnitude (int value)
 {
     return (value < 0) ? -value : value;
 }
 
+/*! @brief Seconds as milliseconds, modulo 2^32. */
 static uint32_t
 s5_ms (float64_t seconds)
 {
     return (uint32_t)(uint64_t)(fmax(0.0, seconds) * 1000.0);
 }
 
+/*! @brief Forget the recent pings. */
 static void
 history_clear (s5_history_t * p_history)
 {
     memset(p_history, 0, sizeof(*p_history));
 }
 
+/*! @brief Add one ping. */
 static void
 history_add (s5_history_t * p_history, bool b_echo, float64_t range_mm,
              float64_t time_s)
@@ -190,7 +195,7 @@ history_add (s5_history_t * p_history, bool b_echo, float64_t range_mm,
                     | (((next + 1U) % S5_HISTORY) << S5_HISTORY_NEXT_SHIFT));
 }
 
-/* Median of the last pings, each moved forward to "now" by the distance
+/*! @brief Median of the last pings, each moved forward to "now" by the distance
    driven since it was taken.  A missed or stale ping votes for "clear", so
    one stray short echo cannot stop the robot but two can. */
 static float64_t
@@ -237,7 +242,8 @@ history_front (const s5_history_t * p_history, float64_t now,
     return value[1];
 }
 
-/* Stop on the ping nearest to S5_STOP_MM: the next one comes a ping period
+/*! @brief Stop on the ping nearest to S5_STOP_MM: the next one comes a ping
+   period
    (~5 mm at line speed) later, so stop now if that is closer to target. */
 static bool
 should_stop (float64_t front_mm, float64_t speed_mm_s)
@@ -250,12 +256,14 @@ should_stop (float64_t front_mm, float64_t speed_mm_s)
            && ((predicted - S5_STOP_MM) <= (0.5 * speed * S5_PING_PERIOD_S));
 }
 
+/*! @brief Is the ultrasonic sensor answering? */
 static void
 note_sensor (s5_us_status_t result)
 {
     g_s5_task.sensor_ok = (S5_US_OK == result) || (S5_US_NO_ECHO == result);
 }
 
+/*! @brief Write the obstacle slot of the shared status. */
 static bool
 publish_status (float64_t now)
 {
@@ -279,7 +287,7 @@ publish_status (float64_t now)
     return robot_update_subsystem(SOURCE_OBSTACLE, &status);
 }
 
-/* The line follower reads values[3] to keep off the wheels: a change of
+/*! @brief The line follower reads values[3] to keep off the wheels: a change of
    phase must reach the shared status before the robot moves. */
 static bool
 publish_verified (void)
@@ -301,6 +309,7 @@ publish_verified (void)
 
 /* ---- scan callbacks ---- */
 
+/*! @brief One ping of a scan, latching a sensor failure. */
 static bool
 scan_ping (void * p_context, float64_t * p_range_mm)
 {
@@ -325,7 +334,7 @@ scan_ping (void * p_context, float64_t * p_range_mm)
     return b_result;
 }
 
-/* The scan needs the robot still.  If something released the motors
+/*! @brief The scan needs the robot still.  If something released the motors
    meanwhile (e.g. an MQTT "start"), stop again: the obstacle is right there. */
 static bool
 hold_still (void)
@@ -357,6 +366,7 @@ hold_still (void)
     return b_result;
 }
 
+/*! @brief Point the sensor and measure, only while held still. */
 static bool
 scan_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
 {
@@ -394,6 +404,7 @@ scan_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
 
 /* ---- report ---- */
 
+/*! @brief Print one reading. */
 static void
 print_point (const char * p_phase, s5_point_t point)
 {
@@ -419,6 +430,7 @@ print_point (const char * p_phase, s5_point_t point)
               s5_point_object(point) ? "OBSTACLE" : "clear");
 }
 
+/*! @brief Print one edge. */
 static void
 print_edge (const char * p_name, const s5_edge_t * p_edge, int limit_deg)
 {
@@ -447,6 +459,7 @@ print_edge (const char * p_name, const s5_edge_t * p_edge, int limit_deg)
     }
 }
 
+/*! @brief Name of a pass side. */
 static const char *
 avoid_name (s5_avoid_side_t side)
 {
@@ -455,7 +468,7 @@ avoid_name (s5_avoid_side_t side)
                : ((S5_AVOID_RIGHT == side) ? "right" : "none");
 }
 
-/* The end of the obstacle on this side has been placed */
+/*! @brief The end of the obstacle on this side has been placed */
 static bool
 end_known (const s5_scan_t * p_scan, unsigned side)
 {
@@ -463,7 +476,7 @@ end_known (const s5_scan_t * p_scan, unsigned side)
                                 : p_scan->edge[side].b_found;
 }
 
-/* "123 mm" or "none" for a side with nothing beside the obstacle */
+/*! @brief "123 mm" or "none" for a side with nothing beside the obstacle */
 static void
 print_side (const char * p_name, unsigned side, const s5_scan_t * p_scan)
 {
@@ -489,6 +502,7 @@ print_side (const char * p_name, unsigned side, const s5_scan_t * p_scan)
     }
 }
 
+/*! @brief Print the decision and its reason. */
 static void
 print_avoid (const s5_scan_t * p_scan)
 {
@@ -532,6 +546,7 @@ print_avoid (const s5_scan_t * p_scan)
     print_side("right", S5_RIGHT, p_scan);
 }
 
+/*! @brief Name of a position. */
 static const char *
 position_name (s5_position_t position)
 {
@@ -559,7 +574,8 @@ position_name (s5_position_t position)
     return p_result;
 }
 
-/* Degrees as "<whole>.<tenth>" of the magnitude; the sign is in the words */
+/*! @brief Degrees as "<whole>.<tenth>" of the magnitude; the sign is in the
+ * words */
 static void
 tenths_of (float64_t degrees, int * p_whole, int * p_tenth)
 {
@@ -569,6 +585,7 @@ tenths_of (float64_t degrees, int * p_whole, int * p_tenth)
     *p_tenth = tenths % 10;
 }
 
+/*! @brief Print the position from the edge angles. */
 static void
 print_placement (const s5_placement_t * p_placement)
 {
@@ -617,7 +634,7 @@ print_placement (const s5_placement_t * p_placement)
     }
 }
 
-/* Printed for every scan: square-on scans give S5_FACE_TILT_BIAS_DEG */
+/*! @brief Printed for every scan: square-on scans give S5_FACE_TILT_BIAS_DEG */
 static void
 print_face (const s5_scan_t * p_scan)
 {
@@ -642,7 +659,7 @@ print_face (const s5_scan_t * p_scan)
               s5_round(S5_FACE_CENTRE_FRACTION * p_face->distance_mm));
 }
 
-/* Every reading of the scan, then the two edges. */
+/*! @brief Every reading of the scan, then the two edges. */
 static void
 report_points (const s5_scan_t * p_scan)
 {
@@ -684,8 +701,8 @@ report_points (const s5_scan_t * p_scan)
     print_edge("right", &p_scan->edge[S5_RIGHT], S5_ANGLE_RIGHT_DEG);
 }
 
-/* Two bounded text diagnostics: the combined report exceeds the queue's 96-byte
-   buffer even for ordinary readings. */
+/*! @brief Two bounded text diagnostics: the combined report exceeds the queue's
+   96-byte buffer even for ordinary readings. */
 static void
 send_scan (const s5_scan_t * p_scan, int width, int distance, int offset,
            bool b_complete)
@@ -727,6 +744,7 @@ send_scan (const s5_scan_t * p_scan, int width, int distance, int offset,
     }
 }
 
+/*! @brief Print and publish a finished scan. */
 static void
 report_scan (const s5_scan_t * p_scan)
 {
@@ -781,14 +799,14 @@ report_scan (const s5_scan_t * p_scan)
 
 /* ---- why it stopped ---- */
 
-/* -1 for "none" (INFINITY), so that it can be printed */
+/*! @brief -1 for "none" (INFINITY), so that it can be printed */
 static int
 finite_mm (float64_t value)
 {
     return isfinite(value) ? s5_round(value) : -1;
 }
 
-/* Buddy 4 stopped the motors: lifted, or overturned */
+/*! @brief Buddy 4 stopped the motors: lifted, or overturned */
 static bool
 robot_lifted (void)
 {
@@ -812,9 +830,9 @@ robot_lifted (void)
     return b_result;
 }
 
-/* The robot stays held: say why, on the console and over MQTT.  A stop from
-   outside (the dashboard's STOP, or Buddy 4 lifting it) is not a failure and
-   publishes S5_STATE_STOPPED instead of S5_STATE_AVOID_FAILED.  b_pose: the
+/*! @brief The robot stays held: say why, on the console and over MQTT.  A stop
+   from outside (the dashboard's STOP, or Buddy 4 lifting it) is not a failure
+   and publishes S5_STATE_STOPPED instead of S5_STATE_AVOID_FAILED.  b_pose: the
    detour had started, so its pose means something. */
 static void
 report_abort (s5_why_t why, int detail_a, int detail_b, unsigned tries,
@@ -870,10 +888,10 @@ static bool square_wanted(const s5_scan_t * p_scan);
 static bool square_up(float64_t tilt_deg, float64_t * p_turned_deg);
 static bool face_obstacle(float64_t * p_squared_deg);
 
-/* Stopped closer than S5_STOP_MM (a thin post, or one that came into the beam
-   late, e.g. mid-curve): reverse in a straight line until the sensor is
-   S5_STOP_MM away, measuring again after each move, so the scan and the detour
-   start from the usual distance.  True: ready to scan (held and still).
+/*! @brief Stopped closer than S5_STOP_MM (a thin post, or one that came into
+   the beam late, e.g. mid-curve): reverse in a straight line until the sensor
+   is S5_STOP_MM away, measuring again after each move, so the scan and the
+   detour start from the usual distance.  True: ready to scan (held and still).
    False: could not be moved or measured; the robot is stopped. */
 static bool
 back_off_if_close (void)
@@ -950,8 +968,9 @@ back_off_if_close (void)
     return hold_still(); /* still short after the last try: scan from here */
 }
 
-/* Worth turning to face the obstacle, and the front corners clear it doing so?
-   If there is no room the plan still works from the tilt it measured. */
+/*! @brief Worth turning to face the obstacle, and the front corners clear it
+   doing so? If there is no room the plan still works from the tilt it measured.
+ */
 static bool
 square_wanted (const s5_scan_t * p_scan)
 {
@@ -979,7 +998,8 @@ square_wanted (const s5_scan_t * p_scan)
     return b_result;
 }
 
-/* True: turned (*p_turned_deg added to) and held still, ready to look again. */
+/*! @brief True: turned (*p_turned_deg added to) and held still, ready to look
+ * again. */
 static bool
 square_up (float64_t tilt_deg, float64_t * p_turned_deg)
 {
@@ -1020,8 +1040,9 @@ square_up (float64_t tilt_deg, float64_t * p_turned_deg)
     return b_result;
 }
 
-/* Face the obstacle using coarse sweeps only: the fine scan is for the width,
-   and the last turn is followed by that full scan anyway.  True: ready for it.
+/*! @brief Face the obstacle using coarse sweeps only: the fine scan is for the
+   width, and the last turn is followed by that full scan anyway.  True: ready
+   for it.
  */
 static bool
 face_obstacle (float64_t * p_squared_deg)
@@ -1093,13 +1114,15 @@ static bool            corridor_clear(float64_t reach_mm);
 static bool            spurious_stop(const s5_scan_t * p_scan);
 static bool            resume_line(const s5_scan_t * p_scan);
 
+/*! @brief The opposite side. */
 static s5_avoid_side_t
 other_side (s5_avoid_side_t side)
 {
     return (S5_AVOID_LEFT == side) ? S5_AVOID_RIGHT : S5_AVOID_LEFT;
 }
 
-/* A shallower limit that changes nothing would only repeat the same moves */
+/*! @brief A shallower limit that changes nothing would only repeat the same
+ * moves */
 static bool
 same_plan (const s5_detour_plan_t * p_a, const s5_detour_plan_t * p_b)
 {
@@ -1108,8 +1131,8 @@ same_plan (const s5_detour_plan_t * p_a, const s5_detour_plan_t * p_b)
            && (fabs(p_a->backup_mm - p_b->backup_mm) < 1.0);
 }
 
-/* A side to pass on, the line sensors answering, and the line follower told to
-   keep off.  False: report_abort() has said why. */
+/*! @brief A side to pass on, the line sensors answering, and the line follower
+   told to keep off.  False: report_abort() has said why. */
 static bool
 detour_ready (void)
 {
@@ -1149,7 +1172,7 @@ detour_ready (void)
     return true;
 }
 
-/* Every try failed: hold, and say why. */
+/*! @brief Every try failed: hold, and say why. */
 static void
 detour_failed (unsigned tries)
 {
@@ -1178,8 +1201,8 @@ detour_failed (unsigned tries)
     (void)publish_verified();
 }
 
-/* Drive round the held obstacle and back onto the line, trying the ways in
-   s5_attempts while the way out is blocked before the robot has left (see
+/*! @brief Drive round the held obstacle and back onto the line, trying the ways
+   in s5_attempts while the way out is blocked before the robot has left (see
    detour_plan.h).  True: back on the line and released, so the line follower
    drives on.  False: the robot is stopped and held (or was never released),
    and report_abort() has said why. */
@@ -1261,7 +1284,7 @@ drive_round (void)
     return false;
 }
 
-/* Looks across the corridor the robot drives through, at the angles the
+/*! @brief Looks across the corridor the robot drives through, at the angles the
    back-off uses.  True: no echo in it within reach_mm of the sensor.  An
    unsure look counts as something there. */
 static bool
@@ -1317,9 +1340,9 @@ corridor_clear (float64_t reach_mm)
     return true;
 }
 
-/* The scan found nothing to drive round at the stop distance straight ahead,
-   and nothing in the corridor either: what stopped the robot has gone (or was
-   never there).  True: line following may resume. */
+/*! @brief The scan found nothing to drive round at the stop distance straight
+   ahead, and nothing in the corridor either: what stopped the robot has gone
+   (or was never there).  True: line following may resume. */
 static bool
 spurious_stop (const s5_scan_t * p_scan)
 {
@@ -1339,9 +1362,9 @@ spurious_stop (const s5_scan_t * p_scan)
     return b_result;
 }
 
-/* Hand the wheels back to the line follower after a spurious stop, unless the
-   last one was only just now (then hold, so that it cannot stop-start).
-   True: released. */
+/*! @brief Hand the wheels back to the line follower after a spurious stop,
+   unless the last one was only just now (then hold, so that it cannot
+   stop-start). True: released. */
 static bool
 resume_line (const s5_scan_t * p_scan)
 {
@@ -1433,7 +1456,7 @@ typedef struct
 
 static void run_diagnostic(void);
 
-/* Only S5_DIAG 3 returns. */
+/*! @brief Only S5_DIAG 3 returns. */
 static void
 run_diagnostic (void)
 {
@@ -1481,7 +1504,7 @@ static bool watch_motion(s5_watch_t * p_watch, const robot_status_t * p_status,
 static bool prepare_scan(float64_t * p_squared_deg);
 static bool measure_obstacle(float64_t squared_deg);
 
-/* One ping; paces the loop, 60 ms. */
+/*! @brief One ping; paces the loop, 60 ms. */
 static s5_us_status_t
 watch_ping (float64_t * p_range_mm, float64_t * p_time_s)
 {
@@ -1499,8 +1522,9 @@ watch_ping (float64_t * p_range_mm, float64_t * p_time_s)
     return result;
 }
 
-/* What the robot is doing: whether a stop could be needed, its speed, and
-   whether an echo can be trusted (not on a hump).  True: it may be moving. */
+/*! @brief What the robot is doing: whether a stop could be needed, its speed,
+   and whether an echo can be trusted (not on a hump).  True: it may be moving.
+ */
 static bool
 watch_motion (s5_watch_t * p_watch, const robot_status_t * p_status,
               float64_t range_mm, bool * p_echo, float64_t * p_speed_mm_s)
@@ -1549,7 +1573,8 @@ watch_motion (s5_watch_t * p_watch, const robot_status_t * p_status,
     return b_may_move;
 }
 
-/* Back off and square up before the scan.  False: report_abort() said why. */
+/*! @brief Back off and square up before the scan.  False: report_abort() said
+ * why. */
 static bool
 prepare_scan (float64_t * p_squared_deg)
 {
@@ -1580,7 +1605,7 @@ prepare_scan (float64_t * p_squared_deg)
     return b_ready;
 }
 
-/* The full scan, the decision and the report.  True: measured. */
+/*! @brief The full scan, the decision and the report.  True: measured. */
 static bool
 measure_obstacle (float64_t squared_deg)
 {
@@ -1637,7 +1662,7 @@ measure_obstacle (float64_t squared_deg)
 static void act_on_scan(s5_watch_t * p_watch, robot_status_t * p_status,
                         bool b_measured);
 
-/* After the scan: resume, drive round it, or stay held. */
+/*! @brief After the scan: resume, drive round it, or stay held. */
 static void
 act_on_scan (s5_watch_t * p_watch, robot_status_t * p_status, bool b_measured)
 {
@@ -1683,6 +1708,7 @@ static void watch_once(s5_watch_t * p_watch);
 
 /* ---- task ---- */
 
+/*! @brief Subsystem 5 task: watch ahead, stop, scan, drive round. */
 void
 obstacle_task (INT code, void * p_context)
 {
@@ -1711,8 +1737,8 @@ obstacle_task (INT code, void * p_context)
     }
 }
 
-/* Something is close enough to stop for.  False: the scan could not be made and
-   the state has been published already. */
+/*! @brief Something is close enough to stop for.  False: the scan could not be
+   made and the state has been published already. */
 static bool
 handle_stop (s5_watch_t * p_watch, robot_status_t * p_status,
              float64_t speed_mm_s)
@@ -1768,7 +1794,7 @@ handle_stop (s5_watch_t * p_watch, robot_status_t * p_status,
     return b_handled;
 }
 
-/* The ultrasonic sensor is not answering: say so now and then. */
+/*! @brief The ultrasonic sensor is not answering: say so now and then. */
 static void
 warn_sensor (s5_watch_t * p_watch, s5_us_status_t result, float64_t now)
 {
@@ -1781,7 +1807,7 @@ warn_sensor (s5_watch_t * p_watch, s5_us_status_t result, float64_t now)
     }
 }
 
-/* One pass: ping, then decide.  */
+/*! @brief One pass: ping, then decide.  */
 static void
 watch_once (s5_watch_t * p_watch)
 {
@@ -1858,6 +1884,7 @@ watch_once (s5_watch_t * p_watch)
 #else /* disabled, calibration profiles and the IR monitor: leave the pins \
          alone */
 
+/*! @brief Subsystem 5 task: watch ahead, stop, scan, drive round. */
 void
 obstacle_task (INT code, void * p_context)
 {

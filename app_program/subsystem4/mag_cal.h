@@ -1,10 +1,13 @@
-/* Buddy 4 magnetometer calibration constants.
+/** @file mag_cal.h
+ *
+ * @brief Buddy 4 magnetometer calibration constants.
  * Produced by the self-pivot calibration build (-DROBO_MAG_CAL=ON, see
  * app_program/subsystem4/README.md): paste the printed #define lines here.
  * Valid while the GY-511 mounting, wiring and nearby metal stay the same.
  * While B4_MAG_CALIBRATED is 0 the compass reports "n/a (uncal)"; nothing
  * else changes.
  */
+
 #ifndef MAG_CAL_H
 #define MAG_CAL_H
 

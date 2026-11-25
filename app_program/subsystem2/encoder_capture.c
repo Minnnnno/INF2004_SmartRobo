@@ -12,6 +12,7 @@ static uint8_t encoder_ab_read(const volatile encoder_capture_t * p_capture,
 static void    encoder_ab_store(volatile encoder_capture_t * p_capture,
                                 uint32_t wheel, uint8_t state);
 
+/*! @brief Start from the present pin levels with zero counts. */
 void
 encoder_capture_init (volatile encoder_capture_t * p_capture,
                       const unsigned pins[2][2], const bool quadrature[2],
@@ -46,6 +47,7 @@ encoder_capture_init (volatile encoder_capture_t * p_capture,
     }
 }
 
+/*! @brief Count the edges one interrupt reported. */
 void
 encoder_capture_events (volatile encoder_capture_t * p_capture,
                         const uint32_t pending[4], uint32_t levels)
@@ -117,6 +119,7 @@ encoder_capture_events (volatile encoder_capture_t * p_capture,
     }
 }
 
+/*! @brief Stored A/B state of a wheel. */
 static uint8_t
 encoder_ab_read (const volatile encoder_capture_t * p_capture, uint32_t wheel,
                  uint32_t levels)
@@ -127,6 +130,7 @@ encoder_ab_read (const volatile encoder_capture_t * p_capture, uint32_t wheel,
     return (uint8_t)((phase_a << 1u) | phase_b);
 }
 
+/*! @brief Store the A/B state of a wheel. */
 static void
 encoder_ab_store (volatile encoder_capture_t * p_capture, uint32_t wheel,
                   uint8_t state)

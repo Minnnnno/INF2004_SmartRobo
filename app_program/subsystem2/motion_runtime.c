@@ -1,5 +1,9 @@
-/* Buddy 2 runtime: owns the live motion controller, 10 ms task and motor
- * diagnostics. */
+/** @file motion_runtime.c
+ *
+ * @brief Buddy 2 runtime: owns the live motion controller, 10 ms task and motor
+ * diagnostics.
+ */
+
 #include "../../include/float_types.h"
 #include <stdint.h>
 #include "motion_runtime.h"
@@ -38,24 +42,28 @@ motion_move_forward (uint32_t command_id, float64_t metres)
     return magnitude(command_id, DISTANCE_MOVE, metres, 1);
 }
 
+/*! @brief Submit a straight move backwards, metres. */
 motion_result_t
 motion_move_backward (uint32_t command_id, float64_t metres)
 {
     return magnitude(command_id, DISTANCE_MOVE, metres, -1);
 }
 
+/*! @brief Submit a turn to the left, radians. */
 motion_result_t
 motion_turn_left (uint32_t command_id, float64_t radians)
 {
     return magnitude(command_id, ENCODER_TURN, radians, 1);
 }
 
+/*! @brief Submit a turn to the right, radians. */
 motion_result_t
 motion_turn_right (uint32_t command_id, float64_t radians)
 {
     return magnitude(command_id, ENCODER_TURN, radians, -1);
 }
 
+/*! @brief Submit wheel speeds, m/s. */
 motion_result_t
 motion_set_wheel_speeds (uint32_t command_id, float64_t left, float64_t right)
 {
@@ -63,6 +71,7 @@ motion_set_wheel_speeds (uint32_t command_id, float64_t left, float64_t right)
                         left, right);
 }
 
+/*! @brief Submit raw outputs (calibration only). */
 motion_result_t
 motion_manual_output (uint32_t command_id, float64_t left, float64_t right)
 {
@@ -104,19 +113,22 @@ motion_runtime_init (void)
 #endif
 }
 
+/*! @brief The configuration in use. */
 const motion_config_t *
 motion_runtime_config (void)
 {
     return &g_motion.config;
 }
 
-/* Read only before tasks start; runtime readers use motion_get_status(). */
+/*! @brief Read only before tasks start; runtime readers use
+ * motion_get_status(). */
 const motion_status_t *
 motion_runtime_initial_status (void)
 {
     return &g_motion.status;
 }
 
+/*! @brief Cut the motors now. */
 void
 motion_runtime_emergency_stop (void)
 {
@@ -149,6 +161,7 @@ motion_runtime_report_startup (void)
 #endif
 }
 
+/*! @brief Motion Control task, 10 ms. */
 void
 motion_task (INT code, void * p_context)
 {
@@ -232,6 +245,7 @@ motion_task (INT code, void * p_context)
     }
 }
 
+/*! @brief Keep the encoder fault latch across a restart. */
 static void
 sync_encoder_fault_latch (void)
 {
@@ -241,7 +255,8 @@ sync_encoder_fault_latch (void)
     crash_encoder_fault_update(b_latched, (UW)g_motion.status.feedback_cause);
 }
 
-/* Capture while the bus is locked, before the hardware output cutoff. */
+/*! @brief Capture while the bus is locked, before the hardware output cutoff.
+ */
 static void
 capture_motor_fault (void)
 {
@@ -263,6 +278,7 @@ capture_motor_fault (void)
     }
 }
 
+/*! @brief Snapshot taken before the cutoff. False: not available yet. */
 static bool
 get_motor_fault (const motion_status_t *  p_status,
                  motor_fault_snapshot_t * p_snapshot)
@@ -295,6 +311,7 @@ get_motor_fault (const motion_status_t *  p_status,
     return b_result;
 }
 
+/*! @brief Submit a move of a non-negative size with a sign. */
 static motion_result_t
 magnitude (uint32_t command_id, motion_mode_t mode, float64_t value, int sign)
 {
@@ -329,8 +346,8 @@ static void report_fault_wheels(const motion_status_t * p_status);
 static void report_motion_fault(const motion_status_t * p_status,
                                 const motion_config_t * p_config);
 
-/* Task context only: the motion task already stopped the outputs and saved
- * this snapshot. Missing counts cannot distinguish a stalled wheel from a
+/*! @brief Task context only: the motion task already stopped the outputs and
+ * saved this snapshot. Missing counts cannot distinguish a stalled wheel from a
  * disconnected/faulty encoder, so report the observed failure explicitly. */
 static void
 report_encoder_error (const motion_status_t * p_status)
@@ -409,7 +426,7 @@ report_encoder_error (const motion_status_t * p_status)
     }
 }
 
-/* Driver and encoder registers of one wheel before the cutoff. */
+/*! @brief Driver and encoder registers of one wheel before the cutoff. */
 static void
 report_wheel_registers (const char * p_name, unsigned wheel,
                         const motor_diagnostics_t *   p_motor,
@@ -449,7 +466,7 @@ report_wheel_registers (const char * p_name, unsigned wheel,
               (unsigned)p_encoder->irq_events[wheel][1]);
 }
 
-/* What those registers say about one wheel. */
+/*! @brief What those registers say about one wheel. */
 static void
 report_wheel_checks (const char * p_name, unsigned wheel,
                      const motor_diagnostics_t *  p_motor,
@@ -523,6 +540,7 @@ report_wheel_checks (const char * p_name, unsigned wheel,
     }
 }
 
+/*! @brief Print the motor and encoder snapshot of a fault. */
 static void
 report_motor_fault (const motion_status_t * p_status)
 {
@@ -563,7 +581,7 @@ report_motor_fault (const motion_status_t * p_status)
                           "voltage/current are not measured.\n");
 }
 
-/* The fault in words. */
+/*! @brief The fault in words. */
 static void
 report_fault_cause (const motion_status_t * p_status,
                     const motion_config_t * p_config)
@@ -670,7 +688,7 @@ report_fault_cause (const motion_status_t * p_status,
     }
 }
 
-/* What each wheel was doing at the fault. */
+/*! @brief What each wheel was doing at the fault. */
 static void
 report_fault_wheels (const motion_status_t * p_status)
 {
@@ -709,6 +727,7 @@ report_fault_wheels (const motion_status_t * p_status)
     }
 }
 
+/*! @brief Print a fault and what led to it. */
 static void
 report_motion_fault (const motion_status_t * p_status,
                      const motion_config_t * p_config)
@@ -755,6 +774,7 @@ report_motion_fault (const motion_status_t * p_status,
 
 #endif
 
+/*! @brief Print a new fault once. */
 void
 motion_runtime_report_fault (void)
 {

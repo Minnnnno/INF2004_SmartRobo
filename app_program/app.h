@@ -1,9 +1,9 @@
-/*
- *  app.h
- *  Definitions shared by the whole team.  Changed only by team agreement.
+/** @file app.h
  *
- *  Anything that belongs to ONE subsystem goes in that subsystem's own
- *  header instead (app_program/subsystemN/subsystemN.h).
+ * @brief Definitions shared by the whole team.  Changed only by team agreement.
+ *
+ * Anything that belongs to ONE subsystem goes in that subsystem's own
+ * header instead (app_program/subsystemN/subsystemN.h).
  */
 
 #ifndef APP_H
@@ -27,8 +27,8 @@
  * --------------------------------------------------------------------- */
 #define TASK_STACK_SIZE 2048 /* bytes; tm_printf needs ~1 KB */
 
-/* Create and start a task.  prc = TP_PRC1 (core 0), TP_PRC2 (core 1), or
-   0 for "any core".  Defined in system/app_tasks.c. */
+/*! @brief Create and start a task.  prc = TP_PRC1 (core 0), TP_PRC2 (core 1),
+   or 0 for "any core".  Defined in system/app_tasks.c. */
 IMPORT ID app_start_task(FP p_entry, PRI pri, UW prc, const char * p_name);
 
 /* ---------------------------------------------------------------------

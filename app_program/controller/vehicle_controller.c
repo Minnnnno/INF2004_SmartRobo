@@ -1,3 +1,8 @@
+/** @file vehicle_controller.c
+ *
+ * @brief Vehicle Controller: arbitrates the requests of the subsystems.
+ */
+
 #include "../../include/float_types.h"
 #include "robot.h"
 #include <math.h>
@@ -11,6 +16,7 @@ robot_bus_init (robot_bus_t * p_bus, const motion_status_t * p_status)
     p_bus->status.motion = *p_status;
 }
 
+/*! @brief Queue one request on the bus. */
 motion_result_t
 robot_request (robot_bus_t * p_bus, const robot_request_t * p_request)
 {
@@ -73,6 +79,7 @@ robot_request (robot_bus_t * p_bus, const robot_request_t * p_request)
     return R_OK;
 }
 
+/*! @brief Set one control latch on the bus. */
 void
 robot_control (robot_bus_t * p_bus, robot_control_t control, bool b_checks_ok,
                bool b_external_rest)
@@ -106,6 +113,7 @@ robot_control (robot_bus_t * p_bus, robot_control_t control, bool b_checks_ok,
     p_bus->external_rest = b_external_rest;
 }
 
+/*! @brief One controller pass: arbitrate the waiting requests. */
 void
 vehicle_controller_cycle (robot_bus_t * p_bus, float64_t now)
 {
@@ -293,6 +301,7 @@ robot_motion_inputs (robot_bus_t * p_bus, motion_t * p_motion,
     }
 }
 
+/*! @brief Copy Motion Control's status and events onto the bus. */
 void
 robot_publish (robot_bus_t * p_bus, motion_t * p_motion, float64_t now)
 {

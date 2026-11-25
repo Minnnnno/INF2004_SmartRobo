@@ -1,7 +1,7 @@
-/*
- *  servo.h
- *  Subsystem 5 -- hobby servo on GP15 that carries the ultrasonic sensor.
- *  Task context only.  Owner: obstacle_task.
+/** @file servo.h
+ *
+ * @brief Subsystem 5 -- hobby servo on GP15 that carries the ultrasonic sensor.
+ * Task context only.  Owner: obstacle_task.
  */
 
 #ifndef S5_SERVO_H
@@ -23,11 +23,12 @@
 #define S5_SERVO_MIN_DEG 20
 #define S5_SERVO_MAX_DEG 160
 
-/* Start the PWM at angle_deg and wait for the horn to get there */
+/*! @brief Start the PWM at angle_deg and wait for the horn to get there */
 void s5_servo_init(int angle_deg);
-/* Move and block until the sensor on top has stopped swinging */
+/*! @brief Move and block until the sensor on top has stopped swinging */
 void s5_servo_move(int angle_deg);
-/* Start the same move without waiting; returns the ms to wait before a ping */
+/*! @brief Start the same move without waiting; returns the ms to wait before a
+ * ping */
 unsigned s5_servo_aim(int angle_deg);
 int      s5_servo_angle(void); /* 0: not started */
 

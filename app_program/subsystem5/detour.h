@@ -1,12 +1,12 @@
-/*
- *  detour.h
- *  Subsystem 5 -- drive a detour_plan.h plan with Buddy 2's finite moves.
- *  Task context only.  Owner: obstacle_task.
+/** @file detour.h
  *
- *  Each move is submitted once as SOURCE_OBSTACLE and waited for until its
- *  EV_COMPLETE.  Between moves the robot is READY, so the line follower
- *  must already be told to keep off the wheels (S5_STATE_AVOIDING in the
- *  shared status) before s5_detour_run() is called.
+ * @brief Subsystem 5 -- drive a detour_plan.h plan with Buddy 2's finite moves.
+ * Task context only.  Owner: obstacle_task.
+ *
+ * Each move is submitted once as SOURCE_OBSTACLE and waited for until its
+ * EV_COMPLETE.  Between moves the robot is READY, so the line follower
+ * must already be told to keep off the wheels (S5_STATE_AVOIDING in the
+ * shared status) before s5_detour_run() is called.
  */
 
 #ifndef S5_DETOUR_H
@@ -16,37 +16,39 @@
 #include "robot.h"
 #include "detour_plan.h"
 
-/* motion_get_status(), retried: the shared status lock is only polled */
+/*! @brief motion_get_status(), retried: the shared status lock is only polled
+ */
 bool s5_status(robot_status_t * p_status);
-/* Wait until Motion Control has the robot held and still (or 4 s) */
+/*! @brief Wait until Motion Control has the robot held and still (or 4 s) */
 bool s5_wait_still(void);
-/* Has the robot really moved?  Motion Control's "stationary" clears for 0.3 s
-   on a single encoder count (0.08 mm in one 10 ms sample reads over
+/*! @brief Has the robot really moved?  Motion Control's "stationary" clears for
+   0.3 s on a single encoder count (0.08 mm in one 10 ms sample reads over
    stopped_speed), which rocking after a turn or the servo's swing can cause.
    With no move active the motors are off, so only s5_still_moved() can tell a
    push from a wobble: more than S5_STILL_MOVE_MM on either wheel since
    s5_still_mark(). */
 void s5_still_mark(void);
 bool s5_still_moved(const robot_status_t * p_status);
-/* Buddy 3 is publishing fresh line readings */
+/*! @brief Buddy 3 is publishing fresh line readings */
 bool s5_line_reporting(const robot_status_t * p_status, float64_t now);
 
-/* Task-context diagnostic: coherent live left/right encoder counts. id=0 for
-   stop/scan boundaries; finite moves use their command ID. Production only. */
+/*! @brief Task-context diagnostic: coherent live left/right encoder counts.
+   id=0 for stop/scan boundaries; finite moves use their command ID. Production
+   only. */
 encoder_sample_t s5_log_encoders(const char * p_phase, uint32_t command_id);
 
-/* Reverse straight back mm, from a held robot, then hold it still again.
-   The line follower must already be told to keep off the wheels.
-   True: moved back and held still. */
+/*! @brief Reverse straight back mm, from a held robot, then hold it still
+   again. The line follower must already be told to keep off the wheels. True:
+   moved back and held still. */
 bool s5_back_off(float64_t distance_mm);
 
-/* Turn on the spot by degrees (+ left), from a held robot, then hold it still
-   and let it settle.  The line follower must already be told to keep off the
-   wheels.  *p_turned_deg: what the encoders measured, which a stall cuts short.
-   True: held and still.  False: the caller must stop it. */
+/*! @brief Turn on the spot by degrees (+ left), from a held robot, then hold it
+   still and let it settle.  The line follower must already be told to keep off
+   the wheels.  *p_turned_deg: what the encoders measured, which a stall cuts
+   short. True: held and still.  False: the caller must stop it. */
 bool s5_square_up(float64_t degrees, float64_t * p_turned_deg);
 
-/* Release the obstacle hold, drive round the obstacle and back onto the
+/*! @brief Release the obstacle hold, drive round the obstacle and back onto the
    line.  If Buddy 3's centre and right sensors both see black while passing
    the obstacle or coming back, stop there and skip the rest.  The robot is not
    aligned with the line, and when interrupted while passing it may not have
@@ -109,16 +111,16 @@ typedef enum
 
 const char * s5_why_name(s5_why_t why);
 
-/* Why the last s5_detour_run() (or anything since the last clear) gave up,
-   or S5_WHY_NONE when nothing failed.
-   *p_a and *p_b: two numbers whose meaning depends on the code. */
+/*! @brief Why the last s5_detour_run() (or anything since the last clear) gave
+   up, or S5_WHY_NONE when nothing failed. *p_a and *p_b: two numbers whose
+   meaning depends on the code. */
 void     s5_detour_reason_clear(void);
 s5_why_t s5_detour_reason(int * p_a, int * p_b);
-/* Where the detour has the axle now (detour_plan.h frame), mm */
+/*! @brief Where the detour has the axle now (detour_plan.h frame), mm */
 void s5_detour_pose(int * p_x_mm, int * p_y_mm);
 
-/* Release the hold this task latched, once the robot is still (as the detour
-   does before each move).  True: released, READY. */
+/*! @brief Release the hold this task latched, once the robot is still (as the
+   detour does before each move).  True: released, READY. */
 bool s5_release(void);
 
 #endif /* S5_DETOUR_H */

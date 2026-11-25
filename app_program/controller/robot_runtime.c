@@ -1,5 +1,9 @@
-/* Shared request bus and task-context API; only the motion owner mutates
- * motion_t. */
+/** @file robot_runtime.c
+ *
+ * @brief Shared request bus and task-context API; only the motion owner mutates
+ * motion_t.
+ */
+
 #include "../../include/float_types.h"
 #include "robot_runtime.h"
 #include "../subsystem1/comms.h"
@@ -38,6 +42,7 @@ robot_runtime_prepare (const motion_config_t * p_config,
 #endif
 }
 
+/*! @brief Create the status mutex. Returns its ID, or an error. */
 ID
 robot_runtime_init (void)
 {
@@ -47,6 +52,7 @@ robot_runtime_init (void)
     return g_status_mutex;
 }
 
+/*! @brief Let the request bus run once everything has been created. */
 void
 robot_runtime_enable (void)
 {
@@ -59,18 +65,21 @@ robot_runtime_lock (void)
     return lock_bus();
 }
 
+/*! @brief Wait for the status mutex. */
 bool
 robot_runtime_wait (void)
 {
     return E_OK == tk_loc_mtx(g_status_mutex, TMO_FEVR);
 }
 
+/*! @brief Release the status mutex. */
 void
 robot_runtime_unlock (void)
 {
     unlock_bus();
 }
 
+/*! @brief Pass the pending controls and commands to Motion Control. */
 void
 robot_runtime_motion_inputs (motion_t * p_owner, encoder_sample_t sample,
                              float64_t now)
@@ -78,12 +87,14 @@ robot_runtime_motion_inputs (motion_t * p_owner, encoder_sample_t sample,
     robot_motion_inputs(&g_bus, p_owner, sample, now);
 }
 
+/*! @brief Copy Motion Control's results to the shared status. */
 void
 robot_runtime_publish (motion_t * p_owner, float64_t now)
 {
     robot_publish(&g_bus, p_owner, now);
 }
 
+/*! @brief True while a stop request is waiting to be taken. */
 bool
 robot_runtime_stop_pending (void)
 {
@@ -93,6 +104,7 @@ robot_runtime_stop_pending (void)
                   | CONTROL_SHUTDOWN));
 }
 
+/*! @brief Submit a motion request from any task. */
 motion_result_t
 robot_submit (request_source_t source, uint32_t command_id, motion_mode_t mode,
               float64_t value, float64_t left, float64_t right)
@@ -100,6 +112,7 @@ robot_submit (request_source_t source, uint32_t command_id, motion_mode_t mode,
     return submit(source, command_id, mode, value, left, right, 0.0, 0.0);
 }
 
+/*! @brief Submit an arc request from any task. */
 motion_result_t
 robot_submit_arc (request_source_t source, uint32_t command_id,
                   float64_t metres, float64_t radians, float64_t seconds,
@@ -109,36 +122,42 @@ robot_submit_arc (request_source_t source, uint32_t command_id,
                   seconds);
 }
 
+/*! @brief Latch a controlled stop and hold. */
 void
 motion_stop (void)
 {
     control(CONTROL_STOP, false, false);
 }
 
+/*! @brief Ask for the hold to be released. */
 void
 motion_controller_release (bool b_checks)
 {
     control(CONTROL_RELEASE, b_checks, false);
 }
 
+/*! @brief Ask for a checked fault reset. */
 void
 motion_fault_reset (bool b_cleared, bool b_rest)
 {
     control(CONTROL_RESET, b_cleared, b_rest);
 }
 
+/*! @brief Ask for a permanent shutdown. */
 void
 motion_request_shutdown (void)
 {
     control(CONTROL_SHUTDOWN, false, false);
 }
 
+/*! @brief Report an internal fault that must stop the robot. */
 void
 robot_system_fault (void)
 {
     control(CONTROL_FAULT, false, false);
 }
 
+/*! @brief Copy the shared status. False: the lock was busy. */
 bool
 motion_get_status (robot_status_t * p_status)
 {
@@ -158,6 +177,7 @@ motion_get_status (robot_status_t * p_status)
     return b_result;
 }
 
+/*! @brief Store one subsystem's status slot. False: rejected or busy. */
 bool
 robot_update_subsystem (request_source_t           source,
                         const subsystem_status_t * p_status)
@@ -218,6 +238,8 @@ robot_update_subsystem (request_source_t           source,
     return NULL != p_destination;
 }
 
+/*! @brief Vehicle Controller task: remote commands, then one controller cycle.
+ */
 void
 controller_task (INT code, void * p_context)
 {
@@ -263,6 +285,7 @@ controller_task (INT code, void * p_context)
     }
 }
 
+/*! @brief Try to take the status mutex without waiting. */
 static bool
 lock_bus (void)
 {
@@ -270,12 +293,14 @@ lock_bus (void)
            && (E_OK == tk_loc_mtx(g_status_mutex, TMO_POL));
 }
 
+/*! @brief Release the status mutex. */
 static void
 unlock_bus (void)
 {
     (void)tk_unl_mtx(g_status_mutex);
 }
 
+/*! @brief Build and queue one request under the status mutex. */
 static motion_result_t
 submit (request_source_t source, uint32_t command_id, motion_mode_t mode,
         float64_t value, float64_t left, float64_t right, float64_t angle,
@@ -314,6 +339,7 @@ submit (request_source_t source, uint32_t command_id, motion_mode_t mode,
     return outcome;
 }
 
+/*! @brief Set one control latch. */
 static void
 control (robot_control_t request, bool b_checks, bool b_rest)
 {

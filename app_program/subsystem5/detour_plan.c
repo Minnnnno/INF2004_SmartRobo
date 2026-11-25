@@ -1,7 +1,7 @@
-/*
- *  detour_plan.c
- *  Subsystem 5 -- the geometry of driving round a scanned obstacle.
- *  See detour_plan.h for the frame and the steps.
+/** @file detour_plan.c
+ *
+ * @brief Subsystem 5 -- the geometry of driving round a scanned obstacle.
+ * See detour_plan.h for the frame and the steps.
  */
 
 #include "../../include/float_types.h"
@@ -14,7 +14,7 @@ static float64_t side_sign(s5_avoid_side_t side);
 static bool      clip_ray(float64_t offset, float64_t slope, float64_t * p_lo,
                           float64_t * p_hi);
 
-/* Every pose of the outward move keeps the robot's front corners (they
+/*! @brief Every pose of the outward move keeps the robot's front corners (they
    sweep a circle of front_reach round the centre) S5_TURN_MARGIN_MM short
    of the obstacle's face, so turning out, the diagonal and turning back
    parallel all happen before the face: the robot is beside the obstacle
@@ -124,6 +124,7 @@ s5_detour_plan_side (const s5_scan_t * p_scan, s5_avoid_side_t side,
     return true;
 }
 
+/*! @brief Start following the obstacle's side. */
 void
 s5_pass_init (s5_pass_t * p_pass, const s5_detour_plan_t * p_plan)
 {
@@ -136,7 +137,7 @@ s5_pass_init (s5_pass_t * p_pass, const s5_detour_plan_t * p_plan)
     p_pass->b_ended   = false;
 }
 
-/* An echo near enough sideways is the obstacle (or something as close,
+/*! @brief An echo near enough sideways is the obstacle (or something as close,
    which is no safer) and moves its known end to where the beam met it.
    A clear look counts only when the beam crosses the obstacle's side
    beyond that end; looking at a part already known to be there, silence
@@ -191,7 +192,7 @@ s5_pass_observe (s5_pass_t * p_pass, const s5_detour_plan_t * p_plan,
     return p_pass->b_ended;
 }
 
-/* Turning in place, the rear corners sweep a circle of rear_reach. */
+/*! @brief Turning in place, the rear corners sweep a circle of rear_reach. */
 float64_t
 s5_pass_clear_x (const s5_pass_t * p_pass)
 {
@@ -273,14 +274,15 @@ s5_echo_on_obstacle (const s5_detour_plan_t * p_plan, float64_t x_mm,
     return b_result;
 }
 
+/*! @brief +1 when passing on the left, -1 on the right. */
 static float64_t
 side_sign (s5_avoid_side_t side)
 {
     return (S5_AVOID_LEFT == side) ? 1.0 : -1.0;
 }
 
-/* t >= 0 along a ray stays inside the half-plane a + t * d >= 0: narrow [*p_lo,
- * *p_hi]. */
+/*! @brief t >= 0 along a ray stays inside the half-plane a + t * d >= 0: narrow
+ * [*p_lo, *p_hi]. */
 static bool
 clip_ray (float64_t offset, float64_t slope, float64_t * p_lo, float64_t * p_hi)
 {

@@ -1,3 +1,8 @@
+/** @file robot.h
+ *
+ * @brief Request bus, shared status and motion requests for all subsystems.
+ */
+
 #ifndef ROBO_ROBOT_H
 #define ROBO_ROBOT_H
 #include "float_types.h"
@@ -91,25 +96,26 @@ typedef struct
     bool remote_hold;
 } robot_bus_t;
 
-/* Bus operations require the caller's short priority-inheritance mutex lock.
- * Payloads copied by value; never keep references to caller storage. */
+/*! @brief Bus operations require the caller's short priority-inheritance mutex
+ * lock. Payloads copied by value; never keep references to caller storage. */
 void robot_bus_init(robot_bus_t * p_bus, const motion_status_t * p_status);
 motion_result_t robot_request(robot_bus_t *           p_bus,
                               const robot_request_t * p_request);
 void            robot_control(robot_bus_t * p_bus, robot_control_t control,
                               bool b_checks_ok, bool b_external_rest);
 void            vehicle_controller_cycle(robot_bus_t * p_bus, float64_t now);
-/* Bridge for Buddy 1's queued start/stop/estop commands; caller holds bus
- * mutex. */
+/*! @brief Bridge for Buddy 1's queued start/stop/estop commands; caller holds
+ * bus mutex. */
 motion_result_t vehicle_controller_remote(robot_bus_t *          p_bus,
                                           robot_remote_command_t command);
-/* Take controls/approved under lock; run control calculations outside lock. */
+/*! @brief Take controls/approved under lock; run control calculations outside
+ * lock. */
 void robot_motion_inputs(robot_bus_t * p_bus, motion_t * p_motion,
                          encoder_sample_t sample, float64_t now);
 void robot_publish(robot_bus_t * p_bus, motion_t * p_motion, float64_t now);
 
-/* Target task-context API. Nonblocking submission; result is acceptance into
- * request buffer. */
+/*! @brief Target task-context API. Nonblocking submission; result is acceptance
+ * into request buffer. */
 motion_result_t motion_move_forward(uint32_t command_id, float64_t metres);
 motion_result_t motion_move_backward(uint32_t command_id, float64_t metres);
 motion_result_t motion_turn_left(uint32_t command_id, float64_t radians);

@@ -1,8 +1,8 @@
-/*
- *  obstacle_scan.c
- *  Subsystem 5 -- obstacle width, position and which side to pass it on,
- *  from a servo-swept ultrasonic ranger.
- *  Pure computation; see obstacle_scan.h.
+/** @file obstacle_scan.c
+ *
+ * @brief Subsystem 5 -- obstacle width, position and which side to pass it on,
+ * from a servo-swept ultrasonic ranger.
+ * Pure computation; see obstacle_scan.h.
  */
 
 #include "../../include/float_types.h"
@@ -104,18 +104,21 @@ static float64_t s5_face_clear(const s5_scan_t * p_scan, unsigned side,
                                float64_t axle_mm);
 static uint16_t  s5_curve_path(float64_t path_mm);
 
+/*! @brief Forward part of a range from the servo axis. */
 float64_t
 s5_forward_mm (float64_t range_mm, float64_t angle_deg)
 {
     return (range_mm + S5_SENSOR_OFFSET_MM) * cos(s5_bearing_rad(angle_deg));
 }
 
+/*! @brief Sideways part of a range from the servo axis, + left. */
 float64_t
 s5_lateral_mm (float64_t range_mm, float64_t angle_deg)
 {
     return (range_mm + S5_SENSOR_OFFSET_MM) * sin(s5_bearing_rad(angle_deg));
 }
 
+/*! @brief A range as a stored code, rounded and clamped. */
 uint16_t
 s5_range_code (float64_t range_mm)
 {
@@ -143,6 +146,7 @@ s5_range_mm (unsigned code)
     return (float64_t)code / S5_RANGE_STEPS_PER_MM;
 }
 
+/*! @brief Pack one reading into 32 bits. */
 s5_point_t
 s5_point_pack (int angle_deg, const s5_estimate_t * p_estimate, bool b_object)
 {
@@ -172,6 +176,7 @@ s5_point_pack (int angle_deg, const s5_estimate_t * p_estimate, bool b_object)
     return point;
 }
 
+/*! @brief Servo angle of a stored reading. */
 int
 s5_point_angle (s5_point_t point)
 {
@@ -179,12 +184,14 @@ s5_point_angle (s5_point_t point)
            + S5_ANGLE_LEFT_DEG;
 }
 
+/*! @brief Range of a stored reading, mm. */
 float64_t
 s5_point_range (s5_point_t point)
 {
     return s5_range_mm((unsigned)(point.bits & S5_POINT_RANGE_MASK));
 }
 
+/*! @brief Pings that agreed. */
 unsigned
 s5_point_support (s5_point_t point)
 {
@@ -192,6 +199,7 @@ s5_point_support (s5_point_t point)
                       & S5_POINT_COUNT_MASK);
 }
 
+/*! @brief Pings that echoed. */
 unsigned
 s5_point_valid (s5_point_t point)
 {
@@ -199,6 +207,7 @@ s5_point_valid (s5_point_t point)
                       & S5_POINT_COUNT_MASK);
 }
 
+/*! @brief Pings taken. */
 unsigned
 s5_point_total (s5_point_t point)
 {
@@ -213,12 +222,14 @@ s5_point_object (s5_point_t point)
     return 0U != (point.bits & S5_POINT_OBJECT);
 }
 
+/*! @brief Mark a stored reading as the obstacle. */
 void
 s5_point_set_object (s5_point_t * p_point)
 {
     p_point->bits |= S5_POINT_OBJECT;
 }
 
+/*! @brief What the pings said. */
 s5_echo_t
 s5_point_status (s5_point_t point)
 {
@@ -226,6 +237,7 @@ s5_point_status (s5_point_t point)
                    s5_point_total(point));
 }
 
+/*! @brief Is a stored reading a usable echo? */
 bool
 s5_point_usable (s5_point_t point)
 {
@@ -328,6 +340,7 @@ s5_estimate_usable (const s5_estimate_t * p_estimate)
                           p_estimate->valid, p_estimate->total);
 }
 
+/*! @brief Is this estimate on the obstacle's face? */
 bool
 s5_point_is_object (const s5_estimate_t * p_estimate, int angle_deg,
                     float64_t centre_forward_mm)
@@ -719,6 +732,7 @@ s5_avoidance (const s5_scan_t * p_scan, s5_avoid_t * p_out)
     }
 }
 
+/*! @brief Forget the heading history. */
 void
 s5_curve_reset (s5_curve_t * p_curve)
 {
@@ -734,8 +748,8 @@ s5_curve_mark (s5_curve_t * p_curve, float64_t path_mm)
         = (uint16_t)(p_curve->now_mm + (uint16_t)S5_CURVE_HOLD_MM);
 }
 
-/* Every call compares against the stored samples, so a pivot on the spot
-   (no path at all) still counts.  Samples are only stored per distance, so
+/*! @brief Every call compares against the stored samples, so a pivot on the
+   spot (no path at all) still counts.  Samples are only stored per distance, so
    standing still does not push the older ones out. */
 void
 s5_curve_note (s5_curve_t * p_curve, float64_t path_mm, float64_t heading_deg)
@@ -793,12 +807,14 @@ s5_curve_note (s5_curve_t * p_curve, float64_t path_mm, float64_t heading_deg)
     }
 }
 
+/*! @brief True just after a curve. */
 bool
 s5_curve_recent (const s5_curve_t * p_curve)
 {
     return 0U != p_curve->marked;
 }
 
+/*! @brief Bearing of a servo angle, radians, + left. */
 static float64_t
 s5_bearing_rad (float64_t angle_deg)
 {
@@ -806,6 +822,7 @@ s5_bearing_rad (float64_t angle_deg)
     return ((float64_t)S5_ANGLE_CENTRE_DEG - angle_deg) * S5_DEG_TO_RAD;
 }
 
+/*! @brief A ping count limited to its field. */
 static uint32_t
 s5_count_bits (unsigned count)
 {
@@ -813,7 +830,8 @@ s5_count_bits (unsigned count)
                                          : (uint32_t)count;
 }
 
-/* What the pings said: the same rule for a fresh estimate and a stored one */
+/*! @brief What the pings said: the same rule for a fresh estimate and a stored
+ * one */
 static s5_echo_t
 s5_vote (unsigned support, unsigned valid, unsigned total)
 {
@@ -833,6 +851,7 @@ s5_vote (unsigned support, unsigned valid, unsigned total)
     return result;
 }
 
+/*! @brief Does this vote count as an echo? */
 static bool
 s5_vote_usable (s5_echo_t status, unsigned support, unsigned valid,
                 unsigned total)
@@ -841,14 +860,16 @@ s5_vote_usable (s5_echo_t status, unsigned support, unsigned valid,
            || ((S5_ECHO_UNSTABLE == status) && (support > (total - valid)));
 }
 
+/*! @brief Did this ping echo? */
 static bool
 s5_echo_bit (uint16_t echo, unsigned index)
 {
     return 0U != ((echo >> index) & 1U);
 }
 
-/* Same surface as the previous point on the obstacle: see S5_CONTINUITY_MM.
- *p_prev_mm / *p_have follow the last point taken as the obstacle. */
+/*! @brief Same surface as the previous point on the obstacle: see
+ * S5_CONTINUITY_MM. p_prev_mm / *p_have follow the last point taken as the
+ * obstacle. */
 static void
 s5_follow_surface (s5_point_t * p_point, float64_t * p_prev_mm, bool * p_have)
 {
@@ -868,6 +889,7 @@ s5_follow_surface (s5_point_t * p_point, float64_t * p_prev_mm, bool * p_have)
     }
 }
 
+/*! @brief Measure one angle and store it. */
 static bool
 s5_measure_point (s5_point_t * p_point, int angle_deg,
                   float64_t centre_forward_mm, s5_measure_fn_t p_measure,
@@ -892,7 +914,7 @@ s5_measure_point (s5_point_t * p_point, int angle_deg,
     return b_result;
 }
 
-/* Walk back inward from last_deg (clear space, where the outward walk
+/*! @brief Walk back inward from last_deg (clear space, where the outward walk
    left the servo) until the obstacle is seen twice in a row.  The servo now
    reaches every angle moving the other way.  No further in than straight
    ahead or S5_INWARD_MAX_STEPS points: backlash can put the edge inside
@@ -953,8 +975,8 @@ s5_walk_inward (s5_scan_t * p_scan, unsigned side, int last_deg,
     return true;
 }
 
-/* Walk outward 1 deg at a time from start_deg (the outermost coarse point
-   still on the obstacle).  The edge is passed once two clear points in a
+/*! @brief Walk outward 1 deg at a time from start_deg (the outermost coarse
+   point still on the obstacle).  The edge is passed once two clear points in a
    row are seen, so one dropped ping cannot end the obstacle early.  Then
    walk back inward and average the two crossings. */
 static bool
@@ -1053,7 +1075,8 @@ s5_find_edge (s5_scan_t * p_scan, unsigned side, int start_deg,
     return true;
 }
 
-/* Outermost coarse point, walking out from 90 deg, before the first clear one
+/*! @brief Outermost coarse point, walking out from 90 deg, before the first
+ * clear one
  */
 static void
 s5_coarse_edge (const s5_scan_t * p_scan, unsigned side, int * p_angle_deg,
@@ -1081,30 +1104,35 @@ s5_coarse_edge (const s5_scan_t * p_scan, unsigned side, int * p_angle_deg,
     }
 }
 
+/*! @brief One bit of a per-angle map. */
 static bool
 s5_profile_bit (const uint8_t map[], int index)
 {
     return 0U != ((map[index / 8] >> (index % 8)) & 1U);
 }
 
+/*! @brief Was this angle measured? */
 static bool
 s5_profile_taken (const s5_profile_t * p_profile, int index)
 {
     return s5_profile_bit(p_profile->taken, index);
 }
 
+/*! @brief Was there an echo at this angle? */
 static bool
 s5_profile_echo (const s5_profile_t * p_profile, int index)
 {
     return s5_profile_bit(p_profile->echo, index);
 }
 
+/*! @brief Range at this angle, mm. */
 static float64_t
 s5_profile_mm (const s5_profile_t * p_profile, int index)
 {
     return s5_range_mm(p_profile->range[index]);
 }
 
+/*! @brief Put one reading into the profile. */
 static void
 s5_profile_add (s5_profile_t * p_profile, s5_point_t point)
 {
@@ -1124,8 +1152,8 @@ s5_profile_add (s5_profile_t * p_profile, s5_point_t point)
     }
 }
 
-/* Out along the face from start until the sweep ends (*p_jump false) or it
-   does.  Returns where it was last heard, *p_before the reading before. */
+/*! @brief Out along the face from start until the sweep ends (*p_jump false) or
+   it does.  Returns where it was last heard, *p_before the reading before. */
 static int
 s5_face_walk (const s5_profile_t * p_profile, int start, int step,
               int * p_before, bool * p_jump, unsigned * p_count)
@@ -1162,8 +1190,9 @@ s5_face_walk (const s5_profile_t * p_profile, int start, int step,
     return end;
 }
 
-/* A jump can still be the same plane: a flat wall's range rises fast between
-   coarse angles.  Carry on while the readings stay on the plane so far. */
+/*! @brief A jump can still be the same plane: a flat wall's range rises fast
+   between coarse angles.  Carry on while the readings stay on the plane so far.
+ */
 static int
 s5_face_extend (const s5_profile_t * p_profile, int end, int step,
                 float64_t distance, float64_t tilt, int * p_before,
@@ -1210,7 +1239,8 @@ s5_face_extend (const s5_profile_t * p_profile, int end, int step,
     return end;
 }
 
-/* The corner's range: the last reading, unless it is a long grazing echo */
+/*! @brief The corner's range: the last reading, unless it is a long grazing
+ * echo */
 static float64_t
 s5_face_corner_range (const s5_profile_t * p_profile, int end, int before)
 {
@@ -1220,7 +1250,8 @@ s5_face_corner_range (const s5_profile_t * p_profile, int end, int before)
                : s5_profile_mm(p_profile, end);
 }
 
-/* First rise through level going out from start, interpolated, as an index */
+/*! @brief First rise through level going out from start, interpolated, as an
+ * index */
 static bool
 s5_face_cross (const s5_profile_t * p_profile, int start, int end, int step,
                float64_t level, float64_t * p_index)
@@ -1254,7 +1285,7 @@ s5_face_cross (const s5_profile_t * p_profile, int start, int end, int step,
     return false;
 }
 
-/* At the limit of the sweep: has the range stopped rising? */
+/*! @brief At the limit of the sweep: has the range stopped rising? */
 static bool
 s5_face_flat_end (const s5_profile_t * p_profile, int start, int end, int step)
 {
@@ -1274,7 +1305,7 @@ s5_face_flat_end (const s5_profile_t * p_profile, int start, int end, int step)
            <= S5_FACE_FLAT_MM;
 }
 
-/* The coarse sweep and the outward fine walks, by angle. */
+/*! @brief The coarse sweep and the outward fine walks, by angle. */
 static void
 s5_face_profile (const s5_scan_t * p_scan, s5_profile_t * p_profile)
 {
@@ -1298,7 +1329,7 @@ s5_face_profile (const s5_scan_t * p_scan, s5_profile_t * p_profile)
     }
 }
 
-/* Where the shortest range near straight ahead is, or -1. */
+/*! @brief Where the shortest range near straight ahead is, or -1. */
 static int
 s5_face_nearest (const s5_profile_t * p_profile)
 {
@@ -1321,7 +1352,7 @@ s5_face_nearest (const s5_profile_t * p_profile)
     return nearest;
 }
 
-/* Both ends heard: half the beam's width cancels between them */
+/*! @brief Both ends heard: half the beam's width cancels between them */
 static float64_t
 s5_face_edge_tilt (const s5_face_t * p_face, int left, int right,
                    float64_t distance, float64_t tilt)
@@ -1339,7 +1370,7 @@ s5_face_edge_tilt (const s5_face_t * p_face, int left, int right,
                : tilt;
 }
 
-/* The face knows better than the edge angles */
+/*! @brief The face knows better than the edge angles */
 static void
 s5_face_apply (s5_scan_t * p_scan)
 {
@@ -1367,7 +1398,8 @@ s5_face_apply (s5_scan_t * p_scan)
     }
 }
 
-/* The reading straight ahead, then the coarse sweep if it found something */
+/*! @brief The reading straight ahead, then the coarse sweep if it found
+ * something */
 static bool
 s5_scan_coarse (s5_scan_t * p_scan, s5_measure_fn_t p_measure, void * p_context)
 {
@@ -1409,7 +1441,7 @@ s5_scan_coarse (s5_scan_t * p_scan, s5_measure_fn_t p_measure, void * p_context)
     return true;
 }
 
-/* Farthest range among the obstacle's own points */
+/*! @brief Farthest range among the obstacle's own points */
 static float64_t
 s5_object_range (const s5_scan_t * p_scan)
 {
@@ -1441,7 +1473,8 @@ s5_object_range (const s5_scan_t * p_scan)
     return farthest;
 }
 
-/* Is this point something else beside the obstacle, beyond the given edge? */
+/*! @brief Is this point something else beside the obstacle, beyond the given
+ * edge? */
 static bool
 s5_beside (const s5_scan_t * p_scan, unsigned side, s5_point_t point,
            float64_t object_range_mm)
@@ -1458,7 +1491,8 @@ s5_beside (const s5_scan_t * p_scan, unsigned side, s5_point_t point,
                <= (p_scan->centre_forward_mm + S5_PASS_LOOKAHEAD_MM));
 }
 
-/* Nearest echo beside the obstacle on one side, mm from the centre line */
+/*! @brief Nearest echo beside the obstacle on one side, mm from the centre line
+ */
 static float64_t
 s5_side_clear (const s5_scan_t * p_scan, unsigned side,
                float64_t object_range_mm)
@@ -1496,7 +1530,8 @@ s5_side_clear (const s5_scan_t * p_scan, unsigned side,
     return nearest;
 }
 
-/* Nearest echo beyond this end of the face, square to the face from the axle */
+/*! @brief Nearest echo beyond this end of the face, square to the face from the
+ * axle */
 static bool
 s5_face_echo_real (const s5_scan_t * p_scan, unsigned side, s5_point_t point)
 {
@@ -1530,6 +1565,7 @@ s5_face_echo_real (const s5_scan_t * p_scan, unsigned side, s5_point_t point)
     return false;
 }
 
+/*! @brief Nearest thing beside this end of the face. */
 static float64_t
 s5_face_clear (const s5_scan_t * p_scan, unsigned side, float64_t axle_mm)
 {
@@ -1572,7 +1608,7 @@ s5_face_clear (const s5_scan_t * p_scan, unsigned side, float64_t axle_mm)
     return nearest;
 }
 
-/* Whole mm modulo 2^16; a path is never negative */
+/*! @brief Whole mm modulo 2^16; a path is never negative */
 static uint16_t
 s5_curve_path (float64_t path_mm)
 {
