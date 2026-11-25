@@ -17,3 +17,5 @@
 #define B4_MAG_HEADING_SIGN (1)
 
 #endif
+
+/*** end of file ***/

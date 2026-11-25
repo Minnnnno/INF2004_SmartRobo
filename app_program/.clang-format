@@ -1,0 +1,54 @@
+# BARR-C:2018 layout for the team's firmware (app_program and the team headers
+# in include).  Run tools/barr_format.py: it also applies the rules clang-format
+# cannot (docs/CODING_STANDARD.md).
+Language: Cpp
+Standard: c++11
+BasedOnStyle: LLVM
+ColumnLimit: 80
+IndentWidth: 4
+ContinuationIndentWidth: 4
+TabWidth: 4
+UseTab: Never
+LineEnding: DeriveLF
+BreakBeforeBraces: Allman
+InsertBraces: true
+IndentCaseLabels: true
+IndentPPDirectives: None
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+BreakAfterReturnType: AllDefinitions
+PenaltyReturnTypeOnItsOwnLine: 60
+BreakStringLiterals: true
+BreakBeforeBinaryOperators: All
+BinPackArguments: true
+BinPackParameters: true
+PointerAlignment: Middle
+DerivePointerAlignment: false
+SpaceBeforeParens: Custom
+SpaceBeforeParensOptions:
+  AfterControlStatements: true
+  AfterFunctionDefinitionName: true
+  AfterFunctionDeclarationName: false
+AlignConsecutiveAssignments:
+  Enabled: true
+AlignConsecutiveDeclarations:
+  Enabled: true
+AlignConsecutiveBitFields:
+  Enabled: true
+AlignConsecutiveMacros:
+  Enabled: true
+AlignTrailingComments:
+  Kind: Always
+AlignEscapedNewlines: Left
+ReflowComments: Always
+SortIncludes: Never
+MaxEmptyLinesToKeep: 1
+KeepEmptyLines:
+  AtStartOfBlock: false
+  AtStartOfFile: false
+  AtEndOfFile: false
+InsertNewlineAtEOF: true

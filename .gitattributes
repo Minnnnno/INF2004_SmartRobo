@@ -1,0 +1,6 @@
+# BARR-C:2018 3.6.a: the team's C sources end lines with LF.
+app_program/**/*.c text eol=lf
+app_program/**/*.h text eol=lf
+app_program/*.c text eol=lf
+app_program/*.h text eol=lf
+/include/*.h text eol=lf

@@ -14,45 +14,62 @@
 #include <stdint.h>
 
 /* Class codes (3 bits, CR1). Published in the terrain slot and M_CLASS. */
-#define MC_STATIONARY   (0U)
-#define MC_MOVING       (1U)
-#define MC_ACCELERATING (2U) /* Speed changing, either direction (braking included). */
+#define MC_STATIONARY (0U)
+#define MC_MOVING     (1U)
+/* Speed changing, either direction (braking included). */
+#define MC_ACCELERATING (2U)
 #define MC_REVERSING    (3U) /* Encoders measure the robot driving backwards. */
 #define MC_TURNING      (4U)
 #define MC_CLIMBING     (5U)
 #define MC_DESCENDING   (6U)
-#define MC_OVERTURNED   (7U) /* IMU: robot overturned (lift.h); motors stopped. */
-#define MC_CLASS_MASK   (0x07U)
+/* IMU: robot overturned (lift.h); motors stopped. */
+#define MC_OVERTURNED (7U)
+#define MC_CLASS_MASK (0x07U)
 
 /* Thresholds (tune from robot logs). */
 /* TURNING = the robot's heading really changed: |net heading change over the
  * last ~0.5 s| >= 15 deg (an average of ~30 deg/s held). Line-following
  * corrections flip left/right and net close to 0, so they stay MOVING. */
-#define MC_TURN_NET_DDEG   (150)  /* 15.0 deg, in 0.1 deg. */
-#define MC_TURN_WINDOW_MS  (500U) /* Nominal window; 5 samples, 100 ms apart. */
+#define MC_TURN_NET_DDEG (150) /* 15.0 deg, in 0.1 deg. */
+#define MC_TURN_WINDOW_MS                              \
+    (500U) /* Nominal window; 5 samples, 100 ms apart. \
+            */
 #define MC_HEADING_SLOTS   (5U)
 #define MC_HEADING_STEP_MS (100U)
-#define MC_HEADING_JUMP_DDEG (900) /* > 90 deg in one 100 ms step: odometry reset. */
-#define MC_TURN_MOVING_DEG_S (10)  /* A turn's duration ends at the last |yaw| >= this. */
-#define MC_ACCEL_MM_S2     (150)  /* |change in centre speed size| at or above this. */
-#define MC_REVERSE_MM_S    (-20)  /* Centre speed at or below this is REVERSING; the
-                                     margin rejects encoder jitter at standstill. */
-#define MC_ACCEL_WINDOW_MS (100U) /* Speed change measured over this window. */
-#define MC_CONFIRM_SAMPLES (3U)   /* A new class must repeat this many cycles. */
-#define MC_MAX_GAP_MS      (100U) /* Longer input gaps reseed the speed window. */
+/* > 90 deg in one 100 ms step: odometry reset. */
+#define MC_HEADING_JUMP_DDEG (900)
+/* A turn's duration ends at the last |yaw| >= this. */
+#define MC_TURN_MOVING_DEG_S (10)
+/* |change in centre speed size| at or above this. */
+#define MC_ACCEL_MM_S2 (150)
+/* Centre speed at or below this is REVERSING; the margin rejects encoder jitter
+ * at standstill. */
+#define MC_REVERSE_MM_S (-20)
+#define MC_ACCEL_WINDOW_MS                            \
+    (100U) /* Speed change measured over this window. \
+            */
+/* A new class must repeat this many cycles. */
+#define MC_CONFIRM_SAMPLES (3U)
+/* Longer input gaps reseed the speed window. */
+#define MC_MAX_GAP_MS (100U)
 
 /* One fresh observation from the owning task. */
 typedef struct
 {
-    bool valid;          /* Buddy 4 MONITORING and motion status available. */
-    bool stationary;     /* Buddy 2 encoders report the robot at rest. */
-    bool overturned;     /* Buddy 4 lift detector: robot overturned (latched). */
-    uint8_t terrain_phase; /* TERRAIN_WAITING/CLIMBING/DESCENDING (terrain.h). */
-    int16_t speed_mm_s[2]; /* Buddy 2 wheel speeds, left then right. */
-    uint16_t track_mm;   /* Wheel track for the yaw rate (B4_TRACK_MM). */
-    bool heading_valid;  /* Buddy 2 odometry heading is finite. */
-    int32_t heading_ddeg; /* Buddy 2 odometry heading, unwrapped, 0.1 deg, + = left. */
-    bool compass_valid;  /* Calibrated, fresh, field in range, not on a hump. */
+    /* Buddy 4 MONITORING and motion status available. */
+    bool valid;
+    bool stationary; /* Buddy 2 encoders report the robot at rest. */
+    /* Buddy 4 lift detector: robot overturned (latched). */
+    bool overturned;
+    /* TERRAIN_WAITING/CLIMBING/DESCENDING (terrain.h). */
+    uint8_t  terrain_phase;
+    int16_t  speed_mm_s[2]; /* Buddy 2 wheel speeds, left then right. */
+    uint16_t track_mm;      /* Wheel track for the yaw rate (B4_TRACK_MM). */
+    bool     heading_valid; /* Buddy 2 odometry heading is finite. */
+    /* Buddy 2 odometry heading, unwrapped, 0.1 deg, + = left. */
+    int32_t heading_ddeg;
+    /* Calibrated, fresh, field in range, not on a hump. */
+    bool    compass_valid;
     int32_t compass_ddeg; /* Compass heading, unwrapped, 0.1 deg, + = left. */
 } motion_class_input_t;
 
@@ -64,56 +81,74 @@ typedef struct
  */
 typedef struct
 {
-    uint32_t last_ms;       /* Time of the previous valid step. */
-    uint32_t window_ms;     /* Start of the current speed-change window. */
-    int16_t window_mm_s;    /* Centre speed at the window start. */
-    int16_t accel_mm_s2;    /* Rate of change of centre speed SIZE, mm/s^2:
-                               + speeding up, - slowing down (either direction). */
-    int16_t yaw_deg_s;      /* Yaw rate, + = left/anticlockwise. */
+    /* Time of the previous valid step. */
+    uint32_t last_ms;
+    /* Start of the current speed-change window. */
+    uint32_t window_ms;
+    /* Centre speed at the window start. */
+    int16_t window_mm_s;
+    /* Rate of change of centre speed SIZE, mm/s^2: + speeding up, - slowing
+     * down (either direction). */
+    int16_t accel_mm_s2;
+    /* Yaw rate, + = left/anticlockwise. */
+    int16_t yaw_deg_s;
     int32_t heading_ring[MC_HEADING_SLOTS]; /* Heading samples, 0.1 deg. */
-    uint32_t heading_ms;    /* Time of the newest ring sample. */
-    int32_t turn_start_ddeg; /* Heading where the current turn began. */
+    /* Time of the newest ring sample. */
+    uint32_t heading_ms;
+    /* Heading where the current turn began. */
+    int32_t  turn_start_ddeg;
     uint32_t turn_start_ms;
-    uint32_t turn_moving_ms; /* Last time |yaw| >= MC_TURN_MOVING_DEG_S in the turn. */
-    int16_t turn_peak_deg_s; /* Highest |yaw| during the current turn. */
-    int16_t last_turn_ddeg;  /* Completed turn angle, 0.1 deg, + = left. */
-    uint16_t last_turn_ms;   /* Completed turn duration. */
-    int16_t last_turn_peak;  /* Completed turn peak |yaw|, deg/s. */
-    int32_t compass_ring[MC_HEADING_SLOTS]; /* Compass samples beside heading_ring. */
+    /* Last time |yaw| >= MC_TURN_MOVING_DEG_S in the turn. */
+    uint32_t turn_moving_ms;
+    /* Highest |yaw| during the current turn. */
+    int16_t turn_peak_deg_s;
+    /* Completed turn angle, 0.1 deg, + = left. */
+    int16_t  last_turn_ddeg;
+    uint16_t last_turn_ms; /* Completed turn duration. */
+    /* Completed turn peak |yaw|, deg/s. */
+    int16_t last_turn_peak;
+    /* Compass samples beside heading_ring. */
+    int32_t compass_ring[MC_HEADING_SLOTS];
     int32_t turn_compass_start;
     int16_t last_turn_compass; /* Completed turn compass angle, 0.1 deg. */
-    uint8_t compass_bits;    /* Bit i: compass_ring[i] was valid (5 bits). */
-    uint8_t turn_info;       /* Bit 0 compass valid so far in this turn, bit 1 last
-                                turn compass valid. */
+    uint8_t compass_bits;      /* Bit i: compass_ring[i] was valid (5 bits). */
+    /* Bit 0 compass valid so far in this turn, bit 1 last turn compass valid.
+     */
+    uint8_t turn_info;
     uint8_t ring;
     uint8_t packed;
     uint8_t flags;
 } motion_class_t;
 
-void motion_class_reset(motion_class_t *p_context);
+void motion_class_reset(motion_class_t * p_context);
 /* One step per task cycle. Invalid input publishes STATIONARY with the valid
  * flag clear and discards the speed window.
  */
-void motion_class_step(motion_class_t *p_context, motion_class_input_t const *p_input,
-                       uint32_t now_ms);
-uint8_t motion_class_get(motion_class_t const *p_context);
-bool motion_class_valid(motion_class_t const *p_context);
-/* True while a turn (net heading change) is in progress, before it is reported. */
-bool motion_class_turn_active(motion_class_t const *p_context);
-int16_t motion_class_yaw_deg_s(motion_class_t const *p_context);
-int16_t motion_class_accel_mm_s2(motion_class_t const *p_context);
+void motion_class_step(motion_class_t *             p_context,
+                       motion_class_input_t const * p_input, uint32_t now_ms);
+uint8_t motion_class_get(motion_class_t const * p_context);
+bool    motion_class_valid(motion_class_t const * p_context);
+/* True while a turn (net heading change) is in progress, before it is reported.
+ */
+bool    motion_class_turn_active(motion_class_t const * p_context);
+int16_t motion_class_yaw_deg_s(motion_class_t const * p_context);
+int16_t motion_class_accel_mm_s2(motion_class_t const * p_context);
 /* Consume one completed turn (true at most once per turn): signed angle in
  * 0.1 deg (+ = left), duration in ms and peak |yaw| in deg/s. Any output
  * pointer may be NULL. The angle comes from Buddy 2's encoders: wheel slip
  * inflates it. */
-bool motion_class_take_turn(motion_class_t *p_context, int16_t *p_angle_ddeg,
-                            uint16_t *p_duration_ms, int16_t *p_peak_deg_s);
+bool motion_class_take_turn(motion_class_t * p_context, int16_t * p_angle_ddeg,
+                            uint16_t * p_duration_ms, int16_t * p_peak_deg_s);
 /* Compass angle for the turn last returned by motion_class_take_turn():
  * true with the angle (0.1 deg, + = left) when the compass was valid for the
  * whole turn; false = "compass n/a". Shown next to the encoder angle for a
  * by-eye comparison; no slip verdict is made (removed for now). */
-bool motion_class_turn_compass(motion_class_t const *p_context, int16_t *p_compass_ddeg);
+bool motion_class_turn_compass(motion_class_t const * p_context,
+                               int16_t *              p_compass_ddeg);
 /* Yaw rate from wheel speeds: (right - left) / track, deg/s, rounded. */
-int16_t motion_class_yaw_from_speeds(int16_t left_mm_s, int16_t right_mm_s, uint16_t track_mm);
-char const *motion_class_name(uint8_t motion_class);
+int16_t      motion_class_yaw_from_speeds(int16_t left_mm_s, int16_t right_mm_s,
+                                          uint16_t track_mm);
+char const * motion_class_name(uint8_t motion_class);
 #endif
+
+/*** end of file ***/

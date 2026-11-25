@@ -10,8 +10,11 @@
  * Returns E_OK only when identity, all register readbacks and close succeed.
  * Identity/readback mismatch returns E_IO; driver errors are passed through.
  * One attempt only. Failure may leave partially configured sensor registers.
- * This does not calibrate, read measurements, or establish measurement validity.
+ * This does not calibrate, read measurements, or establish measurement
+ * validity.
  */
 ER subsystem4_init(void);
 
 #endif /* SUBSYSTEM4_H */
+
+/*** end of file ***/

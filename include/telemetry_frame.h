@@ -1,28 +1,28 @@
 /*
- *	telemetry_frame.h
- *	Shared binary MQTT formats: status frame, command, acknowledgement,
- *	event frame and encoder frame.  Owned by Buddy 1; changed only by team agreement
- *	(Week 8 Tribunal 1 decision log: "Pack all fields into one bit-level
- *	status frame").
+ *  telemetry_frame.h
+ *  Shared binary MQTT formats: status frame, command, acknowledgement,
+ *  event frame and encoder frame.  Owned by Buddy 1; changed only by team
+ * agreement (Week 8 Tribunal 1 decision log: "Pack all fields into one
+ * bit-level status frame").
  *
- *	This is the ONE definition of every field's range, bit width and sign.
- *	The firmware codec (app_program/subsystem1/telemetry_frame.c), the host
- *	round-trip test (tests/subsystem1) and the dashboard decoder
- *	(tools/dashboard.py, which parses TF_FIELDS below) all read this table.
- *	Plain C only: no kernel headers, so mqtt_utk.c and host tests can use it.
+ *  This is the ONE definition of every field's range, bit width and sign.
+ *  The firmware codec (app_program/subsystem1/telemetry_frame.c), the host
+ *  round-trip test (tests/subsystem1) and the dashboard decoder
+ *  (tools/dashboard.py, which parses TF_FIELDS below) all read this table.
+ *  Plain C only: no kernel headers, so mqtt_utk.c and host tests can use it.
  *
- *	Encoding rules
- *	  - A field stores the unsigned offset (value - min) in `bits` bits.
- *	    Signed values therefore never wrap: -1 with min -250 is sent as 249,
- *	    and the decoder adds min back.
- *	  - Out-of-range values are CLAMPED to [min, max], never wrapped.
- *	    Counters (SEQ, UPTIME_DS, CMD_ID) wrap by design before packing.
- *	  - Fields are written most-significant bit first, in table order,
- *	    starting at bit 7 of byte 0.  Spare bits at the end are zero.
- *	  - Each field uses the minimum number of bits for its range; this is
- *	    checked at compile time in telemetry_frame.c.
- *	  - Bump TF_LAYOUT_VERSION whenever a field is added, removed or resized.
- *	    New fields go into the spare bits first, so the size stays 21 bytes.
+ *  Encoding rules
+ *    - A field stores the unsigned offset (value - min) in `bits` bits.
+ *      Signed values therefore never wrap: -1 with min -250 is sent as 249,
+ *      and the decoder adds min back.
+ *    - Out-of-range values are CLAMPED to [min, max], never wrapped.
+ *      Counters (SEQ, UPTIME_DS, CMD_ID) wrap by design before packing.
+ *    - Fields are written most-significant bit first, in table order,
+ *      starting at bit 7 of byte 0.  Spare bits at the end are zero.
+ *    - Each field uses the minimum number of bits for its range; this is
+ *      checked at compile time in telemetry_frame.c.
+ *    - Bump TF_LAYOUT_VERSION whenever a field is added, removed or resized.
+ *      New fields go into the spare bits first, so the size stays 21 bytes.
  */
 
 #ifndef TELEMETRY_FRAME_H
@@ -38,7 +38,7 @@
    v2 -> v3 (Buddy 3 barcode): BC_VALID + BC_CMD (a 0..3 command B3 never
    published) became BC_CHAR (the decoded character) + BC_READ (flips on
    every valid read, so a repeated letter still shows as a new read). */
-#define TF_LAYOUT_VERSION	3U
+#define TF_LAYOUT_VERSION 3U
 
 /* ---------------------------------------------------------------------
  *  Status frame, published at QoS 0 on COMMS_TOPIC_FRAME every 100 ms.
@@ -46,91 +46,112 @@
  *  X(name, min, max, bits, owner, "units and meaning")
  *  Keep each entry on ONE line: tools/dashboard.py parses these lines.
  * --------------------------------------------------------------------- */
-#define TF_FIELDS(X) \
-	X(VERSION,     0,     15,     4,  B1, "frame layout version, TF_LAYOUT_VERSION") \
-	X(SEQ,         0,     255,    8,  B1, "frame counter, wraps; gaps = lost frames") \
-	X(UPTIME_DS,   0,     65535,  16, B1, "uptime in 0.1 s, wraps every 109 min") \
-	X(M_STATE,     0,     6,      3,  B2, "motion_state_t") \
-	X(M_MODE,      0,     4,      3,  B2, "motion_mode_t") \
-	X(M_FAULT,     0,     12,     4,  B2, "motion_fault_t (primary cause)") \
-	X(M_FLAGS,     0,     15,     4,  B2, "bit0 stationary, bit1 feedback trusted, bit2 inhibited, bit3 hold") \
-	X(OWNER,       0,     7,      3,  B2, "request_source_t owning motion; 7 = no owner") \
-	X(CMD_ID,      0,     255,    8,  B2, "active command id, low 8 bits") \
-	X(SPEED_L,     -250,  250,    9,  B2, "left wheel speed, mm/s") \
-	X(SPEED_R,     -250,  250,    9,  B2, "right wheel speed, mm/s") \
-	X(CENTRE_MM,   -5000, 5000,   14, B2, "signed centre travel, mm") \
-	X(HEADING,     -180,  179,    9,  B2, "odometry heading, degrees, wrapped") \
-	X(LINE_AVAIL,  0,     1,      1,  B3, "line status available") \
-	X(LINE_ERR,    -1,    1,      2,  B3, "line error: -1 left, 0 centred, +1 right") \
-	X(LINE_TRACK,  0,     1,      1,  B3, "line trackable") \
-	X(BC_CHAR,     0,     44,     6,  B3, "last decoded Code 39 character: 0 none yet, n = TF_BC_CHARS[n - 1]") \
-	X(BC_READ,     0,     1,      1,  B3, "flips on every valid read (low bit of B3's read counter)") \
-	X(T_VALID,     0,     7,      3,  B4, "bit0 motion class + turn rate, bit1 pitch, bit2 hump height valid") \
-	X(T_STATE,     0,     7,      3,  B4, "terrain state (8 states, B4 statechart; 7 = LIFTED)") \
-	X(M_CLASS,     0,     7,      3,  B4, "motion class: 0 still 1 moving 2 accel 3 reverse 4 turn 5 climb 6 descend 7 overturned") \
-	X(PITCH,       -90,   90,     8,  B4, "pitch, degrees, + nose up") \
-	X(TURN_RATE,   -256,  255,    9,  B4, "turn rate from wheel speeds, deg/s, + left (anticlockwise)") \
-	X(HUMP_MM,     0,     127,    7,  B4, "highest completed hump peak this run, mm") \
-	X(O_FLAGS,     0,     31,     5,  B5, "bit0 scanning, bit1 first boundary, bit2 second boundary, bit3 width valid, bit4 no echo") \
-	X(O_AVAIL,     0,     1,      1,  B5, "obstacle status available") \
-	X(O_DIST_CM,   0,     400,    9,  B5, "nearest obstacle distance, cm") \
-	X(O_WIDTH_CM,  0,     255,    8,  B5, "obstacle width, cm; use only if width valid") \
-	X(REJECTED,    0,     7,      3,  B1, "controller rejections since last frame, saturates") \
-	X(DROPPED,     0,     7,      3,  B1, "comms messages dropped since last frame, saturates")
+#define TF_FIELDS(X)                                                          \
+    X(VERSION, 0, 15, 4, B1, "frame layout version, TF_LAYOUT_VERSION")       \
+    X(SEQ, 0, 255, 8, B1, "frame counter, wraps; gaps = lost frames")         \
+    X(UPTIME_DS, 0, 65535, 16, B1, "uptime in 0.1 s, wraps every 109 min")    \
+    X(M_STATE, 0, 6, 3, B2, "motion_state_t")                                 \
+    X(M_MODE, 0, 4, 3, B2, "motion_mode_t")                                   \
+    X(M_FAULT, 0, 12, 4, B2, "motion_fault_t (primary cause)")                \
+    X(M_FLAGS, 0, 15, 4, B2,                                                  \
+      "bit0 stationary, bit1 feedback trusted, bit2 inhibited, bit3 hold")    \
+    X(OWNER, 0, 7, 3, B2, "request_source_t owning motion; 7 = no owner")     \
+    X(CMD_ID, 0, 255, 8, B2, "active command id, low 8 bits")                 \
+    X(SPEED_L, -250, 250, 9, B2, "left wheel speed, mm/s")                    \
+    X(SPEED_R, -250, 250, 9, B2, "right wheel speed, mm/s")                   \
+    X(CENTRE_MM, -5000, 5000, 14, B2, "signed centre travel, mm")             \
+    X(HEADING, -180, 179, 9, B2, "odometry heading, degrees, wrapped")        \
+    X(LINE_AVAIL, 0, 1, 1, B3, "line status available")                       \
+    X(LINE_ERR, -1, 1, 2, B3, "line error: -1 left, 0 centred, +1 right")     \
+    X(LINE_TRACK, 0, 1, 1, B3, "line trackable")                              \
+    X(BC_CHAR, 0, 44, 6, B3,                                                  \
+      "last decoded Code 39 character: 0 none yet, n = TF_BC_CHARS[n - 1]")   \
+    X(BC_READ, 0, 1, 1, B3,                                                   \
+      "flips on every valid read (low bit of B3's read counter)")             \
+    X(T_VALID, 0, 7, 3, B4,                                                   \
+      "bit0 motion class + turn rate, bit1 pitch, bit2 hump height valid")    \
+    X(T_STATE, 0, 7, 3, B4,                                                   \
+      "terrain state (8 states, B4 statechart; 7 = LIFTED)")                  \
+    X(M_CLASS, 0, 7, 3, B4,                                                   \
+      "motion class: 0 still 1 moving 2 accel 3 reverse 4 turn 5 climb 6 "    \
+      "descend 7 overturned")                                                 \
+    X(PITCH, -90, 90, 8, B4, "pitch, degrees, + nose up")                     \
+    X(TURN_RATE, -256, 255, 9, B4,                                            \
+      "turn rate from wheel speeds, deg/s, + left (anticlockwise)")           \
+    X(HUMP_MM, 0, 127, 7, B4, "highest completed hump peak this run, mm")     \
+    X(O_FLAGS, 0, 31, 5, B5,                                                  \
+      "bit0 scanning, bit1 first boundary, bit2 second boundary, bit3 width " \
+      "valid, bit4 no echo")                                                  \
+    X(O_AVAIL, 0, 1, 1, B5, "obstacle status available")                      \
+    X(O_DIST_CM, 0, 400, 9, B5, "nearest obstacle distance, cm")              \
+    X(O_WIDTH_CM, 0, 255, 8, B5,                                              \
+      "obstacle width, cm; use only if width valid")                          \
+    X(REJECTED, 0, 7, 3, B1,                                                  \
+      "controller rejections since last frame, saturates")                    \
+    X(DROPPED, 0, 7, 3, B1,                                                   \
+      "comms messages dropped since last frame, saturates")
 
-#define TF_ENUM_(name, lo, hi, bits, owner, text)	TF_F_##name,
-enum { TF_FIELDS(TF_ENUM_) TF_FIELD_COUNT };
+#define TF_ENUM_(name, lo, hi, bits, owner, text) TF_F_##name,
+enum
+{
+    TF_FIELDS(TF_ENUM_) TF_FIELD_COUNT
+};
 #undef TF_ENUM_
 
-#define TF_SUM_(name, lo, hi, bits, owner, text)	+ (bits)
-enum {
-	TF_FRAME_BITS  = 0 TF_FIELDS(TF_SUM_),
-	TF_FRAME_BYTES = (TF_FRAME_BITS + 7) / 8,
-	TF_SPARE_BITS  = TF_FRAME_BYTES * 8 - TF_FRAME_BITS
+#define TF_SUM_(name, lo, hi, bits, owner, text) +(bits)
+enum
+{
+    TF_FRAME_BITS  = 0 TF_FIELDS(TF_SUM_),
+    TF_FRAME_BYTES = (TF_FRAME_BITS + 7) / 8,
+    TF_SPARE_BITS  = TF_FRAME_BYTES * 8 - TF_FRAME_BITS
 };
 #undef TF_SUM_
 
-typedef struct {
-	const char	*name;
-	int32_t		min;
-	int32_t		max;
-	uint8_t		bits;
+typedef struct
+{
+    const char * name;
+    int32_t      min;
+    int32_t      max;
+    uint8_t      bits;
 } tf_field_t;
 
 extern const tf_field_t tf_fields[TF_FIELD_COUNT];
 
 /* M_FLAGS, T_VALID and O_FLAGS bits */
-#define TF_MF_STATIONARY	0x1U
-#define TF_MF_TRUSTED		0x2U
-#define TF_MF_INHIBITED		0x4U
-#define TF_MF_HOLD		0x8U
+#define TF_MF_STATIONARY 0x1U
+#define TF_MF_TRUSTED    0x2U
+#define TF_MF_INHIBITED  0x4U
+#define TF_MF_HOLD       0x8U
 
-#define TF_TV_MOTION		0x1U	/* M_CLASS and TURN_RATE valid (v1: heading, never set) */
-#define TF_TV_PITCH		0x2U	/* set by terrain_task.c (subsystem4) */
-#define TF_TV_HUMP		0x4U
+/* M_CLASS and TURN_RATE valid (v1: heading, never set) */
+#define TF_TV_MOTION 0x1U
+#define TF_TV_PITCH  0x2U /* set by terrain_task.c (subsystem4) */
+#define TF_TV_HUMP   0x4U
 
-#define TF_OF_SCANNING		0x01U
-#define TF_OF_FIRST_EDGE	0x02U
-#define TF_OF_SECOND_EDGE	0x04U
-#define TF_OF_WIDTH_VALID	0x08U
-#define TF_OF_NO_ECHO		0x10U
+#define TF_OF_SCANNING    0x01U
+#define TF_OF_FIRST_EDGE  0x02U
+#define TF_OF_SECOND_EDGE 0x04U
+#define TF_OF_WIDTH_VALID 0x08U
+#define TF_OF_NO_ECHO     0x10U
 
-#define TF_OWNER_NONE		7
+#define TF_OWNER_NONE 7
 
 /* BC_CHAR: 0 = nothing read yet, n = TF_BC_CHARS[n - 1].  Same order as the
    decoder's code39_symbol table (subsystem3/barcode_decode.c).  The route
    action for a letter is in subsystem3/route.h; the dashboard reads it there.
    Keep on one line: tools/dashboard.py parses it. */
-#define TF_BC_CHARS	"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-. *$/+%"
+#define TF_BC_CHARS "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-. *$/+%"
 
 /* Pack values[TF_FIELD_COUNT] into out[TF_FRAME_BYTES].  Out-of-range values
    are clamped.  Returns a mask with bit i set if field i was clamped. */
-uint32_t tf_pack(const int32_t values[TF_FIELD_COUNT], uint8_t out[TF_FRAME_BYTES]);
+uint32_t tf_pack(const int32_t values[TF_FIELD_COUNT],
+                 uint8_t       out[TF_FRAME_BYTES]);
 
 /* Unpack a received frame.  Returns false (values untouched) if len is
    wrong, the version differs, a code is above its field's range or a
    spare bit is set. */
-bool tf_unpack(const uint8_t *frame, size_t len, int32_t values[TF_FIELD_COUNT]);
+bool tf_unpack(const uint8_t * frame, size_t len,
+               int32_t values[TF_FIELD_COUNT]);
 
 /* ---------------------------------------------------------------------
  *  Command, received on COMMS_TOPIC_CMD at QoS 1.  2 bytes, big-endian:
@@ -143,12 +164,22 @@ bool tf_unpack(const uint8_t *frame, size_t len, int32_t values[TF_FIELD_COUNT])
  *  the robot.  STOP and ESTOP are always forwarded: repeating them is
  *  harmless.  A new session number is accepted and becomes current.
  * --------------------------------------------------------------------- */
-#define TF_CMD_BYTES		2
-typedef enum { TF_OP_NONE, TF_OP_START, TF_OP_STOP, TF_OP_ESTOP } tf_opcode_t;
-typedef struct { uint8_t opcode, session, seq; } tf_command_t;
+#define TF_CMD_BYTES 2
+typedef enum
+{
+    TF_OP_NONE,
+    TF_OP_START,
+    TF_OP_STOP,
+    TF_OP_ESTOP
+} tf_opcode_t;
 
-bool tf_cmd_decode(const uint8_t *data, size_t len, tf_command_t *cmd);
-void tf_cmd_encode(const tf_command_t *cmd, uint8_t out[TF_CMD_BYTES]);
+typedef struct
+{
+    uint8_t opcode, session, seq;
+} tf_command_t;
+
+bool tf_cmd_decode(const uint8_t * data, size_t len, tf_command_t * cmd);
+void tf_cmd_encode(const tf_command_t * cmd, uint8_t out[TF_CMD_BYTES]);
 
 /* ---------------------------------------------------------------------
  *  Acknowledgement, published on COMMS_TOPIC_ACK at QoS 1.  2 bytes:
@@ -157,11 +188,19 @@ void tf_cmd_encode(const tf_command_t *cmd, uint8_t out[TF_CMD_BYTES]);
  *    bits 10..3   seq     (as received)
  *    bits  2..0   spare, zero
  * --------------------------------------------------------------------- */
-#define TF_ACK_BYTES		2
-typedef enum { TF_ACK_OK, TF_ACK_DUPLICATE, TF_ACK_BUSY, TF_ACK_REJECTED } tf_ack_t;
+#define TF_ACK_BYTES 2
+typedef enum
+{
+    TF_ACK_OK,
+    TF_ACK_DUPLICATE,
+    TF_ACK_BUSY,
+    TF_ACK_REJECTED
+} tf_ack_t;
 
-void tf_ack_encode(tf_ack_t result, const tf_command_t *cmd, uint8_t out[TF_ACK_BYTES]);
-bool tf_ack_decode(const uint8_t *data, size_t len, tf_ack_t *result, tf_command_t *cmd);
+void tf_ack_encode(tf_ack_t result, const tf_command_t * cmd,
+                   uint8_t out[TF_ACK_BYTES]);
+bool tf_ack_decode(const uint8_t * data, size_t len, tf_ack_t * result,
+                   tf_command_t * cmd);
 
 /* ---------------------------------------------------------------------
  *  Event frame, published on COMMS_TOPIC_EVENT at QoS 1.  2 bytes:
@@ -170,15 +209,16 @@ bool tf_ack_decode(const uint8_t *data, size_t len, tf_ack_t *result, tf_command
  *  Events are latched bits, not a queue: a burst of the same event is
  *  reported once, and nothing is lost while the broker is unreachable.
  * --------------------------------------------------------------------- */
-#define TF_EVENT_BYTES		2
-#define TF_EV_MOTION_FAULT	0x01U	/* B1 detects from the snapshot */
-#define TF_EV_LINE_LOST		0x02U	/* B1 detects from the snapshot */
-#define TF_EV_BARCODE		0x04U	/* B1 detects from the snapshot */
-#define TF_EV_HUMP_PEAK		0x08U	/* B4 latches when a peak completes */
-#define TF_EV_OBSTACLE		0x10U	/* B5 latches on detection */
-#define TF_EV_SCAN_DONE		0x20U	/* B5 latches when a scan result is ready */
-#define TF_EV_HANDOVER		0x40U	/* B5 latches on B5 -> B3 recovery handover */
-#define TF_EV_CMD_REJECTED	0x80U	/* B1 latches on a malformed command */
+#define TF_EVENT_BYTES     2
+#define TF_EV_MOTION_FAULT 0x01U /* B1 detects from the snapshot */
+#define TF_EV_LINE_LOST    0x02U /* B1 detects from the snapshot */
+#define TF_EV_BARCODE      0x04U /* B1 detects from the snapshot */
+#define TF_EV_HUMP_PEAK    0x08U /* B4 latches when a peak completes */
+#define TF_EV_OBSTACLE     0x10U /* B5 latches on detection */
+#define TF_EV_SCAN_DONE    0x20U /* B5 latches when a scan result is ready */
+/* B5 latches on B5 -> B3 recovery handover */
+#define TF_EV_HANDOVER     0x40U
+#define TF_EV_CMD_REJECTED 0x80U /* B1 latches on a malformed command */
 
 /* ---------------------------------------------------------------------
  *  Encoder frame, published at QoS 0 on COMMS_TOPIC_ENCODER every 100 ms,
@@ -192,8 +232,8 @@ bool tf_ack_decode(const uint8_t *data, size_t len, tf_ack_t *result, tf_command
  *                  bit2 sample fresh (age <= TF_ENC_FRESH_MS, finite time)
  *                  bits 5..3 feedback cause, motion_feedback_cause_t 0..5
  *                  bits 7..6 zero
- *    byte  3       bits 7..4 motion_state_t 0..6, bits 3..0 motion_fault_t 0..12
- *    bytes 4..7    encoder sample time, ms on the robot's clock, mod 2^32
+ *    byte  3       bits 7..4 motion_state_t 0..6, bits 3..0 motion_fault_t
+ * 0..12 bytes 4..7    encoder sample time, ms on the robot's clock, mod 2^32
  *    bytes 8..9    sample age when copied, ms, robot clock; 65535 = at
  *                  least 65.535 s or unknown (non-finite / negative time)
  *    bytes 10..13  left raw count, mod 2^32
@@ -203,37 +243,41 @@ bool tf_ack_decode(const uint8_t *data, size_t len, tf_ack_t *result, tf_command
  *  Counts may decrease (reverse) and wrap: receivers take modular deltas,
  *  never unsigned greater-than.  A reboot can restart the count baseline.
  * --------------------------------------------------------------------- */
-#define TF_ENC_VERSION		1U
-#define TF_ENC_BYTES		26
-#define TF_ENC_FRESH_MS		100U	/* motion samples every 10 ms */
-#define TF_ENC_AGE_UNKNOWN	0xFFFFU
+#define TF_ENC_VERSION     1U
+#define TF_ENC_BYTES       26
+#define TF_ENC_FRESH_MS    100U /* motion samples every 10 ms */
+#define TF_ENC_AGE_UNKNOWN 0xFFFFU
 
-#define TF_EF_RELIABLE		0x01U
-#define TF_EF_TRUSTED		0x02U
-#define TF_EF_FRESH		0x04U
-#define TF_EF_CAUSE_SHIFT	3
-#define TF_EF_CAUSE_MAX		5U	/* FB_RESTART_LATCH */
-#define TF_ENC_STATE_MAX	6U	/* SHUTDOWN */
-#define TF_ENC_FAULT_MAX	12U	/* F_SETUP_TIMEOUT */
+#define TF_EF_RELIABLE    0x01U
+#define TF_EF_TRUSTED     0x02U
+#define TF_EF_FRESH       0x04U
+#define TF_EF_CAUSE_SHIFT 3
+#define TF_EF_CAUSE_MAX   5U  /* FB_RESTART_LATCH */
+#define TF_ENC_STATE_MAX  6U  /* SHUTDOWN */
+#define TF_ENC_FAULT_MAX  12U /* F_SETUP_TIMEOUT */
 
-typedef struct {
-	uint8_t		seq;
-	bool		reliable, trusted, fresh;
-	uint8_t		cause;		/* motion_feedback_cause_t */
-	uint8_t		state;		/* motion_state_t */
-	uint8_t		fault;		/* motion_fault_t */
-	uint32_t	sample_ms;
-	uint16_t	age_ms;
-	uint32_t	count[2];	/* [0] left, [1] right */
-	uint32_t	invalid[2];
+typedef struct
+{
+    uint8_t seq;
+
+    bool     reliable, trusted, fresh;
+    uint8_t  cause; /* motion_feedback_cause_t */
+    uint8_t  state; /* motion_state_t */
+    uint8_t  fault; /* motion_fault_t */
+    uint32_t sample_ms;
+    uint16_t age_ms;
+    uint32_t count[2]; /* [0] left, [1] right */
+    uint32_t invalid[2];
 } tf_encoder_t;
 
 /* Pack an encoder frame.  cause, state and fault above their range are
    clamped to the maximum.  Returns true if anything was clamped. */
-bool tf_enc_pack(const tf_encoder_t *enc, uint8_t out[TF_ENC_BYTES]);
+bool tf_enc_pack(const tf_encoder_t * enc, uint8_t out[TF_ENC_BYTES]);
 
 /* Unpack an encoder frame.  Returns false (enc untouched) if len or the
    version is wrong, a reserved bit is set or a code is out of range. */
-bool tf_enc_unpack(const uint8_t *frame, size_t len, tf_encoder_t *enc);
+bool tf_enc_unpack(const uint8_t * frame, size_t len, tf_encoder_t * enc);
 
 #endif /* TELEMETRY_FRAME_H */
+
+/*** end of file ***/

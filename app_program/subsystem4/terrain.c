@@ -1,17 +1,19 @@
 #include "terrain.h"
 #include <stddef.h>
-#define TERRAIN_PENDING (0x10U)
-#define TERRAIN_SIDE_RIGHT (0x20U)
-#define TERRAIN_PUBLIC_MASK (0x07U)
+#define TERRAIN_PENDING         (0x10U)
+#define TERRAIN_SIDE_RIGHT      (0x20U)
+#define TERRAIN_PUBLIC_MASK     (0x07U)
 #define TERRAIN_COMPLETED_EVENT (0x80U)
 _Static_assert(TERRAIN_EXIT_TENTHS < TERRAIN_ENTER_TENTHS,
                "completion level must be below the entry level (hysteresis)");
 /* Kept across an invalid observation or a sample gap. */
-#define TERRAIN_RETAIN_MASK (TERRAIN_PHASE_MASK | TERRAIN_SIDE_RIGHT | \
-                             TERRAIN_COMPLETED_EVENT)
+#define TERRAIN_RETAIN_MASK \
+    (TERRAIN_PHASE_MASK | TERRAIN_SIDE_RIGHT | TERRAIN_COMPLETED_EVENT)
 
-/* Reset the event, peaks and run maximum only when explicitly starting a new run. */
-void terrain_reset(terrain_t *p_terrain)
+/* Reset the event, peaks and run maximum only when explicitly starting a new
+ * run. */
+void
+terrain_reset (terrain_t * p_terrain)
 {
     if (NULL != p_terrain)
     {
@@ -20,66 +22,83 @@ void terrain_reset(terrain_t *p_terrain)
 }
 
 /* Take the event without disturbing phase, validity or pending confirmation. */
-bool terrain_take_completed(terrain_t *p_terrain)
+bool
+terrain_take_completed (terrain_t * p_terrain)
 {
     bool completed;
+
     if (NULL == p_terrain)
     {
         return false;
     }
+
     completed = (0U != (p_terrain->flags & TERRAIN_COMPLETED_EVENT));
     p_terrain->flags &= (uint8_t)~TERRAIN_COMPLETED_EVENT;
     return completed;
 }
 
 /* Read public phase/validity without exposing candidate bookkeeping. */
-uint8_t terrain_status(terrain_t const *p_terrain)
+uint8_t
+terrain_status (terrain_t const * p_terrain)
 {
     return (NULL == p_terrain) ? 0U : (p_terrain->flags & TERRAIN_PUBLIC_MASK);
 }
 
-uint8_t terrain_last_peak(terrain_t const *p_terrain)
+uint8_t
+terrain_last_peak (terrain_t const * p_terrain)
 {
     return (NULL == p_terrain) ? 0U : p_terrain->last_peak;
 }
 
-uint8_t terrain_run_max(terrain_t const *p_terrain)
+uint8_t
+terrain_run_max (terrain_t const * p_terrain)
 {
     return (NULL == p_terrain) ? 0U : p_terrain->run_max;
 }
 
-/* Fixed names for console reports; an invalid observation retains last phase. */
-char const *terrain_phase_name(uint8_t status)
+/* Fixed names for console reports; an invalid observation retains last phase.
+ */
+char const *
+terrain_phase_name (uint8_t status)
 {
     switch (status & TERRAIN_PHASE_MASK)
     {
-        case TERRAIN_WAITING: return "WAITING";
-        case TERRAIN_CLIMBING: return "CLIMBING";
-        case TERRAIN_DESCENDING: return "DESCENDING";
-        default: return "INVALID";
+        case TERRAIN_WAITING:
+            return "WAITING";
+        case TERRAIN_CLIMBING:
+            return "CLIMBING";
+        case TERRAIN_DESCENDING:
+            return "DESCENDING";
+        default:
+            return "INVALID";
     }
 }
 
 /* Whole millimetres from 0.1 mm, rounded, limited to the 7-bit field. */
-static uint8_t terrain_mm(uint16_t tenths)
+static uint8_t
+terrain_mm (uint16_t tenths)
 {
     uint32_t mm = ((uint32_t)tenths + 5U) / 10U;
+
     return (uint8_t)((mm > TERRAIN_PEAK_MM_MASK) ? TERRAIN_PEAK_MM_MASK : mm);
 }
 
 /* Record a new live peak (and its side). The run maximum is only updated when
  * the hump completes, so a hump that is discarded (lift) never reaches it. */
-static void terrain_raise_peak(terrain_t *p_terrain, uint16_t magnitude, bool right)
+static void
+terrain_raise_peak (terrain_t * p_terrain, uint16_t magnitude, bool right)
 {
     p_terrain->peak_tenths = magnitude;
-    p_terrain->flags = (uint8_t)((p_terrain->flags & (uint8_t)~TERRAIN_SIDE_RIGHT) |
-                                 (right ? TERRAIN_SIDE_RIGHT : 0U));
+    p_terrain->flags
+        = (uint8_t)((p_terrain->flags & (uint8_t)~TERRAIN_SIDE_RIGHT)
+                    | (right ? TERRAIN_SIDE_RIGHT : 0U));
 }
 
 /* Throw away the hump in progress: WAITING, not valid (the next sample reseeds
  * the smoothing), no pending confirmation. Completed humps, the run maximum and
  * an unconsumed completion event are kept. */
-void terrain_discard(terrain_t *p_terrain)
+void
+terrain_discard (terrain_t * p_terrain)
 {
     if (NULL != p_terrain)
     {
@@ -92,14 +111,17 @@ void terrain_discard(terrain_t *p_terrain)
  * that is smaller, so a hump that peaks below ~3 mm can still complete.
  * Peaks are at least TERRAIN_ENTER_TENTHS, so the result is always positive.
  */
-static int32_t terrain_drop(uint16_t peak_tenths)
+static int32_t
+terrain_drop (uint16_t peak_tenths)
 {
     int32_t half = (int32_t)peak_tenths / 2;
+
     return (half < TERRAIN_DROP_TENTHS) ? half : TERRAIN_DROP_TENTHS;
 }
 
 /* Start or continue a timed confirmation; true once held for hold_ms. */
-static bool terrain_confirm(terrain_t *p_terrain, uint32_t now_ms, uint32_t hold_ms)
+static bool
+terrain_confirm (terrain_t * p_terrain, uint32_t now_ms, uint32_t hold_ms)
 {
     if (0U == (p_terrain->flags & TERRAIN_PENDING))
     {
@@ -107,6 +129,7 @@ static bool terrain_confirm(terrain_t *p_terrain, uint32_t now_ms, uint32_t hold
         p_terrain->candidate_since = now_ms;
         return false;
     }
+
     return (now_ms - p_terrain->candidate_since) >= hold_ms;
 }
 
@@ -119,42 +142,52 @@ static bool terrain_confirm(terrain_t *p_terrain, uint32_t now_ms, uint32_t hold
  * side are stored, the run maximum is updated, an event latches and WAITING
  * rearms. An up-only ramp stays CLIMBING and is not counted until it completes.
  */
-void terrain_step(terrain_t *p_terrain, bool valid, int16_t height_tenths, uint32_t now_ms)
+void
+terrain_step (terrain_t * p_terrain, bool valid, int16_t height_tenths,
+              uint32_t now_ms)
 {
-    uint8_t phase;
+    uint8_t  phase;
     uint16_t magnitude;
-    bool right;
+    bool     right;
 
     if (NULL == p_terrain)
     {
         return;
     }
+
     if (!valid)
     {
         p_terrain->flags &= TERRAIN_RETAIN_MASK;
         return;
     }
-    if ((0U == (p_terrain->flags & TERRAIN_VALID)) ||
-        ((now_ms - p_terrain->last_sample) >= TERRAIN_MAX_GAP_MS))
+
+    if ((0U == (p_terrain->flags & TERRAIN_VALID))
+        || ((now_ms - p_terrain->last_sample) >= TERRAIN_MAX_GAP_MS))
     {
-        p_terrain->flags &= TERRAIN_RETAIN_MASK; /* Restart any timed confirmation. */
-        p_terrain->smooth_tenths = height_tenths;  /* Reseed the smoothing. */
+        /* Restart any timed confirmation. */
+        p_terrain->flags &= TERRAIN_RETAIN_MASK;
+        p_terrain->smooth_tenths = height_tenths; /* Reseed the smoothing. */
     }
     else
     {
         /* Rounded integer low-pass; |h| <= 3276 so no overflow in int32. */
-        int32_t step = (int32_t)height_tenths - (int32_t)p_terrain->smooth_tenths;
+        int32_t step
+            = (int32_t)height_tenths - (int32_t)p_terrain->smooth_tenths;
         int32_t half = (step >= 0) ? (1 << (TERRAIN_SMOOTH_SHIFT - 1U))
                                    : -(1 << (TERRAIN_SMOOTH_SHIFT - 1U));
-        p_terrain->smooth_tenths = (int16_t)(p_terrain->smooth_tenths +
-                                             (step + half) / (1 << TERRAIN_SMOOTH_SHIFT));
+
+        p_terrain->smooth_tenths
+            = (int16_t)(p_terrain->smooth_tenths
+                        + (step + half) / (1 << TERRAIN_SMOOTH_SHIFT));
     }
-    height_tenths = p_terrain->smooth_tenths;
+
+    height_tenths          = p_terrain->smooth_tenths;
     p_terrain->last_sample = now_ms;
     p_terrain->flags |= TERRAIN_VALID;
-    right = (height_tenths > 0);
-    magnitude = (uint16_t)((height_tenths < 0) ? -(int32_t)height_tenths : (int32_t)height_tenths);
-    phase = p_terrain->flags & TERRAIN_PHASE_MASK;
+    right     = (height_tenths > 0);
+    magnitude = (uint16_t)((height_tenths < 0) ? -(int32_t)height_tenths
+                                               : (int32_t)height_tenths);
+    phase     = p_terrain->flags & TERRAIN_PHASE_MASK;
 
     if (TERRAIN_WAITING == phase)
     {
@@ -164,47 +197,63 @@ void terrain_step(terrain_t *p_terrain, bool valid, int16_t height_tenths, uint3
         }
         else if (terrain_confirm(p_terrain, now_ms, TERRAIN_ENTER_HOLD_MS))
         {
-            p_terrain->flags = (uint8_t)((p_terrain->flags &
-                                          (TERRAIN_VALID | TERRAIN_COMPLETED_EVENT)) |
-                                         TERRAIN_CLIMBING);
+            p_terrain->flags
+                = (uint8_t)((p_terrain->flags
+                             & (TERRAIN_VALID | TERRAIN_COMPLETED_EVENT))
+                            | TERRAIN_CLIMBING);
             terrain_raise_peak(p_terrain, magnitude, right);
         }
+
         return;
     }
+
     if ((TERRAIN_CLIMBING == phase) && (magnitude > p_terrain->peak_tenths))
     {
         terrain_raise_peak(p_terrain, magnitude, right);
     }
-    else if ((TERRAIN_DESCENDING == phase) &&
-             ((int32_t)magnitude >= ((int32_t)p_terrain->peak_tenths + TERRAIN_RECLIMB_TENTHS)))
+    else if ((TERRAIN_DESCENDING == phase)
+             && ((int32_t)magnitude
+                 >= ((int32_t)p_terrain->peak_tenths + TERRAIN_RECLIMB_TENTHS)))
     {
         terrain_raise_peak(p_terrain, magnitude, right);
         phase = TERRAIN_CLIMBING;
     }
-    else if ((TERRAIN_CLIMBING == phase) &&
-             (((int32_t)magnitude + terrain_drop(p_terrain->peak_tenths)) <=
-              (int32_t)p_terrain->peak_tenths))
+    else if ((TERRAIN_CLIMBING == phase)
+             && (((int32_t)magnitude + terrain_drop(p_terrain->peak_tenths))
+                 <= (int32_t)p_terrain->peak_tenths))
     {
         phase = TERRAIN_DESCENDING;
     }
-    p_terrain->flags = (uint8_t)((p_terrain->flags & (uint8_t)~TERRAIN_PHASE_MASK) | phase);
-    if ((TERRAIN_DESCENDING != phase) || (magnitude >= (uint16_t)TERRAIN_EXIT_TENTHS))
+
+    p_terrain->flags
+        = (uint8_t)((p_terrain->flags & (uint8_t)~TERRAIN_PHASE_MASK) | phase);
+
+    if ((TERRAIN_DESCENDING != phase)
+        || (magnitude >= (uint16_t)TERRAIN_EXIT_TENTHS))
     {
         p_terrain->flags &= (uint8_t)~TERRAIN_PENDING;
         return;
     }
+
     if (terrain_confirm(p_terrain, now_ms, TERRAIN_EXIT_HOLD_MS))
     {
         uint8_t mm = terrain_mm(p_terrain->peak_tenths);
+
         if (mm > (p_terrain->run_max & TERRAIN_PEAK_MM_MASK))
         {
             p_terrain->run_max = mm;
         }
+
         p_terrain->run_max |= TERRAIN_RUN_VALID;
-        p_terrain->last_peak = (uint8_t)(mm |
-                                         ((0U != (p_terrain->flags & TERRAIN_SIDE_RIGHT)) ?
-                                          TERRAIN_PEAK_RIGHT : 0U));
+        p_terrain->last_peak
+            = (uint8_t)(mm
+                        | ((0U != (p_terrain->flags & TERRAIN_SIDE_RIGHT))
+                               ? TERRAIN_PEAK_RIGHT
+                               : 0U));
         p_terrain->peak_tenths = 0U;
-        p_terrain->flags = (uint8_t)(TERRAIN_WAITING | TERRAIN_VALID | TERRAIN_COMPLETED_EVENT);
+        p_terrain->flags       = (uint8_t)(TERRAIN_WAITING | TERRAIN_VALID
+                                           | TERRAIN_COMPLETED_EVENT);
     }
 }
+
+/*** end of file ***/
