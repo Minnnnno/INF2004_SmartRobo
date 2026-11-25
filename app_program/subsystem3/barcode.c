@@ -460,6 +460,10 @@ barcode_count_failure (const uint32_t * p_path, const uint16_t * p_heading,
         ++g_bc_failures;
         barcode_publish();
     }
+    else
+    {
+        /* Nothing to do in any other case. */
+    }
 #else
     (void)p_path;
     (void)p_heading;
@@ -874,6 +878,10 @@ barcode_task (INT code, void * p_context)
         {
             gb_bc_code_pass = false;
             barcode_finish(seg.samples, seg.path, seg.heading, seg.count);
+        }
+        else
+        {
+            /* Nothing to do in any other case. */
         }
     }
 }

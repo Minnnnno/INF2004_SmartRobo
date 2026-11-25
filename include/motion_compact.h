@@ -158,6 +158,10 @@ motion_compact_encode (const motion_command_t *   p_public,
         {
             return false;
         }
+        else
+        {
+            /* Nothing to do in any other case. */
+        }
     }
 
     encoded.id         = p_public->id;

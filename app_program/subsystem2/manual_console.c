@@ -563,6 +563,10 @@ manual_console (void)
                         (const UB *)"ARM then a documented test command\n");
 #endif
                 }
+                else
+                {
+                    /* Nothing to do in any other case. */
+                }
             }
             else if (used < (sizeof(line) - 1U))
             {

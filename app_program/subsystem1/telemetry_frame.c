@@ -88,6 +88,10 @@ tf_pack (const int32_t values[TF_FIELD_COUNT], uint8_t out[TF_FRAME_BYTES])
             value = p_field->max;
             clamped |= 1UL << index;
         }
+        else
+        {
+            /* Nothing to do in any other case. */
+        }
 
         put_bits(out, &pos, (uint32_t)(value - p_field->min), p_field->bits);
     }

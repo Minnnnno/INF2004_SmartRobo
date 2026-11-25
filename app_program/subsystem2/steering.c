@@ -284,6 +284,10 @@ motion_line_direction (line_steering_t * p_state, bool b_left, bool b_right)
     {
         ++p_state->consecutive;
     }
+    else
+    {
+        /* Nothing to do in any other case. */
+    }
 
     if (p_state->consecutive >= 2U)
     {

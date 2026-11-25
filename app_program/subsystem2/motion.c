@@ -426,6 +426,10 @@ motion_init (motion_t * p_motion, const motion_config_t * p_config,
         record_feedback(p_motion, sample, FB_UNRELIABLE);
         motion_raise_fault(p_motion, F_FEEDBACK, now);
     }
+    else
+    {
+        /* Nothing to do in any other case. */
+    }
 }
 
 static void
@@ -526,6 +530,10 @@ motion_cancel (motion_t * p_motion, float64_t now)
     {
         zero_output(p_motion);
         p_motion->status.state = STOPPED;
+    }
+    else
+    {
+        /* Nothing to do in any other case. */
     }
 }
 
@@ -1136,6 +1144,10 @@ drive (motion_t * p_motion, float64_t now, float64_t delta_s,
                 stalled_wheels |= (uint8_t)(1U << wheel);
             }
         }
+        else
+        {
+            /* Nothing to do in any other case. */
+        }
     }
 
     /* Evaluate both wheels in the same cycle before capturing and zeroing
@@ -1256,6 +1268,10 @@ motion_step (motion_t * p_motion, encoder_sample_t sample, float64_t now)
         /* A late cycle must still reach the deadline checks below. */
         delta_s = p_motion->config.max_dt;
     }
+    else
+    {
+        /* Nothing to do in any other case. */
+    }
 
     p_motion->last_time          = now;
     p_motion->status.sample_time = now;
@@ -1354,6 +1370,10 @@ motion_step (motion_t * p_motion, encoder_sample_t sample, float64_t now)
                 p_motion->status.state
                     = p_motion->status.hold ? STOPPED : READY;
             }
+            else
+            {
+                /* Nothing to do in any other case. */
+            }
         break;
 
         case DRIVING:
@@ -1384,6 +1404,10 @@ motion_step (motion_t * p_motion, encoder_sample_t sample, float64_t now)
                 {
                     motion_raise_fault(p_motion, F_FINAL_GOAL, now);
                 }
+            }
+            else
+            {
+                /* Nothing to do in any other case. */
             }
         break;
 

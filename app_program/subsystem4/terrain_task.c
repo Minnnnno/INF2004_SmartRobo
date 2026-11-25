@@ -492,6 +492,10 @@ terrain_lift (buddy4_t const * p_context, s4_motion_t const * p_motion,
             tm_printf((UB const *)"[LIFT] cleared: upright and still; motors "
                                   "stay stopped until START\n");
         }
+        else
+        {
+            /* Nothing to do in any other case. */
+        }
 #endif
         *p_previous = lift;
     }
@@ -502,6 +506,10 @@ terrain_lift (buddy4_t const * p_context, s4_motion_t const * p_motion,
         tm_printf((UB const *)"[LIFT] still %s: motors stopped again\n",
                   (UB const *)lift_name(lift));
 #endif
+    }
+    else
+    {
+        /* Nothing to do in any other case. */
     }
 }
 
@@ -531,6 +539,10 @@ terrain_hump_freeze (buddy4_t * p_context, s4_motion_t const * p_motion,
 #ifndef ROBO_IR_MONITOR
         tm_printf((UB const *)"[TERRAIN] hump recording resumed (START)\n");
 #endif
+    }
+    else
+    {
+        /* Nothing to do in any other case. */
     }
 
     *p_previous = b_frozen;
@@ -655,6 +667,10 @@ terrain_hump_pause (buddy4_t const * p_context, s4_motion_t const * p_motion,
         else if (B4_MONITORING == buddy4_state(p_context))
         {
             tm_printf((UB const *)"[TERRAIN] hump recording resumed (START)\n");
+        }
+        else
+        {
+            /* Nothing to do in any other case. */
         }
     }
 #endif
@@ -974,6 +990,10 @@ terrain_compass (buddy4_t const * p_context, uint8_t phase, uint32_t now_ms,
     {
         reason = S4_MAG_FIELD;
     }
+    else
+    {
+        /* Nothing to do in any other case. */
+    }
 
     g_s_compass.reason = reason;
 
@@ -1193,6 +1213,10 @@ terrain_mag_cal (buddy4_t const * p_context, s4_motion_t const * p_motion)
     {
         terrain_mag_cal_stop(NULL);
         return;
+    }
+    else
+    {
+        /* Nothing to do in any other case. */
     }
 
     g_s_cal.request

@@ -872,6 +872,10 @@ barcode_best_fit (uint32_t * p_widths, unsigned count, const char * p_letters)
         {
             second = fit;
         }
+        else
+        {
+            /* Nothing to do in any other case. */
+        }
     }
 
     return ((best <= BARCODE_FIT_MAX_MISMATCH) && (best < second)) ? found

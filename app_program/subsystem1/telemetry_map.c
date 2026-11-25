@@ -47,6 +47,10 @@ to_int (float64_t value)
     {
         value = -1.0e6;
     }
+    else
+    {
+        /* Nothing to do in any other case. */
+    }
 
     return (int32_t)lround(value);
 }

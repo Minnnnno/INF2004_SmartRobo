@@ -364,6 +364,10 @@ buddy4_initialise (buddy4_t * p_context, uint8_t inputs, uint32_t now_ms)
     {
         buddy4_enter(p_context, B4_RECOVERY, now_ms, E_TMOUT);
     }
+    else
+    {
+        /* Nothing to do in any other case. */
+    }
 }
 
 /* Not-ready is tolerated until prolonged loss. Unsuitable tilt stays in
@@ -469,6 +473,10 @@ buddy4_poll_magnetic (buddy4_t * p_context, uint32_t now_ms)
     else if (E_BUSY != status)
     {
         buddy4_enter(p_context, B4_RECOVERY, now_ms, status);
+    }
+    else
+    {
+        /* Nothing to do in any other case. */
     }
 }
 
@@ -592,6 +600,10 @@ buddy4_recover (buddy4_t * p_context, uint32_t now_ms)
         else if (E_BUSY != status)
         {
             buddy4_retry_failed(p_context, now_ms, status);
+        }
+        else
+        {
+            /* Nothing to do in any other case. */
         }
 
         return;

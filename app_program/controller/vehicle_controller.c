@@ -243,6 +243,14 @@ robot_motion_inputs (robot_bus_t * p_bus, motion_t * p_motion,
         {
             (void)motion_release(p_motion, p_bus->checks_ok);
         }
+        else
+        {
+            /* Nothing to do in any other case. */
+        }
+    }
+    else
+    {
+        /* Nothing to do in any other case. */
     }
 
     if (0U != controls)

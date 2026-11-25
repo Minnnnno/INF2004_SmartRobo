@@ -271,6 +271,10 @@ gy511_read_magnetic_diagnostic (gy511_magnetic_t * p_sample,
         {
             *p_outcome = busy_outcome;
         }
+        else
+        {
+            /* Nothing to do in any other case. */
+        }
     }
 
     return status;

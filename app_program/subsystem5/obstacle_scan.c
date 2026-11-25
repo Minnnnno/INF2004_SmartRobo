@@ -1109,6 +1109,10 @@ s5_placement (const s5_scan_t * p_scan, s5_placement_t * p_out)
     {
         p_out->position = S5_POSITION_CENTRE;
     }
+    else
+    {
+        /* Nothing to do in any other case. */
+    }
 }
 
 /* Farthest range among the obstacle's own points */
@@ -1436,6 +1440,10 @@ s5_curve_note (s5_curve_t * p_curve, float64_t path_mm, float64_t heading_deg)
     {
         /* passed: forget it before until_mm can come round again */
         p_curve->marked = 0U;
+    }
+    else
+    {
+        /* Nothing to do in any other case. */
     }
 
     if ((0U == p_curve->count)

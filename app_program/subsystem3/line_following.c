@@ -60,6 +60,10 @@ line_loop (void)
             motor_test_stop();
             b_sensor_running = false;
         }
+        else
+        {
+            /* Nothing to do in any other case. */
+        }
 
         /* Console labels predate the right/centre naming used by line steering.
          */
@@ -423,6 +427,10 @@ line_publish (line_direction_t direction, float64_t now)
     else if (LINE_RIGHT == direction)
     {
         error = 1.0;
+    }
+    else
+    {
+        /* Nothing to do in any other case. */
     }
 
     subsystem_status_t line_status
@@ -1197,6 +1205,10 @@ line_barcode_events (line_ctx_t * p_context, const robot_status_t * p_status,
                   (int)(p_status->motion.path * 1000.0));
 #endif
     }
+    else
+    {
+        /* Nothing to do in any other case. */
+    }
 
     (void)b_owns;
     return true;
@@ -1240,6 +1252,10 @@ line_barcode_window (line_ctx_t * p_context, const robot_status_t * p_status,
     else if ((*p_window) && (p_context->bc_lost_from < 0.0))
     {
         p_context->bc_lost_from = p_status->motion.path;
+    }
+    else
+    {
+        /* Nothing to do in any other case. */
     }
 
     *p_hold = (*p_window) && (LINE_LOST == direction)
@@ -1312,6 +1328,10 @@ line_drive (line_ctx_t * p_context, const robot_status_t * p_status,
         {
             next = LS_GRACE;
         }
+    }
+    else
+    {
+        /* Nothing to do in any other case. */
     }
 #ifdef ROBO_LINE_RUN_LIMIT_S
     /* Analysis builds: one run of ROBO_LINE_RUN_LIMIT_S seconds, then stand
@@ -1415,6 +1435,10 @@ line_drive (line_ctx_t * p_context, const robot_status_t * p_status,
         }
 #endif
     }
+    else
+    {
+        /* Nothing to do in any other case. */
+    }
 
     line_set_state(&p_context->state, next);
 
@@ -1495,6 +1519,10 @@ line_loop (void)
         else if (1U == centre)
         {
             p_context->last_side = LINE_STRAIGHT;
+        }
+        else
+        {
+            /* Nothing to do in any other case. */
         }
 
         if (LINE_LOST != direction)

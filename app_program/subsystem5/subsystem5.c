@@ -1174,6 +1174,10 @@ corridor_clear (float64_t reach_mm)
             s5_servo_move(S5_ANGLE_CENTRE_DEG);
             return false; /* pings disagree: could be anything */
         }
+        else
+        {
+            /* Nothing to do in any other case. */
+        }
     }
 
     s5_servo_move(S5_ANGLE_CENTRE_DEG);
@@ -1217,6 +1221,10 @@ resume_line (const s5_scan_t * p_scan)
     else if (g_s5_task.spurious_count < 3U)
     {
         g_s5_task.spurious_count++;
+    }
+    else
+    {
+        /* Nothing to do in any other case. */
     }
 
     g_s5_spurious_path_m = path_m;
@@ -1544,6 +1552,10 @@ obstacle_task (INT code, void * p_context)
                         s5_curve_mark(&g_s5_curve, status.motion.path * 1000.0);
                     }
                 }
+                else
+                {
+                    /* Nothing to do in any other case. */
+                }
 #endif
             }
             else
@@ -1561,6 +1573,10 @@ obstacle_task (INT code, void * p_context)
                                   "check GP16/GP17 wiring and 3.3 V supply\n",
                       (S5_US_BUSY == result) ? "ECHO stuck high"
                                              : "no ECHO pulse");
+        }
+        else
+        {
+            /* Nothing to do in any other case. */
         }
 
         (void)publish_status(motion_hal_time());

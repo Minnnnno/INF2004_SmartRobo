@@ -139,6 +139,10 @@ lift_step (lift_t * p_lift, tilt_context_t const * p_tilt, int16_t axis_x,
     {
         p_lift->steep_hold--;
     }
+    else
+    {
+        /* Nothing to do in any other case. */
+    }
 
     p_lift->vertical_mg = lift_clamp16(up_mg - p_tilt->gravity);
 

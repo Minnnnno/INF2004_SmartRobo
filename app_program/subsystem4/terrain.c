@@ -204,6 +204,10 @@ terrain_step (terrain_t * p_terrain, bool b_valid, int16_t height_tenths,
                             | TERRAIN_CLIMBING);
             terrain_raise_peak(p_terrain, magnitude, b_right);
         }
+        else
+        {
+            /* Nothing to do in any other case. */
+        }
 
         return;
     }
@@ -224,6 +228,10 @@ terrain_step (terrain_t * p_terrain, bool b_valid, int16_t height_tenths,
                  <= (int32_t)p_terrain->peak_tenths))
     {
         phase = TERRAIN_DESCENDING;
+    }
+    else
+    {
+        /* Nothing to do in any other case. */
     }
 
     p_terrain->flags

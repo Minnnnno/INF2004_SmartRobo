@@ -593,6 +593,10 @@ move_poll (uint32_t command_id, float64_t start, float64_t timeout_s,
             detour_why(S5_WHY_STALLED, s5_mm(g_s5_x), s5_mm(g_s5_y));
             return S5_MOVE_STALLED;
         }
+        else
+        {
+            /* Nothing to do in any other case. */
+        }
     }
     else
     {

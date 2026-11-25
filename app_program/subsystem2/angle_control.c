@@ -150,6 +150,10 @@ angle_control_step (angle_control_t * p_control, encoder_sample_t sample,
         {
             finish(p_control, ANGLE_TIMEOUT);
         }
+        else
+        {
+            /* Nothing to do in any other case. */
+        }
 
         return;
     }
@@ -170,6 +174,10 @@ angle_control_step (angle_control_t * p_control, encoder_sample_t sample,
             p_control->output[wheel] = duty
                                        * ((0U == wheel) ? -p_control->direction
                                                         : p_control->direction);
+        }
+        else
+        {
+            /* Nothing to do in any other case. */
         }
 
         /* A wheel already braked stays braked; never restart after overshoot.
