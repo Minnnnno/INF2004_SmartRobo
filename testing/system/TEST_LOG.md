@@ -169,6 +169,23 @@ What Buddy 3 brings to the system tests (details in
   any other code is reported as a failed read and the robot carries on.
 - Already verified at subsystem level: S3-U01 to U03, S3-H01 to H04.
 
+## Buddy 5 checklist
+
+What Buddy 5 brings to the system tests (details in
+`testing/subsystem5/TEST_LOG.md`):
+
+- **SYS-04 (lead):** five runs with different left/right offsets, dashboard in the
+  video, box width measured with a ruler on camera. Four runs are recorded below,
+  only one of them with the dashboard. Still needed: the fifth run, a width reading
+  for the other three, and a decision on the tolerance (S5-U02 uses ± 10 cm, NFR11
+  ± 1 cm). The recorded 27 s bypass is over the briefing's 3 s.
+- **SYS-07 (support B1):** obstacle card and events against the console. The
+  handover event is not sent by the firmware (INT-14).
+- **SYS-11:** one box on the course; the 51 s stop to handover counts towards the
+  run time.
+- Already verified at subsystem level: S5-U01 to S5-U06. S5-U07 (false halt) is to
+  be re-filmed: the clip ends before the robot drives on.
+
 ## Other logs in this folder
 
 The `com4_2026-11-0*.log` files are raw serial captures from Buddy 2's
@@ -181,6 +198,8 @@ and `docs/MEMORY_DEBUG_2026-11-04.md`. They are not system test results.
 Add a new row for every run. Never edit or delete old rows.
 
 Buddy 2 entries below reuse the 2026-11-24 results in [the subsystem log](../subsystem2/TEST_LOG.md); they are not additional test runs. **PASS (B2 portion)** records the reported subsystem behavior, with the remaining case coverage listed in Notes. Hardware entries are single-trial user-reported results; their links identify a code reference, with the exact flashed revision unconfirmed.
+
+Buddy 5 entries below (tester 2500344) reuse the runs in [the subsystem log](../subsystem5/TEST_LOG.md) and its saved logs; they are not additional test runs. **PASS (B5 portion)** covers what Buddy 5's evidence shows, with the rest of the case listed in Notes.
 
 | Date | Test ID | Commit / code reference | Tester | Result | Log / evidence | Notes |
 |---|---|---|---|---|---|---|
@@ -197,3 +216,8 @@ Buddy 2 entries below reuse the 2026-11-24 results in [the subsystem log](../sub
 | 2026-11-25 | SYS-08 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-8-LINK> @ m:ss | Hotspot off 10 s mid-run: robot kept driving, dashboard reconnected by itself after ___ s |
 | 2026-11-24 | SYS-02 | `fd5955a` | 2500622 | PASS | <https://youtu.be/t8ZaVSFGggE>, <https://www.youtube.com/watch?v=O-3cIuu86ew> | Subsystem video S3-H01: straights, curves, line lost and found again, no FAULT. Supporting: Buddy 4's full-run video (main after `610725f`, same as SYS-01/05/06) follows the whole course without help |
 | 2026-11-24 | SYS-03 | `fd5955a` | 2500622 | PASS | <https://youtu.be/GsEvuXFR86U>, <https://www.youtube.com/watch?v=O-3cIuu86ew> | Subsystem video S3-H03/H04: route sent from the dashboard (`robot route: ok`), Z → left at the junction, A → U-turn. Supporting: Buddy 4's full-run video (main after `610725f`) shows the right and straight actions |
+| 2026-11-24 | SYS-04 | `fa36f67` + width scale (later `e4e5b3e`) | 2500344 | PARTIAL (run 1) | <https://youtu.be/I9SrSpBJh9Q>, [normal run dashboard log](../subsystem5/logs/2026-11-24_normal_run_dashboard.log) | Reused S5-U01/U02/U03. Detected: yes, stopped at 15 cm, no contact seen. Width: 127 mm for a 150 mm box (tester's figure), 23 mm (15 %) under: outside NFR11 ± 1 cm and the briefing's 10 %, inside S5-U02's ± 10 cm; tolerance to be settled. Side: right (203 mm left, 216 mm right, inside the centred default). Line reacquired: yes (lost 1 s after the handover, found again 8 s later). Bypass 27 s after the scan, 51 s from the stop: over 3 s |
+| 2026-11-24 | SYS-04 | `fa36f67` (not confirmed) | 2500344 | PARTIAL (run 2) | <https://youtu.be/RCM5-oiSxDs> | Reused S5-U04. Box to the right of the line: passed on the left, no contact seen, line reacquired. Width and bypass time not recorded (no dashboard in the video) |
+| 2026-11-24 | SYS-04 | `fa36f67` (not confirmed) | 2500344 | PARTIAL (run 3) | <https://youtu.be/O0wmRNscU0k> | Reused S5-U05. Box slightly to the left of the line: passed on the right, no contact seen, line reacquired. Width and bypass time not recorded (no dashboard in the video) |
+| 2026-11-24 | SYS-04 | `fa36f67` (not confirmed) | 2500344 | PARTIAL (run 4) | <https://youtu.be/5Ype3yBMZK4> | Reused S5-U06. Box just after a curve: stopped, passed on the right, back on the line at the junction. Width and bypass time not recorded (no dashboard in the video). Fifth run still to record |
+| 2026-11-24 | SYS-07 | `fa36f67` + width scale (later `e4e5b3e`) | 2500344 | PASS (B5 portion) | <https://youtu.be/I9SrSpBJh9Q>, [normal run dashboard log](../subsystem5/logs/2026-11-24_normal_run_dashboard.log); [serial log 20 Nov](../subsystem5/logs/2026-11-20_width_100mm.txt) with [full dashboard log](../subsystem5/logs/2026-11-24_dashboard_full.log) | Reused S5-U01 to U03: distance, width, side and obstacle state on the dashboard during the run. Compared with the console on 20 Nov only: three of four scans equal, the fourth did not reach the dashboard (messages dropped). See INT-14. B1 sign-off pending |
