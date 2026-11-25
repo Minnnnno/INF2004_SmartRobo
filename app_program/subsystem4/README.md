@@ -376,7 +376,9 @@ Slot validity bit 0 stays clear; Buddy 1 sets the frame's `T_VALID` bit 0
 (`TF_TV_MOTION`) from bit 9 and sends `M_CLASS` and `TURN_RATE` (deg/s) in
 the frame (since layout v2).
 Nothing is sent as MQTT text any more; data reaches the dashboard only through
-the binary status frame (Change Requirement 1).
+the binary status frame (Change Requirement 1). The minimum-bit evidence (data
+representation table, measured RAM and message sizes, correctness and timing) is in
+`testing/subsystem4/TEST_LOG.md`, section "Minimum-bit representation".
 
 ## Console
 
