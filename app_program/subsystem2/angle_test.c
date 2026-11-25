@@ -9,9 +9,9 @@
 #include "template_hal.h"
 #endif
 #include <math.h>
-static angle_control_t control;
-static volatile bool   expired;
-static bool            timer_ready;
+static angle_control_t g_control;
+static volatile bool   gb_expired;
+static bool            gb_timer_ready;
 static void
 brake (void)
 {
@@ -27,7 +27,7 @@ deadline_irq (UINT number)
 {
     (void)number;
     brake();
-    expired = true;
+    gb_expired = true;
     out_w(TIMER_INTR, 8U);
     ClearInt(3U);
 }
@@ -41,9 +41,9 @@ angle_test_init (void)
     T_DINT     definition = {.intatr = TA_HLNG, .inthdr = (FP)deadline_irq};
 
     brake();
-    angle_control_init(&control, &config);
+    angle_control_init(&g_control, &config);
 
-    if ((!control.ready) || (!board_pins_valid())
+    if ((!g_control.ready) || (!board_pins_valid())
         || (!motion_hal_sample().reliable))
     {
         return false;
@@ -63,15 +63,15 @@ angle_test_init (void)
     ClearInt(3U);
     set_w(TIMER_INTE, 8U);
     EnableInt(3U, 0);
-    timer_ready = true;
+    gb_timer_ready = true;
     return true;
 }
 
 bool
 angle_test_start (int direction)
 {
-    if ((!timer_ready)
-        || (!angle_control_start(&control, direction, motion_hal_sample(),
+    if ((!gb_timer_ready)
+        || (!angle_control_start(&g_control, direction, motion_hal_sample(),
                                  motion_hal_time())))
     {
         return false;
@@ -80,7 +80,7 @@ angle_test_start (int direction)
     uint32_t irq_state = save_and_disable_interrupts();
 
     brake();
-    expired = false;
+    gb_expired = false;
     out_w(TIMER_ARMED, 8U);
     out_w(TIMER_INTR, 8U);
     ClearInt(3U);
@@ -93,44 +93,45 @@ angle_test_start (int direction)
 void
 angle_test_poll (void)
 {
-    unsigned w;
+    unsigned wheel;
 
-    angle_control_step(&control, motion_hal_sample(), motion_hal_time());
+    angle_control_step(&g_control, motion_hal_sample(), motion_hal_time());
     uint32_t irq_state = save_and_disable_interrupts();
 
-    if (expired)
+    if (gb_expired)
     {
-        if (ANGLE_TIMEOUT != control.state)
+        if (ANGLE_TIMEOUT != g_control.state)
         {
-            control.quiet_since = motion_hal_time();
+            g_control.quiet_since = motion_hal_time();
         }
 
-        control.state     = ANGLE_TIMEOUT;
-        control.output[0] = 0.0;
-        control.output[1] = 0.0;
+        g_control.state     = ANGLE_TIMEOUT;
+        g_control.output[0] = 0.0;
+        g_control.output[1] = 0.0;
     }
 
-    if (ANGLE_TURNING != control.state)
+    if (ANGLE_TURNING != g_control.state)
     {
         brake();
 
-        if (ANGLE_BRAKING != control.state)
+        if (ANGLE_BRAKING != g_control.state)
         {
             out_w(TIMER_ARMED, 8U);
         }
     }
     else
     {
-        for (w = 0U; w < 2U; ++w)
+        for (wheel = 0U; wheel < 2U; ++wheel)
         {
-            float64_t output = control.output[w] * control.config.motor_sign[w];
-            uint16_t  duty   = (uint16_t)(fmin(0.25, fabs(output)) * 4000.0);
+            float64_t output
+                = g_control.output[wheel] * g_control.config.motor_sign[wheel];
+            uint16_t duty = (uint16_t)(fmin(0.25, fabs(output)) * 4000.0);
 
-            pwm_set_both_levels(4U + w, (output > 0.0) ? duty : 0U,
+            pwm_set_both_levels(4U + wheel, (output > 0.0) ? duty : 0U,
                                 (output < 0.0) ? duty : 0U);
-            gpio_set_function(motor_pins[w][0], GPIO_FUNC_PWM);
-            gpio_set_function(motor_pins[w][1], GPIO_FUNC_PWM);
-            pwm_set_enabled(4U + w, true);
+            gpio_set_function(g_motor_pins[wheel][0], GPIO_FUNC_PWM);
+            gpio_set_function(g_motor_pins[wheel][1], GPIO_FUNC_PWM);
+            pwm_set_enabled(4U + wheel, true);
         }
     }
 
@@ -146,22 +147,23 @@ angle_test_stop (void)
     out_w(TIMER_ARMED, 8U);
     out_w(TIMER_INTR, 8U);
     ClearInt(3U);
-    expired = false;
-    angle_control_stop(&control);
-    control.quiet_since = motion_hal_time();
+    gb_expired = false;
+    angle_control_stop(&g_control);
+    g_control.quiet_since = motion_hal_time();
     restore_interrupts(irq_state);
 }
 
 angle_control_t
 angle_test_status (void)
 {
-    return control;
+    return g_control;
 }
 
 bool
 angle_test_active (void)
 {
-    return (ANGLE_TURNING == control.state) || (ANGLE_BRAKING == control.state);
+    return (ANGLE_TURNING == g_control.state)
+           || (ANGLE_BRAKING == g_control.state);
 }
 #endif
 

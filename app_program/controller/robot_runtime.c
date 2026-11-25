@@ -12,31 +12,32 @@ _Static_assert(((int)COMMS_CMD_START == (int)REMOTE_START)
                    && ((int)COMMS_CMD_ESTOP == (int)REMOTE_ESTOP),
                "Buddy 1 command mapping changed");
 
-static robot_bus_t             bus;
-static ID                      status_mutex;
-static bool                    running;
-static const motion_config_t * runtime_config;
+static robot_bus_t             g_bus;
+static ID                      g_status_mutex;
+static bool                    gb_running;
+static const motion_config_t * gp_runtime_config;
 
 static bool
 lock_bus (void)
 {
-    return (status_mutex > 0) && (E_OK == tk_loc_mtx(status_mutex, TMO_POL));
+    return (g_status_mutex > 0)
+           && (E_OK == tk_loc_mtx(g_status_mutex, TMO_POL));
 }
 
 static void
 unlock_bus (void)
 {
-    (void)tk_unl_mtx(status_mutex);
+    (void)tk_unl_mtx(g_status_mutex);
 }
 
 void
-robot_runtime_prepare (const motion_config_t * config,
-                       const motion_status_t * initial_status)
+robot_runtime_prepare (const motion_config_t * p_config,
+                       const motion_status_t * p_initial_status)
 {
-    runtime_config = config;
-    robot_bus_init(&bus, initial_status);
+    gp_runtime_config = p_config;
+    robot_bus_init(&g_bus, p_initial_status);
 #ifdef ROBO_REQUIRE_START
-    bus.remote_hold = true; /* boot held until the dashboard START */
+    g_bus.remote_hold = true; /* boot held until the dashboard START */
 #endif
 }
 
@@ -45,14 +46,14 @@ robot_runtime_init (void)
 {
     T_CMTX mutex = {.mtxatr = TA_INHERIT};
 
-    status_mutex = tk_cre_mtx(&mutex);
-    return status_mutex;
+    g_status_mutex = tk_cre_mtx(&mutex);
+    return g_status_mutex;
 }
 
 void
 robot_runtime_enable (void)
 {
-    running = true;
+    gb_running = true;
 }
 
 bool
@@ -64,7 +65,7 @@ robot_runtime_lock (void)
 bool
 robot_runtime_wait (void)
 {
-    return E_OK == tk_loc_mtx(status_mutex, TMO_FEVR);
+    return E_OK == tk_loc_mtx(g_status_mutex, TMO_FEVR);
 }
 
 void
@@ -74,29 +75,29 @@ robot_runtime_unlock (void)
 }
 
 void
-robot_runtime_motion_inputs (motion_t * owner, encoder_sample_t sample,
+robot_runtime_motion_inputs (motion_t * p_owner, encoder_sample_t sample,
                              float64_t now)
 {
-    robot_motion_inputs(&bus, owner, sample, now);
+    robot_motion_inputs(&g_bus, p_owner, sample, now);
 }
 
 void
-robot_runtime_publish (motion_t * owner, float64_t now)
+robot_runtime_publish (motion_t * p_owner, float64_t now)
 {
-    robot_publish(&bus, owner, now);
+    robot_publish(&g_bus, p_owner, now);
 }
 
 bool
 robot_runtime_stop_pending (void)
 {
     return 0U
-           != (bus.controls
+           != (g_bus.controls
                & (CONTROL_STOP | CONTROL_FAULT | CONTROL_ESTOP
                   | CONTROL_SHUTDOWN));
 }
 
 static motion_result_t
-submit (request_source_t source, uint32_t id, motion_mode_t mode,
+submit (request_source_t source, uint32_t command_id, motion_mode_t mode,
         float64_t value, float64_t left, float64_t right, float64_t angle,
         float64_t duration)
 {
@@ -104,53 +105,54 @@ submit (request_source_t source, uint32_t id, motion_mode_t mode,
     motion_result_t result;
     float64_t       now = motion_hal_time();
 
-    if ((!running) || (!lock_bus()))
+    if ((!gb_running) || (!lock_bus()))
     {
         return R_BUSY;
     }
 
     request.source  = source;
     request.command = (motion_command_t){
-        .id         = id,
-        .generation = bus.generation,
+        .id         = command_id,
+        .generation = g_bus.generation,
         .mode       = mode,
         .value      = value,
         .speed      = {left, right},
-        .expires    = now + runtime_config->command_lifetime,
+        .expires    = now + gp_runtime_config->command_lifetime,
         .deadline
         = now
-          + ((MANUAL_OUTPUT == mode) ? runtime_config->manual_timeout
-                                     : runtime_config->movement_timeout),
+          + ((MANUAL_OUTPUT == mode) ? gp_runtime_config->manual_timeout
+                                     : gp_runtime_config->movement_timeout),
         .angle    = angle,
         .duration = duration};
-    result = robot_request(&bus, &request);
+    result = robot_request(&g_bus, &request);
     unlock_bus();
     return result;
 }
 
 motion_result_t
-robot_submit (request_source_t source, uint32_t id, motion_mode_t mode,
+robot_submit (request_source_t source, uint32_t command_id, motion_mode_t mode,
               float64_t value, float64_t left, float64_t right)
 {
-    return submit(source, id, mode, value, left, right, 0.0, 0.0);
+    return submit(source, command_id, mode, value, left, right, 0.0, 0.0);
 }
 
 motion_result_t
-robot_submit_arc (request_source_t source, uint32_t id, float64_t metres,
-                  float64_t radians, float64_t seconds, float64_t left,
-                  float64_t right)
+robot_submit_arc (request_source_t source, uint32_t command_id,
+                  float64_t metres, float64_t radians, float64_t seconds,
+                  float64_t left, float64_t right)
 {
-    return submit(source, id, ARC_MOVE, metres, left, right, radians, seconds);
+    return submit(source, command_id, ARC_MOVE, metres, left, right, radians,
+                  seconds);
 }
 
 static void
-control (robot_control_t request, bool checks, bool rest)
+control (robot_control_t request, bool b_checks, bool b_rest)
 {
     /* Priority inheritance, bounded short critical sections. Never enqueue
      * stop. */
-    if (running && (E_OK == tk_loc_mtx(status_mutex, TMO_FEVR)))
+    if (gb_running && (E_OK == tk_loc_mtx(g_status_mutex, TMO_FEVR)))
     {
-        robot_control(&bus, request, checks, rest);
+        robot_control(&g_bus, request, b_checks, b_rest);
         unlock_bus();
     }
 }
@@ -162,15 +164,15 @@ motion_stop (void)
 }
 
 void
-motion_controller_release (bool checks)
+motion_controller_release (bool b_checks)
 {
-    control(CONTROL_RELEASE, checks, false);
+    control(CONTROL_RELEASE, b_checks, false);
 }
 
 void
-motion_fault_reset (bool cleared, bool rest)
+motion_fault_reset (bool b_cleared, bool b_rest)
 {
-    control(CONTROL_RESET, cleared, rest);
+    control(CONTROL_RESET, b_cleared, b_rest);
 }
 
 void
@@ -186,39 +188,39 @@ robot_system_fault (void)
 }
 
 bool
-motion_get_status (robot_status_t * status)
+motion_get_status (robot_status_t * p_status)
 {
-    if ((NULL == status) || (!running) || (!lock_bus()))
+    if ((NULL == p_status) || (!gb_running) || (!lock_bus()))
     {
         return false;
     }
 
-    *status = bus.status;
+    *p_status = g_bus.status;
     unlock_bus();
     return true;
 }
 
 bool
 robot_update_subsystem (request_source_t           source,
-                        const subsystem_status_t * status)
+                        const subsystem_status_t * p_status)
 {
-    subsystem_status_t * destination = NULL;
-    unsigned             i;
+    subsystem_status_t * p_destination = NULL;
+    unsigned             index;
 
-    if ((NULL == status) || (!isfinite(status->timestamp)))
+    if ((NULL == p_status) || (!isfinite(p_status->timestamp)))
     {
         return false;
     }
 
-    for (i = 0; i < 4U; ++i)
+    for (index = 0; index < 4U; ++index)
     {
-        if (!isfinite(status->values[i]))
+        if (!isfinite(p_status->values[index]))
         {
             return false;
         }
     }
 
-    if ((!running) || (!lock_bus()))
+    if ((!gb_running) || (!lock_bus()))
     {
         return false;
     }
@@ -226,43 +228,43 @@ robot_update_subsystem (request_source_t           source,
     switch (source)
     {
         case SOURCE_LINE:
-            destination = &bus.status.line;
+            p_destination = &g_bus.status.line;
         break;
 
         case SOURCE_BARCODE:
-            destination = &bus.status.barcode;
+            p_destination = &g_bus.status.barcode;
         break;
 
         case SOURCE_TERRAIN:
-            destination = &bus.status.terrain;
+            p_destination = &g_bus.status.terrain;
         break;
 
         case SOURCE_OBSTACLE:
-            destination = &bus.status.obstacle;
+            p_destination = &g_bus.status.obstacle;
         break;
 
         case SOURCE_WIFI:
-            destination = &bus.status.wifi;
+            p_destination = &g_bus.status.wifi;
         break;
 
         default:
         break;
     }
 
-    if (NULL != destination)
+    if (NULL != p_destination)
     {
-        *destination = *status;
+        *p_destination = *p_status;
     }
 
     unlock_bus();
-    return NULL != destination;
+    return NULL != p_destination;
 }
 
 void
-controller_task (INT code, void * context)
+controller_task (INT code, void * p_context)
 {
     (void)code;
-    (void)context;
+    (void)p_context;
 
     for (;;)
     {
@@ -271,7 +273,7 @@ controller_task (INT code, void * context)
         for (unsigned budget = 0U; budget < 4U; ++budget)
         {
             COMMS_CMD command;
-            INT       received = tk_rcv_mbf(mbf_comms_cmd, &command, TMO_POL);
+            INT       received = tk_rcv_mbf(g_mbf_comms_cmd, &command, TMO_POL);
 
             if (received < E_OK)
             {
@@ -283,17 +285,17 @@ controller_task (INT code, void * context)
                 continue;
             }
 
-            if (E_OK == tk_loc_mtx(status_mutex, TMO_FEVR))
+            if (E_OK == tk_loc_mtx(g_status_mutex, TMO_FEVR))
             {
                 (void)vehicle_controller_remote_command(
-                    &bus, (robot_remote_command_t)command);
+                    &g_bus, (robot_remote_command_t)command);
                 unlock_bus();
             }
         }
 
         if (lock_bus())
         {
-            vehicle_controller_cycle(&bus, motion_hal_time());
+            vehicle_controller_cycle(&g_bus, motion_hal_time());
             unlock_bus();
         }
 

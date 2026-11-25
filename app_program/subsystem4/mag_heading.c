@@ -20,7 +20,7 @@ mag_cal_begin (mag_cal_acc_t * p_acc)
 }
 
 void
-mag_cal_add (mag_cal_acc_t * p_acc, int16_t x, int16_t y,
+mag_cal_add (mag_cal_acc_t * p_acc, int16_t axis_x, int16_t axis_y,
              int32_t rel_heading_ddeg)
 {
     int32_t  wrapped = 0;
@@ -31,24 +31,24 @@ mag_cal_add (mag_cal_acc_t * p_acc, int16_t x, int16_t y,
         return;
     }
 
-    if (x < p_acc->min[0])
+    if (axis_x < p_acc->min[0])
     {
-        p_acc->min[0] = x;
+        p_acc->min[0] = axis_x;
     }
 
-    if (x > p_acc->max[0])
+    if (axis_x > p_acc->max[0])
     {
-        p_acc->max[0] = x;
+        p_acc->max[0] = axis_x;
     }
 
-    if (y < p_acc->min[1])
+    if (axis_y < p_acc->min[1])
     {
-        p_acc->min[1] = y;
+        p_acc->min[1] = axis_y;
     }
 
-    if (y > p_acc->max[1])
+    if (axis_y > p_acc->max[1])
     {
-        p_acc->max[1] = y;
+        p_acc->max[1] = axis_y;
     }
 
     if (p_acc->samples < UINT16_MAX)
@@ -68,8 +68,8 @@ mag_cal_add (mag_cal_acc_t * p_acc, int16_t x, int16_t y,
     if (0U == (p_acc->bins & (1ULL << bin)))
     {
         p_acc->bins |= (1ULL << bin);
-        p_acc->bin_x[bin] = x;
-        p_acc->bin_y[bin] = y;
+        p_acc->bin_x[bin] = axis_x;
+        p_acc->bin_y[bin] = axis_y;
     }
 }
 
@@ -89,11 +89,11 @@ mag_popcount (uint64_t bits)
 
 /* Corrected X/Y for a raw sample. */
 static void
-mag_correct (mag_cal_t const * p_cal, int16_t x, int16_t y, float32_t * p_cx,
-             float32_t * p_cy)
+mag_correct (mag_cal_t const * p_cal, int16_t axis_x, int16_t axis_y,
+             float32_t * p_cx, float32_t * p_cy)
 {
-    *p_cx = (float32_t)((int32_t)x - (int32_t)p_cal->offset_x);
-    *p_cy = (float32_t)((int32_t)y - (int32_t)p_cal->offset_y)
+    *p_cx = (float32_t)((int32_t)axis_x - (int32_t)p_cal->offset_x);
+    *p_cy = (float32_t)((int32_t)axis_y - (int32_t)p_cal->offset_y)
             * ((float32_t)p_cal->scale_y_q12 / (float32_t)MAG_SCALE_ONE_Q12);
 }
 
@@ -170,14 +170,14 @@ mag_cal_finish (mag_cal_acc_t const * p_acc, mag_cal_result_t * p_result)
     /* Circle fit over one sample per bin, and the rotation sense. */
     for (uint32_t bin = 0U; bin < MAG_BINS; bin++)
     {
-        float32_t cx    = 0.0F;
-        float32_t cy    = 0.0F;
-        float32_t angle = 0.0F;
+        float32_t centre_x = 0.0F;
+        float32_t centre_y = 0.0F;
+        float32_t angle    = 0.0F;
 
-        mag_correct(&p_result->cal, p_acc->bin_x[bin], p_acc->bin_y[bin], &cx,
-                    &cy);
-        sum += sqrtf((cx * cx) + (cy * cy));
-        angle = atan2f(cy, cx) * 57.2957795F;
+        mag_correct(&p_result->cal, p_acc->bin_x[bin], p_acc->bin_y[bin],
+                    &centre_x, &centre_y);
+        sum += sqrtf((centre_x * centre_x) + (centre_y * centre_y));
+        angle = atan2f(centre_y, centre_x) * 57.2957795F;
 
         if (bin > 0U)
         {
@@ -191,13 +191,14 @@ mag_cal_finish (mag_cal_acc_t const * p_acc, mag_cal_result_t * p_result)
 
     for (uint32_t bin = 0U; bin < MAG_BINS; bin++)
     {
-        float32_t cx    = 0.0F;
-        float32_t cy    = 0.0F;
-        float32_t error = 0.0F;
+        float32_t centre_x = 0.0F;
+        float32_t centre_y = 0.0F;
+        float32_t error    = 0.0F;
 
-        mag_correct(&p_result->cal, p_acc->bin_x[bin], p_acc->bin_y[bin], &cx,
-                    &cy);
-        error = (sqrtf((cx * cx) + (cy * cy)) / mean) - 1.0F;
+        mag_correct(&p_result->cal, p_acc->bin_x[bin], p_acc->bin_y[bin],
+                    &centre_x, &centre_y);
+        error = (sqrtf((centre_x * centre_x) + (centre_y * centre_y)) / mean)
+                - 1.0F;
         sum_sq += error * error;
     }
 
@@ -230,28 +231,28 @@ mag_cal_status_name (uint8_t status)
 }
 
 uint16_t
-mag_field (mag_cal_t const * p_cal, int16_t x, int16_t y)
+mag_field (mag_cal_t const * p_cal, int16_t axis_x, int16_t axis_y)
 {
-    float32_t cx        = (float32_t)x;
-    float32_t cy        = (float32_t)y;
+    float32_t centre_x  = (float32_t)axis_x;
+    float32_t centre_y  = (float32_t)axis_y;
     float32_t magnitude = 0.0F;
 
     if ((NULL != p_cal) && (p_cal->calibrated))
     {
-        mag_correct(p_cal, x, y, &cx, &cy);
+        mag_correct(p_cal, axis_x, axis_y, &centre_x, &centre_y);
     }
 
-    magnitude = sqrtf((cx * cx) + (cy * cy));
+    magnitude = sqrtf((centre_x * centre_x) + (centre_y * centre_y));
     return (magnitude > 65535.0F) ? (uint16_t)65535U
                                   : (uint16_t)(magnitude + 0.5F);
 }
 
 bool
-mag_heading_ddeg (mag_cal_t const * p_cal, int16_t x, int16_t y,
+mag_heading_ddeg (mag_cal_t const * p_cal, int16_t axis_x, int16_t axis_y,
                   int16_t * p_heading_ddeg)
 {
-    float32_t cx        = 0.0F;
-    float32_t cy        = 0.0F;
+    float32_t centre_x  = 0.0F;
+    float32_t centre_y  = 0.0F;
     float32_t heading   = 0.0F;
     int32_t   field     = 0;
     int32_t   reference = 0;
@@ -263,7 +264,7 @@ mag_heading_ddeg (mag_cal_t const * p_cal, int16_t x, int16_t y,
         return false;
     }
 
-    field     = (int32_t)mag_field(p_cal, x, y);
+    field     = (int32_t)mag_field(p_cal, axis_x, axis_y);
     reference = (int32_t)p_cal->field;
 
     if ((((field - reference) * 100) > (reference * MAG_FIELD_TOL_PERCENT))
@@ -272,8 +273,9 @@ mag_heading_ddeg (mag_cal_t const * p_cal, int16_t x, int16_t y,
         return false;
     }
 
-    mag_correct(p_cal, x, y, &cx, &cy);
-    heading = (float32_t)p_cal->sign * atan2f(cy, cx) * MAG_RAD_TO_DDEG;
+    mag_correct(p_cal, axis_x, axis_y, &centre_x, &centre_y);
+    heading
+        = (float32_t)p_cal->sign * atan2f(centre_y, centre_x) * MAG_RAD_TO_DDEG;
     ddeg = (int32_t)((heading >= 0.0F) ? (heading + 0.5F) : (heading - 0.5F));
     ddeg %= 3600;
 

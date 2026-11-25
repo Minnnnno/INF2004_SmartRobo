@@ -66,8 +66,8 @@ typedef enum
     BARCODE_SEG_DONE
 } barcode_seg_event_t;
 
-void                barcode_seg_init(barcode_seg_t * g);
-barcode_seg_event_t barcode_seg_feed(barcode_seg_t * g, uint16_t s,
+void                barcode_seg_init(barcode_seg_t * p_segment);
+barcode_seg_event_t barcode_seg_feed(barcode_seg_t * p_segment, uint16_t sample,
                                      uint32_t path, uint16_t heading);
 
 #ifndef BARCODE_CONTRAST_DIV
@@ -85,7 +85,7 @@ barcode_seg_event_t barcode_seg_feed(barcode_seg_t * g, uint16_t s,
  * extra settings never decoded a wrong letter in the replay fixtures
  * (tests/subsystem3/barcode/replay.txt). */
 #define BARCODE_LADDER {32U, 64U, 16U, 128U}
-unsigned barcode_ladder_div(unsigned first, unsigned i);
+unsigned barcode_ladder_div(unsigned first, unsigned index);
 
 /* Decodes one stretch. work is scratch (BARCODE_SAMPLES); widths receives the
  * element widths (BARCODE_MAX_ELEMENTS, in BARCODE_SAMPLE_US units per decoding
@@ -95,23 +95,25 @@ unsigned barcode_ladder_div(unsigned first, unsigned i);
  * a pass the strict decoder cannot read is matched against them
  * (barcode_best_fit). Returns the character count of a complete *...* read
  * (text holds it, '\0'-terminated), else 0. */
-unsigned barcode_decode_stretch(const uint16_t * samples, const uint32_t * path,
-                                unsigned count, uint16_t * work,
-                                uint32_t * widths, unsigned * elements,
-                                char * text, unsigned contrast_div,
-                                const char * letters);
+unsigned barcode_decode_stretch(const uint16_t * p_samples,
+                                const uint32_t * p_path, unsigned count,
+                                uint16_t * p_work, uint32_t * p_widths,
+                                unsigned * p_elements, char * p_text,
+                                unsigned contrast_div, const char * p_letters);
 
 /* The allowed letter whose *X* pattern the elements fit best (either direction,
  * up to BARCODE_MAX_STRAY stray elements), if it is within
  * BARCODE_FIT_MAX_MISMATCH and strictly better than every other; else '\0'.
  * Needs one element per bar and space (29 for *X*); d is reversed and restored
  * in place. */
-char barcode_best_fit(uint32_t * d, unsigned n, const char * letters);
+char barcode_best_fit(uint32_t * p_widths, unsigned count,
+                      const char * p_letters);
 
 /* Mean and mean absolute deviation (the noise) of n samples. */
-uint32_t barcode_level(const uint16_t * s, unsigned n, uint32_t * noise);
-void     barcode_range(const uint16_t * s, unsigned n, uint16_t * low,
-                       uint16_t * high);
+uint32_t barcode_level(const uint16_t * p_samples, unsigned count,
+                       uint32_t * p_noise);
+void barcode_range(const uint16_t * p_samples, unsigned count, uint16_t * p_low,
+                   uint16_t * p_high);
 
 #ifndef BARCODE_PATH_STEP
 /* Decoding step: 0.4 mm of driven distance (path is in 0.1 mm). */

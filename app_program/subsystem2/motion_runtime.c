@@ -12,15 +12,15 @@
 #include "../system/system_runtime.h"
 #include <math.h>
 
-static motion_t motion;
+static motion_t g_motion;
 
 static void
 sync_encoder_fault_latch (void)
 {
-    bool latched
-        = 0U != (motion.fault_flags & (1U << ((unsigned)F_FEEDBACK - 1U)));
+    bool b_latched
+        = 0U != (g_motion.fault_flags & (1U << ((unsigned)F_FEEDBACK - 1U)));
 
-    crash_encoder_fault_update(latched, (UW)motion.status.feedback_cause);
+    crash_encoder_fault_update(b_latched, (UW)g_motion.status.feedback_cause);
 }
 
 typedef struct
@@ -32,98 +32,103 @@ typedef struct
     encoder_diagnostics_t encoders;
 } motor_fault_snapshot_t;
 
-static motor_fault_snapshot_t motor_fault_snapshot;
+static motor_fault_snapshot_t g_motor_fault_snapshot;
 
 /* Capture while the bus is locked, before the hardware output cutoff. */
 static void
 capture_motor_fault (void)
 {
-    if (F_NONE == motion.status.fault)
+    if (F_NONE == g_motion.status.fault)
     {
-        motor_fault_snapshot.recorded = false;
+        g_motor_fault_snapshot.recorded = false;
         return;
     }
 
-    if (motor_fault_snapshot.recorded)
+    if (g_motor_fault_snapshot.recorded)
     {
         return;
     }
 
-    motion_hal_motor_diagnostics(&motor_fault_snapshot.motors);
-    motion_hal_encoder_diagnostics(&motor_fault_snapshot.encoders);
-    motor_fault_snapshot.command_id    = motion.status.debug.id;
-    motor_fault_snapshot.fault_time_ms = motion.status.debug.time_ms;
-    motor_fault_snapshot.recorded      = true;
+    motion_hal_motor_diagnostics(&g_motor_fault_snapshot.motors);
+    motion_hal_encoder_diagnostics(&g_motor_fault_snapshot.encoders);
+    g_motor_fault_snapshot.command_id    = g_motion.status.debug.id;
+    g_motor_fault_snapshot.fault_time_ms = g_motion.status.debug.time_ms;
+    g_motor_fault_snapshot.recorded      = true;
 }
 
 static bool
-get_motor_fault (const motion_status_t * s, motor_fault_snapshot_t * snapshot)
+get_motor_fault (const motion_status_t *  p_status,
+                 motor_fault_snapshot_t * p_snapshot)
 {
-    bool available;
+    bool b_available;
 
     if (!robot_runtime_lock())
     {
         return false;
     }
 
-    available = (motor_fault_snapshot.recorded) && (s->debug.recorded)
-                && (motor_fault_snapshot.command_id == s->debug.id)
-                && (motor_fault_snapshot.fault_time_ms == s->debug.time_ms);
+    b_available
+        = (g_motor_fault_snapshot.recorded) && (p_status->debug.recorded)
+          && (g_motor_fault_snapshot.command_id == p_status->debug.id)
+          && (g_motor_fault_snapshot.fault_time_ms == p_status->debug.time_ms);
 
-    if (available)
+    if (b_available)
     {
-        *snapshot = motor_fault_snapshot;
+        *p_snapshot = g_motor_fault_snapshot;
     }
 
     robot_runtime_unlock();
-    return available;
+    return b_available;
 }
 
 static motion_result_t
-magnitude (uint32_t id, motion_mode_t mode, float64_t value, int sign)
+magnitude (uint32_t command_id, motion_mode_t mode, float64_t value, int sign)
 {
     if ((!isfinite(value)) || (value < 0.0))
     {
         return R_INVALID;
     }
 
-    return robot_submit(SOURCE_MANUAL, id, mode, value * sign, 0.0, 0.0);
+    return robot_submit(SOURCE_MANUAL, command_id, mode, value * sign, 0.0,
+                        0.0);
 }
 
 motion_result_t
-motion_move_forward (uint32_t id, float64_t m)
+motion_move_forward (uint32_t command_id, float64_t metres)
 {
-    return magnitude(id, DISTANCE_MOVE, m, 1);
+    return magnitude(command_id, DISTANCE_MOVE, metres, 1);
 }
 
 motion_result_t
-motion_move_backward (uint32_t id, float64_t m)
+motion_move_backward (uint32_t command_id, float64_t metres)
 {
-    return magnitude(id, DISTANCE_MOVE, m, -1);
+    return magnitude(command_id, DISTANCE_MOVE, metres, -1);
 }
 
 motion_result_t
-motion_turn_left (uint32_t id, float64_t r)
+motion_turn_left (uint32_t command_id, float64_t radians)
 {
-    return magnitude(id, ENCODER_TURN, r, 1);
+    return magnitude(command_id, ENCODER_TURN, radians, 1);
 }
 
 motion_result_t
-motion_turn_right (uint32_t id, float64_t r)
+motion_turn_right (uint32_t command_id, float64_t radians)
 {
-    return magnitude(id, ENCODER_TURN, r, -1);
+    return magnitude(command_id, ENCODER_TURN, radians, -1);
 }
 
 motion_result_t
-motion_set_wheel_speeds (uint32_t id, float64_t l, float64_t r)
+motion_set_wheel_speeds (uint32_t command_id, float64_t left, float64_t right)
 {
-    return robot_submit(SOURCE_MANUAL, id, WHEEL_SPEED_TRACKING, 0.0, l, r);
+    return robot_submit(SOURCE_MANUAL, command_id, WHEEL_SPEED_TRACKING, 0.0,
+                        left, right);
 }
 
 motion_result_t
-motion_manual_output (uint32_t id, float64_t l, float64_t r)
+motion_manual_output (uint32_t command_id, float64_t left, float64_t right)
 {
-    return robot_submit(SOURCE_MANUAL, id, MANUAL_OUTPUT, 0.0, l, r);
+    return robot_submit(SOURCE_MANUAL, command_id, MANUAL_OUTPUT, 0.0, left,
+                        right);
 }
 
 void
@@ -132,22 +137,22 @@ motion_runtime_init (void)
     motion_config_t config;
     float64_t       start;
 
-    config          = board_motion_config();
-    start           = motion_hal_time();
-    bool      setup = motion_hal_init(&config);
-    float64_t now   = motion_hal_time();
+    config            = board_motion_config();
+    start             = motion_hal_time();
+    bool      b_setup = motion_hal_init(&config);
+    float64_t now     = motion_hal_time();
 
-    motion_init(&motion, &config, motion_hal_sample(), now, setup);
+    motion_init(&g_motion, &config, motion_hal_sample(), now, b_setup);
 
-    if (setup && (INITIALISING == motion.status.state)
+    if (b_setup && (INITIALISING == g_motion.status.state)
         && ((now - start) > config.setup_timeout))
     {
-        motion_raise_fault(&motion, F_SETUP_TIMEOUT, now);
+        motion_raise_fault(&g_motion, F_SETUP_TIMEOUT, now);
     }
 
     if (system_encoder_fault_latched())
     {
-        motion_restore_encoder_fault(&motion, motion_hal_sample(), now);
+        motion_restore_encoder_fault(&g_motion, motion_hal_sample(), now);
     }
 
     sync_encoder_fault_latch();
@@ -156,21 +161,21 @@ motion_runtime_init (void)
        (not READY) once still, and only the dashboard START releases it
        (vehicle_controller_remote_command; robot_runtime_prepare sets the
        latch). */
-    motion.status.hold = true;
+    g_motion.status.hold = true;
 #endif
 }
 
 const motion_config_t *
 motion_runtime_config (void)
 {
-    return &motion.config;
+    return &g_motion.config;
 }
 
 /* Read only before tasks start; runtime readers use motion_get_status(). */
 const motion_status_t *
 motion_runtime_initial_status (void)
 {
-    return &motion.status;
+    return &g_motion.status;
 }
 
 void
@@ -183,15 +188,16 @@ void
 motion_runtime_report_startup (void)
 {
 #ifdef ROBO_PRODUCTION_BUILD
-    const motion_config_t * config = &motion.config;
+    const motion_config_t * p_config = &g_motion.config;
 
     tm_printf(
         (const UB *)"firmware=%s hardware_confirmed=%u manual_enabled=%u "
                     "max_output_percent=%u production=1 line_task_enabled=%u "
                     "subsystem4_enabled=%u subsystem5_enabled=%u\n",
-        (const UB *)ROBO_ENCODER_BUILD_ID, (unsigned)config->hardware_confirmed,
-        (unsigned)config->manual_enabled,
-        (unsigned)(config->max_output * 100.0), (unsigned)ROBO_LINE_TASK,
+        (const UB *)ROBO_ENCODER_BUILD_ID,
+        (unsigned)p_config->hardware_confirmed,
+        (unsigned)p_config->manual_enabled,
+        (unsigned)(p_config->max_output * 100.0), (unsigned)ROBO_LINE_TASK,
         (unsigned)ROBO_SUBSYSTEM4, (unsigned)ROBO_SUBSYSTEM5);
 #ifdef ROBO_MOTION_FAULTS_DISABLED
     tm_printf((const UB *)"[MOTION] faults_enabled=0; diagnostic override "
@@ -205,16 +211,16 @@ motion_runtime_report_startup (void)
 }
 
 void
-motion_task (INT code, void * context)
+motion_task (INT code, void * p_context)
 {
-    float64_t next         = motion_hal_time();
-    bool      first_sample = true;
+    float64_t next           = motion_hal_time();
+    bool      b_first_sample = true;
 
     (void)code;
-    (void)context;
+    (void)p_context;
     /* Boot banner, communications and task creation are not control-loop
      * intervals. */
-    motion_begin_sampling(&motion, motion_hal_sample(), next);
+    motion_begin_sampling(&g_motion, motion_hal_sample(), next);
     sync_encoder_fault_latch();
     system_watchdog_start();
 
@@ -224,62 +230,62 @@ motion_task (INT code, void * context)
 
         system_watchdog_feed(now);
         crash_mark(CRASH_MARK_MOTION, CRASH_MOTION_INPUTS);
-        float64_t        previous_time = motion.last_time;
+        float64_t        previous_time = g_motion.last_time;
         encoder_sample_t sample        = motion_hal_sample();
 
         if (robot_runtime_wait())
         {
-            robot_runtime_motion_inputs(&motion, sample, now);
+            robot_runtime_motion_inputs(&g_motion, sample, now);
             robot_runtime_unlock();
         }
         else
         {
-            motion_raise_fault(&motion, F_SYSTEM, now);
+            motion_raise_fault(&g_motion, F_SYSTEM, now);
         }
 
         /* Skip equal timestamps only on startup/reset; a stalled or backwards
          * runtime clock must still fault instead of repeating stale PWM. */
         crash_mark(CRASH_MARK_MOTION, CRASH_MOTION_STEP);
 
-        if ((now != motion.last_time)
-            || ((!first_sample) && (motion.last_time == previous_time)))
+        if ((now != g_motion.last_time)
+            || ((!b_first_sample) && (g_motion.last_time == previous_time)))
         {
-            motion_step(&motion, sample, now);
+            motion_step(&g_motion, sample, now);
         }
 
-        first_sample = false;
+        b_first_sample = false;
         sync_encoder_fault_latch();
         crash_mark(CRASH_MARK_MOTION, CRASH_MOTION_OUTPUT);
 
         if (robot_runtime_wait())
         {
-            robot_runtime_publish(&motion, now);
+            robot_runtime_publish(&g_motion, now);
 
             /* A stop arriving while calculating wins before the hardware write.
              */
             if (robot_runtime_stop_pending())
             {
-                robot_runtime_motion_inputs(&motion, sample, now);
-                robot_runtime_publish(&motion, now);
+                robot_runtime_motion_inputs(&g_motion, sample, now);
+                robot_runtime_publish(&g_motion, now);
             }
 
             capture_motor_fault();
-            motion_hal_write(motion.status.output, motion.status.inhibited,
+            motion_hal_write(g_motion.status.output, g_motion.status.inhibited,
                              now);
             robot_runtime_unlock();
         }
         else
         {
-            motion_raise_fault(&motion, F_SYSTEM, now);
-            motion_hal_write(motion.status.output, true, now);
+            motion_raise_fault(&g_motion, F_SYSTEM, now);
+            motion_hal_write(g_motion.status.output, true, now);
         }
 
-        next += motion.config.period;
+        next += g_motion.config.period;
         now = motion_hal_time();
 
         if (next <= now)
         {
-            next = now + motion.config.period;
+            next = now + g_motion.config.period;
         }
 
         crash_mark(CRASH_MARK_MOTION, CRASH_MOTION_SLEEP);
@@ -292,42 +298,42 @@ motion_task (INT code, void * context)
  * this snapshot. Missing counts cannot distinguish a stalled wheel from a
  * disconnected/faulty encoder, so report the observed failure explicitly. */
 static void
-report_encoder_error (const motion_status_t * s)
+report_encoder_error (const motion_status_t * p_status)
 {
-    const motion_fault_debug_t * d = &s->debug;
+    const motion_fault_debug_t * p_debug = &p_status->debug;
 
-    if (F_FEEDBACK != s->fault)
+    if (F_FEEDBACK != p_status->fault)
     {
         return;
     }
 
-    if ((FB_NO_PROGRESS == s->feedback_cause) && (d->recorded))
+    if ((FB_NO_PROGRESS == p_status->feedback_cause) && (p_debug->recorded))
     {
-        for (unsigned w = 0U; w < 2U; ++w)
+        for (unsigned wheel = 0U; wheel < 2U; ++wheel)
         {
-            if (0U == (d->stalled_wheels & (1U << w)))
+            if (0U == (p_debug->stalled_wheels & (1U << wheel)))
             {
                 continue;
             }
 
-            const char * name = (0U == w) ? "LEFT" : "RIGHT";
+            const char * p_name = (0U == wheel) ? "LEFT" : "RIGHT";
 
             tm_printf((const UB *)"[ERROR] %s ENCODER: wheel commanded to move "
                                   "but no encoder count change for %ld ms "
                                   "(limit %ld ms).\n",
-                      name, (int32_t)d->no_progress_ms[w],
-                      (int32_t)d->feedback_limit_ms[w]);
+                      p_name, (int32_t)p_debug->no_progress_ms[wheel],
+                      (int32_t)p_debug->feedback_limit_ms[wheel]);
             tm_printf((const UB *)"[ERROR] %s ENCODER: wheel may be stalled or "
                                   "encoder/wiring may be faulty.\n",
-                      name);
+                      p_name);
         }
     }
-    else if (FB_INVALID_TRANSITION == s->feedback_cause)
+    else if (FB_INVALID_TRANSITION == p_status->feedback_cause)
     {
-        for (unsigned w = 0U; w < 2U; ++w)
+        for (unsigned wheel = 0U; wheel < 2U; ++wheel)
         {
-            if (s->feedback_fault_sample.invalid[w]
-                == s->feedback_previous_invalid[w])
+            if (p_status->feedback_fault_sample.invalid[wheel]
+                == p_status->feedback_previous_invalid[wheel])
             {
                 continue;
             }
@@ -335,16 +341,16 @@ report_encoder_error (const motion_status_t * s)
             tm_printf((const UB *)"[ERROR] %s ENCODER: invalid A/B transition "
                                   "detected; check encoder wiring and signal "
                                   "quality.\n",
-                      (0U == w) ? "LEFT" : "RIGHT");
+                      (0U == wheel) ? "LEFT" : "RIGHT");
         }
     }
-    else if (FB_UNRELIABLE == s->feedback_cause)
+    else if (FB_UNRELIABLE == p_status->feedback_cause)
     {
         tm_printf(
             (const UB *)"[ERROR] ENCODER FEEDBACK: readings unavailable or "
                         "unreliable; affected wheel cannot be identified.\n");
     }
-    else if (FB_RESTART_LATCH == s->feedback_cause)
+    else if (FB_RESTART_LATCH == p_status->feedback_cause)
     {
         tm_printf((const UB *)"[ERROR] ENCODER FAULT RETAINED: pre-restart "
                               "cause=%s(%u); manual checks and checked "
@@ -357,124 +363,140 @@ report_encoder_error (const motion_status_t * s)
     {
         tm_printf((const UB *)"[ERROR] ENCODER FEEDBACK: invalid movement "
                               "measurement (%s).\n",
-                  motion_feedback_name(s->feedback_cause));
+                  motion_feedback_name(p_status->feedback_cause));
     }
 }
 
 static void
-report_motor_fault (const motion_status_t * s)
+report_motor_fault (const motion_status_t * p_status)
 {
     motor_fault_snapshot_t       saved;
-    const motion_fault_debug_t * d = &s->debug;
+    const motion_fault_debug_t * p_debug = &p_status->debug;
 
-    if (!get_motor_fault(s, &saved))
+    if (!get_motor_fault(p_status, &saved))
     {
         tm_printf((const UB *)"[MOTOR] pre-stop hardware snapshot unavailable; "
                               "next report will retry.\n");
         return;
     }
 
-    const motor_diagnostics_t *   p = &saved.motors;
-    const encoder_diagnostics_t * e = &saved.encoders;
+    const motor_diagnostics_t *   p_motor   = &saved.motors;
+    const encoder_diagnostics_t * p_encoder = &saved.encoders;
 
     tm_printf((const UB *)"[DRIVER] BEFORE fault cutoff: ready=%u inhibited=%u "
                           "output_age_ms=%u configured_top=%u div16=%u\n",
-              (unsigned)p->ready, (unsigned)p->inhibited,
-              (unsigned)p->output_age_ms, (unsigned)p->configured_top,
-              (unsigned)p->configured_divider_16);
+              (unsigned)p_motor->ready, (unsigned)p_motor->inhibited,
+              (unsigned)p_motor->output_age_ms,
+              (unsigned)p_motor->configured_top,
+              (unsigned)p_motor->configured_divider_16);
     tm_printf((const UB *)"[ENCODER] BEFORE cutoff: initialised=%u "
                           "irq_registered=%u nvic13_enabled=%u\n",
-              (unsigned)e->initialised, (unsigned)e->irq_registered,
-              (unsigned)e->nvic_enabled);
+              (unsigned)p_encoder->initialised,
+              (unsigned)p_encoder->irq_registered,
+              (unsigned)p_encoder->nvic_enabled);
 
-    for (unsigned w = 0U; w < 2U; ++w)
+    for (unsigned wheel = 0U; wheel < 2U; ++wheel)
     {
-        const char * name      = (0U == w) ? "LEFT" : "RIGHT";
-        unsigned     reversing = (unsigned)((p->reversal_wait_mask >> w) & 1U);
+        const char * p_name = (0U == wheel) ? "LEFT" : "RIGHT";
+        unsigned     reversing
+            = (unsigned)((p_motor->reversal_wait_mask >> wheel) & 1U);
 
         /* Targets/speeds/PID requests are already printed in the [FAULT] lines.
          */
         tm_printf(
             (const UB *)"[PWM] %s prior_request_permille=%ld "
                         "applied_permille=%ld reverse_wait=%u enabled=%u\n",
-            name, (int32_t)p->requested_permille[w],
-            (int32_t)p->applied_permille[w], reversing,
-            (unsigned)((p->enabled_mask >> w) & 1U));
+            p_name, (int32_t)p_motor->requested_permille[wheel],
+            (int32_t)p_motor->applied_permille[wheel], reversing,
+            (unsigned)((p_motor->enabled_mask >> wheel) & 1U));
         tm_printf((const UB *)"[PWM REGS] %s GP%u/GP%u actual=%u,%u "
                               "expected=%u,%u top=%u div16=%u func=%u,%u\n",
-                  name, motor_pins[w][0], motor_pins[w][1],
-                  (unsigned)p->compare[w][0], (unsigned)p->compare[w][1],
-                  (unsigned)p->expected_compare[w][0],
-                  (unsigned)p->expected_compare[w][1], (unsigned)p->top[w],
-                  (unsigned)p->divider_16[w], (unsigned)p->pin_function[w][0],
-                  (unsigned)p->pin_function[w][1]);
-        tm_printf((const UB *)"[ENCODER] %s GP%u/GP%u levels=%u,%u edges=%u,%u "
-                              "count=%u invalid=%u irq_mask=%u,%u\n",
-                  name, e->pins[w][0], e->pins[w][1],
-                  (unsigned)((e->levels >> e->pins[w][0]) & 1U),
-                  (unsigned)((e->levels >> e->pins[w][1]) & 1U),
-                  (unsigned)e->edges[w][0], (unsigned)e->edges[w][1],
-                  (unsigned)e->sample.count[w], (unsigned)e->sample.invalid[w],
-                  (unsigned)e->irq_events[w][0], (unsigned)e->irq_events[w][1]);
+                  p_name, g_motor_pins[wheel][0], g_motor_pins[wheel][1],
+                  (unsigned)p_motor->compare[wheel][0],
+                  (unsigned)p_motor->compare[wheel][1],
+                  (unsigned)p_motor->expected_compare[wheel][0],
+                  (unsigned)p_motor->expected_compare[wheel][1],
+                  (unsigned)p_motor->top[wheel],
+                  (unsigned)p_motor->divider_16[wheel],
+                  (unsigned)p_motor->pin_function[wheel][0],
+                  (unsigned)p_motor->pin_function[wheel][1]);
+        tm_printf(
+            (const UB *)"[ENCODER] %s GP%u/GP%u levels=%u,%u edges=%u,%u "
+                        "count=%u invalid=%u irq_mask=%u,%u\n",
+            p_name, p_encoder->pins[wheel][0], p_encoder->pins[wheel][1],
+            (unsigned)((p_encoder->levels >> p_encoder->pins[wheel][0]) & 1U),
+            (unsigned)((p_encoder->levels >> p_encoder->pins[wheel][1]) & 1U),
+            (unsigned)p_encoder->edges[wheel][0],
+            (unsigned)p_encoder->edges[wheel][1],
+            (unsigned)p_encoder->sample.count[wheel],
+            (unsigned)p_encoder->sample.invalid[wheel],
+            (unsigned)p_encoder->irq_events[wheel][0],
+            (unsigned)p_encoder->irq_events[wheel][1]);
 
-        if (0U != (p->mismatch_mask & (1U << w)))
+        if (0U != (p_motor->mismatch_mask & (1U << wheel)))
         {
             tm_printf(
                 (const UB *)"[ERROR] %s MOTOR PWM: register/pin configuration "
                             "differs from the last driver write.\n",
-                name);
+                p_name);
         }
 
-        if (0U != (d->stalled_wheels & (1U << w)))
+        if (0U != (p_debug->stalled_wheels & (1U << wheel)))
         {
             tm_printf((const UB *)"[ERROR] %s MOTOR: commanded movement has no "
                                   "encoder progress; inspect motor/load/power "
                                   "and encoder.\n",
-                      name);
+                      p_name);
 
-            if ((!p->ready) || (p->inhibited) || reversing
-                || (0 == p->applied_permille[w]))
+            if ((!p_motor->ready) || (p_motor->inhibited) || reversing
+                || (0 == p_motor->applied_permille[wheel]))
             {
                 tm_printf(
                     (const UB *)"[MOTOR CHECK] %s had zero/inhibited/reversing "
                                 "PWM in the prior cycle; movement was not "
                                 "being applied normally.\n",
-                    name);
+                    p_name);
             }
             else
             {
                 tm_printf((const UB *)"[MOTOR CHECK] %s had nonzero PWM before "
                                       "cutoff; physical stall and missing "
                                       "encoder signals remain possible.\n",
-                          name);
+                          p_name);
             }
         }
 
-        if (((d->target_mm_s[w] > 5) && (d->speed_mm_s[w] < -5)
-             && (INT32_MIN != d->speed_mm_s[w]))
-            || ((d->target_mm_s[w] < -5) && (INT32_MIN != d->target_mm_s[w])
-                && (d->speed_mm_s[w] > 5)))
+        if (((p_debug->target_mm_s[wheel] > 5)
+             && (p_debug->speed_mm_s[wheel] < -5)
+             && (INT32_MIN != p_debug->speed_mm_s[wheel]))
+            || ((p_debug->target_mm_s[wheel] < -5)
+                && (INT32_MIN != p_debug->target_mm_s[wheel])
+                && (p_debug->speed_mm_s[wheel] > 5)))
         {
             tm_printf(
                 (const UB *)"[MOTOR CHECK] %s encoder speed opposed its target "
                             "at fault; check polarity or reversal/coasting.\n",
-                name);
+                p_name);
         }
 
-        if ((p->cap_permille > 0) && (INT32_MIN != d->output_permille[w])
-            && (((int64_t)d->output_permille[w] >= p->cap_permille)
-                || ((int64_t)d->output_permille[w] <= -p->cap_permille)))
+        if ((p_motor->cap_permille > 0)
+            && (INT32_MIN != p_debug->output_permille[wheel])
+            && (((int64_t)p_debug->output_permille[wheel]
+                 >= p_motor->cap_permille)
+                || ((int64_t)p_debug->output_permille[wheel]
+                    <= -p_motor->cap_permille)))
         {
             tm_printf((const UB *)"[MOTOR CHECK] %s requested output reached "
                                   "the configured cap (%ld permille).\n",
-                      name, (int32_t)p->cap_permille);
+                      p_name, (int32_t)p_motor->cap_permille);
         }
 
-        if ((0 == d->target_mm_s[w]) && (0 == d->output_permille[w]))
+        if ((0 == p_debug->target_mm_s[wheel])
+            && (0 == p_debug->output_permille[wheel]))
         {
             tm_printf((const UB *)"[MOTOR] %s was not commanded to move at the "
                                   "captured fault.\n",
-                      name);
+                      p_name);
         }
     }
 
@@ -483,31 +505,33 @@ report_motor_fault (const motion_status_t * s)
 }
 
 static void
-report_motion_fault (const motion_status_t * s, const motion_config_t * config)
+report_motion_fault (const motion_status_t * p_status,
+                     const motion_config_t * p_config)
 {
-    const motion_fault_debug_t * d = &s->debug;
+    const motion_fault_debug_t * p_debug = &p_status->debug;
 
-    if (F_NONE == s->fault)
+    if (F_NONE == p_status->fault)
     {
         return;
     }
 
-    report_encoder_error(s);
+    report_encoder_error(p_status);
 
-    if (FAULT == s->state)
+    if (FAULT == p_status->state)
     {
         tm_printf((const UB *)"[STATE] Buddy 2 ENTERED FAULT (state=5): "
                               "%s(%u). Motors stopped; movement held.\n",
-                  motion_fault_name(s->fault), (unsigned)s->fault);
+                  motion_fault_name(p_status->fault),
+                  (unsigned)p_status->fault);
     }
 
-    switch (s->fault)
+    switch (p_status->fault)
     {
         case F_CONFIG:
             tm_printf((const UB *)"[ERROR] MOTION CONFIG: invalid "
                                   "configuration or initial timestamp; "
                                   "hardware_confirmed=%u pins_valid=%u.\n",
-                      (unsigned)config->hardware_confirmed,
+                      (unsigned)p_config->hardware_confirmed,
                       (unsigned)board_pins_valid());
         break;
 
@@ -521,20 +545,21 @@ report_motion_fault (const motion_status_t * s, const motion_config_t * config)
             tm_printf(
                 (const UB *)"[ERROR] MOTION SETUP TIMEOUT: initialization or "
                             "startup qualification exceeded %lu ms.\n",
-                (uint32_t)(config->setup_timeout * 1000.0));
+                (uint32_t)(p_config->setup_timeout * 1000.0));
             tm_printf((const UB *)"[SETUP] startup_gaps=%u max_gap_us=%lu "
                                   "stationary=%u feedback_trusted=%u\n",
-                      (unsigned)s->startup_gaps,
-                      (uint32_t)(s->max_startup_gap * 1000000.0),
-                      (unsigned)s->stationary, (unsigned)s->feedback_trusted);
+                      (unsigned)p_status->startup_gaps,
+                      (uint32_t)(p_status->max_startup_gap * 1000000.0),
+                      (unsigned)p_status->stationary,
+                      (unsigned)p_status->feedback_trusted);
         break;
 
         case F_TIMING:
             tm_printf(
                 (const UB *)"[ERROR] MOTOR CONTROL TIMING: interval must be "
                             "finite, positive and <= %lu us; nominal=%lu us.\n",
-                (uint32_t)(config->max_dt * 1000000.0),
-                (uint32_t)(config->period * 1000000.0));
+                (uint32_t)(p_config->max_dt * 1000000.0),
+                (uint32_t)(p_config->period * 1000000.0));
         break;
 
         case F_FEEDBACK:
@@ -546,14 +571,14 @@ report_motion_fault (const motion_status_t * s, const motion_config_t * config)
             tm_printf(
                 (const UB *)"[ERROR] MOTOR MOVEMENT: command deadline reached "
                             "before completion; movement_timeout_ms=%lu.\n",
-                (uint32_t)(config->movement_timeout * 1000.0));
+                (uint32_t)(p_config->movement_timeout * 1000.0));
         break;
 
         case F_EXPIRED:
             tm_printf(
                 (const UB *)"[ERROR] STEERING EXPIRED: wheel-speed command was "
                             "not refreshed before expiry; lifetime_ms=%lu.\n",
-                (uint32_t)(config->command_lifetime * 1000.0));
+                (uint32_t)(p_config->command_lifetime * 1000.0));
         break;
 
         case F_STOP_TIMEOUT:
@@ -561,9 +586,9 @@ report_motion_fault (const motion_status_t * s, const motion_config_t * config)
                 (const UB *)"[ERROR] MOTOR STOP: stationary confirmation did "
                             "not arrive within %lu ms; both speed magnitudes "
                             "must be <= %lu mm/s for %lu ms.\n",
-                (uint32_t)(config->stop_timeout * 1000.0),
-                (uint32_t)(config->stopped_speed * 1000.0),
-                (uint32_t)(config->settle_time * 1000.0));
+                (uint32_t)(p_config->stop_timeout * 1000.0),
+                (uint32_t)(p_config->stopped_speed * 1000.0),
+                (uint32_t)(p_config->settle_time * 1000.0));
         break;
 
         case F_FINAL_GOAL:
@@ -571,8 +596,8 @@ report_motion_fault (const motion_status_t * s, const motion_config_t * config)
                 (const UB *)"[ERROR] MOTOR MOVEMENT: final distance/heading "
                             "check failed; distance_tolerance_um=%lu "
                             "angle_tolerance_mrad=%lu.\n",
-                (uint32_t)(config->distance_tolerance * 1000000.0),
-                (uint32_t)(config->angle_tolerance * 1000.0));
+                (uint32_t)(p_config->distance_tolerance * 1000000.0),
+                (uint32_t)(p_config->angle_tolerance * 1000.0));
         break;
 
         case F_EVENT_OVERFLOW:
@@ -597,57 +622,61 @@ report_motion_fault (const motion_status_t * s, const motion_config_t * config)
         default:
             tm_printf(
                 (const UB *)"[ERROR] MOTION: unrecognized fault code %u.\n",
-                (unsigned)s->fault);
+                (unsigned)p_status->fault);
         break;
     }
 
     tm_printf((const UB *)"[FAULT] %s(%u) feedback=%s(%u) id=%u held=%u; "
                           "firmware running\n",
-              motion_fault_name(s->fault), (unsigned)s->fault,
-              motion_feedback_name(s->feedback_cause),
-              (unsigned)s->feedback_cause, (unsigned)s->id, (unsigned)s->hold);
+              motion_fault_name(p_status->fault), (unsigned)p_status->fault,
+              motion_feedback_name(p_status->feedback_cause),
+              (unsigned)p_status->feedback_cause, (unsigned)p_status->id,
+              (unsigned)p_status->hold);
 
-    if (!d->recorded)
+    if (!p_debug->recorded)
     {
         return;
     }
 
     tm_printf((const UB *)"[FAULT] captured_ms=%ld mode=%s previous_state=%u "
                           "dt_us=%ld finite_goal=%u (INT32_MIN=invalid)\n",
-              (int32_t)d->time_ms, motion_mode_name(d->mode),
-              (unsigned)d->state, (int32_t)d->dt_us, (unsigned)d->finite_goal);
+              (int32_t)p_debug->time_ms, motion_mode_name(p_debug->mode),
+              (unsigned)p_debug->state, (int32_t)p_debug->dt_us,
+              (unsigned)p_debug->finite_goal);
 
-    for (unsigned w = 0U; w < 2U; ++w)
+    for (unsigned wheel = 0U; wheel < 2U; ++wheel)
     {
-        const char * name = (0U == w) ? "LEFT" : "RIGHT";
+        const char * p_name = (0U == wheel) ? "LEFT" : "RIGHT";
 
         tm_printf((const UB *)"[FAULT] %s stalled=%u target_mm_s=%ld "
                               "speed_mm_s=%ld request_permille=%ld\n",
-                  name, (unsigned)((d->stalled_wheels >> w) & 1U),
-                  (int32_t)d->target_mm_s[w], (int32_t)d->speed_mm_s[w],
-                  (int32_t)d->output_permille[w]);
+                  p_name, (unsigned)((p_debug->stalled_wheels >> wheel) & 1U),
+                  (int32_t)p_debug->target_mm_s[wheel],
+                  (int32_t)p_debug->speed_mm_s[wheel],
+                  (int32_t)p_debug->output_permille[wheel]);
         tm_printf((const UB *)"[FAULT] %s remaining_um=%ld no_progress_ms=%ld "
                               "limit_ms=%ld count=%u invalid=%u\n",
-                  name, (int32_t)d->remaining_um[w],
-                  (int32_t)d->no_progress_ms[w],
-                  (int32_t)d->feedback_limit_ms[w],
-                  (unsigned)s->feedback_fault_sample.count[w],
-                  (unsigned)s->feedback_fault_sample.invalid[w]);
+                  p_name, (int32_t)p_debug->remaining_um[wheel],
+                  (int32_t)p_debug->no_progress_ms[wheel],
+                  (int32_t)p_debug->feedback_limit_ms[wheel],
+                  (unsigned)p_status->feedback_fault_sample.count[wheel],
+                  (unsigned)p_status->feedback_fault_sample.invalid[wheel]);
 
-        if (F_FEEDBACK == s->fault)
+        if (F_FEEDBACK == p_status->fault)
         {
             tm_printf((const UB *)"[FEEDBACK] %s previous_count=%u "
                                   "fault_count=%u previous_invalid=%u "
                                   "fault_invalid=%u reliable=%u\n",
-                      name, (unsigned)s->feedback_previous_count[w],
-                      (unsigned)s->feedback_fault_sample.count[w],
-                      (unsigned)s->feedback_previous_invalid[w],
-                      (unsigned)s->feedback_fault_sample.invalid[w],
-                      (unsigned)s->feedback_fault_sample.reliable);
+                      p_name,
+                      (unsigned)p_status->feedback_previous_count[wheel],
+                      (unsigned)p_status->feedback_fault_sample.count[wheel],
+                      (unsigned)p_status->feedback_previous_invalid[wheel],
+                      (unsigned)p_status->feedback_fault_sample.invalid[wheel],
+                      (unsigned)p_status->feedback_fault_sample.reliable);
         }
     }
 
-    report_motor_fault(s);
+    report_motor_fault(p_status);
 }
 
 #endif
@@ -660,7 +689,7 @@ motion_runtime_report_fault (void)
 
     if (motion_get_status(&status))
     {
-        report_motion_fault(&status.motion, &motion.config);
+        report_motion_fault(&status.motion, &g_motion.config);
     }
 #endif
 }

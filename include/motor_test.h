@@ -32,7 +32,7 @@ typedef struct
 } motor_test_button_diag_t;
 
 /* Read-only GPIO/task snapshot. */
-bool motor_test_get_buttons(motor_test_button_diag_t * diagnostics);
+bool motor_test_get_buttons(motor_test_button_diag_t * p_diagnostics);
 #endif
 /* Continuous forward while refreshed by IR task. */
 bool motor_test_sensor_forward(void);
@@ -40,7 +40,7 @@ bool motor_test_sensor_forward(void);
 void motor_test_pause_sensor(void);
 void motor_test_stop(void);
 void motor_test_shutdown(void);
-bool motor_test_result(motor_test_result_t * result);
+bool motor_test_result(motor_test_result_t * p_result);
 bool motor_test_active(void);
 #endif
 #endif

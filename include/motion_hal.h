@@ -2,7 +2,7 @@
 #define ROBO_MOTION_HAL_H
 #include "float_types.h"
 #include "motion.h"
-bool             motion_hal_init(const motion_config_t * config);
+bool             motion_hal_init(const motion_config_t * p_config);
 encoder_sample_t motion_hal_sample(void);
 
 typedef struct
@@ -21,7 +21,7 @@ typedef struct
     bool     motors_inhibited;
 } encoder_diagnostics_t;
 
-void motion_hal_encoder_diagnostics(encoder_diagnostics_t * diagnostics);
+void motion_hal_encoder_diagnostics(encoder_diagnostics_t * p_diagnostics);
 
 /* Software/PWM-register evidence, not motor voltage or current measurement.
  * Motion-task context: capture before a fault write clears the outputs. */
@@ -45,9 +45,10 @@ typedef struct
     uint32_t output_age_ms;
 } motor_diagnostics_t;
 
-void motion_hal_motor_diagnostics(motor_diagnostics_t * diagnostics);
-void motion_hal_write(const float64_t output[2], bool inhibited, float64_t now);
-void motion_hal_emergency_stop(void);
+void      motion_hal_motor_diagnostics(motor_diagnostics_t * p_diagnostics);
+void      motion_hal_write(const float64_t output[2], bool b_inhibited,
+                           float64_t now);
+void      motion_hal_emergency_stop(void);
 float64_t motion_hal_time(void);
 void      motion_hal_console_init(void);
 int       motion_hal_console_read(void);

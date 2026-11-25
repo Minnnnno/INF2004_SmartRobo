@@ -33,14 +33,14 @@
 #endif
 
 #if ROBO_LINE_TASK
-void line_task(INT code, void * context);
+void line_task(INT code, void * p_context);
 #endif
 #ifdef ROBO_SAFE_MOTOR_TEST
 /* Serial stop blocks restart until sensor condition clears. */
 void line_forward_pause(void);
 #endif
 #if ROBO_BARCODE_TASK
-void barcode_task(INT code, void * context);
+void barcode_task(INT code, void * p_context);
 /* A barcode pass is being captured (barcode.c). */
 bool barcode_code_pass(void);
 
@@ -60,11 +60,11 @@ barcode_cal_t barcode_calibration_result(void);
 void barcode_ignore_for(float64_t metres);
 #endif
 #if ROBO_SHUTTLE_TASK
-void shuttle_task(INT code, void * context);
+void shuttle_task(INT code, void * p_context);
 #endif
-void terrain_task(INT code, void * context);
-void obstacle_task(INT code, void * context);
-void wifi_task(INT code, void * context);
+void terrain_task(INT code, void * p_context);
+void obstacle_task(INT code, void * p_context);
+void wifi_task(INT code, void * p_context);
 #endif
 
 /*** end of file ***/

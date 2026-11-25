@@ -34,7 +34,7 @@ usermain (void)
            {(FP)wifi_task, 12, 4096, "wifi"}};
 
     ID       ids[sizeof(tasks) / sizeof(tasks[0])];
-    unsigned i;
+    unsigned index;
 
     system_boot_init();
     motion_runtime_init();
@@ -63,21 +63,22 @@ usermain (void)
         return 0;
     }
 
-    for (i = 0; i < (sizeof(tasks) / sizeof(tasks[0])); ++i)
+    for (index = 0; index < (sizeof(tasks) / sizeof(tasks[0])); ++index)
     {
         T_CTSK task = {.tskatr  = TA_HLNG | TA_RNG0,
-                       .task    = tasks[i].entry,
-                       .itskpri = tasks[i].priority,
-                       .stksz   = tasks[i].stack};
+                       .task    = tasks[index].entry,
+                       .itskpri = tasks[index].priority,
+                       .stksz   = tasks[index].stack};
 
-        ids[i] = tk_cre_tsk(&task);
+        ids[index] = tk_cre_tsk(&task);
 
-        if (ids[i] <= 0)
+        if (ids[index] <= 0)
         {
             motion_runtime_emergency_stop();
             tm_printf((const UB *)"[INIT ERROR] task=%s stack=%u creation "
                                   "failed: %d\n",
-                      tasks[i].name, (unsigned)tasks[i].stack, (int)ids[i]);
+                      tasks[index].name, (unsigned)tasks[index].stack,
+                      (int)ids[index]);
             return 0;
         }
     }
@@ -93,16 +94,16 @@ usermain (void)
         return 0;
     }
 
-    for (i = 0; i < (sizeof(tasks) / sizeof(tasks[0])); ++i)
+    for (index = 0; index < (sizeof(tasks) / sizeof(tasks[0])); ++index)
     {
-        init_result = tk_sta_tsk(ids[i], 0);
+        init_result = tk_sta_tsk(ids[index], 0);
 
         if (init_result < E_OK)
         {
             motion_request_shutdown();
             motion_runtime_emergency_stop();
             tm_printf((const UB *)"[INIT ERROR] task=%s start failed: %d\n",
-                      tasks[i].name, (int)init_result);
+                      tasks[index].name, (int)init_result);
             return 0;
         }
     }

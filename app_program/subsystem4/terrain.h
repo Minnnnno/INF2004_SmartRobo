@@ -72,7 +72,7 @@ bool terrain_take_completed(terrain_t * p_terrain);
  * height_tenths: right-minus-left wheel contact height, 0.1 mm (sign = side).
  * The run maximum changes only when a hump completes.
  */
-void terrain_step(terrain_t * p_terrain, bool valid, int16_t height_tenths,
+void terrain_step(terrain_t * p_terrain, bool b_valid, int16_t height_tenths,
                   uint32_t now_ms);
 /* Discard the hump in progress (robot lifted/overturned: the tilt is the hand,
  * not the course): back to WAITING with no completion event. Completed humps,

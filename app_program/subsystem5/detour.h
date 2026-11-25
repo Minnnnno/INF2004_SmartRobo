@@ -33,12 +33,12 @@ bool s5_line_reporting(const robot_status_t * p_status, float64_t now);
 
 /* Task-context diagnostic: coherent live left/right encoder counts. id=0 for
    stop/scan boundaries; finite moves use their command ID. Production only. */
-encoder_sample_t s5_log_encoders(const char * phase, uint32_t id);
+encoder_sample_t s5_log_encoders(const char * p_phase, uint32_t command_id);
 
 /* Reverse straight back mm, from a held robot, then hold it still again.
    The line follower must already be told to keep off the wheels.
    True: moved back and held still. */
-bool s5_back_off(float64_t mm);
+bool s5_back_off(float64_t distance_mm);
 
 /* Turn on the spot by degrees (+ left), from a held robot, then hold it still
    and let it settle.  The line follower must already be told to keep off the

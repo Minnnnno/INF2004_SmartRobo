@@ -30,7 +30,7 @@ typedef enum
 /* A route is one word: byte (action - 1) holds that action's letter, 0 =
  * unused. */
 /* Parse "L=B R=C S=D U=A"; stored only if valid. */
-bool route_set(const char * text, int len);
+bool route_set(const char * p_text, int len);
 /* The MQTT route, or ROUTE_TABLE if none arrived. */
 uint32_t       route_get(void);
 route_action_t route_action(uint32_t route, char letter);

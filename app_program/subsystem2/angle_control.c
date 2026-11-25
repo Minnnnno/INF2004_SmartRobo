@@ -2,182 +2,199 @@
 #include "angle_test.h"
 #include <math.h>
 #include <string.h>
-static const float64_t pi = 3.141592653589793;
+static const float64_t g_pi_value = 3.141592653589793;
 static void
-finish (angle_control_t * c, angle_state_t state)
+finish (angle_control_t * p_control, angle_state_t state)
 {
-    c->state     = state;
-    c->output[0] = 0.0;
-    c->output[1] = 0.0;
+    p_control->state     = state;
+    p_control->output[0] = 0.0;
+    p_control->output[1] = 0.0;
 }
 
 void
-angle_control_init (angle_control_t * c, const motion_config_t * config)
+angle_control_init (angle_control_t *       p_control,
+                    const motion_config_t * p_config)
 {
-    unsigned w;
+    unsigned wheel;
 
-    memset(c, 0, sizeof(*c));
-    c->config = *config;
-    c->ready  = (isfinite(config->track)) && (config->track > 0.0);
+    memset(p_control, 0, sizeof(*p_control));
+    p_control->config = *p_config;
+    p_control->ready  = (isfinite(p_config->track)) && (p_config->track > 0.0);
 
-    for (w = 0U; w < 2U; ++w)
+    for (wheel = 0U; wheel < 2U; ++wheel)
     {
-        c->ready = (c->ready) && (isfinite(config->diameter[w]))
-                   && (config->diameter[w] > 0.0)
-                   && (isfinite(config->counts_per_rev[w]))
-                   && (config->counts_per_rev[w] > 0.0)
-                   && (config->quadrature[w]);
+        p_control->ready = (p_control->ready)
+                           && (isfinite(p_config->diameter[wheel]))
+                           && (p_config->diameter[wheel] > 0.0)
+                           && (isfinite(p_config->counts_per_rev[wheel]))
+                           && (p_config->counts_per_rev[wheel] > 0.0)
+                           && (p_config->quadrature[wheel]);
 
-        if (c->ready)
+        if (p_control->ready)
         {
-            c->goal[w] = (config->counts_per_rev[w] * config->track)
-                         / (4.0 * config->diameter[w]);
+            p_control->goal[wheel]
+                = (p_config->counts_per_rev[wheel] * p_config->track)
+                  / (4.0 * p_config->diameter[wheel]);
         }
     }
 }
 
 bool
-angle_control_start (angle_control_t * c, int direction,
+angle_control_start (angle_control_t * p_control, int direction,
                      encoder_sample_t sample, float64_t now)
 {
-    if ((!c->ready) || (!sample.reliable) || (!isfinite(now))
+    if ((!p_control->ready) || (!sample.reliable) || (!isfinite(now))
         || ((1 != direction) && (-1 != direction))
-        || (ANGLE_TURNING == c->state) || (ANGLE_BRAKING == c->state)
-        || ((ANGLE_IDLE != c->state) && (now < (c->quiet_since + 0.3))))
+        || (ANGLE_TURNING == p_control->state)
+        || (ANGLE_BRAKING == p_control->state)
+        || ((ANGLE_IDLE != p_control->state)
+            && (now < (p_control->quiet_since + 0.3))))
     {
         return false;
     }
 
-    c->baseline       = sample;
-    c->previous       = sample;
-    c->delta[0]       = 0U;
-    c->delta[1]       = 0U;
-    c->angle          = 0.0;
-    c->direction      = direction;
-    c->deadline       = now + 8.0;
-    c->last_change[0] = now;
-    c->last_change[1] = now;
-    c->quiet_since    = now;
-    c->state          = ANGLE_TURNING;
-    c->output[0]      = -0.25 * direction;
-    c->output[1]      = 0.25 * direction;
+    p_control->baseline       = sample;
+    p_control->previous       = sample;
+    p_control->delta[0]       = 0U;
+    p_control->delta[1]       = 0U;
+    p_control->angle          = 0.0;
+    p_control->direction      = direction;
+    p_control->deadline       = now + 8.0;
+    p_control->last_change[0] = now;
+    p_control->last_change[1] = now;
+    p_control->quiet_since    = now;
+    p_control->state          = ANGLE_TURNING;
+    p_control->output[0]      = -0.25 * direction;
+    p_control->output[1]      = 0.25 * direction;
     return true;
 }
 
 void
-angle_control_step (angle_control_t * c, encoder_sample_t sample, float64_t now)
+angle_control_step (angle_control_t * p_control, encoder_sample_t sample,
+                    float64_t now)
 {
-    unsigned w;
+    unsigned wheel;
 
     float64_t travel[2];
     float64_t progress[2];
-    bool      changed = false;
+    bool      b_changed = false;
 
-    if ((ANGLE_TURNING != c->state) && (ANGLE_BRAKING != c->state))
+    if ((ANGLE_TURNING != p_control->state)
+        && (ANGLE_BRAKING != p_control->state))
     {
         return;
     }
 
     if ((!sample.reliable) || (!isfinite(now)))
     {
-        finish(c, ANGLE_FEEDBACK);
+        finish(p_control, ANGLE_FEEDBACK);
         return;
     }
 
-    for (w = 0U; w < 2U; ++w)
+    for (wheel = 0U; wheel < 2U; ++wheel)
     {
-        int     expected = (0U == w) ? -c->direction : c->direction;
-        int64_t delta    = encoder_delta(sample.count[w], c->baseline.count[w]);
+        int expected
+            = (0U == wheel) ? -p_control->direction : p_control->direction;
+        int64_t delta = encoder_delta(sample.count[wheel],
+                                      p_control->baseline.count[wheel]);
 
-        c->delta[w] = sample.count[w] - c->baseline.count[w];
-        travel[w]   = ((float64_t)delta * pi * c->config.diameter[w])
-                      / c->config.counts_per_rev[w];
-        progress[w] = (float64_t)delta * expected;
+        p_control->delta[wheel]
+            = sample.count[wheel] - p_control->baseline.count[wheel];
+        travel[wheel]   = ((float64_t)delta * g_pi_value
+                           * p_control->config.diameter[wheel])
+                          / p_control->config.counts_per_rev[wheel];
+        progress[wheel] = (float64_t)delta * expected;
 
-        if (sample.count[w] != c->previous.count[w])
+        if (sample.count[wheel] != p_control->previous.count[wheel])
         {
-            c->last_change[w] = now;
-            changed           = true;
+            p_control->last_change[wheel] = now;
+            b_changed                     = true;
         }
 
-        if ((sample.invalid[w] != c->baseline.invalid[w])
-            || (progress[w] < -4.0))
+        if ((sample.invalid[wheel] != p_control->baseline.invalid[wheel])
+            || (progress[wheel] < -4.0))
         {
-            finish(c, ANGLE_FEEDBACK);
-            c->quiet_since = now;
+            finish(p_control, ANGLE_FEEDBACK);
+            p_control->quiet_since = now;
             return;
         }
     }
 
-    c->angle    = (travel[1] - travel[0]) / c->config.track;
-    c->previous = sample;
+    p_control->angle    = (travel[1] - travel[0]) / p_control->config.track;
+    p_control->previous = sample;
 
-    if (now >= c->deadline)
+    if (now >= p_control->deadline)
     {
-        finish(c, ANGLE_TIMEOUT);
-        c->quiet_since = now;
+        finish(p_control, ANGLE_TIMEOUT);
+        p_control->quiet_since = now;
         return;
     }
 
-    if (ANGLE_BRAKING == c->state)
+    if (ANGLE_BRAKING == p_control->state)
     {
-        if (changed)
+        if (b_changed)
         {
-            c->quiet_since = now;
+            p_control->quiet_since = now;
         }
 
-        if ((now - c->quiet_since) >= 0.3)
+        if ((now - p_control->quiet_since) >= 0.3)
         {
-            finish(c,
-                   (fabs(c->angle - ((c->direction * pi) / 2.0)) <= (pi / 60.0))
+            finish(p_control,
+                   (fabs(p_control->angle
+                         - ((p_control->direction * g_pi_value) / 2.0))
+                    <= (g_pi_value / 60.0))
                        ? ANGLE_DONE
                        : ANGLE_OVERSHOOT);
         }
-        else if (now >= c->brake_deadline)
+        else if (now >= p_control->brake_deadline)
         {
-            finish(c, ANGLE_TIMEOUT);
+            finish(p_control, ANGLE_TIMEOUT);
         }
 
         return;
     }
 
-    for (w = 0U; w < 2U; ++w)
+    for (wheel = 0U; wheel < 2U; ++wheel)
     {
-        float64_t remaining = fmax(0.0, 1.0 - (progress[w] / c->goal[w]));
+        float64_t remaining
+            = fmax(0.0, 1.0 - (progress[wheel] / p_control->goal[wheel]));
         float64_t duty
             = fmin(0.25, 0.12 + ((0.13 * remaining) / (25.0 / 90.0)));
 
-        if (progress[w] >= c->goal[w])
+        if (progress[wheel] >= p_control->goal[wheel])
         {
-            c->output[w] = 0.0;
+            p_control->output[wheel] = 0.0;
         }
-        else if (0.0 != c->output[w])
+        else if (0.0 != p_control->output[wheel])
         {
-            c->output[w] = duty * ((0U == w) ? -c->direction : c->direction);
+            p_control->output[wheel] = duty
+                                       * ((0U == wheel) ? -p_control->direction
+                                                        : p_control->direction);
         }
 
         /* A wheel already braked stays braked; never restart after overshoot.
          */
-        if ((0.0 != c->output[w]) && ((now - c->last_change[w]) >= 1.0))
+        if ((0.0 != p_control->output[wheel])
+            && ((now - p_control->last_change[wheel]) >= 1.0))
         {
-            finish(c, ANGLE_FEEDBACK);
-            c->quiet_since = now;
+            finish(p_control, ANGLE_FEEDBACK);
+            p_control->quiet_since = now;
             return;
         }
     }
 
-    if ((0.0 == c->output[0]) && (0.0 == c->output[1]))
+    if ((0.0 == p_control->output[0]) && (0.0 == p_control->output[1]))
     {
-        c->state          = ANGLE_BRAKING;
-        c->quiet_since    = now;
-        c->brake_deadline = now + 1.0;
+        p_control->state          = ANGLE_BRAKING;
+        p_control->quiet_since    = now;
+        p_control->brake_deadline = now + 1.0;
     }
 }
 
 void
-angle_control_stop (angle_control_t * c)
+angle_control_stop (angle_control_t * p_control)
 {
-    finish(c, ANGLE_STOPPED);
+    finish(p_control, ANGLE_STOPPED);
 }
 
 /*** end of file ***/

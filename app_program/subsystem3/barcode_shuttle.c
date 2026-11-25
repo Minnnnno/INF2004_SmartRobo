@@ -27,7 +27,7 @@
 
 /* One finite straight move (negative = backward). True when it completed. */
 static bool
-shuttle_leg (uint32_t id, float64_t metres)
+shuttle_leg (uint32_t command_id, float64_t metres)
 {
     robot_status_t status;
     float64_t      start = motion_hal_time(), path = 0.0;
@@ -37,7 +37,8 @@ shuttle_leg (uint32_t id, float64_t metres)
         path = status.motion.path;
     }
 
-    if (motion_steer_distance(SOURCE_LINE, id, metres, 0.0, SHUTTLE_SPEED)
+    if (motion_steer_distance(SOURCE_LINE, command_id, metres, 0.0,
+                              SHUTTLE_SPEED)
         != R_OK)
     {
         tm_printf((const UB *)"shuttle: move was not accepted\n");
@@ -66,7 +67,7 @@ shuttle_leg (uint32_t id, float64_t metres)
             return false;
         }
 
-        if (status.last_event.id == id)
+        if (status.last_event.id == command_id)
         /* With motion faults disabled a missed goal still completes, so check
          * the distance too. */
         {
@@ -83,12 +84,12 @@ shuttle_leg (uint32_t id, float64_t metres)
 }
 
 void
-shuttle_task (INT code, void * context)
+shuttle_task (INT code, void * p_context)
 {
-    uint32_t id = 4000U;
+    uint32_t command_id = 4000U;
 
     (void)code;
-    (void)context;
+    (void)p_context;
     ir_input_init(BOARD_LINE_R);
     ir_input_init(BOARD_LINE_C);
     tm_printf((const UB *)"shuttle: %u round trips of %u mm at %u mm/s, "
@@ -104,7 +105,7 @@ shuttle_task (INT code, void * context)
             tm_printf((const UB *)"shuttle: trip %u %s\n", trip,
                       back ? "backward" : "forward");
 
-            if (!shuttle_leg(++id,
+            if (!shuttle_leg(++command_id,
                              back ? -SHUTTLE_DISTANCE_M : SHUTTLE_DISTANCE_M))
             {
                 motion_stop();

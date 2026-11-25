@@ -7,15 +7,16 @@
  * Finite moves submit once; positive distance=forward, positive angle=left.
  * Turn is an in-place robot heading change, not motor-shaft rotation.
  * Motion Control chooses/ramp-limits finite-move speed from configuration. */
-motion_result_t motion_move_mm(request_source_t source, uint32_t id,
+motion_result_t motion_move_mm(request_source_t source, uint32_t command_id,
                                float64_t distance_mm);
-motion_result_t motion_turn_degrees(request_source_t source, uint32_t id,
-                                    float64_t degrees);
+motion_result_t motion_turn_degrees(request_source_t source,
+                                    uint32_t command_id, float64_t degrees);
 /* Refresh the same nonzero ID every 20-50 ms. Targets are scaled together
  * to the configured wheel-speed limit, preserving curvature. */
 motion_result_t motion_set_wheel_speeds_mm_s(request_source_t source,
-                                             uint32_t id, float64_t left_mm_s,
-                                             float64_t right_mm_s);
+                                             uint32_t         command_id,
+                                             float64_t        left_mm_s,
+                                             float64_t        right_mm_s);
 
 typedef struct
 {
@@ -38,26 +39,27 @@ typedef struct
  * Distances accumulate since init/reset: subtract snapshots for a run.
  * Centre distance is signed; path distance accumulates forward/reverse travel.
  * Check feedback_trusted and fault before using measurements for navigation. */
-bool motion_get_measurements_mm(motion_measurements_mm_t * measurements);
+bool motion_get_measurements_mm(motion_measurements_mm_t * p_measurements);
 
 /* Task-context requests through the Vehicle Controller. Angles are degrees.
  * Positive heading/turn rate means left. Use SOURCE_LINE or SOURCE_OBSTACLE.
  * Continuous commands: refresh the same nonzero ID every 20-50 ms.
  * Finite commands: submit once, then wait for matching completion/fault. */
-motion_result_t motion_steer(request_source_t source, uint32_t id,
+motion_result_t motion_steer(request_source_t source, uint32_t command_id,
                              float64_t speed_m_s, float64_t turn_deg_s);
-motion_result_t motion_steer_left(request_source_t source, uint32_t id,
+motion_result_t motion_steer_left(request_source_t source, uint32_t command_id,
                                   float64_t speed_m_s,
                                   float64_t correction_m_s);
-motion_result_t motion_steer_right(request_source_t source, uint32_t id,
+motion_result_t motion_steer_right(request_source_t source, uint32_t command_id,
                                    float64_t speed_m_s,
                                    float64_t correction_m_s);
-motion_result_t motion_steer_distance(request_source_t source, uint32_t id,
-                                      float64_t metres, float64_t heading_deg,
+motion_result_t motion_steer_distance(request_source_t source,
+                                      uint32_t command_id, float64_t metres,
+                                      float64_t heading_deg,
                                       float64_t speed_m_s);
 /* speed_m_s is average centre speed; timed arcs use smooth start/end ramps.
  * Physically impossible speed/acceleration/time combinations are rejected. */
-motion_result_t motion_steer_time(request_source_t source, uint32_t id,
+motion_result_t motion_steer_time(request_source_t source, uint32_t command_id,
                                   float64_t seconds, float64_t heading_deg,
                                   float64_t speed_m_s);
 
@@ -81,7 +83,7 @@ typedef struct
 /* Encoder estimates, not a ground-truth slip measurement. Distances are
  * cumulative since init/reset. Save a snapshot and subtract to measure a run.
  */
-bool motion_get_feedback(motion_feedback_t * feedback);
+bool motion_get_feedback(motion_feedback_t * p_feedback);
 
 typedef enum
 {
@@ -101,8 +103,8 @@ typedef struct
 
 /* Two consecutive equal samples filter DO chatter. Pass true for black.
  * A zero-initialized state returns LINE_WAIT until a stable sample pair. */
-line_direction_t motion_line_direction(line_steering_t * state, bool left_black,
-                                       bool right_black);
+line_direction_t motion_line_direction(line_steering_t * p_state,
+                                       bool b_left_black, bool b_right_black);
 #endif
 
 /*** end of file ***/

@@ -7,7 +7,7 @@
 #include "crash_log.h"
 #include "stack_debug.h"
 
-static crash_snapshot_t previous_crash;
+static crash_snapshot_t g_previous_crash;
 
 /* The private idle context also carries interrupts on this MSP-based port. */
 extern UW   knl_idle_stack_used(UINT core);
@@ -25,12 +25,12 @@ extern BOOL knl_guards_intact(void);
 #define FREEZE_ALARM          2U
 #define SYSCFG_PROC0_NMI_MASK 0x40004000U
 #define EXC_NMI               2U
-static volatile UW last_feed_us;
-static volatile UW freeze_check_count;
+static volatile UW g_last_feed_us;
+static volatile UW g_freeze_check_count;
 /* Kernel's RAM vector table; VTOR points here. */
 extern UW   exchdr_tbl[];
 extern void robo_freeze_entry(void);
-void        robo_freeze_check(const UW * frame);
+void        robo_freeze_check(const UW * p_frame);
 
 /* NMI entry: the exception frame is at the stack pointer (tasks and handlers
  * both run on MSP here). Returns through the C function with EXC_RETURN still
@@ -54,16 +54,16 @@ __asm__("   .syntax unified         \n"
         "   .ltorg              \n");
 
 __attribute__((used)) void
-robo_freeze_check (const UW * frame)
+robo_freeze_check (const UW * p_frame)
 {
     UW now = in_w(TIMER_TIMERAWL);
     UW where;
 
-    ++freeze_check_count;
+    ++g_freeze_check_count;
     out_w(TIMER_INTR, 1UL << FREEZE_ALARM);
     out_w(TIMER_ALARM2, now + CRASH_FREEZE_CHECK_US);
 
-    if ((now - last_feed_us) < CRASH_FREEZE_LIMIT_US)
+    if ((now - g_last_feed_us) < CRASH_FREEZE_LIMIT_US)
     {
         return;
     }
@@ -72,10 +72,10 @@ robo_freeze_check (const UW * frame)
      * invalidate its current-TCB pointer and fault even inside this NMI.
      * Task 255 means the lookup did not finish; the watchdog still keeps PC/LR.
      */
-    where = ((frame[7] & 0x3fU) << 24U) | (0xffU << 16U)
+    where = ((p_frame[7] & 0x3fU) << 24U) | (0xffU << 16U)
             | ((in_w(CRASH_MARK_MOTION) & 0xffU) << 8U)
             | (in_w(CRASH_MARK_OBSTACLE) & 0xffU);
-    crash_log_save(CRASH_MAGIC_FREEZE, frame[6], frame[5], where);
+    crash_log_save(CRASH_MAGIC_FREEZE, p_frame[6], p_frame[5], where);
     where = (where & ~(0xffU << 16U)) | (((UW)tk_get_tid() & 0xffU) << 16U);
     out_w(CRASH_WDT_SCRATCH0 + 12U, where);
     crash_log_reboot();
@@ -94,11 +94,11 @@ freeze_catcher_start (void)
     }
 
     DI(state);
-    last_feed_us        = in_w(TIMER_TIMERAWL);
+    g_last_feed_us      = in_w(TIMER_TIMERAWL);
     exchdr_tbl[EXC_NMI] = (UW)robo_freeze_entry;
     out_w(TIMER_INTR, 1UL << FREEZE_ALARM);
     set_w(TIMER_INTE, 1UL << FREEZE_ALARM);
-    out_w(TIMER_ALARM2, last_feed_us + CRASH_FREEZE_CHECK_US);
+    out_w(TIMER_ALARM2, g_last_feed_us + CRASH_FREEZE_CHECK_US);
     /* NMI only: the IRQ stays disabled in the NVIC. */
     set_w(SYSCFG_PROC0_NMI_MASK, 1UL << FREEZE_ALARM);
     EI(state);
@@ -116,34 +116,34 @@ void
 system_watchdog_feed (float64_t now)
 {
     crash_watchdog_feed(1000U);
-    last_feed_us = in_w(TIMER_TIMERAWL);
+    g_last_feed_us = in_w(TIMER_TIMERAWL);
     crash_mark(CRASH_MARK_FEED_MS, (UW)(now * 1000.0));
 }
 
 void
 system_report_previous_crash (void)
 {
-    if (!crash_log_present(&previous_crash))
+    if (!crash_log_present(&g_previous_crash))
     {
         return;
     }
 
-    const UW * data = previous_crash.data;
+    const UW * p_data = g_previous_crash.data;
 
-    if (CRASH_MAGIC_FAULT == previous_crash.magic)
+    if (CRASH_MAGIC_FAULT == g_previous_crash.magic)
     {
         tm_printf(
             (const UB *)"LAST CRASH: hard fault task=%u pc=%08x lr=%08x\n",
-            (unsigned)data[2], (unsigned)data[0], (unsigned)data[1]);
+            (unsigned)p_data[2], (unsigned)p_data[0], (unsigned)p_data[1]);
     }
-    else if (CRASH_MAGIC_FREEZE == previous_crash.magic)
+    else if (CRASH_MAGIC_FREEZE == g_previous_crash.magic)
     {
-        UW where = data[2];
+        UW where = p_data[2];
 
         tm_printf((const UB *)"LAST CRASH: froze, motion not run for 0.8 s "
                               "pc=%08x lr=%08x exception=%u task=%u "
                               "motion_stage=%u obstacle_stage=%u\n",
-                  (unsigned)data[0], (unsigned)data[1],
+                  (unsigned)p_data[0], (unsigned)p_data[1],
                   (unsigned)(where >> 24U), (unsigned)((where >> 16U) & 0xffU),
                   (unsigned)((where >> 8U) & 0xffU), (unsigned)(where & 0xffU));
     }
@@ -152,7 +152,7 @@ system_report_previous_crash (void)
         tm_printf(
             (const UB *)"LAST CRASH: watchdog timeout, code froze >1 s "
                         "motion_stage=%u obstacle_stage=%u last_feed_ms=%u\n",
-            (unsigned)data[0], (unsigned)data[1], (unsigned)data[2]);
+            (unsigned)p_data[0], (unsigned)p_data[1], (unsigned)p_data[2]);
     }
 
     tm_printf((
@@ -164,20 +164,20 @@ void
 system_boot_init (void)
 {
     crash_watchdog_stop();
-    crash_log_capture(&previous_crash);
+    crash_log_capture(&g_previous_crash);
     system_report_previous_crash();
 }
 
 bool
 system_encoder_fault_latched (void)
 {
-    return previous_crash.encoder_latched;
+    return g_previous_crash.encoder_latched;
 }
 
 UW
 system_encoder_fault_cause (void)
 {
-    return previous_crash.encoder_cause;
+    return g_previous_crash.encoder_cause;
 }
 
 void
@@ -192,10 +192,10 @@ system_report_startup (void)
 
 #ifdef ROBO_PRODUCTION_BUILD
 static bool
-report_task_stack (ID id, const char * name)
+report_task_stack (ID task_id, const char * p_name)
 {
     stack_debug_t info;
-    ER            result = knl_task_stack_debug(id, &info);
+    ER            result = knl_task_stack_debug(task_id, &info);
 
     if (E_NOEXS == result)
     {
@@ -206,33 +206,34 @@ report_task_stack (ID id, const char * name)
     {
         tm_printf((const UB *)"[MEMORY] task=%u name=%s stack metadata invalid "
                               "error=%d\n",
-                  (unsigned)id, name, (int)result);
+                  (unsigned)task_id, p_name, (int)result);
         return false;
     }
 
     tm_printf((const UB *)"[STACK] task=%u name=%s used=%u capacity=%u "
                           "guard_ok=%u saved_sp_ok=%u\n",
-              (unsigned)id, name, (unsigned)info.used, (unsigned)info.capacity,
-              (unsigned)info.guard_ok, (unsigned)info.saved_sp_ok);
+              (unsigned)task_id, p_name, (unsigned)info.used,
+              (unsigned)info.capacity, (unsigned)info.guard_ok,
+              (unsigned)info.saved_sp_ok);
     return (info.guard_ok) && (info.saved_sp_ok);
 }
 #endif
 
 void
-system_supervise (const app_task_spec_t * tasks, const ID * ids,
-                  unsigned task_count, void (*report_motion_fault)(void))
+system_supervise (const app_task_spec_t * p_tasks, const ID * p_ids,
+                  unsigned task_count, void (*p_report_motion_fault)(void))
 {
 #ifdef ROBO_PRODUCTION_BUILD
-    unsigned i;
+    unsigned index;
 #else
-    (void)tasks;
-    (void)ids;
+    (void)p_tasks;
+    (void)p_ids;
     (void)task_count;
-    (void)report_motion_fault;
+    (void)p_report_motion_fault;
 #endif
-    bool memory_ok = (knl_idle_stack_intact(0U)) && (knl_guards_intact());
+    bool b_memory_ok = (knl_idle_stack_intact(0U)) && (knl_guards_intact());
 
-    if (!memory_ok)
+    if (!b_memory_ok)
     {
         motion_hal_emergency_stop();
         motion_request_shutdown();
@@ -243,27 +244,28 @@ system_supervise (const app_task_spec_t * tasks, const ID * ids,
     /* Put the fault evidence ahead of routine stack/debug output, so it is
      * first in the bounded USB transmit queue. Printing stays off motion_task.
      */
-    report_motion_fault();
+    p_report_motion_fault();
     system_report_previous_crash();
     tm_printf((const UB *)"[STACK] idle_used=%u capacity=%u guard_ok=%u\n",
               (unsigned)knl_idle_stack_used(0U),
               (unsigned)knl_idle_stack_size(),
               (unsigned)knl_idle_stack_intact(0U));
 
-    for (ID id = 1; id <= CNF_MAX_TSKID; ++id)
+    for (ID task_id = 1; task_id <= CNF_MAX_TSKID; ++task_id)
     {
-        const char * name = (id == tk_get_tid()) ? "diagnostics" : "kernel";
+        const char * p_name
+            = (task_id == tk_get_tid()) ? "diagnostics" : "kernel";
 
-        for (i = 0U; i < task_count; ++i)
+        for (index = 0U; index < task_count; ++index)
         {
-            if (ids[i] == id)
+            if (p_ids[index] == task_id)
             {
-                name = tasks[i].name;
+                p_name = p_tasks[index].name;
                 break;
             }
         }
 
-        if (!report_task_stack(id, name))
+        if (!report_task_stack(task_id, p_name))
         {
             motion_hal_emergency_stop();
             motion_request_shutdown();
@@ -279,8 +281,8 @@ system_supervise (const app_task_spec_t * tasks, const ID * ids,
         tm_printf((const UB *)"[DEBUG] firmware=%s\n", ROBO_ENCODER_BUILD_ID);
         tm_printf((const UB *)"[DEBUG] feed_age_ms=%u nmi_checks=%u "
                               "usb_dropped=%u scheduler_guard=%u\n",
-                  (unsigned)((in_w(TIMER_TIMERAWL) - last_feed_us) / 1000U),
-                  (unsigned)freeze_check_count, (unsigned)dropped,
+                  (unsigned)((in_w(TIMER_TIMERAWL) - g_last_feed_us) / 1000U),
+                  (unsigned)g_freeze_check_count, (unsigned)dropped,
                   (unsigned)knl_guards_intact());
     }
 #endif

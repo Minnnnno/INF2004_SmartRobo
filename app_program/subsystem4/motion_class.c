@@ -205,24 +205,24 @@ mc_record_compass (motion_class_t *             p_context,
  * backdated to the window start; the result is latched when the turn ends. */
 static void
 mc_track_turn (motion_class_t * p_context, motion_class_input_t const * p_input,
-               bool turning_now, bool window_full, int32_t oldest_ddeg,
+               bool b_turning_now, bool b_window_full, int32_t oldest_ddeg,
                uint32_t now_ms)
 {
-    int16_t yaw    = mc_abs16(p_context->yaw_deg_s);
-    bool    active = (0U != (p_context->flags & MC_FLAG_TURN));
+    int16_t yaw      = mc_abs16(p_context->yaw_deg_s);
+    bool    b_active = (0U != (p_context->flags & MC_FLAG_TURN));
     uint8_t pending
         = (uint8_t)((p_context->ring >> MC_RING_PENDING_SHIFT) & 0x03U);
 
-    if (turning_now != active)
+    if (b_turning_now != b_active)
     {
         pending++;
 
         if ((uint8_t)(pending + 1U) >= MC_CONFIRM_SAMPLES)
         {
-            pending = 0U;
-            active  = turning_now;
+            pending  = 0U;
+            b_active = b_turning_now;
 
-            if (!active)
+            if (!b_active)
             {
                 int32_t angle
                     = p_input->heading_ddeg - p_context->turn_start_ddeg;
@@ -247,15 +247,15 @@ mc_track_turn (motion_class_t * p_context, motion_class_input_t const * p_input,
     p_context->ring = (uint8_t)((p_context->ring & 0x3FU)
                                 | (uint8_t)(pending << MC_RING_PENDING_SHIFT));
 
-    if (active)
+    if (b_active)
     {
         if (0U == (p_context->flags & MC_FLAG_TURN))
         {
             p_context->flags |= MC_FLAG_TURN;
             p_context->turn_start_ddeg
-                = window_full ? oldest_ddeg : p_input->heading_ddeg;
+                = b_window_full ? oldest_ddeg : p_input->heading_ddeg;
             p_context->turn_start_ms
-                = now_ms - (window_full ? MC_TURN_WINDOW_MS : 0U);
+                = now_ms - (b_window_full ? MC_TURN_WINDOW_MS : 0U);
             p_context->turn_moving_ms  = now_ms;
             p_context->turn_peak_deg_s = 0;
             {
@@ -263,15 +263,15 @@ mc_track_turn (motion_class_t * p_context, motion_class_input_t const * p_input,
                  * start; usable only if the whole window was valid. */
                 uint8_t oldest
                     = (uint8_t)(p_context->ring & MC_RING_INDEX_MASK);
-                bool ok = window_full && (p_input->compass_valid)
-                          && (MC_COMPASS_ALL
-                              == (p_context->compass_bits & MC_COMPASS_ALL));
+                bool b_ok = b_window_full && (p_input->compass_valid)
+                            && (MC_COMPASS_ALL
+                                == (p_context->compass_bits & MC_COMPASS_ALL));
 
                 p_context->turn_compass_start
-                    = window_full ? p_context->compass_ring[oldest]
-                                  : p_input->compass_ddeg;
+                    = b_window_full ? p_context->compass_ring[oldest]
+                                    : p_input->compass_ddeg;
 
-                if (ok)
+                if (b_ok)
                 {
                     p_context->turn_info |= MC_TI_COMPASS_OK;
                 }
@@ -305,7 +305,7 @@ mc_track_turn (motion_class_t * p_context, motion_class_input_t const * p_input,
 static uint8_t
 mc_raw_class (motion_class_t const *       p_context,
               motion_class_input_t const * p_input, int16_t centre_mm_s,
-              bool window_full, int32_t net_ddeg)
+              bool b_window_full, int32_t net_ddeg)
 {
     if (p_input->overturned)
     {
@@ -327,7 +327,7 @@ mc_raw_class (motion_class_t const *       p_context,
         return MC_STATIONARY;
     }
 
-    if (window_full
+    if (b_window_full
         && ((net_ddeg >= MC_TURN_NET_DDEG) || (net_ddeg <= -MC_TURN_NET_DDEG)))
     {
         return MC_TURNING; /* Heading really changed; wiggles net close to 0. */
@@ -382,14 +382,14 @@ void
 motion_class_step (motion_class_t *             p_context,
                    motion_class_input_t const * p_input, uint32_t now_ms)
 {
-    uint8_t reported    = 0U;
-    uint8_t candidate   = 0U;
-    uint8_t count       = 0U;
-    uint8_t raw         = 0U;
-    int16_t centre      = 0;
-    int32_t net_ddeg    = 0;
-    int32_t oldest_ddeg = 0;
-    bool    window_full = false;
+    uint8_t reported      = 0U;
+    uint8_t candidate     = 0U;
+    uint8_t count         = 0U;
+    uint8_t raw           = 0U;
+    int16_t centre        = 0;
+    int32_t net_ddeg      = 0;
+    int32_t oldest_ddeg   = 0;
+    bool    b_window_full = false;
 
     if ((NULL == p_context) || (NULL == p_input))
     {
@@ -414,15 +414,15 @@ motion_class_step (motion_class_t *             p_context,
     p_context->yaw_deg_s = motion_class_yaw_from_speeds(
         p_input->speed_mm_s[0], p_input->speed_mm_s[1], p_input->track_mm);
     mc_update_acceleration(p_context, centre, now_ms);
-    window_full = mc_heading_window(p_context, p_input, now_ms, &net_ddeg,
-                                    &oldest_ddeg);
+    b_window_full = mc_heading_window(p_context, p_input, now_ms, &net_ddeg,
+                                      &oldest_ddeg);
     p_context->last_ms = now_ms;
 
     reported = p_context->packed & MC_CLASS_MASK;
     candidate
         = (uint8_t)((p_context->packed >> MC_CANDIDATE_SHIFT) & MC_CLASS_MASK);
     count = (uint8_t)((p_context->packed >> MC_COUNT_SHIFT) & MC_COUNT_MASK);
-    raw   = mc_raw_class(p_context, p_input, centre, window_full, net_ddeg);
+    raw   = mc_raw_class(p_context, p_input, centre, b_window_full, net_ddeg);
 
     if (0U == (p_context->flags & MC_FLAG_VALID))
     {
@@ -457,10 +457,10 @@ motion_class_step (motion_class_t *             p_context,
     p_context->flags |= MC_FLAG_VALID;
     p_context->packed = mc_pack(reported, candidate, count);
     mc_track_turn(p_context, p_input,
-                  window_full
+                  b_window_full
                       && ((net_ddeg >= MC_TURN_NET_DDEG)
                           || (net_ddeg <= -MC_TURN_NET_DDEG)),
-                  window_full, oldest_ddeg, now_ms);
+                  b_window_full, oldest_ddeg, now_ms);
 }
 
 bool

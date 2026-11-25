@@ -123,13 +123,14 @@ buddy4_step (buddy4_t * p_context, uint8_t inputs)
             return;
         }
 
-        bool fresh = (0U != (p_context->result & TILT_RESULT_VALID))
-                     && ((now_ms - p_context->last_fresh) < B4_STALE_MS)
-                     && (!lift_suspect(&p_context->lift));
+        bool b_fresh = (0U != (p_context->result & TILT_RESULT_VALID))
+                       && ((now_ms - p_context->last_fresh) < B4_STALE_MS)
+                       && (!lift_suspect(&p_context->lift));
 
         terrain_step(
-            &p_context->terrain, fresh,
-            fresh ? tilt_side_height_tenths(&p_context->tilt, B4_TRACK_MM) : 0,
+            &p_context->terrain, b_fresh,
+            b_fresh ? tilt_side_height_tenths(&p_context->tilt, B4_TRACK_MM)
+                    : 0,
             now_ms);
     }
 }
@@ -502,15 +503,15 @@ buddy4_lift (buddy4_t const * p_context)
  * latch clear (the robot is back down), so START in the air or during sensor
  * recovery keeps it frozen. No motion status: stays frozen (safe side). */
 bool
-buddy4_hump_start (buddy4_t * p_context, bool available, bool held)
+buddy4_hump_start (buddy4_t * p_context, bool b_available, bool b_held)
 {
     if ((NULL == p_context) || (B4_FREEZE_NONE == p_context->hump_freeze)
-        || (!available))
+        || (!b_available))
     {
         return false;
     }
 
-    if (held)
+    if (b_held)
     {
         p_context->hump_freeze = B4_FREEZE_HELD;
         return false;

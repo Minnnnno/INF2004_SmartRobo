@@ -33,8 +33,8 @@
 #define US_SLICE ((S5_US_ECHO_PIN >> 1U) & 7U) /* fixed by the pin */
 
 /* us, modulo 2^32: a wrap can only cost one wait */
-static uint32_t us_last_trigger;
-static bool     us_ready;
+static uint32_t g_us_last_trigger;
+static bool     gb_us_ready;
 
 static UW
 us_reg (UW offset)
@@ -71,8 +71,8 @@ s5_us_init (void)
     /* B is an input in this mode */
     gpio_set_function(S5_US_ECHO_PIN, GPIO_FUNC_PWM);
 
-    us_last_trigger = (uint32_t)time_us_64() - US_CYCLE_US;
-    us_ready        = true;
+    g_us_last_trigger = (uint32_t)time_us_64() - US_CYCLE_US;
+    gb_us_ready       = true;
     return true;
 }
 
@@ -87,7 +87,7 @@ s5_us_ping (float64_t * p_range_mm, float64_t * p_time_s)
     *p_range_mm = 0.0;
     *p_time_s   = 0.0;
 
-    if (!us_ready)
+    if (!gb_us_ready)
     {
         return S5_US_NO_PULSE;
     }
@@ -103,7 +103,7 @@ s5_us_ping (float64_t * p_range_mm, float64_t * p_time_s)
         (void)tk_dly_tsk(1U);
     }
 
-    since = (uint32_t)time_us_64() - us_last_trigger;
+    since = (uint32_t)time_us_64() - g_us_last_trigger;
 
     if (since < US_CYCLE_US)
     {
@@ -120,7 +120,7 @@ s5_us_ping (float64_t * p_range_mm, float64_t * p_time_s)
     }
 
     gpio_put(S5_US_TRIG_PIN, false);
-    us_last_trigger = (uint32_t)start;
+    g_us_last_trigger = (uint32_t)start;
 
     for (;;)
     {

@@ -20,10 +20,10 @@ subsystem1_start (void)
 
 /* Retain Buddy 2's auxiliary console task for isolated calibration builds. */
 void
-wifi_task (INT code, void * context)
+wifi_task (INT code, void * p_context)
 {
     (void)code;
-    (void)context;
+    (void)p_context;
 #ifdef ROBO_MANUAL_CONSOLE
     extern void manual_console(void);
     manual_console();

@@ -273,33 +273,36 @@ typedef struct
     uint8_t event_queue;
 } motion_t;
 
-bool      motion_config_valid(const motion_config_t * config);
-float64_t pid_step(pid_t * pid, const pid_config_t * config, float64_t target,
-                   float64_t measured, float64_t dt, float64_t limit);
-void      pid_reset(pid_t * pid);
+bool      motion_config_valid(const motion_config_t * p_config);
+float64_t pid_step(pid_t * p_pid, const pid_config_t * p_config,
+                   float64_t target, float64_t measured, float64_t delta_s,
+                   float64_t limit);
+void      pid_reset(pid_t * p_pid);
 int64_t   encoder_delta(uint32_t now, uint32_t before);
-int       encoder_quadrature(uint8_t before, uint8_t after, bool * invalid);
-bool      odometry_step(odometry_t * odom, const motion_config_t * config,
-                        const encoder_sample_t * sample, float64_t dt);
-void      motion_init(motion_t * motion, const motion_config_t * config,
-                      encoder_sample_t sample, float64_t now, bool setup_ok);
+int       encoder_quadrature(uint8_t before, uint8_t after, bool * p_invalid);
+bool      odometry_step(odometry_t * p_odom, const motion_config_t * p_config,
+                        const encoder_sample_t * p_sample, float64_t delta_s);
+void      motion_init(motion_t * p_motion, const motion_config_t * p_config,
+                      encoder_sample_t sample, float64_t now, bool b_setup_ok);
 /* Call once at task startup, before the first update. Never clears a fault. */
-void motion_begin_sampling(motion_t * motion, encoder_sample_t sample,
+void motion_begin_sampling(motion_t * p_motion, encoder_sample_t sample,
                            float64_t now);
-void motion_step(motion_t * motion, encoder_sample_t sample, float64_t now);
-motion_result_t motion_accept(motion_t *               motion,
-                              const motion_command_t * command, float64_t now);
-void            motion_cancel(motion_t * motion, float64_t now);
-void motion_raise_fault(motion_t * motion, motion_fault_t fault, float64_t now);
+void motion_step(motion_t * p_motion, encoder_sample_t sample, float64_t now);
+motion_result_t motion_accept(motion_t *               p_motion,
+                              const motion_command_t * p_command,
+                              float64_t                now);
+void            motion_cancel(motion_t * p_motion, float64_t now);
+void            motion_raise_fault(motion_t * p_motion, motion_fault_t fault,
+                                   float64_t now);
 /* Restore a known pre-reboot encoder fault; a quiet startup cannot clear it. */
-void motion_restore_encoder_fault(motion_t * motion, encoder_sample_t sample,
+void motion_restore_encoder_fault(motion_t * p_motion, encoder_sample_t sample,
                                   float64_t now);
-bool motion_release(motion_t * motion, bool checks_ok);
-bool motion_reset(motion_t * motion, bool cause_cleared,
-                  bool externally_verified_rest, encoder_sample_t sample,
+bool motion_release(motion_t * p_motion, bool b_checks_ok);
+bool motion_reset(motion_t * p_motion, bool b_cause_cleared,
+                  bool b_externally_verified_rest, encoder_sample_t sample,
                   float64_t now);
-void motion_shutdown(motion_t * motion, float64_t now);
-bool motion_next_event(motion_t * motion, motion_event_t * event);
+void motion_shutdown(motion_t * p_motion, float64_t now);
+bool motion_next_event(motion_t * p_motion, motion_event_t * p_event);
 const char * motion_fault_name(motion_fault_t fault);
 const char * motion_feedback_name(motion_feedback_cause_t cause);
 const char * motion_mode_name(motion_mode_t mode);

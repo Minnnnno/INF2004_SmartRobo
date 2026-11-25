@@ -34,13 +34,13 @@ typedef struct
     float64_t quiet_since;
 } angle_control_t;
 
-void angle_control_init(angle_control_t *       control,
-                        const motion_config_t * config);
-bool angle_control_start(angle_control_t * control, int direction,
+void angle_control_init(angle_control_t *       p_control,
+                        const motion_config_t * p_config);
+bool angle_control_start(angle_control_t * p_control, int direction,
                          encoder_sample_t sample, float64_t now);
-void angle_control_step(angle_control_t * control, encoder_sample_t sample,
+void angle_control_step(angle_control_t * p_control, encoder_sample_t sample,
                         float64_t now);
-void angle_control_stop(angle_control_t * control);
+void angle_control_stop(angle_control_t * p_control);
 #ifdef ROBO_ANGLE_TEST
 bool            angle_test_init(void);
 bool            angle_test_start(int direction);

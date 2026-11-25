@@ -208,8 +208,8 @@ void
 s5_estimate (const float64_t range_mm[], uint16_t echo, unsigned count,
              s5_estimate_t * p_out)
 {
-    unsigned  i;
-    unsigned  j;
+    unsigned  index;
+    unsigned  other;
     unsigned  best         = count;
     unsigned  best_support = 0U;
     float64_t best_spread  = 0.0;
@@ -223,33 +223,33 @@ s5_estimate (const float64_t range_mm[], uint16_t echo, unsigned count,
     p_out->nearest_mm  = 0.0;
     p_out->farthest_mm = 0.0;
 
-    for (i = 0U; i < count; i++)
+    for (index = 0U; index < count; index++)
     {
         unsigned  support = 0U;
         float64_t spread  = 0.0;
 
-        if (!s5_echo_bit(echo, i))
+        if (!s5_echo_bit(echo, index))
         {
             continue;
         }
 
-        if ((0U == p_out->valid) || (range_mm[i] < p_out->nearest_mm))
+        if ((0U == p_out->valid) || (range_mm[index] < p_out->nearest_mm))
         {
-            p_out->nearest_mm = range_mm[i];
+            p_out->nearest_mm = range_mm[index];
         }
 
-        if ((0U == p_out->valid) || (range_mm[i] > p_out->farthest_mm))
+        if ((0U == p_out->valid) || (range_mm[index] > p_out->farthest_mm))
         {
-            p_out->farthest_mm = range_mm[i];
+            p_out->farthest_mm = range_mm[index];
         }
 
         p_out->valid++;
 
-        for (j = 0U; j < count; j++)
+        for (other = 0U; other < count; other++)
         {
-            float64_t gap = fabs(range_mm[j] - range_mm[i]);
+            float64_t gap = fabs(range_mm[other] - range_mm[index]);
 
-            if ((s5_echo_bit(echo, j)) && (gap <= S5_CLUSTER_TOL_MM))
+            if ((s5_echo_bit(echo, other)) && (gap <= S5_CLUSTER_TOL_MM))
             {
                 support++;
                 spread += gap;
@@ -262,9 +262,9 @@ s5_estimate (const float64_t range_mm[], uint16_t echo, unsigned count,
             || ((support == best_support)
                 && ((spread < best_spread)
                     || ((spread == best_spread)
-                        && (range_mm[i] < range_mm[best])))))
+                        && (range_mm[index] < range_mm[best])))))
         {
-            best         = i;
+            best         = index;
             best_support = support;
             best_spread  = spread;
         }
@@ -275,12 +275,12 @@ s5_estimate (const float64_t range_mm[], uint16_t echo, unsigned count,
         return; /* no echo at all */
     }
 
-    for (j = 0U; j < count; j++)
+    for (other = 0U; other < count; other++)
     {
-        if ((s5_echo_bit(echo, j))
-            && (fabs(range_mm[j] - range_mm[best]) <= S5_CLUSTER_TOL_MM))
+        if ((s5_echo_bit(echo, other))
+            && (fabs(range_mm[other] - range_mm[best]) <= S5_CLUSTER_TOL_MM))
         {
-            sum += range_mm[j];
+            sum += range_mm[other];
         }
     }
 
@@ -308,7 +308,7 @@ s5_point_is_object (const s5_estimate_t * p_estimate, int angle_deg,
 }
 
 void
-s5_sample_point (s5_ping_fn ping, void * p_context, s5_estimate_t * p_out)
+s5_sample_point (s5_ping_fn p_ping, void * p_context, s5_estimate_t * p_out)
 {
     float64_t range_mm[S5_MAX_SAMPLES];
     uint16_t  echo  = 0U; /* a bit per ping */
@@ -318,7 +318,7 @@ s5_sample_point (s5_ping_fn ping, void * p_context, s5_estimate_t * p_out)
     {
         range_mm[count] = 0.0;
 
-        if (ping(p_context, &range_mm[count]))
+        if (p_ping(p_context, &range_mm[count]))
         {
             echo = (uint16_t)(echo | (1U << count));
         }
@@ -339,7 +339,7 @@ s5_sample_point (s5_ping_fn ping, void * p_context, s5_estimate_t * p_out)
     {
         range_mm[count] = 0.0;
 
-        if (ping(p_context, &range_mm[count]))
+        if (p_ping(p_context, &range_mm[count]))
         {
             echo = (uint16_t)(echo | (1U << count));
         }
@@ -373,12 +373,12 @@ s5_follow_surface (s5_point_t * p_point, float64_t * p_prev_mm, bool * p_have)
 
 static bool
 s5_measure_point (s5_point_t * p_point, int angle_deg,
-                  float64_t centre_forward_mm, s5_measure_fn measure,
+                  float64_t centre_forward_mm, s5_measure_fn p_measure,
                   void * p_context)
 {
     s5_estimate_t estimate;
 
-    if (!measure(p_context, angle_deg, &estimate))
+    if (!p_measure(p_context, angle_deg, &estimate))
     {
         return false;
     }
@@ -396,7 +396,7 @@ s5_measure_point (s5_point_t * p_point, int angle_deg,
    the coarse edge angle, so that is no limit. */
 static bool
 s5_walk_inward (s5_scan_t * p_scan, unsigned side, int last_deg,
-                s5_measure_fn measure, void * p_context)
+                s5_measure_fn p_measure, void * p_context)
 {
     s5_edge_t * p_edge = &p_scan->edge[side];
     int         step = (S5_LEFT == side) ? S5_FINE_STEP_DEG : -S5_FINE_STEP_DEG;
@@ -421,7 +421,7 @@ s5_walk_inward (s5_scan_t * p_scan, unsigned side, int last_deg,
         }
 
         if (!s5_measure_point(p_point, angle, p_scan->centre_forward_mm,
-                              measure, p_context))
+                              p_measure, p_context))
         {
             return false;
         }
@@ -456,7 +456,8 @@ s5_walk_inward (s5_scan_t * p_scan, unsigned side, int last_deg,
    walk back inward and average the two crossings. */
 static bool
 s5_find_edge (s5_scan_t * p_scan, unsigned side, int start_deg,
-              float64_t start_range_mm, s5_measure_fn measure, void * p_context)
+              float64_t start_range_mm, s5_measure_fn p_measure,
+              void * p_context)
 {
     s5_edge_t * p_edge = &p_scan->edge[side];
     int         step = (S5_LEFT == side) ? -S5_FINE_STEP_DEG : S5_FINE_STEP_DEG;
@@ -480,7 +481,7 @@ s5_find_edge (s5_scan_t * p_scan, unsigned side, int start_deg,
         s5_point_t * p_point = &p_scan->fine[side][p_scan->fine_count[side]];
 
         if (!s5_measure_point(p_point, angle, p_scan->centre_forward_mm,
-                              measure, p_context))
+                              p_measure, p_context))
         {
             return false;
         }
@@ -521,7 +522,7 @@ s5_find_edge (s5_scan_t * p_scan, unsigned side, int start_deg,
     p_scan->fine_outward[side] = p_scan->fine_count[side];
 
     if ((p_edge->b_found)
-        && (!s5_walk_inward(p_scan, side, last_deg, measure, p_context)))
+        && (!s5_walk_inward(p_scan, side, last_deg, p_measure, p_context)))
     {
         return false;
     }
@@ -784,7 +785,7 @@ s5_face_fit (const s5_scan_t * p_scan, s5_face_t * p_out)
     s5_profile_t profile;
 
     unsigned side;
-    unsigned i;
+    unsigned side_point;
     int      index;
     int      nearest = -1;
 
@@ -814,16 +815,17 @@ s5_face_fit (const s5_scan_t * p_scan, s5_face_t * p_out)
 
     memset(&profile, 0, sizeof(profile));
 
-    for (i = 0U; i < p_scan->coarse_count; i++)
+    for (side_point = 0U; side_point < p_scan->coarse_count; side_point++)
     {
-        s5_profile_add(&profile, p_scan->coarse[i]);
+        s5_profile_add(&profile, p_scan->coarse[side_point]);
     }
 
     for (side = S5_LEFT; side <= S5_RIGHT; side++)
     {
-        for (i = 0U; i < p_scan->fine_outward[side]; i++)
+        for (side_point = 0U; side_point < p_scan->fine_outward[side];
+             side_point++)
         {
-            s5_profile_add(&profile, p_scan->fine[side][i]);
+            s5_profile_add(&profile, p_scan->fine[side][side_point]);
         }
     }
 
@@ -972,7 +974,7 @@ s5_face_apply (s5_scan_t * p_scan)
 
 /* The reading straight ahead, then the coarse sweep if it found something */
 static bool
-s5_scan_coarse (s5_scan_t * p_scan, s5_measure_fn measure, void * p_context)
+s5_scan_coarse (s5_scan_t * p_scan, s5_measure_fn p_measure, void * p_context)
 {
     int           angle;
     s5_estimate_t estimate;
@@ -980,7 +982,7 @@ s5_scan_coarse (s5_scan_t * p_scan, s5_measure_fn measure, void * p_context)
     memset(p_scan, 0, sizeof(*p_scan));
 
     /* Reference: straight ahead */
-    if (!measure(p_context, S5_ANGLE_CENTRE_DEG, &estimate))
+    if (!p_measure(p_context, S5_ANGLE_CENTRE_DEG, &estimate))
     {
         return false;
     }
@@ -1001,7 +1003,7 @@ s5_scan_coarse (s5_scan_t * p_scan, s5_measure_fn measure, void * p_context)
          angle += S5_COARSE_STEP_DEG)
     {
         if (!s5_measure_point(&p_scan->coarse[p_scan->coarse_count], angle,
-                              p_scan->centre_forward_mm, measure, p_context))
+                              p_scan->centre_forward_mm, p_measure, p_context))
         {
             return false;
         }
@@ -1013,9 +1015,9 @@ s5_scan_coarse (s5_scan_t * p_scan, s5_measure_fn measure, void * p_context)
 }
 
 bool
-s5_tilt_scan (s5_scan_t * p_scan, s5_measure_fn measure, void * p_context)
+s5_tilt_scan (s5_scan_t * p_scan, s5_measure_fn p_measure, void * p_context)
 {
-    if (!s5_scan_coarse(p_scan, measure, p_context))
+    if (!s5_scan_coarse(p_scan, p_measure, p_context))
     {
         return false;
     }
@@ -1026,11 +1028,11 @@ s5_tilt_scan (s5_scan_t * p_scan, s5_measure_fn measure, void * p_context)
 }
 
 bool
-s5_scan_run (s5_scan_t * p_scan, s5_measure_fn measure, void * p_context)
+s5_scan_run (s5_scan_t * p_scan, s5_measure_fn p_measure, void * p_context)
 {
     unsigned side;
 
-    if (!s5_scan_coarse(p_scan, measure, p_context))
+    if (!s5_scan_coarse(p_scan, p_measure, p_context))
     {
         return false;
     }
@@ -1048,7 +1050,7 @@ s5_scan_run (s5_scan_t * p_scan, s5_measure_fn measure, void * p_context)
 
         s5_coarse_edge(p_scan, side, &start_deg, &start_range_mm);
 
-        if (!s5_find_edge(p_scan, side, start_deg, start_range_mm, measure,
+        if (!s5_find_edge(p_scan, side, start_deg, start_range_mm, p_measure,
                           p_context))
         {
             return false;
@@ -1116,24 +1118,24 @@ s5_object_range (const s5_scan_t * p_scan)
     float64_t farthest = s5_point_range(p_scan->centre);
 
     unsigned side;
-    unsigned i;
+    unsigned index;
 
-    for (i = 0U; i < p_scan->coarse_count; i++)
+    for (index = 0U; index < p_scan->coarse_count; index++)
     {
-        if (s5_point_object(p_scan->coarse[i]))
+        if (s5_point_object(p_scan->coarse[index]))
         {
-            farthest = fmax(farthest, s5_point_range(p_scan->coarse[i]));
+            farthest = fmax(farthest, s5_point_range(p_scan->coarse[index]));
         }
     }
 
     for (side = S5_LEFT; side <= S5_RIGHT; side++)
     {
-        for (i = 0U; i < p_scan->fine_count[side]; i++)
+        for (index = 0U; index < p_scan->fine_count[side]; index++)
         {
-            if (s5_point_object(p_scan->fine[side][i]))
+            if (s5_point_object(p_scan->fine[side][index]))
             {
                 farthest
-                    = fmax(farthest, s5_point_range(p_scan->fine[side][i]));
+                    = fmax(farthest, s5_point_range(p_scan->fine[side][index]));
             }
         }
     }
@@ -1165,11 +1167,11 @@ s5_side_clear (const s5_scan_t * p_scan, unsigned side,
 {
     float64_t nearest = INFINITY;
     float64_t sign    = (S5_LEFT == side) ? 1.0 : -1.0;
-    unsigned  i;
+    unsigned  index;
 
-    for (i = 0U; i < p_scan->coarse_count; i++)
+    for (index = 0U; index < p_scan->coarse_count; index++)
     {
-        s5_point_t point = p_scan->coarse[i];
+        s5_point_t point = p_scan->coarse[index];
 
         if (s5_beside(p_scan, side, point, object_range_mm))
         {
@@ -1180,9 +1182,9 @@ s5_side_clear (const s5_scan_t * p_scan, unsigned side,
         }
     }
 
-    for (i = 0U; i < p_scan->fine_count[side]; i++)
+    for (index = 0U; index < p_scan->fine_count[side]; index++)
     {
-        s5_point_t point = p_scan->fine[side][i];
+        s5_point_t point = p_scan->fine[side][index];
 
         if (s5_beside(p_scan, side, point, object_range_mm))
         {
@@ -1201,7 +1203,7 @@ static bool
 s5_face_echo_real (const s5_scan_t * p_scan, unsigned side, s5_point_t point)
 {
     int      sign = (S5_LEFT == side) ? -1 : 1;
-    unsigned i;
+    unsigned index;
     unsigned total = (unsigned)p_scan->coarse_count + p_scan->fine_count[side];
 
     if ((sign * (s5_point_angle(point) - p_scan->face.end_deg[side]))
@@ -1210,11 +1212,12 @@ s5_face_echo_real (const s5_scan_t * p_scan, unsigned side, s5_point_t point)
         return true;
     }
 
-    for (i = 0U; i < total; i++)
+    for (index = 0U; index < total; index++)
     {
-        s5_point_t other = (i < p_scan->coarse_count)
-                               ? p_scan->coarse[i]
-                               : p_scan->fine[side][i - p_scan->coarse_count];
+        s5_point_t other
+            = (index < p_scan->coarse_count)
+                  ? p_scan->coarse[index]
+                  : p_scan->fine[side][index - p_scan->coarse_count];
         int further = sign * (s5_point_angle(other) - s5_point_angle(point));
 
         if ((further > 0) && (further <= S5_FACE_EDGE_CONFIRM_DEG)
@@ -1235,14 +1238,15 @@ s5_face_clear (const s5_scan_t * p_scan, unsigned side, float64_t axle_mm)
     const s5_face_t * p_face  = &p_scan->face;
     float64_t         sign    = (S5_LEFT == side) ? 1.0 : -1.0;
     float64_t         nearest = INFINITY;
-    unsigned          i;
+    unsigned          index;
     unsigned total = (unsigned)p_scan->coarse_count + p_scan->fine_count[side];
 
-    for (i = 0U; i < total; i++)
+    for (index = 0U; index < total; index++)
     {
-        s5_point_t point = (i < p_scan->coarse_count)
-                               ? p_scan->coarse[i]
-                               : p_scan->fine[side][i - p_scan->coarse_count];
+        s5_point_t point
+            = (index < p_scan->coarse_count)
+                  ? p_scan->coarse[index]
+                  : p_scan->fine[side][index - p_scan->coarse_count];
         bool b_beyond = (S5_LEFT == side)
                             ? (s5_point_angle(point) < p_face->end_deg[side])
                             : (s5_point_angle(point) > p_face->end_deg[side]);
@@ -1306,7 +1310,7 @@ s5_avoidance (const s5_scan_t * p_scan, s5_avoid_t * p_out)
     s5_avoid_side_t order[2];
 
     unsigned  side;
-    unsigned  i;
+    unsigned  index;
     float64_t clearance = S5_ROBOT_HALF_WIDTH_MM + S5_PASS_MARGIN_MM;
 
     memset(p_out, 0, sizeof(*p_out));
@@ -1364,11 +1368,11 @@ s5_avoidance (const s5_scan_t * p_scan, s5_avoid_t * p_out)
     order[0] = s5_preferred_side(p_scan);
     order[1] = (S5_AVOID_LEFT == order[0]) ? S5_AVOID_RIGHT : S5_AVOID_LEFT;
 
-    for (i = 0U; i < 2U; i++)
+    for (index = 0U; index < 2U; index++)
     {
-        if (p_out->b_room[(S5_AVOID_LEFT == order[i]) ? S5_LEFT : S5_RIGHT])
+        if (p_out->b_room[(S5_AVOID_LEFT == order[index]) ? S5_LEFT : S5_RIGHT])
         {
-            p_out->side = order[i];
+            p_out->side = order[index];
             return;
         }
     }
@@ -1402,18 +1406,18 @@ s5_curve_mark (s5_curve_t * p_curve, float64_t path_mm)
 void
 s5_curve_note (s5_curve_t * p_curve, float64_t path_mm, float64_t heading_deg)
 {
-    unsigned i;
+    unsigned index;
     unsigned last  = (p_curve->next + S5_CURVE_SAMPLES - 1U) % S5_CURVE_SAMPLES;
     unsigned swing = 0U;
     uint16_t path  = s5_curve_path(path_mm);
     uint16_t heading = (uint16_t)(int32_t)floor((heading_deg * 10.0) + 0.5);
 
-    for (i = 0U; i < p_curve->count; i++)
+    for (index = 0U; index < p_curve->count; index++)
     {
-        if ((uint16_t)(path - p_curve->path_mm[i])
+        if ((uint16_t)(path - p_curve->path_mm[index])
             <= (unsigned)S5_CURVE_WINDOW_MM)
         {
-            unsigned left = (uint16_t)(heading - p_curve->heading_ddeg[i]);
+            unsigned left = (uint16_t)(heading - p_curve->heading_ddeg[index]);
             /* turned the other way */
             unsigned change = (left > 0x8000U) ? 0x10000U - left : left;
 

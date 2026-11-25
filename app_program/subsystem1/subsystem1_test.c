@@ -28,9 +28,9 @@ send_cmd (UB opcode, UB session, UB seq)
 }
 
 LOCAL INT
-take_cmd (COMMS_CMD * cmd)
+take_cmd (COMMS_CMD * p_cmd)
 {
-    return tk_rcv_mbf(mbf_comms_cmd, cmd, TMO_POL);
+    return tk_rcv_mbf(g_mbf_comms_cmd, p_cmd, TMO_POL);
 }
 
 LOCAL void
@@ -53,39 +53,39 @@ drain (void)
 EXPORT void
 subsystem1_test (void)
 {
-    ER er;
+    ER result;
 
     TEST_INIT();
     drain();
 
     /* S1-U01: a diagnostic message is accepted while the queue has room */
-    er = comms_send_telemetry("test", "hello");
-    TEST_CHECK("S1-U01", er == E_OK, "telemetry is queued");
+    result = comms_send_telemetry("test", "hello");
+    TEST_CHECK("S1-U01", result == E_OK, "telemetry is queued");
 
     /* S1-U02: a full queue drops the message at once instead of waiting */
     {
         UW  before = comms_dropped();
-        INT i;
+        INT index;
 
-        er = E_OK;
+        result = E_OK;
 
-        for (i = 0; i < 20 && E_OK == er; i++)
+        for (index = 0; index < 20 && E_OK == result; index++)
         {
-            er = comms_send_telemetry("test", "fill");
+            result = comms_send_telemetry("test", "fill");
         }
 
-        TEST_CHECK("S1-U02", er == E_TMOUT && comms_dropped() > before,
+        TEST_CHECK("S1-U02", result == E_TMOUT && comms_dropped() > before,
                    "full queue drops and counts");
     }
 
     /* S1-U03: an oversized payload is refused */
     {
         char big[COMMS_PAYLOAD_MAX + 1];
-        INT  i;
+        INT  index;
 
-        for (i = 0; i < COMMS_PAYLOAD_MAX; i++)
+        for (index = 0; index < COMMS_PAYLOAD_MAX; index++)
         {
-            big[i] = 'x';
+            big[index] = 'x';
         }
 
         big[COMMS_PAYLOAD_MAX] = '\0';
@@ -136,26 +136,26 @@ subsystem1_test (void)
 
     /* S1-U10: frame round trip keeps negatives and clamps out-of-range */
     {
-        int32_t in[TF_FIELD_COUNT] = {0}, out[TF_FIELD_COUNT];
+        int32_t inward[TF_FIELD_COUNT] = {0}, out[TF_FIELD_COUNT];
         UB      frame[TF_FRAME_BYTES];
-        INT     i;
+        INT     index;
         BOOL    same;
         UW      clamped;
 
-        in[TF_F_VERSION]   = (int32_t)TF_LAYOUT_VERSION;
-        in[TF_F_SPEED_L]   = -1;
-        in[TF_F_SPEED_R]   = 999; /* clamps to 250 */
-        in[TF_F_CENTRE_MM] = -5000;
-        in[TF_F_HEADING]   = -180;
-        in[TF_F_LINE_ERR]  = -1;
-        in[TF_F_PITCH]     = -90;
-        clamped            = tf_pack(in, frame);
-        in[TF_F_SPEED_R]   = 250;
-        same               = tf_unpack(frame, TF_FRAME_BYTES, out);
+        inward[TF_F_VERSION]   = (int32_t)TF_LAYOUT_VERSION;
+        inward[TF_F_SPEED_L]   = -1;
+        inward[TF_F_SPEED_R]   = 999; /* clamps to 250 */
+        inward[TF_F_CENTRE_MM] = -5000;
+        inward[TF_F_HEADING]   = -180;
+        inward[TF_F_LINE_ERR]  = -1;
+        inward[TF_F_PITCH]     = -90;
+        clamped                = tf_pack(inward, frame);
+        inward[TF_F_SPEED_R]   = 250;
+        same                   = tf_unpack(frame, TF_FRAME_BYTES, out);
 
-        for (i = 0; same && i < TF_FIELD_COUNT; i++)
+        for (index = 0; same && index < TF_FIELD_COUNT; index++)
         {
-            same = (in[i] == out[i]);
+            same = (inward[index] == out[index]);
         }
 
         TEST_CHECK("S1-U10",

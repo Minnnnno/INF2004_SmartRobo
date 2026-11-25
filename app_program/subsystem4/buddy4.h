@@ -136,7 +136,7 @@ uint8_t buddy4_lift(buddy4_t const * p_context);
 #define B4_FREEZE_NONE (0U)
 #define B4_FREEZE_WAIT (1U) /* Frozen; controller hold not seen yet. */
 #define B4_FREEZE_HELD (2U) /* Frozen; hold seen, START will unfreeze. */
-bool buddy4_hump_start(buddy4_t * p_context, bool available, bool held);
+bool buddy4_hump_start(buddy4_t * p_context, bool b_available, bool b_held);
 bool buddy4_hump_frozen(buddy4_t const * p_context);
 /* Latest good magnetometer sample no older than max_age_ms (raw counts X/Y).
  * False when none (not read yet, out of range, stale, or not MONITORING). */

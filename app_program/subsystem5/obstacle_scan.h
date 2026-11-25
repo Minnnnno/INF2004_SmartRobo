@@ -341,13 +341,14 @@ bool s5_point_is_object(const s5_estimate_t * p_estimate, int angle_deg,
                         float64_t centre_forward_mm);
 
 /* S5_SAMPLES_PER_POINT pings, plus S5_RETRY_SAMPLES more if they disagree. */
-void s5_sample_point(s5_ping_fn ping, void * p_context, s5_estimate_t * p_out);
+void s5_sample_point(s5_ping_fn p_ping, void * p_context,
+                     s5_estimate_t * p_out);
 
 /* Centre reading, coarse sweep 20 -> 160 deg, then a 1 deg walk outward
    from each coarse edge until clear space is seen twice in a row, and back
    inward until the obstacle is seen twice in a row.
    Returns false only if measure() aborted; check p_scan->b_valid. */
-bool s5_scan_run(s5_scan_t * p_scan, s5_measure_fn measure, void * p_context);
+bool s5_scan_run(s5_scan_t * p_scan, s5_measure_fn p_measure, void * p_context);
 
 /* Compare how far each edge is from straight ahead.  Within
    S5_CENTRE_TOLERANCE_DEG is centre.  An edge beyond the sweep is only a
@@ -369,7 +370,8 @@ s5_avoid_side_t s5_preferred_side(const s5_scan_t * p_scan);
 /* Just enough to correct the robot's angle: the coarse sweep and the face fit,
    with no fine scan, width or decision.  s5_scan_run() measures the obstacle.
    False: the robot moved or the sensor failed. */
-bool s5_tilt_scan(s5_scan_t * p_scan, s5_measure_fn measure, void * p_context);
+bool s5_tilt_scan(s5_scan_t * p_scan, s5_measure_fn p_measure,
+                  void * p_context);
 /* The tilt the robot stopped with: what is left, plus what it turned to square
  * up */
 float64_t s5_start_tilt_deg(const s5_scan_t * p_scan);

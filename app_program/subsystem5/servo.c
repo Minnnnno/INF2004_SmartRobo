@@ -22,7 +22,7 @@
 
 #define SERVO_SLICE ((S5_SERVO_PIN >> 1U) & 7U) /* fixed by the pin */
 
-static uint8_t servo_deg; /* 0: not started */
+static uint8_t g_servo_deg; /* 0: not started */
 
 static void
 servo_write (int angle_deg)
@@ -60,8 +60,8 @@ s5_servo_init (int angle_deg)
     pwm_config_set_clkdiv(&config, (float32_t)TMCLK_MHz); /* 1 count per us */
     pwm_init(SERVO_SLICE, &config, false);
 
-    servo_deg = (uint8_t)servo_clamp(angle_deg);
-    servo_write(servo_deg); /* pulse set before output */
+    g_servo_deg = (uint8_t)servo_clamp(angle_deg);
+    servo_write(g_servo_deg); /* pulse set before output */
 /* diagnostic 4: slice runs, pin untouched */
 #if !defined(S5_DIAG) || (S5_DIAG != 4)
     gpio_set_function(S5_SERVO_PIN, GPIO_FUNC_PWM);
@@ -74,17 +74,17 @@ unsigned
 s5_servo_aim (int angle_deg)
 {
     int target = servo_clamp(angle_deg);
-    int travel
-        = (target > servo_deg) ? (target - servo_deg) : (servo_deg - target);
+    int travel = (target > g_servo_deg) ? (target - g_servo_deg)
+                                        : (g_servo_deg - target);
 
-    if (0U == servo_deg)
+    if (0U == g_servo_deg)
     {
         s5_servo_init(target); /* waits for itself */
         return 0U;
     }
 
     servo_write(target);
-    servo_deg = (uint8_t)target;
+    g_servo_deg = (uint8_t)target;
     return SERVO_SETTLE_BASE_MS + ((unsigned)travel * SERVO_SETTLE_PER_DEG_MS);
 }
 
@@ -102,7 +102,7 @@ s5_servo_move (int angle_deg)
 int
 s5_servo_angle (void)
 {
-    return servo_deg;
+    return g_servo_deg;
 }
 
 /*** end of file ***/

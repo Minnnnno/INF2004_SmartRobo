@@ -115,7 +115,7 @@ typedef struct
     uint8_t      bits;
 } tf_field_t;
 
-extern const tf_field_t tf_fields[TF_FIELD_COUNT];
+extern const tf_field_t g_tf_fields[TF_FIELD_COUNT];
 
 /* M_FLAGS, T_VALID and O_FLAGS bits */
 #define TF_MF_STATIONARY 0x1U
@@ -150,7 +150,7 @@ uint32_t tf_pack(const int32_t values[TF_FIELD_COUNT],
 /* Unpack a received frame.  Returns false (values untouched) if len is
    wrong, the version differs, a code is above its field's range or a
    spare bit is set. */
-bool tf_unpack(const uint8_t * frame, size_t len,
+bool tf_unpack(const uint8_t * p_frame, size_t len,
                int32_t values[TF_FIELD_COUNT]);
 
 /* ---------------------------------------------------------------------
@@ -180,8 +180,8 @@ typedef struct
     uint8_t seq;
 } tf_command_t;
 
-bool tf_cmd_decode(const uint8_t * data, size_t len, tf_command_t * cmd);
-void tf_cmd_encode(const tf_command_t * cmd, uint8_t out[TF_CMD_BYTES]);
+bool tf_cmd_decode(const uint8_t * p_data, size_t len, tf_command_t * p_cmd);
+void tf_cmd_encode(const tf_command_t * p_cmd, uint8_t out[TF_CMD_BYTES]);
 
 /* ---------------------------------------------------------------------
  *  Acknowledgement, published on COMMS_TOPIC_ACK at QoS 1.  2 bytes:
@@ -199,10 +199,10 @@ typedef enum
     TF_ACK_REJECTED
 } tf_ack_t;
 
-void tf_ack_encode(tf_ack_t result, const tf_command_t * cmd,
+void tf_ack_encode(tf_ack_t result, const tf_command_t * p_cmd,
                    uint8_t out[TF_ACK_BYTES]);
-bool tf_ack_decode(const uint8_t * data, size_t len, tf_ack_t * result,
-                   tf_command_t * cmd);
+bool tf_ack_decode(const uint8_t * p_data, size_t len, tf_ack_t * p_result,
+                   tf_command_t * p_cmd);
 
 /* ---------------------------------------------------------------------
  *  Event frame, published on COMMS_TOPIC_EVENT at QoS 1.  2 bytes:
@@ -276,11 +276,11 @@ typedef struct
 
 /* Pack an encoder frame.  cause, state and fault above their range are
    clamped to the maximum.  Returns true if anything was clamped. */
-bool tf_enc_pack(const tf_encoder_t * enc, uint8_t out[TF_ENC_BYTES]);
+bool tf_enc_pack(const tf_encoder_t * p_enc, uint8_t out[TF_ENC_BYTES]);
 
 /* Unpack an encoder frame.  Returns false (enc untouched) if len or the
    version is wrong, a reserved bit is set or a code is out of range. */
-bool tf_enc_unpack(const uint8_t * frame, size_t len, tf_encoder_t * enc);
+bool tf_enc_unpack(const uint8_t * p_frame, size_t len, tf_encoder_t * p_enc);
 
 #endif /* TELEMETRY_FRAME_H */
 

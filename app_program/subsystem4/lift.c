@@ -45,10 +45,10 @@ lift_set_state (lift_t * p_lift, uint8_t condition)
 /* Start or keep a timer while the condition holds; true once it held hold_ms.
  */
 static bool
-lift_timer (lift_t * p_lift, uint8_t flag, uint32_t * p_since, bool condition,
+lift_timer (lift_t * p_lift, uint8_t flag, uint32_t * p_since, bool b_condition,
             uint32_t now_ms, uint32_t hold_ms)
 {
-    if (!condition)
+    if (!b_condition)
     {
         p_lift->flags &= (uint8_t)~flag;
         return false;
@@ -64,15 +64,16 @@ lift_timer (lift_t * p_lift, uint8_t flag, uint32_t * p_since, bool condition,
 }
 
 uint8_t
-lift_step (lift_t * p_lift, tilt_context_t const * p_tilt, int16_t x, int16_t y,
-           int16_t z, uint32_t now_ms, bool armed)
+lift_step (lift_t * p_lift, tilt_context_t const * p_tilt, int16_t axis_x,
+           int16_t axis_y, int16_t axis_z, uint32_t now_ms, bool b_armed)
 {
-    float32_t a[3]      = {(float32_t)x, (float32_t)y, (float32_t)z};
-    float32_t magnitude = 0.0F;
-    float32_t up_mg     = 0.0F;
-    float32_t upright   = 1.0F;
-    bool      oriented  = false;
-    uint8_t   condition = LIFT_NONE;
+    float32_t accel[3]
+        = {(float32_t)axis_x, (float32_t)axis_y, (float32_t)axis_z};
+    float32_t magnitude  = 0.0F;
+    float32_t up_mg      = 0.0F;
+    float32_t upright    = 1.0F;
+    bool      b_oriented = false;
+    uint8_t   condition  = LIFT_NONE;
 
     if (NULL == p_lift)
     {
@@ -98,20 +99,21 @@ lift_step (lift_t * p_lift, tilt_context_t const * p_tilt, int16_t x, int16_t y,
     p_lift->flags |= LIFT_F_SEEN;
     p_lift->last_ms = now_ms;
 
-    magnitude = sqrtf((a[0] * a[0]) + (a[1] * a[1]) + (a[2] * a[2]));
-    up_mg     = (a[0] * p_tilt->up[0]) + (a[1] * p_tilt->up[1])
-                + (a[2] * p_tilt->up[2]);
-    oriented  = (isfinite(magnitude))
-                && (magnitude >= (float32_t)LIFT_MIN_MAGNITUDE_MG);
+    magnitude  = sqrtf((accel[0] * accel[0]) + (accel[1] * accel[1])
+                       + (accel[2] * accel[2]));
+    up_mg      = (accel[0] * p_tilt->up[0]) + (accel[1] * p_tilt->up[1])
+                 + (accel[2] * p_tilt->up[2]);
+    b_oriented = (isfinite(magnitude))
+                 && (magnitude >= (float32_t)LIFT_MIN_MAGNITUDE_MG);
 
-    if (oriented)
+    if (b_oriented)
     {
         upright = up_mg / magnitude;
 
         if (!isfinite(upright))
         {
-            upright  = 1.0F;
-            oriented = false;
+            upright    = 1.0F;
+            b_oriented = false;
         }
 
         if (upright > 1.0F)
@@ -129,7 +131,7 @@ lift_step (lift_t * p_lift, tilt_context_t const * p_tilt, int16_t x, int16_t y,
 
     /* Steep tilt only pauses hump measurement (until the tilt filter has
      * settled after it); it never latches a stop. */
-    if (oriented && (p_lift->upright_pct < LIFT_SUSPECT_UPRIGHT_PCT))
+    if (b_oriented && (p_lift->upright_pct < LIFT_SUSPECT_UPRIGHT_PCT))
     {
         p_lift->steep_hold = (uint8_t)LIFT_SUSPECT_SAMPLES;
     }
@@ -152,7 +154,7 @@ lift_step (lift_t * p_lift, tilt_context_t const * p_tilt, int16_t x, int16_t y,
         p_lift->vertical_count = 0U;
     }
 
-    if (!armed)
+    if (!b_armed)
     {
         /* Nothing seen while settling (placing the robot) counts later. */
         p_lift->flags &= (uint8_t)~LIFT_F_TIMERS;
@@ -161,17 +163,17 @@ lift_step (lift_t * p_lift, tilt_context_t const * p_tilt, int16_t x, int16_t y,
     }
 
     {
-        bool over = lift_timer(
+        bool b_over = lift_timer(
             p_lift, LIFT_F_OVER, &p_lift->over_since,
-            oriented && (p_lift->upright_pct < LIFT_OVERTURN_UPRIGHT_PCT),
+            b_oriented && (p_lift->upright_pct < LIFT_OVERTURN_UPRIGHT_PCT),
             now_ms, LIFT_HOLD_MS);
-        bool raised = (p_lift->vertical_count >= LIFT_VERTICAL_SAMPLES);
+        bool b_raised = (p_lift->vertical_count >= LIFT_VERTICAL_SAMPLES);
 
         if (LIFT_NONE == condition)
         {
-            if (over || raised)
+            if (b_over || b_raised)
             {
-                condition          = over ? LIFT_OVERTURNED : LIFT_LIFTED;
+                condition          = b_over ? LIFT_OVERTURNED : LIFT_LIFTED;
                 p_lift->trigger_mg = p_lift->vertical_mg;
                 p_lift->flags &= (uint8_t)~LIFT_F_CLEAR;
             }
@@ -179,18 +181,18 @@ lift_step (lift_t * p_lift, tilt_context_t const * p_tilt, int16_t x, int16_t y,
         else
         {
             float32_t still = magnitude - p_tilt->gravity;
-            bool      calm  = oriented
+            bool b_calm     = b_oriented
                               && (p_lift->upright_pct >= LIFT_CLEAR_UPRIGHT_PCT)
                               && (still < (float32_t)LIFT_CLEAR_STILL_MG)
                               && (still > -(float32_t)LIFT_CLEAR_STILL_MG);
 
-            if (over)
+            if (b_over)
             {
                 /* A lifted robot that then tips over. */
                 condition = LIFT_OVERTURNED;
             }
 
-            if (lift_timer(p_lift, LIFT_F_CLEAR, &p_lift->clear_since, calm,
+            if (lift_timer(p_lift, LIFT_F_CLEAR, &p_lift->clear_since, b_calm,
                            now_ms, LIFT_CLEAR_MS))
             {
                 condition = LIFT_NONE;

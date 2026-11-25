@@ -60,23 +60,24 @@ typedef struct
 } crash_snapshot_t;
 
 static inline void
-crash_log_capture (crash_snapshot_t * snapshot)
+crash_log_capture (crash_snapshot_t * p_snapshot)
 {
-    snapshot->reason = in_w(CRASH_WDT_REASON);
-    UW raw_magic     = in_w(CRASH_WDT_SCRATCH0);
+    p_snapshot->reason = in_w(CRASH_WDT_REASON);
+    UW raw_magic       = in_w(CRASH_WDT_SCRATCH0);
 
-    snapshot->magic  = raw_magic & ~CRASH_ENCODER_MASK;
-    BOOL known_magic = (CRASH_MAGIC_FAULT == snapshot->magic)
-                       || (CRASH_MAGIC_FREEZE == snapshot->magic)
-                       || (CRASH_MAGIC_ARMED == snapshot->magic);
+    p_snapshot->magic = raw_magic & ~CRASH_ENCODER_MASK;
+    BOOL known_magic  = (CRASH_MAGIC_FAULT == p_snapshot->magic)
+                        || (CRASH_MAGIC_FREEZE == p_snapshot->magic)
+                        || (CRASH_MAGIC_ARMED == p_snapshot->magic);
 
-    snapshot->encoder_latched
+    p_snapshot->encoder_latched
         = known_magic && (0U != (raw_magic & CRASH_ENCODER_LATCH));
-    snapshot->encoder_cause = (raw_magic & CRASH_ENCODER_CAUSE_MASK) >> 4U;
+    p_snapshot->encoder_cause = (raw_magic & CRASH_ENCODER_CAUSE_MASK) >> 4U;
 
-    for (UINT i = 0U; i < 3U; ++i)
+    for (UINT index = 0U; index < 3U; ++index)
     {
-        snapshot->data[i] = in_w(CRASH_WDT_SCRATCH0 + (4U * (i + 1U)));
+        p_snapshot->data[index]
+            = in_w(CRASH_WDT_SCRATCH0 + (4U * (index + 1U)));
     }
 }
 
@@ -103,12 +104,12 @@ crash_encoder_fault_update (BOOL latched, UW cause)
 }
 
 static inline BOOL
-crash_log_present (const crash_snapshot_t * snapshot)
+crash_log_present (const crash_snapshot_t * p_snapshot)
 {
-    return (CRASH_MAGIC_FAULT == snapshot->magic)
-           || (CRASH_MAGIC_FREEZE == snapshot->magic)
-           || ((0U != (snapshot->reason & CRASH_REASON_TIMER))
-               && (CRASH_MAGIC_ARMED == snapshot->magic));
+    return (CRASH_MAGIC_FAULT == p_snapshot->magic)
+           || (CRASH_MAGIC_FREEZE == p_snapshot->magic)
+           || ((0U != (p_snapshot->reason & CRASH_REASON_TIMER))
+               && (CRASH_MAGIC_ARMED == p_snapshot->magic));
 }
 
 enum
@@ -173,13 +174,13 @@ crash_watchdog_stop (void)
 /* Save first: anything after this in a fault handler may hang, and the watchdog
  * timeout then still reboots with the details kept. */
 static inline void
-crash_log_save (UW magic, UW pc, UW lr, UW task)
+crash_log_save (UW magic, UW fault_pc, UW fault_lr, UW task)
 {
     UW encoder = in_w(CRASH_WDT_SCRATCH0) & CRASH_ENCODER_MASK;
 
     out_w(CRASH_WDT_SCRATCH0, magic | encoder);
-    out_w(CRASH_WDT_SCRATCH0 + 4U, pc);
-    out_w(CRASH_WDT_SCRATCH0 + 8U, lr);
+    out_w(CRASH_WDT_SCRATCH0 + 4U, fault_pc);
+    out_w(CRASH_WDT_SCRATCH0 + 8U, fault_lr);
     out_w(CRASH_WDT_SCRATCH0 + 12U, task);
 }
 

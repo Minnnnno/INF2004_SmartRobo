@@ -18,8 +18,8 @@ void system_report_startup(void);
 void system_report_previous_crash(void);
 bool system_encoder_fault_latched(void);
 UW   system_encoder_fault_cause(void);
-void system_supervise(const app_task_spec_t * tasks, const ID * ids,
-                      unsigned task_count, void (*report_motion_fault)(void));
+void system_supervise(const app_task_spec_t * p_tasks, const ID * p_ids,
+                      unsigned task_count, void (*p_report_motion_fault)(void));
 
 /* Motion owner calls these at exactly the existing start/feed points. */
 void system_watchdog_start(void);

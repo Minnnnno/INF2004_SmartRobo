@@ -53,20 +53,20 @@ typedef struct
 } world_t;
 
 static float64_t curve_drive(s5_curve_t * p_curve, float64_t path_mm,
-                             float64_t * p_heading_deg, float64_t mm,
+                             float64_t * p_heading_deg, float64_t distance_mm,
                              float64_t deg_per_mm);
 
-static unsigned failures;
-static unsigned checks;
+static unsigned g_failures;
+static unsigned g_checks;
 
 static void
 check (bool b_ok, const char * p_name)
 {
-    checks++;
+    g_checks++;
 
     if (!b_ok)
     {
-        failures++;
+        g_failures++;
         printf("FAIL  %s\n", p_name);
     }
 }
@@ -75,11 +75,11 @@ static void
 check_near (float64_t actual, float64_t expected, float64_t tolerance,
             const char * p_name)
 {
-    checks++;
+    g_checks++;
 
     if (!(fabs(actual - expected) <= tolerance))
     {
-        failures++;
+        g_failures++;
         printf("FAIL  %s: got %.1f, expected %.1f +/- %.1f\n", p_name, actual,
                expected, tolerance);
     }
@@ -91,13 +91,13 @@ estimate (const float64_t range_mm[], const bool echo[], unsigned count,
           s5_estimate_t * p_out)
 {
     uint16_t mask = 0U;
-    unsigned i;
+    unsigned index;
 
-    for (i = 0U; i < count; i++)
+    for (index = 0U; index < count; index++)
     {
-        if (echo[i])
+        if (echo[index])
         {
-            mask = (uint16_t)(mask | (1U << i));
+            mask = (uint16_t)(mask | (1U << index));
         }
     }
 
@@ -240,16 +240,16 @@ yawed_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
     float64_t axis     = face / cos(ray);
     float64_t range[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
     bool      echo[5]  = {false, false, false, false, false};
-    unsigned  i;
+    unsigned  index;
 
     if ((cos(ray) > 0.0)
         && (fabs((axis * sin(ray)) - p_yawed->centre_mm)
             <= p_yawed->half_width_mm))
     {
-        for (i = 0U; i < 5U; i++)
+        for (index = 0U; index < 5U; index++)
         {
-            range[i] = axis - S5_SENSOR_OFFSET_MM;
-            echo[i]  = true;
+            range[index] = axis - S5_SENSOR_OFFSET_MM;
+            echo[index]  = true;
         }
     }
 
@@ -274,7 +274,7 @@ box (float64_t depth_mm, float64_t left_mm, float64_t right_mm,
 static void
 test_estimate (void)
 {
-    s5_estimate_t   e;
+    s5_estimate_t   reading;
     const float64_t agree[5]    = {400.0, 401.0, 399.0, 400.0, 402.0};
     const float64_t stray[5]    = {400.0, 250.0, 401.0, 399.0, 900.0};
     const float64_t spread[5]   = {300.0, 400.0, 500.0, 600.0, 700.0};
@@ -283,35 +283,38 @@ test_estimate (void)
     const bool      silent[5]   = {false, true, false, true, false};
     const bool      one_miss[5] = {true, true, true, true, false};
 
-    estimate(agree, all, 5U, &e);
-    check((S5_ECHO_OK == e.status) && (5U == e.support),
+    estimate(agree, all, 5U, &reading);
+    check((S5_ECHO_OK == reading.status) && (5U == reading.support),
           "estimate: five agreeing pings");
-    check_near(e.range_mm, 400.4, 0.01, "estimate: mean of the agreeing pings");
+    check_near(reading.range_mm, 400.4, 0.01,
+               "estimate: mean of the agreeing pings");
 
-    estimate(stray, all, 5U, &e);
-    check((S5_ECHO_OK == e.status) && (3U == e.support),
+    estimate(stray, all, 5U, &reading);
+    check((S5_ECHO_OK == reading.status) && (3U == reading.support),
           "estimate: two stray pings outvoted");
-    check_near(e.range_mm, 400.0, 0.01,
+    check_near(reading.range_mm, 400.0, 0.01,
                "estimate: strays excluded from the mean");
 
-    estimate(agree, silent, 5U, &e);
-    check((S5_ECHO_NONE == e.status) && (!s5_estimate_usable(&e)),
+    estimate(agree, silent, 5U, &reading);
+    check((S5_ECHO_NONE == reading.status) && (!s5_estimate_usable(&reading)),
           "estimate: mostly silent is no echo");
 
-    estimate(agree, one_miss, 5U, &e);
-    check((S5_ECHO_OK == e.status) && (4U == e.valid),
+    estimate(agree, one_miss, 5U, &reading);
+    check((S5_ECHO_OK == reading.status) && (4U == reading.valid),
           "estimate: one miss tolerated");
 
-    estimate(spread, all, 5U, &e);
-    check((S5_ECHO_UNSTABLE == e.status) && (s5_estimate_usable(&e)),
+    estimate(spread, all, 5U, &reading);
+    check((S5_ECHO_UNSTABLE == reading.status)
+              && (s5_estimate_usable(&reading)),
           "estimate: no agreement is unstable but beats silence");
 
-    estimate(tie, all, 4U, &e);
-    check_near(e.range_mm, 400.5, 0.01,
+    estimate(tie, all, 4U, &reading);
+    check_near(reading.range_mm, 400.5, 0.01,
                "estimate: equal groups prefer the nearer echo");
 
-    estimate(agree, silent, 0U, &e);
-    check((S5_ECHO_NONE == e.status) && (0U == e.total), "estimate: no pings");
+    estimate(agree, silent, 0U, &reading);
+    check((S5_ECHO_NONE == reading.status) && (0U == reading.total),
+          "estimate: no pings");
 }
 
 static void
@@ -622,14 +625,14 @@ test_face (void)
     static const float64_t yaws[]
         = {0.0, 10.0, -10.0, 20.0, -20.0, 30.0, -30.0};
     s5_detour_plan_t plan;
-    unsigned         i;
+    unsigned         index;
 
-    for (i = 0U; i < (sizeof(yaws) / sizeof(yaws[0])); i++)
+    for (index = 0U; index < (sizeof(yaws) / sizeof(yaws[0])); index++)
     {
-        yawed_t   yawed = {yaws[i], 100.0, 0.0};
-        float64_t face  = 180.0 * cos(yaws[i] * DEG_TO_RAD);
+        yawed_t   yawed = {yaws[index], 100.0, 0.0};
+        float64_t face  = 180.0 * cos(yaws[index] * DEG_TO_RAD);
         /* the robot's, square to the face */
-        float64_t heading = yaws[i] * DEG_TO_RAD;
+        float64_t heading = yaws[index] * DEG_TO_RAD;
 
         float64_t start_y;
         float64_t servo_y;
@@ -638,7 +641,7 @@ test_face (void)
         check((s5_scan_run(&scan, yawed_measure, &yawed)) && (scan.b_valid),
               "face: scanned");
         check(scan.face.b_valid, "face: fitted");
-        check_near(scan.face.tilt_deg, -yaws[i], 4.0, "face: tilt");
+        check_near(scan.face.tilt_deg, -yaws[index], 4.0, "face: tilt");
         check_near(scan.face.distance_mm, face, 3.0, "face: distance");
         check_near(scan.face.width_mm, 200.0, 12.0, "face: width");
         check_near(scan.width_mm, scan.face.width_mm, 1e-9,
@@ -648,9 +651,9 @@ test_face (void)
         check(S5_POSITION_CENTRE == scan.placement.position, "face: centred");
         /* Centred: the closer side, or the default when it is square */
         check(scan.avoid.side
-                  == ((yaws[i] > 0.0)   ? S5_AVOID_RIGHT
-                      : (yaws[i] < 0.0) ? S5_AVOID_LEFT
-                                        : S5_DEFAULT_AVOID),
+                  == ((yaws[index] > 0.0)   ? S5_AVOID_RIGHT
+                      : (yaws[index] < 0.0) ? S5_AVOID_LEFT
+                                            : S5_DEFAULT_AVOID),
               "face: side");
 
         /* The plan is the square-on one, in the face's frame */
@@ -678,14 +681,14 @@ test_face (void)
     }
 
     /* The angle alone: coarse readings only, no fine scan and no decision */
-    for (i = 0U; i < (sizeof(yaws) / sizeof(yaws[0])); i++)
+    for (index = 0U; index < (sizeof(yaws) / sizeof(yaws[0])); index++)
     {
-        yawed_t yawed = {yaws[i], 100.0, 0.0};
+        yawed_t yawed = {yaws[index], 100.0, 0.0};
 
         check((s5_tilt_scan(&scan, yawed_measure, &yawed))
                   && (scan.face.b_valid),
               "tilt scan: fitted");
-        check_near(scan.face.tilt_deg, -yaws[i], 6.0, "tilt scan: tilt");
+        check_near(scan.face.tilt_deg, -yaws[index], 6.0, "tilt scan: tilt");
         check((0U == scan.fine_count[S5_LEFT])
                   && (0U == scan.fine_count[S5_RIGHT]),
               "tilt scan: no fine points");
@@ -693,9 +696,9 @@ test_face (void)
     }
 
     /* Off centre, tilted or not: pass on the side it reaches less */
-    for (i = 0U; i < 3U; i++)
+    for (index = 0U; index < 3U; index++)
     {
-        yawed_t yawed = {yaws[i], 120.0, 60.0};
+        yawed_t yawed = {yaws[index], 120.0, 60.0};
 
         check((s5_scan_run(&scan, yawed_measure, &yawed))
                   && (scan.face.b_valid),
@@ -764,42 +767,43 @@ test_face (void)
 static s5_point_t
 logged_point (int angle_deg, float64_t range_mm)
 {
-    s5_estimate_t e
+    s5_estimate_t reading
         = {S5_ECHO_NONE, 0.0, 0U, 0U, S5_SAMPLES_PER_POINT, 0.0, 0.0};
 
     if (range_mm >= 0.0)
     {
-        e.status   = S5_ECHO_OK;
-        e.range_mm = range_mm;
-        e.support = e.valid = S5_SAMPLES_PER_POINT;
+        reading.status   = S5_ECHO_OK;
+        reading.range_mm = range_mm;
+        reading.support = reading.valid = S5_SAMPLES_PER_POINT;
     }
 
-    return s5_point_pack(angle_deg, &e, false);
+    return s5_point_pack(angle_deg, &reading, false);
 }
 
 /* Fill a scan's readings from a logged one */
 static void
 face_fill (s5_scan_t * p_scan, const face_scan_t * p_logged)
 {
-    unsigned i;
+    unsigned index;
 
     memset(p_scan, 0, sizeof(*p_scan));
     p_scan->b_valid = true;
 
-    for (i = 0U; i < p_logged->coarse_count; i++)
+    for (index = 0U; index < p_logged->coarse_count; index++)
     {
-        p_scan->coarse[p_scan->coarse_count++] = logged_point(
-            p_logged->p_coarse[i].angle_deg, p_logged->p_coarse[i].range_mm);
+        p_scan->coarse[p_scan->coarse_count++]
+            = logged_point(p_logged->p_coarse[index].angle_deg,
+                           p_logged->p_coarse[index].range_mm);
     }
 
-    for (i = 0U; i < p_logged->out_count; i++)
+    for (index = 0U; index < p_logged->out_count; index++)
     {
-        unsigned side = (p_logged->p_out[i].angle_deg < S5_ANGLE_CENTRE_DEG)
+        unsigned side = (p_logged->p_out[index].angle_deg < S5_ANGLE_CENTRE_DEG)
                             ? (unsigned)S5_LEFT
                             : (unsigned)S5_RIGHT;
 
         p_scan->fine[side][p_scan->fine_count[side]++] = logged_point(
-            p_logged->p_out[i].angle_deg, p_logged->p_out[i].range_mm);
+            p_logged->p_out[index].angle_deg, p_logged->p_out[index].range_mm);
         p_scan->fine_outward[side] = p_scan->fine_count[side];
     }
 }
@@ -823,7 +827,7 @@ test_point_pack (void)
         {20, 4000.0, 3U, 10U, 10U, false}, {160, 20.06, 2U, 3U, 5U, true},
         {45, 399.9, 1U, 6U, 10U, false},   {135, 0.13, 5U, 5U, 10U, true},
     };
-    unsigned i;
+    unsigned index;
     unsigned support;
     unsigned valid;
     unsigned total;
@@ -831,46 +835,50 @@ test_point_pack (void)
 
     check(4U == sizeof(s5_point_t), "point: 32 bits");
 
-    for (i = 0U; i < (sizeof(rows) / sizeof(rows[0])); i++)
+    for (index = 0U; index < (sizeof(rows) / sizeof(rows[0])); index++)
     {
-        s5_estimate_t e = {S5_ECHO_OK,
-                           rows[i].range_mm,
-                           rows[i].support,
-                           rows[i].valid,
-                           rows[i].total,
-                           0.0,
-                           0.0};
-        s5_point_t p = s5_point_pack(rows[i].angle_deg, &e, rows[i].b_object);
+        s5_estimate_t reading = {S5_ECHO_OK,
+                                 rows[index].range_mm,
+                                 rows[index].support,
+                                 rows[index].valid,
+                                 rows[index].total,
+                                 0.0,
+                                 0.0};
+        s5_point_t    point   = s5_point_pack(rows[index].angle_deg, &reading,
+                                              rows[index].b_object);
 
-        check((s5_point_angle(p) == rows[i].angle_deg)
-                  && (s5_point_support(p) == rows[i].support)
-                  && (s5_point_valid(p) == rows[i].valid)
-                  && (s5_point_total(p) == rows[i].total)
-                  && (s5_point_object(p) == rows[i].b_object),
+        check((s5_point_angle(point) == rows[index].angle_deg)
+                  && (s5_point_support(point) == rows[index].support)
+                  && (s5_point_valid(point) == rows[index].valid)
+                  && (s5_point_total(point) == rows[index].total)
+                  && (s5_point_object(point) == rows[index].b_object),
               "point: fields come back");
-        check_near(s5_point_range(p), rows[i].range_mm, 0.125,
+        check_near(s5_point_range(point), rows[index].range_mm, 0.125,
                    "point: range to 0.25 mm");
-        s5_point_set_object(&p);
-        check((s5_point_object(p)) && (s5_point_angle(p) == rows[i].angle_deg)
-                  && (s5_point_support(p) == rows[i].support)
-                  && (s5_point_valid(p) == rows[i].valid)
-                  && (s5_point_total(p) == rows[i].total)
-                  && (fabs(s5_point_range(p) - rows[i].range_mm) <= 0.125),
+        s5_point_set_object(&point);
+        check((s5_point_object(point))
+                  && (s5_point_angle(point) == rows[index].angle_deg)
+                  && (s5_point_support(point) == rows[index].support)
+                  && (s5_point_valid(point) == rows[index].valid)
+                  && (s5_point_total(point) == rows[index].total)
+                  && (fabs(s5_point_range(point) - rows[index].range_mm)
+                      <= 0.125),
               "point: marking it changes nothing else");
     }
 
     /* Out of range is clamped, never wrapped into another field */
     {
-        s5_estimate_t e = {S5_ECHO_OK, 9000.0, 40U, 40U, 10U, 0.0, 0.0};
-        s5_point_t    p = s5_point_pack(300, &e, false);
+        s5_estimate_t reading = {S5_ECHO_OK, 9000.0, 40U, 40U, 10U, 0.0, 0.0};
+        s5_point_t    point   = s5_point_pack(300, &reading, false);
 
-        check((160 == s5_point_angle(p)) && (4000.0 == s5_point_range(p))
-                  && (15U == s5_point_support(p)) && (15U == s5_point_valid(p))
-                  && (!s5_point_object(p)),
-              "point: clamped high");
-        e.range_mm = -5.0;
-        p          = s5_point_pack(-40, &e, false);
-        check((20 == s5_point_angle(p)) && (0.0 == s5_point_range(p)),
+        check(
+            (160 == s5_point_angle(point)) && (4000.0 == s5_point_range(point))
+                && (15U == s5_point_support(point))
+                && (15U == s5_point_valid(point)) && (!s5_point_object(point)),
+            "point: clamped high");
+        reading.range_mm = -5.0;
+        point            = s5_point_pack(-40, &reading, false);
+        check((20 == s5_point_angle(point)) && (0.0 == s5_point_range(point)),
               "point: clamped low");
     }
 
@@ -884,20 +892,24 @@ test_point_pack (void)
             for (support = (valid > 0U) ? 1U : 0U; support <= valid; support++)
             {
                 float64_t     range[S5_MAX_SAMPLES] = {0.0};
-                s5_estimate_t e;
-                s5_point_t    p;
+                s5_estimate_t reading;
+                s5_point_t    point;
 
                 /* "support" agreeing pings, the rest of the echoes far apart */
-                for (i = 0U; i < valid; i++)
+                for (index = 0U; index < valid; index++)
                 {
-                    range[i] = (i < support) ? 200.0
-                                             : 300.0 + (100.0 * (float64_t)i);
+                    range[index] = (index < support)
+                                       ? 200.0
+                                       : 300.0 + (100.0 * (float64_t)index);
                 }
 
-                s5_estimate(range, (uint16_t)((1U << valid) - 1U), total, &e);
-                p = s5_point_pack(90, &e, false);
-                check((e.support == support) && (s5_point_status(p) == e.status)
-                          && (s5_point_usable(p) == s5_estimate_usable(&e)),
+                s5_estimate(range, (uint16_t)((1U << valid) - 1U), total,
+                            &reading);
+                point = s5_point_pack(90, &reading, false);
+                check((reading.support == support)
+                          && (s5_point_status(point) == reading.status)
+                          && (s5_point_usable(point)
+                              == s5_estimate_usable(&reading)),
                       "point: derived status");
                 votes++;
             }
@@ -948,12 +960,13 @@ static void
 test_face_logged (void)
 {
     static s5_scan_t scan;
-    unsigned         i;
+    unsigned         index;
     char             name[64];
 
-    for (i = 0U; i < (sizeof(face_scans) / sizeof(face_scans[0])); i++)
+    for (index = 0U; index < (sizeof(face_scans) / sizeof(face_scans[0]));
+         index++)
     {
-        const face_scan_t * p_logged = &face_scans[i];
+        const face_scan_t * p_logged = &face_scans[index];
 
         face_fill(&scan, p_logged);
         s5_face_fit(&scan, &scan.face);
@@ -997,9 +1010,9 @@ test_face_logged (void)
    task does at line speed.  Returns the path reached. */
 static float64_t
 curve_drive (s5_curve_t * p_curve, float64_t path_mm, float64_t * p_heading_deg,
-             float64_t mm, float64_t deg_per_mm)
+             float64_t distance_mm, float64_t deg_per_mm)
 {
-    float64_t end = path_mm + mm;
+    float64_t end = path_mm + distance_mm;
 
     while (path_mm < end)
     {
@@ -1017,7 +1030,7 @@ test_curve (void)
     static s5_curve_t curve;
     float64_t         path    = 0.0;
     float64_t         heading = 0.0;
-    unsigned          i;
+    unsigned          index;
 
     s5_curve_reset(&curve);
     check(!s5_curve_recent(&curve), "curve: not at the start");
@@ -1027,7 +1040,7 @@ test_curve (void)
                "curve: a straight has no swing");
 
     /* The follower's zigzag: +/- 8 deg every 100 mm */
-    for (i = 0U; i < 20U; i++)
+    for (index = 0U; index < 20U; index++)
     {
         path = curve_drive(&curve, path, &heading, 50.0, 0.16);
         path = curve_drive(&curve, path, &heading, 50.0, -0.16);
@@ -1077,7 +1090,7 @@ test_curve (void)
     /* Standing still does not age the curve or lose samples */
     path = curve_drive(&curve, path, &heading, 150.0, 0.6);
 
-    for (i = 0U; i < 1000U; i++)
+    for (index = 0U; index < 1000U; index++)
     {
         s5_curve_note(&curve, path, heading);
     }
@@ -1106,7 +1119,7 @@ typedef struct
     float64_t range_mm;
 } replay_t;
 
-static const replay_t replay_scan[]
+static const replay_t g_replay_scan[]
     = {{0, 515.0},   {20, 893.0},  {30, 601.0},  {40, 579.0},  {50, 588.0},
        {60, 575.0},  {70, 515.0},  {80, 515.0},  {84, 563.0},  {85, 168.0},
        {89, 163.0},  {90, 159.0},  {100, 121.0}, {106, 125.0}, {107, 111.0},
@@ -1119,23 +1132,24 @@ replay_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
     float64_t  range[5];
     bool       echo[5] = {true, true, true, true, true};
 
-    unsigned i;
+    unsigned index;
     unsigned row = 0U;
 
-    for (i = 0U; i < (sizeof(replay_scan) / sizeof(replay_scan[0])); i++)
+    for (index = 0U; index < (sizeof(g_replay_scan) / sizeof(g_replay_scan[0]));
+         index++)
     {
-        if (replay_scan[i].angle_deg <= angle_deg)
+        if (g_replay_scan[index].angle_deg <= angle_deg)
         {
-            row = i;
+            row = index;
         }
     }
 
     /* The reading straight ahead, taken first, was 172 mm */
-    for (i = 0U; i < 5U; i++)
+    for (index = 0U; index < 5U; index++)
     {
-        range[i] = ((0U == *p_calls) && (90 == angle_deg))
-                       ? 172.0
-                       : replay_scan[row].range_mm;
+        range[index] = ((0U == *p_calls) && (90 == angle_deg))
+                           ? 172.0
+                           : g_replay_scan[row].range_mm;
     }
 
     (*p_calls)++;
@@ -1149,7 +1163,7 @@ test_sloping_surface (void)
     static s5_scan_t scan;
     s5_detour_plan_t plan;
     unsigned         calls = 0U;
-    unsigned         i;
+    unsigned         index;
 
     check((s5_scan_run(&scan, replay_measure, &calls)) && (scan.b_valid),
           "slope: scanned");
@@ -1162,9 +1176,9 @@ test_sloping_surface (void)
           "slope: followed to the sweep limit");
 
     /* every point on the way there is the obstacle */
-    for (i = 0U; i < scan.fine_outward[S5_RIGHT]; i++)
+    for (index = 0U; index < scan.fine_outward[S5_RIGHT]; index++)
     {
-        check(s5_point_object(scan.fine[S5_RIGHT][i]),
+        check(s5_point_object(scan.fine[S5_RIGHT][index]),
               "slope: right walk stays on the face");
     }
 
@@ -1193,13 +1207,13 @@ test_sloping_surface (void)
 
 /* com4_live.log, 5 Nov 2026 15:04, after the L bend and a 27 deg turn to square
    up. Each row holds from that angle upwards. */
-static const replay_t bend_scan[]
+static const replay_t g_bend_scan[]
     = {{0, 1230.0},  {30, 1195.0}, {40, 1163.0}, {48, 1151.0},  {49, 1131.0},
        {50, 181.0},  {51, 168.0},  {60, 162.0},  {70, 158.0},   {80, 145.0},
        {100, 159.0}, {110, 165.0}, {120, 172.0}, {122, 168.0},  {125, 181.0},
        {126, 178.0}, {127, 386.0}, {128, 571.0}, {130, 2238.0}, {140, 585.0},
        {150, 641.0}, {160, 1423.0}};
-static float64_t bend_128_mm;
+static float64_t g_bend_128_mm;
 
 static bool
 bend_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
@@ -1207,22 +1221,24 @@ bend_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
     float64_t range[5];
     bool      echo[5] = {true, true, true, true, true};
 
-    unsigned i;
+    unsigned index;
     unsigned row = 0U;
 
     (void)p_context;
 
-    for (i = 0U; i < (sizeof(bend_scan) / sizeof(bend_scan[0])); i++)
+    for (index = 0U; index < (sizeof(g_bend_scan) / sizeof(g_bend_scan[0]));
+         index++)
     {
-        if (bend_scan[i].angle_deg <= angle_deg)
+        if (g_bend_scan[index].angle_deg <= angle_deg)
         {
-            row = i;
+            row = index;
         }
     }
 
-    for (i = 0U; i < 5U; i++)
+    for (index = 0U; index < 5U; index++)
     {
-        range[i] = (128 == angle_deg) ? bend_128_mm : bend_scan[row].range_mm;
+        range[index]
+            = (128 == angle_deg) ? g_bend_128_mm : g_bend_scan[row].range_mm;
     }
 
     estimate(range, echo, 5U, p_estimate);
@@ -1234,7 +1250,7 @@ test_bend_scan (void)
 {
     static s5_scan_t scan;
 
-    bend_128_mm = 571.0;
+    g_bend_128_mm = 571.0;
     check((s5_scan_run(&scan, bend_measure, NULL)) && (scan.face.b_valid),
           "bend: scanned");
     check(S5_POSITION_CENTRE == scan.placement.position, "bend: centred");
@@ -1246,7 +1262,7 @@ test_bend_scan (void)
           "bend: passes on the side that was closer");
 
     /* The next reading agrees: something is really there */
-    bend_128_mm = 390.0;
+    g_bend_128_mm = 390.0;
     check((s5_scan_run(&scan, bend_measure, NULL)) && (scan.face.b_valid),
           "bend: real object scanned");
     check(!scan.avoid.b_room[S5_RIGHT],
@@ -1365,17 +1381,17 @@ static bool
 simulate_pass (const s5_detour_plan_t * p_plan, float64_t depth_mm,
                unsigned miss_every, float64_t far_mm, s5_pass_t * p_pass)
 {
-    float64_t look = (float64_t)S5_SIDE_LOOK_DEG * DEG_TO_RAD;
-    float64_t x    = p_plan->out_x_mm;
-    float64_t y    = p_plan->shift_mm;
-    float64_t gap  = fabs(y - p_plan->edge_mm);
+    float64_t look  = (float64_t)S5_SIDE_LOOK_DEG * DEG_TO_RAD;
+    float64_t pos_x = p_plan->out_x_mm;
+    float64_t pos_y = p_plan->shift_mm;
+    float64_t gap   = fabs(pos_y - p_plan->edge_mm);
     unsigned  count;
 
     s5_pass_init(p_pass, p_plan);
 
-    for (count = 1U; x <= (p_plan->out_x_mm + S5_PASS_MAX_MM); count++)
+    for (count = 1U; pos_x <= (p_plan->out_x_mm + S5_PASS_MAX_MM); count++)
     {
-        float64_t crossing = x + S5_SERVO_AHEAD_MM + (gap / tan(look));
+        float64_t crossing = pos_x + S5_SERVO_AHEAD_MM + (gap / tan(look));
         bool      b_box    = (crossing >= p_plan->face_mm)
                              && (crossing <= (p_plan->face_mm + depth_mm));
         bool      b_echo
@@ -1389,12 +1405,12 @@ simulate_pass (const s5_detour_plan_t * p_plan, float64_t depth_mm,
             range  = ((gap + far_mm) / sin(look)) - S5_SENSOR_OFFSET_MM;
         }
 
-        if (s5_pass_observe(p_pass, p_plan, x, y, b_echo, range))
+        if (s5_pass_observe(p_pass, p_plan, pos_x, pos_y, b_echo, range))
         {
             return true;
         }
 
-        x += S5_PASS_STEP_MM;
+        pos_x += S5_PASS_STEP_MM;
     }
 
     return false;
@@ -1487,7 +1503,7 @@ test_detour_retry (void)
     s5_detour_plan_t shallow;
     s5_detour_plan_t other;
     s5_avoid_side_t  side;
-    float64_t        x;
+    float64_t        pos_x;
     float64_t        expected;
     float64_t        echo;
     float64_t        needed;
@@ -1539,12 +1555,12 @@ test_detour_retry (void)
     /* Turned out by the steep plan, the look 30 deg back towards the box hears
        its near corner.  The guard alone puts that echo in the path (the
        abandoned run). */
-    x    = -steep.backup_mm;
-    look = S5_ANGLE_CENTRE_DEG
-           + ((S5_AVOID_LEFT == side) ? S5_GUARD_SWEEP_DEG
-                                      : -S5_GUARD_SWEEP_DEG);
-    expected
-        = s5_obstacle_range(&steep, x, steep.start_y_mm, steep.turn_deg, look);
+    pos_x    = -steep.backup_mm;
+    look     = S5_ANGLE_CENTRE_DEG
+               + ((S5_AVOID_LEFT == side) ? S5_GUARD_SWEEP_DEG
+                                          : -S5_GUARD_SWEEP_DEG);
+    expected = s5_obstacle_range(&steep, pos_x, steep.start_y_mm,
+                                 steep.turn_deg, look);
     check(isfinite(expected), "retry: the box is in that look's beam");
     echo   = expected - S5_SENSOR_OFFSET_MM;
     needed = steep.diagonal_mm + S5_DIAGONAL_EXTRA_MM + S5_FRONT_MM
@@ -1557,24 +1573,24 @@ test_detour_retry (void)
                          * DEG_TO_RAD))
                   <= (S5_ROBOT_HALF_WIDTH_MM + S5_PASS_MARGIN_MM)),
           "retry: the guard alone would block on it");
-    check(s5_echo_on_obstacle(&steep, x, steep.start_y_mm, steep.turn_deg, look,
-                              echo),
+    check(s5_echo_on_obstacle(&steep, pos_x, steep.start_y_mm, steep.turn_deg,
+                              look, echo),
           "retry: that echo is the box");
-    check(s5_echo_on_obstacle(&steep, x, steep.start_y_mm, steep.turn_deg, look,
-                              echo + S5_KNOWN_RANGE_TOL_MM - 1.0),
+    check(s5_echo_on_obstacle(&steep, pos_x, steep.start_y_mm, steep.turn_deg,
+                              look, echo + S5_KNOWN_RANGE_TOL_MM - 1.0),
           "retry: within the tolerance");
-    check(!s5_echo_on_obstacle(&steep, x, steep.start_y_mm, steep.turn_deg,
+    check(!s5_echo_on_obstacle(&steep, pos_x, steep.start_y_mm, steep.turn_deg,
                                look, echo - S5_KNOWN_RANGE_TOL_MM - 20.0),
           "retry: nearer than the box is something else");
-    check(!s5_echo_on_obstacle(&steep, x, steep.start_y_mm, steep.turn_deg,
+    check(!s5_echo_on_obstacle(&steep, pos_x, steep.start_y_mm, steep.turn_deg,
                                look, echo + S5_KNOWN_RANGE_TOL_MM + 20.0),
           "retry: further than the box is something else");
     /* Straight along the way out the box is not in the beam: nothing there is
      * excused */
-    check(!isfinite(s5_obstacle_range(&steep, x, steep.start_y_mm,
+    check(!isfinite(s5_obstacle_range(&steep, pos_x, steep.start_y_mm,
                                       steep.turn_deg, S5_ANGLE_CENTRE_DEG)),
           "retry: the box is not ahead on the way out");
-    check(!s5_echo_on_obstacle(&steep, x, steep.start_y_mm, steep.turn_deg,
+    check(!s5_echo_on_obstacle(&steep, pos_x, steep.start_y_mm, steep.turn_deg,
                                S5_ANGLE_CENTRE_DEG, echo),
           "retry: an echo ahead still blocks");
     /* Before turning, straight ahead is the face itself */
@@ -1583,7 +1599,7 @@ test_detour_retry (void)
                steep.face_mm - S5_SERVO_AHEAD_MM, 1e-6,
                "retry: the face straight ahead");
     steep.b_ok = false;
-    check(!s5_echo_on_obstacle(&steep, x, steep.start_y_mm, steep.turn_deg,
+    check(!s5_echo_on_obstacle(&steep, pos_x, steep.start_y_mm, steep.turn_deg,
                                look, echo),
           "retry: no plan, nothing is known");
     printf("ok    %-34s steep %+5.1f deg back %3.0f, shallow %+5.1f deg back "
@@ -1619,8 +1635,8 @@ main (void)
     test_detour_plan();
     test_detour_pass();
     test_detour_retry();
-    printf("%u/%u checks passed\n", checks - failures, checks);
-    return (0U == failures) ? 0 : 1;
+    printf("%u/%u checks passed\n", g_checks - g_failures, g_checks);
+    return (0U == g_failures) ? 0 : 1;
 }
 
 /*** end of file ***/

@@ -61,7 +61,7 @@ typedef struct
 void mag_cal_begin(mag_cal_acc_t * p_acc);
 /* rel_heading_ddeg: encoder heading since the spin started, 0.1 deg, any sign.
  */
-void mag_cal_add(mag_cal_acc_t * p_acc, int16_t x, int16_t y,
+void mag_cal_add(mag_cal_acc_t * p_acc, int16_t axis_x, int16_t axis_y,
                  int32_t rel_heading_ddeg);
 /* Fills *p_result (also on FAIL, for printing) and returns MAG_CAL_*. */
 uint8_t      mag_cal_finish(mag_cal_acc_t const * p_acc,
@@ -70,10 +70,10 @@ char const * mag_cal_status_name(uint8_t status);
 
 /* Horizontal field magnitude, counts: corrected when calibrated, raw otherwise.
  */
-uint16_t mag_field(mag_cal_t const * p_cal, int16_t x, int16_t y);
+uint16_t mag_field(mag_cal_t const * p_cal, int16_t axis_x, int16_t axis_y);
 /* Calibrated heading 0..3599 (0.1 deg, + = left). False when uncalibrated or
  * the field is outside +/-20 % of the reference (steel nearby). */
-bool mag_heading_ddeg(mag_cal_t const * p_cal, int16_t x, int16_t y,
+bool mag_heading_ddeg(mag_cal_t const * p_cal, int16_t axis_x, int16_t axis_y,
                       int16_t * p_heading_ddeg);
 /* Continue an unwrapped heading with a new 0..3599 reading (step < 180 deg). */
 int32_t mag_unwrap(int32_t previous_ddeg, int16_t heading_ddeg);

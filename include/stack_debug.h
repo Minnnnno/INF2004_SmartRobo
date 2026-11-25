@@ -14,7 +14,7 @@ typedef struct
 
 /* Diagnostic snapshot of a public task's painted stack (single-core port).
  * E_NOEXS: no such task; E_SYS: corrupted stack metadata. No console I/O. */
-ER knl_task_stack_debug(ID id, stack_debug_t * info);
+ER knl_task_stack_debug(ID task_id, stack_debug_t * p_info);
 #endif
 
 /*** end of file ***/

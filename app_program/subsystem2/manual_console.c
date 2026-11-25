@@ -43,48 +43,54 @@ count_magnitude (uint32_t raw)
 }
 
 static void
-print_counts (const encoder_sample_t * sample)
+print_counts (const encoder_sample_t * p_sample)
 {
     /* Keep modulo uint32 counters internally. Explicit sign/magnitude
      * formatting also handles INT32_MIN without the legacy formatter's signed
      * negation. */
     printf("counts=%s%lu,%s%lu raw_counts=%lu,%lu invalid=%lu,%lu\n",
-           count_sign(sample->count[0]), count_magnitude(sample->count[0]),
-           count_sign(sample->count[1]), count_magnitude(sample->count[1]),
-           (uint32_t)sample->count[0], (uint32_t)sample->count[1],
-           (uint32_t)sample->invalid[0], (uint32_t)sample->invalid[1]);
+           count_sign(p_sample->count[0]), count_magnitude(p_sample->count[0]),
+           count_sign(p_sample->count[1]), count_magnitude(p_sample->count[1]),
+           (uint32_t)p_sample->count[0], (uint32_t)p_sample->count[1],
+           (uint32_t)p_sample->invalid[0], (uint32_t)p_sample->invalid[1]);
 }
 
 static void
 encoder_diagnostics (void)
 {
-    encoder_diagnostics_t d;
+    encoder_diagnostics_t diagnostics;
     unsigned              wheel;
 
-    motion_hal_encoder_diagnostics(&d);
+    motion_hal_encoder_diagnostics(&diagnostics);
     printf("firmware=%s built=%s %s backend=rp2040-registers "
            "motors_inhibited=%u\n",
            (const UB *)ROBO_ENCODER_BUILD_ID, (const UB *)__DATE__,
-           (const UB *)__TIME__, (unsigned)d.motors_inhibited);
+           (const UB *)__TIME__, (unsigned)diagnostics.motors_inhibited);
     printf("enc_init=%u irq_registered=%u nvic13_enabled=%u\n",
-           (unsigned)d.initialised, (unsigned)d.irq_registered,
-           (unsigned)d.nvic_enabled);
+           (unsigned)diagnostics.initialised,
+           (unsigned)diagnostics.irq_registered,
+           (unsigned)diagnostics.nvic_enabled);
 
     for (wheel = 0; wheel < 2U; ++wheel)
     {
         printf(
             "%s A=GP%u level=%u edges=%lu irq_mask=%u func=%u B=GP%u level=%u "
             "edges=%lu irq_mask=%u func=%u prev_AB=%u\n",
-            (const UB *)((0U == wheel) ? "left" : "right"), d.pins[wheel][0],
-            (unsigned)((d.levels >> d.pins[wheel][0]) & 1U),
-            (uint32_t)d.edges[wheel][0], (unsigned)d.irq_events[wheel][0],
-            (unsigned)d.function[wheel][0], d.pins[wheel][1],
-            (unsigned)((d.levels >> d.pins[wheel][1]) & 1U),
-            (uint32_t)d.edges[wheel][1], (unsigned)d.irq_events[wheel][1],
-            (unsigned)d.function[wheel][1], (unsigned)d.previous_ab[wheel]);
+            (const UB *)((0U == wheel) ? "left" : "right"),
+            diagnostics.pins[wheel][0],
+            (unsigned)((diagnostics.levels >> diagnostics.pins[wheel][0]) & 1U),
+            (uint32_t)diagnostics.edges[wheel][0],
+            (unsigned)diagnostics.irq_events[wheel][0],
+            (unsigned)diagnostics.function[wheel][0],
+            diagnostics.pins[wheel][1],
+            (unsigned)((diagnostics.levels >> diagnostics.pins[wheel][1]) & 1U),
+            (uint32_t)diagnostics.edges[wheel][1],
+            (unsigned)diagnostics.irq_events[wheel][1],
+            (unsigned)diagnostics.function[wheel][1],
+            (unsigned)diagnostics.previous_ab[wheel]);
     }
 
-    print_counts(&d.sample);
+    print_counts(&diagnostics.sample);
     puts("edges count observed rising/falling latches; fast repeated edges may "
          "coalesce.");
 }
@@ -122,9 +128,9 @@ usb_diagnostics (void)
 static void
 button_diagnostics (void)
 {
-    motor_test_button_diag_t d;
+    motor_test_button_diag_t delta;
 
-    if (!motor_test_get_buttons(&d))
+    if (!motor_test_get_buttons(&delta))
     {
         return;
     }
@@ -134,14 +140,14 @@ button_diagnostics (void)
            (const UB *)ROBO_ENCODER_BUILD_ID);
     printf("GP20=%u GP21=%u pressed_level=0 ready=%u armed=%u active=%u "
            "polls=%lu stop_actions=%lu\n",
-           (unsigned)d.start_high, (unsigned)d.stop_high, (unsigned)d.ready,
-           (unsigned)d.armed, (unsigned)d.active, (uint32_t)d.polls,
-           (uint32_t)d.stop_actions);
+           (unsigned)delta.start_high, (unsigned)delta.stop_high,
+           (unsigned)delta.ready, (unsigned)delta.armed, (unsigned)delta.active,
+           (uint32_t)delta.polls, (uint32_t)delta.stop_actions);
     printf("button_irq_registered=%u button_irq_events=%lu cutoff_ms=2000\n",
-           (unsigned)d.irq_registered, (uint32_t)d.irq_events);
+           (unsigned)delta.irq_registered, (uint32_t)delta.irq_events);
     printf("cutoff_irq_count=%lu polled_cutoffs=%lu remaining_ms=%lu\n",
-           (uint32_t)d.cutoff_irq_count, (uint32_t)d.polled_cutoffs,
-           (uint32_t)d.remaining_ms);
+           (uint32_t)delta.cutoff_irq_count, (uint32_t)delta.polled_cutoffs,
+           (uint32_t)delta.remaining_ms);
 }
 #endif
 
@@ -153,31 +159,31 @@ manual_console (void)
     unsigned used = 0U;
 #if !defined(ROBO_ENCODER_DIAGNOSTICS_ONLY) && !defined(ROBO_SAFE_MOTOR_TEST) \
     && !defined(ROBO_ANGLE_TEST)
-    uint32_t  id       = 1U;
-    bool      armed    = false;
-    float64_t armed_at = 0.0;
+    uint32_t  command_id = 1U;
+    bool      b_armed    = false;
+    float64_t armed_at   = 0.0;
 #else
-    bool armed = false;
+    bool b_armed = false;
 #endif
     motion_hal_console_init();
 #ifdef ROBO_ANGLE_TEST
-    bool          angle_shutdown = false;
-    bool          angle_discard  = false;
-    angle_state_t reported       = ANGLE_IDLE;
+    bool          b_angle_shutdown = false;
+    bool          b_angle_discard  = false;
+    angle_state_t reported         = ANGLE_IDLE;
 
     printf("firmware=%s angle_test_ready=%u production_inhibited=1 "
            "max_output_percent=25 timeout_ms=8000\n",
            (const UB *)ROBO_ENCODER_BUILD_ID, (unsigned)angle_test_init());
 #endif
 #ifdef ROBO_SAFE_MOTOR_TEST
-    bool test_shutdown = false;
-    bool discard_line  = false;
-    bool test_ready    = motor_test_init();
+    bool b_test_shutdown = false;
+    bool b_discard_line  = false;
+    bool b_test_ready    = motor_test_init();
 
     printf("firmware=%s safe_motor_test_ready=%u production_inhibited=1 "
            "single_output_percent=25 paired_left_percent=24.9 "
            "paired_right_percent=25 serial_max_ms=1000\n",
-           (const UB *)ROBO_ENCODER_BUILD_ID, (unsigned)test_ready);
+           (const UB *)ROBO_ENCODER_BUILD_ID, (unsigned)b_test_ready);
 #ifdef ROBO_BATTERY_FORWARD_TEST
     puts("button_test_ready start_stop=GP20 extra_stop=GP21 active_low=1 "
          "cutoff_ms=2000 ir_enabled=0 automatic_start=0");
@@ -236,17 +242,17 @@ manual_console (void)
 
             if (-2 == input)
             {
-                used  = 0U;
-                armed = false;
+                used    = 0U;
+                b_armed = false;
                 motion_stop();
 #ifdef ROBO_ANGLE_TEST
                 angle_test_stop();
-                angle_discard = true;
+                b_angle_discard = true;
 #endif
 #ifdef ROBO_SAFE_MOTOR_TEST
                 line_forward_pause();
                 motor_test_stop();
-                discard_line = true;
+                b_discard_line = true;
 #endif
                 continue;
             }
@@ -256,22 +262,22 @@ manual_console (void)
                 break;
             }
 #ifdef ROBO_ANGLE_TEST
-            if (angle_discard)
+            if (b_angle_discard)
             {
                 if (('\n' == input) || ('\r' == input))
                 {
-                    angle_discard = false;
+                    b_angle_discard = false;
                 }
 
                 continue;
             }
 #endif
 #ifdef ROBO_SAFE_MOTOR_TEST
-            if (discard_line)
+            if (b_discard_line)
             {
                 if (('\n' == input) || ('\r' == input))
                 {
-                    discard_line = false;
+                    b_discard_line = false;
                 }
 
                 continue;
@@ -348,7 +354,7 @@ manual_console (void)
                 }
                 else if (0 == strcmp(line, "ARM"))
                 {
-                    armed    = true;
+                    b_armed  = true;
                     armed_at = motion_hal_time();
                     puts("One command armed for 5 seconds; configuration gates "
                          "still apply.");
@@ -366,26 +372,26 @@ manual_console (void)
                     puts("motors_stopped=1 ir_paused_until_reboot=1");
 #endif
                     motion_stop();
-                    armed = false;
+                    b_armed = false;
                 }
                 else if (0 == strcmp(line, "shutdown"))
                 {
 #ifdef ROBO_ANGLE_TEST
                     angle_test_stop();
-                    angle_shutdown = true;
+                    b_angle_shutdown = true;
 #endif
 #ifdef ROBO_SAFE_MOTOR_TEST
                     motor_test_shutdown();
-                    test_shutdown = true;
+                    b_test_shutdown = true;
 #endif
                     motion_request_shutdown();
-                    armed = false;
+                    b_armed = false;
 #ifdef ROBO_ANGLE_TEST
                 }
                 else if ((0 == strcmp(line, "turn_left_90"))
                          || (0 == strcmp(line, "turn_right_90")))
                 {
-                    if ((!angle_shutdown)
+                    if ((!b_angle_shutdown)
                         && (angle_test_start(
                             (0 == strcmp(line, "turn_left_90")) ? 1 : -1)))
                     {
@@ -408,7 +414,7 @@ manual_console (void)
                          || (0 == strcmp(line, "backward")))
                 {
                     unsigned wheel     = ('l' == line[0]) ? 0U : 1U;
-                    bool     both      = (0 == strcmp(line, "forward"))
+                    bool     b_both    = (0 == strcmp(line, "forward"))
                                          || (0 == strcmp(line, "backward"));
                     int      direction = ((NULL != strstr(line, "reverse"))
                                           || (0 == strcmp(line, "backward")))
@@ -419,11 +425,11 @@ manual_console (void)
                      * movement. */
                     line_forward_pause();
 
-                    if ((!test_shutdown)
-                        && (both ? motor_test_start_pair(direction)
-                                 : motor_test_start(wheel, direction)))
+                    if ((!b_test_shutdown)
+                        && (b_both ? motor_test_start_pair(direction)
+                                   : motor_test_start(wheel, direction)))
                     {
-                        if (both)
+                        if (b_both)
                         {
                             puts("motor_test_started left_output_percent=24.9 "
                                  "right_output_percent=25 cutoff_ms=1000");
@@ -443,43 +449,43 @@ manual_console (void)
 #if !defined(ROBO_ENCODER_DIAGNOSTICS_ONLY) && !defined(ROBO_SAFE_MOTOR_TEST) \
     && !defined(ROBO_ANGLE_TEST)
                 }
-                else if (armed && ((motion_hal_time() - armed_at) <= 5.0))
+                else if (b_armed && ((motion_hal_time() - armed_at) <= 5.0))
                 {
                     motion_result_t result = R_INVALID;
 
-                    armed = false;
+                    b_armed = false;
 
                     if (0 == strcmp(line, "left"))
                     {
-                        result = motion_manual_output(id++, 0.10, 0.0);
+                        result = motion_manual_output(command_id++, 0.10, 0.0);
                     }
                     else if (0 == strcmp(line, "right"))
                     {
-                        result = motion_manual_output(id++, 0.0, 0.10);
+                        result = motion_manual_output(command_id++, 0.0, 0.10);
                     }
                     else if (0 == strcmp(line, "left_reverse"))
                     {
-                        result = motion_manual_output(id++, -0.10, 0.0);
+                        result = motion_manual_output(command_id++, -0.10, 0.0);
                     }
                     else if (0 == strcmp(line, "right_reverse"))
                     {
-                        result = motion_manual_output(id++, 0.0, -0.10);
+                        result = motion_manual_output(command_id++, 0.0, -0.10);
                     }
                     else if (0 == strcmp(line, "forward"))
                     {
-                        result = motion_move_forward(id++, 0.10);
+                        result = motion_move_forward(command_id++, 0.10);
                     }
                     else if (0 == strcmp(line, "backward"))
                     {
-                        result = motion_move_backward(id++, 0.10);
+                        result = motion_move_backward(command_id++, 0.10);
                     }
                     else if (0 == strcmp(line, "turn_left"))
                     {
-                        result = motion_turn_left(id++, 1.57079632679);
+                        result = motion_turn_left(command_id++, 1.57079632679);
                     }
                     else if (0 == strcmp(line, "turn_right"))
                     {
-                        result = motion_turn_right(id++, 1.57079632679);
+                        result = motion_turn_right(command_id++, 1.57079632679);
                     }
                     else if (0 == strcmp(line, "release_checked"))
                     {
@@ -526,16 +532,16 @@ manual_console (void)
             }
             else
             {
-                used  = 0U;
-                armed = false;
+                used    = 0U;
+                b_armed = false;
 #ifdef ROBO_ANGLE_TEST
                 angle_test_stop();
-                angle_discard = true;
+                b_angle_discard = true;
 #endif
 #ifdef ROBO_SAFE_MOTOR_TEST
                 line_forward_pause();
                 motor_test_stop();
-                discard_line = true;
+                b_discard_line = true;
 #endif
             }
         }

@@ -15,7 +15,7 @@ typedef struct
     float32_t divider;
 } pwm_config;
 
-bool board_gpio_irq_register(uint32_t mask, void (*handler)(void));
+bool board_gpio_irq_register(uint32_t mask, void (*p_handler)(void));
 static inline uint32_t
 save_and_disable_interrupts (void)
 {
@@ -44,15 +44,15 @@ gpio_init (unsigned pin)
 }
 
 static inline void
-gpio_put (unsigned pin, bool high)
+gpio_put (unsigned pin, bool b_high)
 {
-    out_w(high ? GPIO_OUT_SET : GPIO_OUT_CLR, 1UL << pin);
+    out_w(b_high ? GPIO_OUT_SET : GPIO_OUT_CLR, 1UL << pin);
 }
 
 static inline void
-gpio_set_dir (unsigned pin, bool output)
+gpio_set_dir (unsigned pin, bool b_output)
 {
-    out_w(output ? GPIO_OE_SET : GPIO_OE_CLR, 1UL << pin);
+    out_w(b_output ? GPIO_OE_SET : GPIO_OE_CLR, 1UL << pin);
 }
 
 static inline bool
@@ -101,13 +101,13 @@ gpio_acknowledge_irq (unsigned pin, uint32_t events)
 }
 
 static inline void
-gpio_set_irq_enabled (unsigned pin, uint32_t events, bool enable)
+gpio_set_irq_enabled (unsigned pin, uint32_t events, bool b_enable)
 {
     UW bits = events << ((pin % 8U) * 4U);
 
     /* Caller clears old latches before seeding quadrature state. Do not discard
      * an edge that arrives between that sample and interrupt enable. */
-    if (enable)
+    if (b_enable)
     {
         set_w(irq_reg(pin, 0x100U), bits);
     }
@@ -126,46 +126,46 @@ pwm_gpio_to_slice_num (unsigned pin)
 static inline pwm_config
 pwm_get_default_config (void)
 {
-    pwm_config p = {4095U, 1.0f};
-    return p;
+    pwm_config config = {4095U, 1.0f};
+    return config;
 }
 
 static inline void
-pwm_config_set_wrap (pwm_config * p, uint16_t wrap)
+pwm_config_set_wrap (pwm_config * p_config, uint16_t wrap)
 {
-    p->wrap = wrap;
+    p_config->wrap = wrap;
 }
 
 static inline void
-pwm_config_set_clkdiv (pwm_config * p, float32_t divider)
+pwm_config_set_clkdiv (pwm_config * p_config, float32_t divider)
 {
-    p->divider = divider;
+    p_config->divider = divider;
 }
 
 static inline void
-pwm_init (unsigned slice, const pwm_config * p, bool enable)
+pwm_init (unsigned slice, const pwm_config * p_config, bool b_enable)
 {
     UW base = PWM_BASE + (slice * 0x14U);
 
     clr_w(RESETS_RESET, RESETS_RESET_PWM);
     out_w(base, 0U);
-    out_w(base + 4U, (UW)(p->divider * 16.0f));
+    out_w(base + 4U, (UW)(p_config->divider * 16.0f));
     out_w(base + 8U, 0U);
     out_w(base + 12U, 0U);
-    out_w(base + 16U, p->wrap);
-    out_w(base, enable ? 1U : 0U);
+    out_w(base + 16U, p_config->wrap);
+    out_w(base, b_enable ? 1U : 0U);
 }
 
 static inline void
-pwm_set_both_levels (unsigned slice, uint16_t a, uint16_t b)
+pwm_set_both_levels (unsigned slice, uint16_t level_a, uint16_t level_b)
 {
-    out_w(PWM_BASE + (slice * 0x14U) + 12U, ((UW)b << 16U) | a);
+    out_w(PWM_BASE + (slice * 0x14U) + 12U, ((UW)level_b << 16U) | level_a);
 }
 
 static inline void
-pwm_set_enabled (unsigned slice, bool enabled)
+pwm_set_enabled (unsigned slice, bool b_enabled)
 {
-    out_w(PWM_BASE + (slice * 0x14U), enabled ? 1U : 0U);
+    out_w(PWM_BASE + (slice * 0x14U), b_enabled ? 1U : 0U);
 }
 
 static inline uint64_t

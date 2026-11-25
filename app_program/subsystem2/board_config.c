@@ -3,10 +3,10 @@
 #include "board_config.h"
 #include <math.h>
 
-const unsigned motor_pins[2][2] = {{8U, 9U}, {10U, 11U}};
+const unsigned g_motor_pins[2][2] = {{8U, 9U}, {10U, 11U}};
 /* Encoder connector pin 2 = A, pin 3 = B; pin 1 = GND, pin 4 = 3V3.
  * Rows are left/right; columns are A/B. Values below are Pico GPIO numbers. */
-const unsigned encoder_pins[2][2] = {
+const unsigned g_encoder_pins[2][2] = {
     {BOARD_ENC_L_A, BOARD_ENC_L_B}, /* M1: ENC_L_A -> GP2; ENC_L_B -> GP3 */
     {BOARD_ENC_R_A, BOARD_ENC_R_B}  /* M2: ENC_R_A -> GP4; ENC_R_B -> GP5 */
 };
@@ -14,37 +14,37 @@ const unsigned encoder_pins[2][2] = {
 bool
 board_pins_valid (void)
 {
-    unsigned       i;
-    unsigned       j;
-    const unsigned enc[] = {encoder_pins[0][0], encoder_pins[0][1],
-                            encoder_pins[1][0], encoder_pins[1][1]};
+    unsigned       index;
+    unsigned       other;
+    const unsigned enc[] = {g_encoder_pins[0][0], g_encoder_pins[0][1],
+                            g_encoder_pins[1][0], g_encoder_pins[1][1]};
 
-    if ((8U != motor_pins[0][0]) || (9U != motor_pins[0][1])
-        || (10U != motor_pins[1][0]) || (11U != motor_pins[1][1]))
+    if ((8U != g_motor_pins[0][0]) || (9U != g_motor_pins[0][1])
+        || (10U != g_motor_pins[1][0]) || (11U != g_motor_pins[1][1]))
     {
         return false;
     }
 
-    for (i = 0; i < 4U; ++i)
+    for (index = 0; index < 4U; ++index)
     {
-        if (enc[i] > 29U)
+        if (enc[index] > 29U)
         {
             return false;
         }
 
-        if ((enc[i] < 2U) || (enc[i] > 5U))
+        if ((enc[index] < 2U) || (enc[index] > 5U))
         {
             return false;
         }
 
-        if ((BOARD_I2C_SDA == enc[i]) || (BOARD_I2C_SCL == enc[i]))
+        if ((BOARD_I2C_SDA == enc[index]) || (BOARD_I2C_SCL == enc[index]))
         {
             return false;
         }
 
-        for (j = 0; j < i; ++j)
+        for (other = 0; other < index; ++other)
         {
-            if (enc[i] == enc[j])
+            if (enc[index] == enc[other])
             {
                 return false;
             }
@@ -125,30 +125,30 @@ board_motion_config (void)
 }
 
 bool
-motion_config_valid (const motion_config_t * c)
+motion_config_valid (const motion_config_t * p_config)
 {
     unsigned        wheel;
-    const float64_t positive[] = {c->track,
-                                  c->max_speed,
-                                  c->acceleration,
-                                  c->max_output,
-                                  c->period,
-                                  c->max_dt,
-                                  c->distance_tolerance,
-                                  c->angle_tolerance,
-                                  c->stopped_speed,
-                                  c->settle_time,
-                                  c->startup_grace,
-                                  c->feedback_timeout,
-                                  c->stop_timeout,
-                                  c->setup_timeout,
-                                  c->command_lifetime,
-                                  c->movement_timeout,
-                                  c->max_distance,
-                                  c->max_angle,
-                                  c->reversal_time,
-                                  c->manual_limit,
-                                  c->manual_timeout};
+    const float64_t positive[] = {p_config->track,
+                                  p_config->max_speed,
+                                  p_config->acceleration,
+                                  p_config->max_output,
+                                  p_config->period,
+                                  p_config->max_dt,
+                                  p_config->distance_tolerance,
+                                  p_config->angle_tolerance,
+                                  p_config->stopped_speed,
+                                  p_config->settle_time,
+                                  p_config->startup_grace,
+                                  p_config->feedback_timeout,
+                                  p_config->stop_timeout,
+                                  p_config->setup_timeout,
+                                  p_config->command_lifetime,
+                                  p_config->movement_timeout,
+                                  p_config->max_distance,
+                                  p_config->max_angle,
+                                  p_config->reversal_time,
+                                  p_config->manual_limit,
+                                  p_config->manual_timeout};
 
     for (wheel = 0; wheel < (sizeof(positive) / sizeof(positive[0])); ++wheel)
     {
@@ -160,31 +160,41 @@ motion_config_valid (const motion_config_t * c)
 
     for (wheel = 0; wheel < 2U; ++wheel)
     {
-        const pid_config_t * p = &c->pid[wheel];
+        const pid_config_t * p_pid_config = &p_config->pid[wheel];
 
-        if ((!isfinite(c->counts_per_rev[wheel]))
-            || (c->counts_per_rev[wheel] < 1.0)
-            || (!isfinite(c->diameter[wheel])) || (c->diameter[wheel] <= 0.0)
-            || ((1 != c->motor_sign[wheel]) && (-1 != c->motor_sign[wheel]))
-            || ((1 != c->encoder_sign[wheel]) && (-1 != c->encoder_sign[wheel]))
-            || (!isfinite(c->breakaway[wheel])) || (c->breakaway[wheel] < 0.0)
-            || (c->breakaway[wheel] > c->max_output) || (!isfinite(p->kp))
-            || (!isfinite(p->ki)) || (!isfinite(p->kd))
-            || (!isfinite(p->derivative_tau)) || (p->kp < 0.0) || (p->ki < 0.0)
-            || (p->kd < 0.0) || (p->derivative_tau < 0.0))
+        if ((!isfinite(p_config->counts_per_rev[wheel]))
+            || (p_config->counts_per_rev[wheel] < 1.0)
+            || (!isfinite(p_config->diameter[wheel]))
+            || (p_config->diameter[wheel] <= 0.0)
+            || ((1 != p_config->motor_sign[wheel])
+                && (-1 != p_config->motor_sign[wheel]))
+            || ((1 != p_config->encoder_sign[wheel])
+                && (-1 != p_config->encoder_sign[wheel]))
+            || (!isfinite(p_config->breakaway[wheel]))
+            || (p_config->breakaway[wheel] < 0.0)
+            || (p_config->breakaway[wheel] > p_config->max_output)
+            || (!isfinite(p_pid_config->kp)) || (!isfinite(p_pid_config->ki))
+            || (!isfinite(p_pid_config->kd))
+            || (!isfinite(p_pid_config->derivative_tau))
+            || (p_pid_config->kp < 0.0) || (p_pid_config->ki < 0.0)
+            || (p_pid_config->kd < 0.0) || (p_pid_config->derivative_tau < 0.0))
         {
             return false;
         }
     }
 
-    return (c->hardware_confirmed) && (c->max_output <= 1.0)
-           && (c->manual_limit <= c->max_output)
-           && (c->manual_timeout <= c->movement_timeout)
-           && (c->period <= c->max_dt) && (c->settle_time < c->stop_timeout)
-           && (c->stopped_speed < c->max_speed) && (c->pwm_hz >= 1000U)
-           && (c->pwm_hz <= 20000U) && (isfinite(c->straight_gain))
-           && (c->straight_gain >= 0.0) && (isfinite(c->min_goal_speed))
-           && (c->min_goal_speed >= 0.0) && (c->min_goal_speed < c->max_speed);
+    return (p_config->hardware_confirmed) && (p_config->max_output <= 1.0)
+           && (p_config->manual_limit <= p_config->max_output)
+           && (p_config->manual_timeout <= p_config->movement_timeout)
+           && (p_config->period <= p_config->max_dt)
+           && (p_config->settle_time < p_config->stop_timeout)
+           && (p_config->stopped_speed < p_config->max_speed)
+           && (p_config->pwm_hz >= 1000U) && (p_config->pwm_hz <= 20000U)
+           && (isfinite(p_config->straight_gain))
+           && (p_config->straight_gain >= 0.0)
+           && (isfinite(p_config->min_goal_speed))
+           && (p_config->min_goal_speed >= 0.0)
+           && (p_config->min_goal_speed < p_config->max_speed);
 }
 
 /*** end of file ***/

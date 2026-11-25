@@ -55,17 +55,17 @@ typedef struct
     bool     have;        /* unwrapped holds a value. */
 } s4_compass_t;
 
-static s4_compass_t s_compass; /* Task-owned. */
+static s4_compass_t g_s_compass; /* Task-owned. */
 /* Task-owned web Start gate, S4_START_* (terrain_wait_start). */
-static uint8_t s_start_gate;
+static uint8_t g_s_start_gate;
 /* Task-owned: hump recording paused while stopped. */
-static bool s_hump_paused;
+static bool gb_s_hump_paused;
 /* Task-owned: hump recording paused while turning on the spot. */
-static bool s_turn_paused;
+static bool gb_s_turn_paused;
 /* Task-owned: s_turn_ms holds the last pivot time. */
-static bool s_turn_seen;
+static bool gb_s_turn_seen;
 /* Task-owned: last cycle the wheels were commanded to pivot. */
-static uint32_t s_turn_ms;
+static uint32_t g_s_turn_ms;
 /* Turning on the spot (terrain_turning): the faster commanded wheel at least
  * this fast, with the other stopped or opposite. Line-following steering keeps
  * both wheels forward (about 70 +/- 37.5 mm/s), so it never matches. */
@@ -112,7 +112,7 @@ static uint32_t terrain_time_ms(void);
 static void     terrain_read_motion(s4_motion_t * p_motion);
 static bool     terrain_wait_start(s4_motion_t const * p_motion);
 static uint8_t  terrain_inputs(uint8_t state, s4_motion_t const * p_motion,
-                               bool wait_start, bool turning);
+                               bool b_wait_start, bool b_turning);
 static bool     terrain_turning(buddy4_t const *    p_context,
                                 s4_motion_t const * p_motion, uint32_t now_ms);
 static char const * terrain_hump_label(buddy4_t const * p_context,
@@ -153,16 +153,16 @@ terrain_task (INT code, void * p_context)
     static buddy4_t       s_context;
     static motion_class_t s_class; /* Task-owned motion classifier. */
     s4_motion_t           motion;
-    float64_t             sample_time          = -1.0;
-    uint32_t              release              = 0U;
-    uint32_t              last_report          = 0U;
-    uint8_t               previous_state       = B4_INIT;
-    uint8_t               previous_phase       = TERRAIN_WAITING;
-    uint8_t               previous_class       = MC_STATIONARY;
-    uint8_t               previous_lift        = LIFT_NONE;
-    bool                  previous_frozen      = false;
-    bool                  previous_paused      = false;
-    bool                  previous_class_valid = false;
+    float64_t             sample_time            = -1.0;
+    uint32_t              release                = 0U;
+    uint32_t              last_report            = 0U;
+    uint8_t               previous_state         = B4_INIT;
+    uint8_t               previous_phase         = TERRAIN_WAITING;
+    uint8_t               previous_class         = MC_STATIONARY;
+    uint8_t               previous_lift          = LIFT_NONE;
+    bool                  b_previous_frozen      = false;
+    bool                  b_previous_paused      = false;
+    bool                  b_previous_class_valid = false;
 
     (void)code;
     (void)p_context;
@@ -170,12 +170,12 @@ terrain_task (INT code, void * p_context)
     last_report = release;
     buddy4_begin(&s_context, release);
     motion_class_reset(&s_class);
-    s_compass     = (s4_compass_t){0};
-    s_start_gate  = 0U; /* S4_START_NONE */
-    s_hump_paused = false;
-    s_turn_paused = false;
-    s_turn_seen   = false;
-    s_turn_ms     = 0U;
+    g_s_compass      = (s4_compass_t){0};
+    g_s_start_gate   = 0U; /* S4_START_NONE */
+    gb_s_hump_paused = false;
+    gb_s_turn_paused = false;
+    gb_s_turn_seen   = false;
+    g_s_turn_ms      = 0U;
 #ifndef ROBO_IR_MONITOR /* Keep the IR monitor's single console line clean. */
 #ifdef ROBO_ENCODER_BUILD_ID
     /* Build ID next to the Buddy 4 start-up lines, to confirm which image is
@@ -190,13 +190,13 @@ terrain_task (INT code, void * p_context)
 #endif
     for (;;)
     {
-        uint32_t now          = 0U;
-        uint32_t elapsed      = 0U;
-        uint32_t wait         = 0U;
-        uint8_t  state        = buddy4_state(&s_context);
-        uint8_t  phase        = 0U;
-        uint8_t  motion_class = MC_STATIONARY;
-        bool     class_valid  = false;
+        uint32_t now           = 0U;
+        uint32_t elapsed       = 0U;
+        uint32_t wait          = 0U;
+        uint8_t  state         = buddy4_state(&s_context);
+        uint8_t  phase         = 0U;
+        uint8_t  motion_class  = MC_STATIONARY;
+        bool     b_class_valid = false;
 
         terrain_read_motion(&motion);
         buddy4_step(&s_context,
@@ -206,8 +206,8 @@ terrain_task (INT code, void * p_context)
         terrain_lift(&s_context, &motion, &previous_lift);
         /* Pause before freeze: on the START that unfreezes, the pause still
          * sees the freeze and leaves the single "resumed" line to it. */
-        terrain_hump_pause(&s_context, &motion, &previous_paused);
-        terrain_hump_freeze(&s_context, &motion, &previous_frozen);
+        terrain_hump_pause(&s_context, &motion, &b_previous_paused);
+        terrain_hump_freeze(&s_context, &motion, &b_previous_frozen);
         terrain_classify(&s_context, &s_class, &motion);
         terrain_publish(&s_context, &s_class, &sample_time);
 #if defined(ROBO_MAG_CAL)
@@ -229,18 +229,18 @@ terrain_task (INT code, void * p_context)
 #endif
         }
 
-        state        = buddy4_state(&s_context);
-        phase        = terrain_status(&s_context.terrain) & TERRAIN_PHASE_MASK;
-        motion_class = motion_class_get(&s_class);
-        class_valid  = motion_class_valid(&s_class);
+        state         = buddy4_state(&s_context);
+        phase         = terrain_status(&s_context.terrain) & TERRAIN_PHASE_MASK;
+        motion_class  = motion_class_get(&s_class);
+        b_class_valid = motion_class_valid(&s_class);
 #ifndef ROBO_IR_MONITOR
-        if (class_valid
-            && ((motion_class != previous_class) || (!previous_class_valid)))
+        if (b_class_valid
+            && ((motion_class != previous_class) || (!b_previous_class_valid)))
         {
             tm_printf((UB const *)"[MOTION] %s -> %s yaw=%d deg/s accel=%d "
                                   "mm/s2 imu_fwd=%d mg\n",
-                      previous_class_valid ? motion_class_name(previous_class)
-                                           : "START",
+                      b_previous_class_valid ? motion_class_name(previous_class)
+                                             : "START",
                       motion_class_name(motion_class),
                       (INT)motion_class_yaw_deg_s(&s_class),
                       (INT)motion_class_accel_mm_s2(&s_class),
@@ -261,10 +261,10 @@ terrain_task (INT code, void * p_context)
                       terrain_phase_name(phase));
         }
 #endif
-        previous_state       = state;
-        previous_phase       = phase;
-        previous_class       = motion_class;
-        previous_class_valid = class_valid;
+        previous_state         = state;
+        previous_phase         = phase;
+        previous_class         = motion_class;
+        b_previous_class_valid = b_class_valid;
 
         now = terrain_time_ms();
 
@@ -305,10 +305,10 @@ terrain_time_ms (void)
  * level reference needs a level, still boot before every run anyway.
  */
 static uint8_t
-terrain_inputs (uint8_t state, s4_motion_t const * p_motion, bool wait_start,
-                bool turning)
+terrain_inputs (uint8_t state, s4_motion_t const * p_motion, bool b_wait_start,
+                bool b_turning)
 {
-    uint8_t start = wait_start ? B4_WAIT_START : 0U;
+    uint8_t start = b_wait_start ? B4_WAIT_START : 0U;
 
     if ((p_motion->available) && (SHUTDOWN == p_motion->state))
     {
@@ -323,7 +323,7 @@ terrain_inputs (uint8_t state, s4_motion_t const * p_motion, bool wait_start,
         uint8_t pause
             = ((p_motion->available) && (p_motion->hold)) ? B4_HUMP_PAUSE : 0U;
 
-        return (uint8_t)(pause | (turning ? B4_TURN_PAUSE : 0U));
+        return (uint8_t)(pause | (b_turning ? B4_TURN_PAUSE : 0U));
     }
 
     if (!p_motion->available)
@@ -356,29 +356,29 @@ static bool
 terrain_wait_start (s4_motion_t const * p_motion)
 {
 #ifdef ROBO_REQUIRE_START
-    uint8_t before = s_start_gate;
+    uint8_t before = g_s_start_gate;
 
-    if (S4_START_GIVEN == s_start_gate)
+    if (S4_START_GIVEN == g_s_start_gate)
     {
         return false;
     }
 
     if ((p_motion->available) && (p_motion->hold))
     {
-        s_start_gate = S4_START_HELD;
+        g_s_start_gate = S4_START_HELD;
     }
-    else if ((p_motion->available) && (S4_START_HELD == s_start_gate))
+    else if ((p_motion->available) && (S4_START_HELD == g_s_start_gate))
     {
-        s_start_gate = S4_START_GIVEN;
+        g_s_start_gate = S4_START_GIVEN;
     }
 #ifndef ROBO_IR_MONITOR
-    if ((S4_START_HELD == s_start_gate) && (S4_START_NONE == before))
+    if ((S4_START_HELD == g_s_start_gate) && (S4_START_NONE == before))
     {
         tm_printf((UB const *)"[B4] waiting for dashboard START before "
                               "capturing the level reference (keep the robot "
                               "level and still after START)\n");
     }
-    else if (S4_START_GIVEN == s_start_gate)
+    else if (S4_START_GIVEN == g_s_start_gate)
     {
         tm_printf((UB const *)"[B4] START: capturing level reference; keep the "
                               "robot level and still ~2 s\n");
@@ -387,11 +387,11 @@ terrain_wait_start (s4_motion_t const * p_motion)
     (void)before;
 #endif
     /* Held, or motion reports but its boot hold has not been seen yet. */
-    return (S4_START_HELD == s_start_gate)
-           || ((S4_START_NONE == s_start_gate) && (p_motion->available));
+    return (S4_START_HELD == g_s_start_gate)
+           || ((S4_START_NONE == g_s_start_gate) && (p_motion->available));
 #else
     (void)p_motion;
-    s_start_gate = S4_START_GIVEN;
+    g_s_start_gate = S4_START_GIVEN;
     return false;
 #endif
 }
@@ -513,11 +513,11 @@ static void
 terrain_hump_freeze (buddy4_t * p_context, s4_motion_t const * p_motion,
                      bool * p_previous)
 {
-    bool resumed
+    bool b_resumed
         = buddy4_hump_start(p_context, p_motion->available, p_motion->hold);
-    bool frozen = buddy4_hump_frozen(p_context);
+    bool b_frozen = buddy4_hump_frozen(p_context);
 
-    if (frozen && (!*p_previous))
+    if (b_frozen && (!*p_previous))
     {
 #ifndef ROBO_IR_MONITOR
         tm_printf(
@@ -526,14 +526,14 @@ terrain_hump_freeze (buddy4_t * p_context, s4_motion_t const * p_motion,
             (INT)(terrain_run_max(&p_context->terrain) & TERRAIN_PEAK_MM_MASK));
 #endif
     }
-    else if (resumed)
+    else if (b_resumed)
     {
 #ifndef ROBO_IR_MONITOR
         tm_printf((UB const *)"[TERRAIN] hump recording resumed (START)\n");
 #endif
     }
 
-    *p_previous = frozen;
+    *p_previous = b_frozen;
 }
 
 /* Hump pause while turning on the spot (B4_TURN_PAUSE). The GY-511 has no
@@ -554,11 +554,11 @@ static bool
 terrain_turning (buddy4_t const * p_context, s4_motion_t const * p_motion,
                  uint32_t now_ms)
 {
-    int32_t left   = p_motion->target_mm_s[0];
-    int32_t right  = p_motion->target_mm_s[1];
-    int32_t fast   = (left < 0) ? -left : left;
-    int32_t other  = (right < 0) ? -right : right;
-    bool    paused = false;
+    int32_t left     = p_motion->target_mm_s[0];
+    int32_t right    = p_motion->target_mm_s[1];
+    int32_t fast     = (left < 0) ? -left : left;
+    int32_t other    = (right < 0) ? -right : right;
+    bool    b_paused = false;
 
     if (other > fast)
     {
@@ -568,16 +568,17 @@ terrain_turning (buddy4_t const * p_context, s4_motion_t const * p_motion,
     if ((p_motion->available) && (fast >= S4_TURN_MIN_MM_S)
         && ((left * right) <= 0))
     {
-        s_turn_seen = true;
-        s_turn_ms   = now_ms;
+        gb_s_turn_seen = true;
+        g_s_turn_ms    = now_ms;
     }
 
-    paused = s_turn_seen && ((now_ms - s_turn_ms) < S4_TURN_SETTLE_MS);
+    b_paused = gb_s_turn_seen && ((now_ms - g_s_turn_ms) < S4_TURN_SETTLE_MS);
 #ifndef ROBO_IR_MONITOR
-    if ((paused != s_turn_paused) && (B4_MONITORING == buddy4_state(p_context))
+    if ((b_paused != gb_s_turn_paused)
+        && (B4_MONITORING == buddy4_state(p_context))
         && (!buddy4_hump_frozen(p_context)))
     {
-        if (paused)
+        if (b_paused)
         {
             tm_printf((UB const *)"[TERRAIN] turning on the spot: hump "
                                   "recording paused (run max %d mm)\n",
@@ -593,8 +594,8 @@ terrain_turning (buddy4_t const * p_context, s4_motion_t const * p_motion,
 #else
     (void)p_context;
 #endif
-    s_turn_paused = paused;
-    return paused;
+    gb_s_turn_paused = b_paused;
+    return b_paused;
 }
 
 /* [TILT] line terrain label: why humps are not measured, else the phase. */
@@ -606,12 +607,12 @@ terrain_hump_label (buddy4_t const * p_context, uint8_t terrain)
         return "FROZEN";
     }
 
-    if (s_hump_paused)
+    if (gb_s_hump_paused)
     {
         return "PAUSED";
     }
 
-    if (s_turn_paused)
+    if (gb_s_turn_paused)
     {
         return "TURNING";
     }
@@ -634,16 +635,16 @@ static void
 terrain_hump_pause (buddy4_t const * p_context, s4_motion_t const * p_motion,
                     bool * p_previous)
 {
-    bool paused = terrain_hump_paused(p_context, p_motion);
+    bool b_paused = terrain_hump_paused(p_context, p_motion);
 
 #ifndef ROBO_IR_MONITOR
-    if (paused != *p_previous)
+    if (b_paused != *p_previous)
     {
         if (buddy4_hump_frozen(p_context))
         {
             /* The freeze lines already say what happens. */
         }
-        else if (paused)
+        else if (b_paused)
         {
             tm_printf(
                 (UB const *)"[TERRAIN] hump recording paused (robot stopped): "
@@ -657,8 +658,8 @@ terrain_hump_pause (buddy4_t const * p_context, s4_motion_t const * p_motion,
         }
     }
 #endif
-    *p_previous   = paused;
-    s_hump_paused = paused;
+    *p_previous      = b_paused;
+    gb_s_hump_paused = b_paused;
 }
 
 /* Motion class from the IMU (overturned latch, hump phase) and Buddy 2
@@ -714,8 +715,8 @@ terrain_classify (buddy4_t * p_context, motion_class_t * p_class,
                     (angle < 0) ? "right" : "left", size / 10, size % 10,
                     (INT)(duration / 1000U), (INT)((duration % 1000U) / 100U),
                     (INT)peak,
-                    terrain_mag_reason((S4_MAG_OK != s_compass.turn_reason)
-                                           ? s_compass.turn_reason
+                    terrain_mag_reason((S4_MAG_OK != g_s_compass.turn_reason)
+                                           ? g_s_compass.turn_reason
                                            : S4_MAG_WINDOW));
             }
 #endif
@@ -727,7 +728,7 @@ terrain_classify (buddy4_t * p_context, motion_class_t * p_class,
          * terrain_compass). */
         if (!motion_class_turn_active(p_class))
         {
-            s_compass.turn_reason = s_compass.reason;
+            g_s_compass.turn_reason = g_s_compass.reason;
         }
     }
 }
@@ -822,7 +823,7 @@ terrain_report (buddy4_t const * p_context, motion_class_t const * p_class)
     uint8_t state   = buddy4_state(p_context);
     uint8_t terrain = terrain_status(&p_context->terrain);
 
-    if ((B4_INIT == state) && (S4_START_GIVEN != s_start_gate))
+    if ((B4_INIT == state) && (S4_START_GIVEN != g_s_start_gate))
     {
         tm_printf((UB const *)"[B4] INIT: waiting for dashboard START (level "
                               "reference not captured yet)\n");
@@ -841,9 +842,9 @@ terrain_report (buddy4_t const * p_context, motion_class_t const * p_class)
         INT roll  = (INT)tilt_angle_tenths(p_context->result, 1U);
         INT height
             = (INT)tilt_side_height_tenths(&p_context->tilt, B4_TRACK_MM);
-        char const * side = (height > 0) ? "R" : ((height < 0) ? "L" : "-");
-        char const * pitch_sign = (pitch < 0) ? "-" : "";
-        char const * roll_sign  = (roll < 0) ? "-" : "";
+        char const * p_side = (height > 0) ? "R" : ((height < 0) ? "L" : "-");
+        char const * p_pitch_sign = (pitch < 0) ? "-" : "";
+        char const * p_roll_sign  = (roll < 0) ? "-" : "";
 
         if (pitch < 0)
         {
@@ -860,45 +861,46 @@ terrain_report (buddy4_t const * p_context, motion_class_t const * p_class)
             height = -height;
         }
 
-        if (S4_MAG_OK == s_compass.reason)
+        if (S4_MAG_OK == g_s_compass.reason)
         {
-            tm_printf((UB const *)"[TILT] pitch=%s%d.%d roll=%s%d.%d deg | %s, "
-                                  "%s | height=%d.%d mm %s | terrain=%s "
-                                  "run_max=%d mm | class=%s yaw=%d deg/s | "
-                                  "compass=%d.%d deg field=%d | lift=%s\n",
-                      pitch_sign, pitch / 10, pitch % 10, roll_sign, roll / 10,
-                      roll % 10, tilt_condition_name(p_context->result, 0U),
-                      tilt_condition_name(p_context->result, 1U), height / 10,
-                      height % 10, side, terrain_hump_label(p_context, terrain),
-                      (INT)(terrain_run_max(&p_context->terrain)
-                            & TERRAIN_PEAK_MM_MASK),
-                      motion_class_valid(p_class)
-                          ? motion_class_name(motion_class_get(p_class))
-                          : "-",
-                      (INT)motion_class_yaw_deg_s(p_class),
-                      (INT)(s_compass.heading / 10),
-                      (INT)(s_compass.heading % 10), (INT)s_compass.field,
-                      (UB const *)lift_name(buddy4_lift(p_context)));
+            tm_printf(
+                (UB const *)"[TILT] pitch=%s%d.%d roll=%s%d.%d deg | %s, "
+                            "%s | height=%d.%d mm %s | terrain=%s "
+                            "run_max=%d mm | class=%s yaw=%d deg/s | "
+                            "compass=%d.%d deg field=%d | lift=%s\n",
+                p_pitch_sign, pitch / 10, pitch % 10, p_roll_sign, roll / 10,
+                roll % 10, tilt_condition_name(p_context->result, 0U),
+                tilt_condition_name(p_context->result, 1U), height / 10,
+                height % 10, p_side, terrain_hump_label(p_context, terrain),
+                (INT)(terrain_run_max(&p_context->terrain)
+                      & TERRAIN_PEAK_MM_MASK),
+                motion_class_valid(p_class)
+                    ? motion_class_name(motion_class_get(p_class))
+                    : "-",
+                (INT)motion_class_yaw_deg_s(p_class),
+                (INT)(g_s_compass.heading / 10),
+                (INT)(g_s_compass.heading % 10), (INT)g_s_compass.field,
+                (UB const *)lift_name(buddy4_lift(p_context)));
         }
         else
         {
-            tm_printf((UB const *)"[TILT] pitch=%s%d.%d roll=%s%d.%d deg | %s, "
-                                  "%s | height=%d.%d mm %s | terrain=%s "
-                                  "run_max=%d mm | class=%s yaw=%d deg/s | "
-                                  "compass n/a (%s) field=%d | lift=%s\n",
-                      pitch_sign, pitch / 10, pitch % 10, roll_sign, roll / 10,
-                      roll % 10, tilt_condition_name(p_context->result, 0U),
-                      tilt_condition_name(p_context->result, 1U), height / 10,
-                      height % 10, side, terrain_hump_label(p_context, terrain),
-                      (INT)(terrain_run_max(&p_context->terrain)
-                            & TERRAIN_PEAK_MM_MASK),
-                      motion_class_valid(p_class)
-                          ? motion_class_name(motion_class_get(p_class))
-                          : "-",
-                      (INT)motion_class_yaw_deg_s(p_class),
-                      terrain_mag_reason(s_compass.reason),
-                      (INT)s_compass.field,
-                      (UB const *)lift_name(buddy4_lift(p_context)));
+            tm_printf(
+                (UB const *)"[TILT] pitch=%s%d.%d roll=%s%d.%d deg | %s, "
+                            "%s | height=%d.%d mm %s | terrain=%s "
+                            "run_max=%d mm | class=%s yaw=%d deg/s | "
+                            "compass n/a (%s) field=%d | lift=%s\n",
+                p_pitch_sign, pitch / 10, pitch % 10, p_roll_sign, roll / 10,
+                roll % 10, tilt_condition_name(p_context->result, 0U),
+                tilt_condition_name(p_context->result, 1U), height / 10,
+                height % 10, p_side, terrain_hump_label(p_context, terrain),
+                (INT)(terrain_run_max(&p_context->terrain)
+                      & TERRAIN_PEAK_MM_MASK),
+                motion_class_valid(p_class)
+                    ? motion_class_name(motion_class_get(p_class))
+                    : "-",
+                (INT)motion_class_yaw_deg_s(p_class),
+                terrain_mag_reason(g_s_compass.reason), (INT)g_s_compass.field,
+                (UB const *)lift_name(buddy4_lift(p_context)));
         }
     }
     else if (B4_MONITORING == state)
@@ -944,22 +946,23 @@ static bool
 terrain_compass (buddy4_t const * p_context, uint8_t phase, uint32_t now_ms,
                  int32_t * p_ddeg)
 {
-    int16_t x       = 0;
-    int16_t y       = 0;
-    int16_t heading = 0;
-    uint8_t reason  = S4_MAG_OK;
-    bool sample = buddy4_magnetic(p_context, now_ms, S4_MAG_MAX_AGE_MS, &x, &y);
+    int16_t axis_x   = 0;
+    int16_t axis_y   = 0;
+    int16_t heading  = 0;
+    uint8_t reason   = S4_MAG_OK;
+    bool    b_sample = buddy4_magnetic(p_context, now_ms, S4_MAG_MAX_AGE_MS,
+                                       &axis_x, &axis_y);
 
-    if (sample)
+    if (b_sample)
     {
-        s_compass.field = mag_field(&g_mag_cal, x, y);
+        g_s_compass.field = mag_field(&g_mag_cal, axis_x, axis_y);
     }
 
     if (!g_mag_cal.calibrated)
     {
         reason = S4_MAG_UNCAL;
     }
-    else if (!sample)
+    else if (!b_sample)
     {
         reason = S4_MAG_NODATA;
     }
@@ -967,29 +970,29 @@ terrain_compass (buddy4_t const * p_context, uint8_t phase, uint32_t now_ms,
     {
         reason = S4_MAG_HUMP;
     }
-    else if (!mag_heading_ddeg(&g_mag_cal, x, y, &heading))
+    else if (!mag_heading_ddeg(&g_mag_cal, axis_x, axis_y, &heading))
     {
         reason = S4_MAG_FIELD;
     }
 
-    s_compass.reason = reason;
+    g_s_compass.reason = reason;
 
     if (S4_MAG_OK != reason)
     {
-        if (S4_MAG_OK == s_compass.turn_reason)
+        if (S4_MAG_OK == g_s_compass.turn_reason)
         {
-            s_compass.turn_reason = reason;
+            g_s_compass.turn_reason = reason;
         }
 
         return false;
     }
 
-    s_compass.unwrapped = s_compass.have
-                              ? mag_unwrap(s_compass.unwrapped, heading)
-                              : (int32_t)heading;
-    s_compass.have      = true;
-    s_compass.heading   = heading;
-    *p_ddeg             = s_compass.unwrapped;
+    g_s_compass.unwrapped = g_s_compass.have
+                                ? mag_unwrap(g_s_compass.unwrapped, heading)
+                                : (int32_t)heading;
+    g_s_compass.have      = true;
+    g_s_compass.heading   = heading;
+    *p_ddeg               = g_s_compass.unwrapped;
     return true;
 }
 
@@ -1028,47 +1031,48 @@ typedef struct
     motion_result_t  request;
 } s4_cal_t;
 
-static s4_cal_t s_cal;
+static s4_cal_t g_s_cal;
 
 static void
 terrain_mag_cal_stop (char const * p_failure)
 {
     (void)motion_steer(SOURCE_TERRAIN, S4_CAL_SOURCE_ID, 0.0, 0.0);
     motion_stop();
-    s_cal.failure = p_failure;
+    g_s_cal.failure = p_failure;
 
     if (NULL == p_failure)
     {
-        s_cal.status = mag_cal_finish(&s_cal.acc, &s_cal.result);
+        g_s_cal.status = mag_cal_finish(&g_s_cal.acc, &g_s_cal.result);
     }
 
-    s_cal.phase    = S4_CAL_DONE;
-    s_cal.phase_ms = terrain_time_ms() - S4_CAL_REPEAT_MS; /* Print at once. */
+    g_s_cal.phase = S4_CAL_DONE;
+    /* Print at once. */
+    g_s_cal.phase_ms = terrain_time_ms() - S4_CAL_REPEAT_MS;
 }
 
 static void
 terrain_mag_cal_print (void)
 {
-    mag_cal_t const * p_cal = &s_cal.result.cal;
+    mag_cal_t const * p_cal = &g_s_cal.result.cal;
 
-    if (NULL != s_cal.failure)
+    if (NULL != g_s_cal.failure)
     {
         tm_printf((UB const *)"[MAGCAL] FAIL %s (last request result=%d). "
                               "Motors stopped; power-cycle to retry.\n",
-                  s_cal.failure, (INT)s_cal.request);
+                  g_s_cal.failure, (INT)g_s_cal.request);
         return;
     }
 
     tm_printf((UB const *)"[MAGCAL] %s | offset_x=%d offset_y=%d "
                           "scale_y=%d/4096 field=%d sign=%d | coverage %d/36 "
                           "bins, fit error %d.%d %%\n",
-              mag_cal_status_name(s_cal.status), (INT)p_cal->offset_x,
+              mag_cal_status_name(g_s_cal.status), (INT)p_cal->offset_x,
               (INT)p_cal->offset_y, (INT)p_cal->scale_y_q12, (INT)p_cal->field,
-              (INT)p_cal->sign, (INT)s_cal.result.bins_covered,
-              (INT)(s_cal.result.fit_permille / 10U),
-              (INT)(s_cal.result.fit_permille % 10U));
+              (INT)p_cal->sign, (INT)g_s_cal.result.bins_covered,
+              (INT)(g_s_cal.result.fit_permille / 10U),
+              (INT)(g_s_cal.result.fit_permille % 10U));
 
-    if (MAG_CAL_PASS == s_cal.status)
+    if (MAG_CAL_PASS == g_s_cal.status)
     {
         tm_printf((UB const *)"[MAGCAL] paste into "
                               "app_program/subsystem4/mag_cal.h:\n");
@@ -1090,31 +1094,31 @@ static void
 terrain_mag_cal (buddy4_t const * p_context, s4_motion_t const * p_motion)
 {
     uint32_t now    = terrain_time_ms();
-    int32_t  turned = p_motion->heading_ddeg - s_cal.start_heading;
-    int16_t  x      = 0;
-    int16_t  y      = 0;
+    int32_t  turned = p_motion->heading_ddeg - g_s_cal.start_heading;
+    int16_t  axis_x = 0;
+    int16_t  axis_y = 0;
 
-    if (S4_CAL_DONE == s_cal.phase)
+    if (S4_CAL_DONE == g_s_cal.phase)
     {
-        if ((now - s_cal.phase_ms) >= S4_CAL_REPEAT_MS)
+        if ((now - g_s_cal.phase_ms) >= S4_CAL_REPEAT_MS)
         {
             terrain_mag_cal_print();
-            s_cal.phase_ms = now;
+            g_s_cal.phase_ms = now;
         }
 
         return;
     }
 
-    if (S4_CAL_WAIT == s_cal.phase)
+    if (S4_CAL_WAIT == g_s_cal.phase)
     {
         if ((B4_MONITORING == buddy4_state(p_context)) && (p_motion->available)
             && (p_motion->stationary) && (p_motion->heading_valid)
             && (READY == p_motion->state))
         {
-            mag_cal_begin(&s_cal.acc);
-            s_cal.phase     = S4_CAL_SETTLE;
-            s_cal.phase_ms  = now;
-            s_cal.countdown = 4U;
+            mag_cal_begin(&g_s_cal.acc);
+            g_s_cal.phase     = S4_CAL_SETTLE;
+            g_s_cal.phase_ms  = now;
+            g_s_cal.countdown = 4U;
             tm_printf((UB const *)"[MAGCAL] magnetometer calibration: keep 30 "
                                   "cm clear and away from steel.\n");
         }
@@ -1129,17 +1133,17 @@ terrain_mag_cal (buddy4_t const * p_context, s4_motion_t const * p_motion)
         return;
     }
 
-    if (S4_CAL_SETTLE == s_cal.phase)
+    if (S4_CAL_SETTLE == g_s_cal.phase)
     {
         uint32_t left
-            = ((now - s_cal.phase_ms) >= S4_CAL_SETTLE_MS)
+            = ((now - g_s_cal.phase_ms) >= S4_CAL_SETTLE_MS)
                   ? 0U
-                  : ((S4_CAL_SETTLE_MS - (now - s_cal.phase_ms) + 999U)
+                  : ((S4_CAL_SETTLE_MS - (now - g_s_cal.phase_ms) + 999U)
                      / 1000U);
 
-        if (left < s_cal.countdown)
+        if (left < g_s_cal.countdown)
         {
-            s_cal.countdown = (uint8_t)left;
+            g_s_cal.countdown = (uint8_t)left;
 
             if (0U != left)
             {
@@ -1150,9 +1154,9 @@ terrain_mag_cal (buddy4_t const * p_context, s4_motion_t const * p_motion)
 
         if (0U == left)
         {
-            s_cal.phase         = S4_CAL_LEFT;
-            s_cal.start_ms      = now;
-            s_cal.start_heading = p_motion->heading_ddeg;
+            g_s_cal.phase         = S4_CAL_LEFT;
+            g_s_cal.start_ms      = now;
+            g_s_cal.start_heading = p_motion->heading_ddeg;
             tm_printf((UB const *)"[MAGCAL] pivoting LEFT 360 deg, then RIGHT "
                                   "360 deg back\n");
         }
@@ -1160,40 +1164,41 @@ terrain_mag_cal (buddy4_t const * p_context, s4_motion_t const * p_motion)
         return;
     }
 
-    if ((now - s_cal.start_ms) > S4_CAL_TIMEOUT_MS)
+    if ((now - g_s_cal.start_ms) > S4_CAL_TIMEOUT_MS)
     {
         terrain_mag_cal_stop("timeout");
         return;
     }
 
-    if ((S4_CAL_LEFT == s_cal.phase)
-        && ((now - s_cal.start_ms) > S4_CAL_STALL_MS) && (turned < 100))
+    if ((S4_CAL_LEFT == g_s_cal.phase)
+        && ((now - g_s_cal.start_ms) > S4_CAL_STALL_MS) && (turned < 100))
     {
         terrain_mag_cal_stop("robot not turning");
         return;
     }
 
-    if ((buddy4_magnetic(p_context, now, S4_MAG_MAX_AGE_MS, &x, &y))
-        && (p_context->mag_ms != s_cal.last_mag_ms))
+    if ((buddy4_magnetic(p_context, now, S4_MAG_MAX_AGE_MS, &axis_x, &axis_y))
+        && (p_context->mag_ms != g_s_cal.last_mag_ms))
     {
-        mag_cal_add(&s_cal.acc, x, y, turned);
-        s_cal.last_mag_ms = p_context->mag_ms;
+        mag_cal_add(&g_s_cal.acc, axis_x, axis_y, turned);
+        g_s_cal.last_mag_ms = p_context->mag_ms;
     }
 
-    if ((S4_CAL_LEFT == s_cal.phase) && (turned >= 3600))
+    if ((S4_CAL_LEFT == g_s_cal.phase) && (turned >= 3600))
     {
-        s_cal.phase = S4_CAL_RIGHT;
+        g_s_cal.phase = S4_CAL_RIGHT;
         tm_printf((UB const *)"[MAGCAL] left 360 done, turning back\n");
     }
-    else if ((S4_CAL_RIGHT == s_cal.phase) && (turned <= 0))
+    else if ((S4_CAL_RIGHT == g_s_cal.phase) && (turned <= 0))
     {
         terrain_mag_cal_stop(NULL);
         return;
     }
 
-    s_cal.request = motion_steer(
-        SOURCE_TERRAIN, S4_CAL_SOURCE_ID, 0.0,
-        (S4_CAL_LEFT == s_cal.phase) ? S4_CAL_RATE_DEG_S : -S4_CAL_RATE_DEG_S);
+    g_s_cal.request
+        = motion_steer(SOURCE_TERRAIN, S4_CAL_SOURCE_ID, 0.0,
+                       (S4_CAL_LEFT == g_s_cal.phase) ? S4_CAL_RATE_DEG_S
+                                                      : -S4_CAL_RATE_DEG_S);
 }
 #endif
 

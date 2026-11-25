@@ -90,15 +90,16 @@ gy511_read_acceleration (gy511_acceleration_t * p_sample)
     // unpack and pack the result on success
     if (E_OK == status)
     {
-        uint32_t x = (((uint32_t)raw[1] << 8U) | raw[0]) >> 4U;
-        uint32_t y = (((uint32_t)raw[3] << 8U) | raw[2]) >> 4U;
-        uint32_t z = (((uint32_t)raw[5] << 8U) | raw[4]) >> 4U;
+        uint32_t axis_x = (((uint32_t)raw[1] << 8U) | raw[0]) >> 4U;
+        uint32_t axis_y = (((uint32_t)raw[3] << 8U) | raw[2]) >> 4U;
+        uint32_t axis_z = (((uint32_t)raw[5] << 8U) | raw[4]) >> 4U;
 
-        p_sample->bytes[0] = (uint8_t)(x & 0xFFU);
-        p_sample->bytes[1] = (uint8_t)((x >> 8U) | ((y & 0x0FU) << 4U));
-        p_sample->bytes[2] = (uint8_t)(y >> 4U);
-        p_sample->bytes[3] = (uint8_t)(z & 0xFFU);
-        p_sample->bytes[4] = (uint8_t)(z >> 8U);
+        p_sample->bytes[0] = (uint8_t)(axis_x & 0xFFU);
+        p_sample->bytes[1]
+            = (uint8_t)((axis_x >> 8U) | ((axis_y & 0x0FU) << 4U));
+        p_sample->bytes[2] = (uint8_t)(axis_y >> 4U);
+        p_sample->bytes[3] = (uint8_t)(axis_z & 0xFFU);
+        p_sample->bytes[4] = (uint8_t)(axis_z >> 8U);
     }
 
     return status;
@@ -296,9 +297,9 @@ gy511_magnetic_counts (gy511_magnetic_t const * p_sample, uint8_t axis,
         return E_PAR;
     }
 
-    for (uint8_t i = 0U; i < sizeof(packed.bytes); i++)
+    for (uint8_t index = 0U; index < sizeof(packed.bytes); index++)
     {
-        packed.bytes[i] = p_sample->bytes[i];
+        packed.bytes[index] = p_sample->bytes[index];
     }
 
     return gy511_acceleration_mg(&packed, axis, p_counts);

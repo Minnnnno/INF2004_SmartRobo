@@ -41,7 +41,7 @@ IMPORT void comms_latch_event(UB events);
    dashboard; prefer the console log.  payload is '\0'-terminated text of
    at most COMMS_PAYLOAD_MAX - 1 characters.
    Errors: E_PAR name or payload missing or too long, E_TMOUT queue full. */
-IMPORT ER comms_send_telemetry(const char * name, const char * payload);
+IMPORT ER comms_send_telemetry(const char * p_name, const char * p_payload);
 
 /* TRUE while connected to the MQTT broker */
 IMPORT BOOL comms_is_online(void);
@@ -49,7 +49,7 @@ IMPORT BOOL comms_is_online(void);
 /* IF-07: each message is one COMMS_CMD.  The Vehicle Controller reads it:
        COMMS_CMD cmd;
        tk_rcv_mbf(mbf_comms_cmd, &cmd, TMO_POL);                           */
-IMPORT ID mbf_comms_cmd;
+IMPORT ID g_mbf_comms_cmd;
 
 /* Diagnostics and NFR6 timing evidence.  Each field has one writer; a copy
    taken while running may mix two updates. */
@@ -69,7 +69,7 @@ typedef struct
     UW pack_us_max; /* longest map + pack, done with no lock held */
 } COMMS_STATS;
 
-IMPORT void comms_stats(COMMS_STATS * stats);
+IMPORT void comms_stats(COMMS_STATS * p_stats);
 
 /* Private to subsystem 1 */
 IMPORT ER comms_init(void);

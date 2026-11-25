@@ -16,9 +16,10 @@
 // The dot product converts gravity from sensor axes into robot axes using the
 // reference saved at startup.
 static float32_t
-tilt_dot (float32_t const a[3], float32_t const b[3])
+tilt_dot (float32_t const first[3], float32_t const second[3])
 {
-    return (a[0] * b[0]) + (a[1] * b[1]) + (a[2] * b[2]);
+    return (first[0] * second[0]) + (first[1] * second[1])
+           + (first[2] * second[2]);
 }
 
 /* Normalise a private vector, rejecting zero/nonfinite magnitudes. */
@@ -40,9 +41,9 @@ tilt_normalise (float32_t vector[3])
 
     // else divide each part by length
     // shrinks/streches the vector without turning it
-    for (uint8_t i = 0U; i < 3U; i++)
+    for (uint8_t index = 0U; index < 3U; index++)
     {
-        vector[i] /= length;
+        vector[index] /= length;
     }
 
     return true;
@@ -82,11 +83,13 @@ tilt_discard_history (tilt_context_t * p_context)
  */
 // for capturing base reference
 bool
-tilt_capture (tilt_context_t * p_context, int16_t x, int16_t y, int16_t z)
+tilt_capture (tilt_context_t * p_context, int16_t axis_x, int16_t axis_y,
+              int16_t axis_z)
 {
     // convert int to float
-    float32_t a[3]  = {(float32_t)x, (float32_t)y, (float32_t)z};
-    uint8_t   count = 0U;
+    float32_t accel[3]
+        = {(float32_t)axis_x, (float32_t)axis_y, (float32_t)axis_z};
+    uint8_t count = 0U;
 
     if (NULL == p_context)
     {
@@ -100,7 +103,7 @@ tilt_capture (tilt_context_t * p_context, int16_t x, int16_t y, int16_t z)
 
     // if robot <700 or >1300 mg (robot being moved), restart the whole capture
     // and return false
-    if (!tilt_plausible(a))
+    if (!tilt_plausible(accel))
     {
         tilt_discard_history(p_context);
         return false;
@@ -109,11 +112,11 @@ tilt_capture (tilt_context_t * p_context, int16_t x, int16_t y, int16_t z)
     // anchor = first sample of current window.
     count = p_context->progress & TILT_COUNT_MASK;
 
-    for (uint8_t i = 0U; i < 3U; i++)
+    for (uint8_t index = 0U; index < 3U; index++)
     {
         // if any axis of the reading >80mg away from anchor , count goes back
         // to 0 robot has moved
-        if (fabsf(a[i] - p_context->anchor[i]) > 80.0F)
+        if (fabsf(accel[index] - p_context->anchor[index]) > 80.0F)
         {
             count = 0U;
         }
@@ -121,17 +124,17 @@ tilt_capture (tilt_context_t * p_context, int16_t x, int16_t y, int16_t z)
 
     if (0U == count)
     {
-        for (uint8_t i = 0U; i < 3U; i++)
+        for (uint8_t index = 0U; index < 3U; index++)
         {
-            p_context->sum[i]    = 0.0F;
-            p_context->anchor[i] = a[i];
+            p_context->sum[index]    = 0.0F;
+            p_context->anchor[index] = accel[index];
         }
     }
 
     // build up running total for each axis
-    for (uint8_t i = 0U; i < 3U; i++)
+    for (uint8_t index = 0U; index < 3U; index++)
     {
-        p_context->sum[i] += a[i];
+        p_context->sum[index] += accel[index];
     }
 
     count++;
@@ -143,9 +146,10 @@ tilt_capture (tilt_context_t * p_context, int16_t x, int16_t y, int16_t z)
     }
 
     // divide for average reading. (sampling)
-    for (uint8_t i = 0U; i < 3U; i++)
+    for (uint8_t index = 0U; index < 3U; index++)
     {
-        p_context->up[i] = p_context->sum[i] / (float32_t)TILT_CAPTURE_SAMPLES;
+        p_context->up[index]
+            = p_context->sum[index] / (float32_t)TILT_CAPTURE_SAMPLES;
     }
 
     /* Keep the reference gravity size: lift detection measures vertical
@@ -161,13 +165,13 @@ tilt_capture (tilt_context_t * p_context, int16_t x, int16_t y, int16_t z)
     }
 
     // building of the front and side direction.
-    for (uint8_t i = 0U; i < 3U; i++)
+    for (uint8_t index = 0U; index < 3U; index++)
     {
         /* Start from sensor +Y, remove its component along up, leaving a level
          * forward direction even if the sensor is mounted slightly tilted.
          */
-        p_context->forward[i]
-            = ((1U == i) ? 1.0F : 0.0F) - (p_context->up[1] * p_context->up[i]);
+        p_context->forward[index] = ((1U == index) ? 1.0F : 0.0F)
+                                    - (p_context->up[1] * p_context->up[index]);
     }
 
     // normalize vector and scale to 1 , if almos nothing left, calibration fail
@@ -224,13 +228,15 @@ tilt_classify (int16_t angle, uint8_t previous)
  * ambiguous roll at pitch poles. Out-of-envelope values are unavailable.
  */
 uint32_t
-tilt_update (tilt_context_t * p_context, int16_t x, int16_t y, int16_t z)
+tilt_update (tilt_context_t * p_context, int16_t axis_x, int16_t axis_y,
+             int16_t axis_z)
 {
-    float32_t a[3] = {(float32_t)x, (float32_t)y, (float32_t)z};
+    float32_t accel[3]
+        = {(float32_t)axis_x, (float32_t)axis_y, (float32_t)axis_z};
 
     float32_t forward;
     float32_t side;
-    float32_t up;
+    float32_t up_axis;
     float32_t pitch;
     float32_t roll;
     int16_t   pitch_tenths;
@@ -247,27 +253,28 @@ tilt_update (tilt_context_t * p_context, int16_t x, int16_t y, int16_t z)
         return 0U;
     }
 
-    if (!tilt_plausible(a))
+    if (!tilt_plausible(accel))
     {
         tilt_discard_history(p_context);
         return 0U;
     }
 
     // smoothing the reading (low-pass fliter)
-    for (uint8_t i = 0U; i < 3U; i++)
+    for (uint8_t index = 0U; index < 3U; index++)
     {
         // if fliter hasnt started yet, copy the reading straight in as its
         // starting value
         if (0U == (p_context->progress & TILT_FILTER_READY))
         {
-            p_context->filtered[i] = a[i];
+            p_context->filtered[index] = accel[index];
         }
 
         // Once the filter has started, each new reading moves the smoothed
         // value 25% of the way toward that reading.
         else
         {
-            p_context->filtered[i] += 0.25F * (a[i] - p_context->filtered[i]);
+            p_context->filtered[index]
+                += 0.25F * (accel[index] - p_context->filtered[index]);
         }
     }
 
@@ -275,19 +282,20 @@ tilt_update (tilt_context_t * p_context, int16_t x, int16_t y, int16_t z)
 
     forward = tilt_dot(p_context->filtered, p_context->forward);
     side    = tilt_dot(p_context->filtered, p_context->side);
-    up      = tilt_dot(p_context->filtered, p_context->up);
+    up_axis = tilt_dot(p_context->filtered, p_context->up);
     // working out of the angles
     // pitch angle of gravity towards the front, roll= angle of gravity towards
     // the side
-    pitch = TILT_PITCH_SIGN * atan2f(forward, sqrtf((side * side) + (up * up)))
+    pitch = TILT_PITCH_SIGN
+            * atan2f(forward, sqrtf((side * side) + (up_axis * up_axis)))
             * TILT_RAD_TO_DEG;
     // turns 2 lengths into an angle
-    roll = TILT_ROLL_SIGN * atan2f(side, up) * TILT_RAD_TO_DEG;
+    roll = TILT_ROLL_SIGN * atan2f(side, up_axis) * TILT_RAD_TO_DEG;
 
     // reject unusable poses
     //  if Nan/infity , if up<= 0  robot is on its side or upside down
     //  or pitch/roll +- 75 degrees
-    if ((!isfinite(pitch)) || (!isfinite(roll)) || (up <= 0.0F)
+    if ((!isfinite(pitch)) || (!isfinite(roll)) || (up_axis <= 0.0F)
         || (fabsf(pitch) > 75.0F) || (fabsf(roll) > 75.0F))
     {
         tilt_discard_history(p_context);
@@ -350,8 +358,8 @@ tilt_side_height_tenths (tilt_context_t const * p_context, uint16_t track_mm)
 }
 
 int16_t
-tilt_forward_dynamic_mg (tilt_context_t const * p_context, int16_t x, int16_t y,
-                         int16_t z)
+tilt_forward_dynamic_mg (tilt_context_t const * p_context, int16_t axis_x,
+                         int16_t axis_y, int16_t axis_z)
 {
     float32_t dynamic[3];
     float32_t forward;
@@ -363,9 +371,9 @@ tilt_forward_dynamic_mg (tilt_context_t const * p_context, int16_t x, int16_t y,
         return 0;
     }
 
-    dynamic[0] = (float32_t)x - p_context->filtered[0];
-    dynamic[1] = (float32_t)y - p_context->filtered[1];
-    dynamic[2] = (float32_t)z - p_context->filtered[2];
+    dynamic[0] = (float32_t)axis_x - p_context->filtered[0];
+    dynamic[1] = (float32_t)axis_y - p_context->filtered[1];
+    dynamic[2] = (float32_t)axis_z - p_context->filtered[2];
     forward    = tilt_dot(dynamic, p_context->forward);
 
     if (!isfinite(forward))

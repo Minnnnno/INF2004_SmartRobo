@@ -40,12 +40,13 @@ typedef struct
  * Returns true when a reference is ready. Stability cannot prove levelness:
  * the user MUST place the board on known level ground. No flash persistence.
  */
-bool tilt_capture(tilt_context_t * p_context, int16_t x, int16_t y, int16_t z);
+bool tilt_capture(tilt_context_t * p_context, int16_t axis_x, int16_t axis_y,
+                  int16_t axis_z);
 /* Compute a filtered result from one fresh sample. Zero means unavailable.
  * Invalid input resets filter/conditions, but preserves the level reference.
  */
-uint32_t tilt_update(tilt_context_t * p_context, int16_t x, int16_t y,
-                     int16_t z);
+uint32_t tilt_update(tilt_context_t * p_context, int16_t axis_x, int16_t axis_y,
+                     int16_t axis_z);
 /* Discard pending capture/filter history after a long gap, preserve
  * calibration. */
 void tilt_discard_history(tilt_context_t * p_context);
@@ -62,8 +63,8 @@ int16_t tilt_side_height_tenths(tilt_context_t const * p_context,
  * used for classification. Zero before calibration/filtering. Call only after
  * tilt_update() returned a valid result for the same x, y, z.
  */
-int16_t tilt_forward_dynamic_mg(tilt_context_t const * p_context, int16_t x,
-                                int16_t y, int16_t z);
+int16_t tilt_forward_dynamic_mg(tilt_context_t const * p_context,
+                                int16_t axis_x, int16_t axis_y, int16_t axis_z);
 /* Decode pitch (axis 0) or roll (axis 1); caller requires a valid packed
  * result. */
 int16_t tilt_angle_tenths(uint32_t result, uint8_t axis);

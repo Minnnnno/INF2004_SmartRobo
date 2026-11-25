@@ -38,10 +38,10 @@ encoder_capture_set_direction (volatile encoder_capture_t * p_capture,
     p_capture->flags = (uint8_t)flags;
 }
 
-void encoder_capture_init(volatile encoder_capture_t * capture,
+void encoder_capture_init(volatile encoder_capture_t * p_capture,
                           const unsigned pins[2][2], const bool quadrature[2],
                           const int sign[2], uint32_t levels);
-void encoder_capture_events(volatile encoder_capture_t * capture,
+void encoder_capture_events(volatile encoder_capture_t * p_capture,
                             const uint32_t pending[4], uint32_t levels);
 #endif
 

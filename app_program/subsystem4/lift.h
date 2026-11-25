@@ -82,8 +82,9 @@ void lift_reset(lift_t * p_lift);
  * Returns the latched condition. Does nothing before the tilt reference is
  * captured. The latch clears only after LIFT_CLEAR_MS upright and still.
  */
-uint8_t lift_step(lift_t * p_lift, tilt_context_t const * p_tilt, int16_t x,
-                  int16_t y, int16_t z, uint32_t now_ms, bool armed);
+uint8_t lift_step(lift_t * p_lift, tilt_context_t const * p_tilt,
+                  int16_t axis_x, int16_t axis_y, int16_t axis_z,
+                  uint32_t now_ms, bool b_armed);
 uint8_t lift_state(lift_t const * p_lift);
 /* True while latched, while the robot is tilted more than ~35 deg (and for
  * ~0.5 s after), or while the overturned pose is being timed: hump measurement

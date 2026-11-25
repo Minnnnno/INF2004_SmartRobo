@@ -106,7 +106,7 @@ static void run(uint32_t end_ms)
     g_heading_deg = 0.0; g_turn_cmd = 0.0; g_max_heading = 0.0;
     g_stopped = false; g_steer_calls = 0U; g_bad_source = 0U;
     g_pass_lines = 0U; g_fail_lines = 0U; g_define_lines = 0U; g_printed_offset_x = 9999;
-    s_cal = (s4_cal_t){0};
+    g_s_cal = (s4_cal_t){0};
     if (0 == setjmp(g_finish)) { terrain_task(0, NULL); }
 }
 
@@ -119,24 +119,24 @@ int main(void)
     check(g_max_heading >= 359.0, "turned a full 360 deg left");
     check(fabs(g_heading_deg) < 3.0, "turned back to the start (cable untwisted)");
     check(g_stopped && (0.0 == g_turn_cmd), "stopped at the end");
-    check(S4_CAL_DONE == s_cal.phase && NULL == s_cal.failure && MAG_CAL_PASS == s_cal.status, "calibration PASS");
-    check(abs(s_cal.result.cal.offset_x + 123) <= 4 && abs(s_cal.result.cal.offset_y - 48) <= 4, "offsets recovered");
-    check(abs((int)s_cal.result.cal.scale_y_q12 - 4342) <= 44, "Y scale recovered");
-    check(-1 == s_cal.result.cal.sign && 36U == s_cal.result.bins_covered, "sign and full coverage");
+    check(S4_CAL_DONE == g_s_cal.phase && NULL == g_s_cal.failure && MAG_CAL_PASS == g_s_cal.status, "calibration PASS");
+    check(abs(g_s_cal.result.cal.offset_x + 123) <= 4 && abs(g_s_cal.result.cal.offset_y - 48) <= 4, "offsets recovered");
+    check(abs((int)g_s_cal.result.cal.scale_y_q12 - 4342) <= 44, "Y scale recovered");
+    check(-1 == g_s_cal.result.cal.sign && 36U == g_s_cal.result.bins_covered, "sign and full coverage");
     check(g_pass_lines >= 1U && 6U <= g_define_lines, "PASS and the #define lines printed");
     check(abs(g_printed_offset_x + 123) <= 4, "printed offset matches");
 
     /* Wheels spin but the robot never turns: stop with FAIL "not turning". */
     g_stuck = true;
     run(20000U);
-    check(S4_CAL_DONE == s_cal.phase && NULL != s_cal.failure && g_stopped, "stuck robot stops with FAIL");
-    check(0 == strcmp("robot not turning", s_cal.failure) && g_fail_lines >= 1U, "reason printed");
+    check(S4_CAL_DONE == g_s_cal.phase && NULL != g_s_cal.failure && g_stopped, "stuck robot stops with FAIL");
+    check(0 == strcmp("robot not turning", g_s_cal.failure) && g_fail_lines >= 1U, "reason printed");
     g_stuck = false;
 
     /* Motion never READY and still: the pivot never starts. */
     g_not_ready = true;
     run(15000U);
-    check(0U == g_steer_calls && S4_CAL_WAIT == s_cal.phase, "no pivot unless motion is ready and still");
+    check(0U == g_steer_calls && S4_CAL_WAIT == g_s_cal.phase, "no pivot unless motion is ready and still");
     g_not_ready = false;
 
     printf("PASS: %u calibration-sequence checks (pivot left/right, stop, constants, failures)\n", g_checks);

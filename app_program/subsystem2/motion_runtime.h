@@ -8,7 +8,7 @@ void                    motion_runtime_init(void);
 const motion_config_t * motion_runtime_config(void);
 const motion_status_t * motion_runtime_initial_status(void);
 void                    motion_runtime_emergency_stop(void);
-void                    motion_task(INT code, void * context);
+void                    motion_task(INT code, void * p_context);
 /* Called by startup/the diagnostics task, never the motion loop or encoder ISR.
  */
 void motion_runtime_report_startup(void);

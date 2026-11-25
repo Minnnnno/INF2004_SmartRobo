@@ -86,7 +86,7 @@ static void mid_values(int32_t v[TF_FIELD_COUNT])
 	int i;
 
 	for (i = 0; i < TF_FIELD_COUNT; i++) {
-		v[i] = tf_fields[i].min + (tf_fields[i].max - tf_fields[i].min) / 2;
+		v[i] = g_tf_fields[i].min + (g_tf_fields[i].max - g_tf_fields[i].min) / 2;
 	}
 	v[TF_F_VERSION] = (int32_t)TF_LAYOUT_VERSION;
 }
@@ -96,12 +96,12 @@ static void test_layout(void)
 	int i, bits = 0;
 
 	for (i = 0; i < TF_FIELD_COUNT; i++) {
-		int64_t range = (int64_t)tf_fields[i].max - tf_fields[i].min;
+		int64_t range = (int64_t)g_tf_fields[i].max - g_tf_fields[i].min;
 
-		bits += tf_fields[i].bits;
-		CHECK(range < ((int64_t)1 << tf_fields[i].bits) &&
-		      range >= ((int64_t)1 << (tf_fields[i].bits - 1)),
-		      "%s is not minimum-bit", tf_fields[i].name);
+		bits += g_tf_fields[i].bits;
+		CHECK(range < ((int64_t)1 << g_tf_fields[i].bits) &&
+		      range >= ((int64_t)1 << (g_tf_fields[i].bits - 1)),
+		      "%s is not minimum-bit", g_tf_fields[i].name);
 	}
 	CHECK(bits == 167 && TF_FRAME_BITS == 167, "167 data bits, got %d", bits);
 	CHECK(TF_FRAME_BYTES == 21 && TF_SPARE_BITS == 1, "21 bytes, 1 spare");
@@ -157,7 +157,7 @@ static void test_exhaustive(void)
 			continue;
 		}
 		mid_values(in);
-		for (v = tf_fields[i].min; v <= tf_fields[i].max; v++) {
+		for (v = g_tf_fields[i].min; v <= g_tf_fields[i].max; v++) {
 			in[i] = v;
 			if ((tf_pack(in, frame) != 0U) || !tf_unpack(frame, sizeof(frame), out)) {
 				bad++;
@@ -169,7 +169,7 @@ static void test_exhaustive(void)
 				}
 			}
 		}
-		CHECK(bad == 0U, "%s round trip: %u mismatches", tf_fields[i].name, bad);
+		CHECK(bad == 0U, "%s round trip: %u mismatches", g_tf_fields[i].name, bad);
 		bad = 0;
 	}
 }
@@ -187,14 +187,14 @@ static void test_clamp(void)
 			int32_t want;
 			mid_values(in);
 			switch (k) {
-			case 0: in[i] = tf_fields[i].min - 1; want = tf_fields[i].min; break;
-			case 1: in[i] = tf_fields[i].max + 1; want = tf_fields[i].max; break;
+			case 0: in[i] = g_tf_fields[i].min - 1; want = g_tf_fields[i].min; break;
+			case 1: in[i] = g_tf_fields[i].max + 1; want = g_tf_fields[i].max; break;
 			default: in[i] = extremes[k - 2];
-				want = (k == 2) ? tf_fields[i].min : tf_fields[i].max; break;
+				want = (k == 2) ? g_tf_fields[i].min : g_tf_fields[i].max; break;
 			}
-			CHECK(tf_pack(in, frame) == (1UL << i), "%s clamp mask", tf_fields[i].name);
+			CHECK(tf_pack(in, frame) == (1UL << i), "%s clamp mask", g_tf_fields[i].name);
 			CHECK(tf_unpack(frame, sizeof(frame), out) && out[i] == want,
-			      "%s clamps to %d, got %d", tf_fields[i].name, want, out[i]);
+			      "%s clamps to %d, got %d", g_tf_fields[i].name, want, out[i]);
 		}
 	}
 
@@ -666,7 +666,7 @@ static void report_json_size(void)
 	n += snprintf(&json[n], sizeof(json) - (size_t)n, "{");
 	for (i = 0; i < TF_FIELD_COUNT; i++) {
 		n += snprintf(&json[n], sizeof(json) - (size_t)n, "%s\"%s\":%d",
-			      (i == 0) ? "" : ",", tf_fields[i].name, (int)v[i]);
+			      (i == 0) ? "" : ",", g_tf_fields[i].name, (int)v[i]);
 	}
 	n += snprintf(&json[n], sizeof(json) - (size_t)n, "}");
 	printf("size: JSON %d bytes, packed %d bytes (%d bits used, %d spare), %.1f%% of JSON\n",

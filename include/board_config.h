@@ -1,8 +1,8 @@
 #ifndef ROBO_BOARD_CONFIG_H
 #define ROBO_BOARD_CONFIG_H
 #include "motion.h"
-extern const unsigned motor_pins[2][2];
-extern const unsigned encoder_pins[2][2];
+extern const unsigned g_motor_pins[2][2];
+extern const unsigned g_encoder_pins[2][2];
 /* Pico GPIO numbers, not connector pin numbers. Optional: buttons GP20/GP21,
  * UART GP0/GP1. */
 enum

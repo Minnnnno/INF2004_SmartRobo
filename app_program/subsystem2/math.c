@@ -10,36 +10,38 @@ clamp (float64_t value, float64_t limit)
 }
 
 void
-pid_reset (pid_t * pid)
+pid_reset (pid_t * p_pid)
 {
-    memset(pid, 0, sizeof(*pid));
+    memset(p_pid, 0, sizeof(*p_pid));
 }
 
 float64_t
-pid_step (pid_t * pid, const pid_config_t * config, float64_t target,
-          float64_t measured, float64_t dt, float64_t limit)
+pid_step (pid_t * p_pid, const pid_config_t * p_config, float64_t target,
+          float64_t measured, float64_t delta_s, float64_t limit)
 {
-    float64_t error      = target - measured;
-    float64_t derivative = pid->seeded ? -(measured - pid->previous) / dt : 0.0;
+    float64_t error = target - measured;
+    float64_t derivative
+        = p_pid->seeded ? -(measured - p_pid->previous) / delta_s : 0.0;
     float64_t candidate;
     float64_t output;
 
-    pid->derivative += (dt / (config->derivative_tau + dt))
-                       * (derivative - pid->derivative);
-    pid->previous = measured;
-    pid->seeded   = true;
-    candidate     = pid->integral + (config->ki * error * dt);
-    output = (config->kp * error) + candidate + (config->kd * pid->derivative);
+    p_pid->derivative += (delta_s / (p_config->derivative_tau + delta_s))
+                         * (derivative - p_pid->derivative);
+    p_pid->previous = measured;
+    p_pid->seeded   = true;
+    candidate       = p_pid->integral + (p_config->ki * error * delta_s);
+    output          = (p_config->kp * error) + candidate
+                      + (p_config->kd * p_pid->derivative);
 
     /* Conditional integration: retain changes that unwind saturation. */
     if ((fabs(output) <= limit) || ((output > limit) && (error < 0.0))
         || ((output < -limit) && (error > 0.0)))
     {
-        pid->integral = clamp(candidate, limit);
+        p_pid->integral = clamp(candidate, limit);
     }
 
-    return clamp((config->kp * error) + pid->integral
-                     + (config->kd * pid->derivative),
+    return clamp((p_config->kp * error) + p_pid->integral
+                     + (p_config->kd * p_pid->derivative),
                  limit);
 }
 
@@ -54,7 +56,7 @@ encoder_delta (uint32_t now, uint32_t before)
 }
 
 int
-encoder_quadrature (uint8_t before, uint8_t after, bool * invalid)
+encoder_quadrature (uint8_t before, uint8_t after, bool * p_invalid)
 {
     /* Positive cycle 00 -> 01 -> 11 -> 10 -> 00; A is bit 1. */
     static const int8_t transitions[16]
@@ -62,34 +64,35 @@ encoder_quadrature (uint8_t before, uint8_t after, bool * invalid)
 
     before &= 3U;
     after &= 3U;
-    *invalid = (3U == (before ^ after));
+    *p_invalid = (3U == (before ^ after));
     return transitions[(before * 4U) + after];
 }
 
 bool
-odometry_step (odometry_t * odom, const motion_config_t * config,
-               const encoder_sample_t * sample, float64_t dt)
+odometry_step (odometry_t * p_odom, const motion_config_t * p_config,
+               const encoder_sample_t * p_sample, float64_t delta_s)
 {
     float64_t change[2];
     unsigned  wheel;
 
-    if ((!isfinite(dt)) || (dt <= 0.0) || (dt > config->max_dt))
+    if ((!isfinite(delta_s)) || (delta_s <= 0.0)
+        || (delta_s > p_config->max_dt))
     {
         return false;
     }
 
     for (wheel = 0; wheel < 2U; ++wheel)
     {
-        float64_t quantum = (3.141592653589793 * config->diameter[wheel])
-                            / config->counts_per_rev[wheel];
+        float64_t quantum = (3.141592653589793 * p_config->diameter[wheel])
+                            / p_config->counts_per_rev[wheel];
 
-        change[wheel] = (float64_t)encoder_delta(sample->count[wheel],
-                                                 odom->previous[wheel])
+        change[wheel] = (float64_t)encoder_delta(p_sample->count[wheel],
+                                                 p_odom->previous[wheel])
                         * quantum;
 
         if ((!isfinite(change[wheel]))
             || (fabs(change[wheel])
-                > ((config->max_speed * dt * 3.0) + (2.0 * quantum))))
+                > ((p_config->max_speed * delta_s * 3.0) + (2.0 * quantum))))
         {
             return false;
         }
@@ -97,14 +100,14 @@ odometry_step (odometry_t * odom, const motion_config_t * config,
 
     for (wheel = 0; wheel < 2U; ++wheel)
     {
-        odom->previous[wheel] = sample->count[wheel];
-        odom->travel[wheel] += change[wheel];
-        odom->speed[wheel] = change[wheel] / dt;
+        p_odom->previous[wheel] = p_sample->count[wheel];
+        p_odom->travel[wheel] += change[wheel];
+        p_odom->speed[wheel] = change[wheel] / delta_s;
     }
 
-    odom->centre += (change[0] + change[1]) / 2.0;
-    odom->path += fabs((change[0] + change[1]) / 2.0);
-    odom->heading += (change[1] - change[0]) / config->track;
+    p_odom->centre += (change[0] + change[1]) / 2.0;
+    p_odom->path += fabs((change[0] + change[1]) / 2.0);
+    p_odom->heading += (change[1] - change[0]) / p_config->track;
     return true;
 }
 

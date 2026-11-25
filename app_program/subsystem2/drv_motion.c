@@ -9,20 +9,20 @@
 #include <stddef.h>
 
 static motion_motor_storage_t     g_motor_config;
-static volatile encoder_capture_t capture;
-static uint32_t                   encoder_event_mask[4];
+static volatile encoder_capture_t g_capture;
+static uint32_t                   g_encoder_event_mask[4];
 static uint8_t                    g_driver_flags;
-static float64_t                  neutral_since[2];
+static float64_t                  g_neutral_since[2];
 /* neutral bits0:1; last directions bits2:5 */
 static uint8_t   g_wheel_flags = 3u;
-static uint16_t  wrap;
-static uint16_t  configured_divider_16;
-static uint16_t  last_compare[2][2];
-static float64_t last_requested[2];
-static float64_t last_applied[2];
-static uint8_t   reversal_wait_mask;
-static bool      last_inhibited = true;
-static uint32_t  last_write_us;
+static uint16_t  g_wrap;
+static uint16_t  g_configured_divider_16;
+static uint16_t  g_last_compare[2][2];
+static float64_t g_last_requested[2];
+static float64_t g_last_applied[2];
+static uint8_t   g_reversal_wait_mask;
+static bool      gb_last_inhibited = true;
+static uint32_t  g_last_write_us;
 
 #define DRIVER_ENCODER_READY  0x01u
 #define DRIVER_IRQ_REGISTERED 0x02u
@@ -99,7 +99,7 @@ encoder_irq (void)
     for (bank = 0U; bank < 4U; ++bank)
     {
         pending[bank] = in_w(IO_BANK0_BASE + 0x120U + (bank * 4U))
-                        & encoder_event_mask[bank];
+                        & g_encoder_event_mask[bank];
         any |= pending[bank];
 
         if (0U != pending[bank])
@@ -116,60 +116,62 @@ encoder_irq (void)
     /* Acknowledge only owned flags, then take one coherent A/B level snapshot.
      */
     levels = in_w(GPIO_IN);
-    encoder_capture_events(&capture, pending, levels);
+    encoder_capture_events(&g_capture, pending, levels);
 }
 
 void
 motion_hal_emergency_stop (void)
 {
-    unsigned w;
+    unsigned wheel;
 
-    for (w = 0; w < 2U; ++w)
+    for (wheel = 0; wheel < 2U; ++wheel)
     {
         /* Fixed physical board links, even if edited configuration is invalid.
          */
-        unsigned a = 8U + (2U * w);
-        unsigned b = a + 1U;
+        unsigned level_a = 8U + (2U * wheel);
+        unsigned level_b = level_a + 1U;
 
         /* Cytron Robo Pico truth table: LOW/LOW brake. Preload before
          * output-enable. */
-        gpio_init(a);
-        gpio_init(b);
-        gpio_put(a, false);
-        gpio_put(b, false);
+        gpio_init(level_a);
+        gpio_init(level_b);
+        gpio_put(level_a, false);
+        gpio_put(level_b, false);
         /* Never drive a motor-control pin if it is assigned to an encoder. */
-        gpio_set_dir(a, (a != encoder_pins[0][0]) && (a != encoder_pins[0][1])
-                            && (a != encoder_pins[1][0])
-                            && (a != encoder_pins[1][1]));
-        gpio_set_dir(b, (b != encoder_pins[0][0]) && (b != encoder_pins[0][1])
-                            && (b != encoder_pins[1][0])
-                            && (b != encoder_pins[1][1]));
+        gpio_set_dir(level_a, (level_a != g_encoder_pins[0][0])
+                                  && (level_a != g_encoder_pins[0][1])
+                                  && (level_a != g_encoder_pins[1][0])
+                                  && (level_a != g_encoder_pins[1][1]));
+        gpio_set_dir(level_b, (level_b != g_encoder_pins[0][0])
+                                  && (level_b != g_encoder_pins[0][1])
+                                  && (level_b != g_encoder_pins[1][0])
+                                  && (level_b != g_encoder_pins[1][1]));
     }
 
     motor_state_set(DRIVER_PWM_READY, false);
-    last_inhibited     = true;
-    reversal_wait_mask = 0U;
-    last_applied[0] = last_applied[1] = 0.0;
+    gb_last_inhibited    = true;
+    g_reversal_wait_mask = 0U;
+    g_last_applied[0] = g_last_applied[1] = 0.0;
 }
 
 bool
-motion_hal_init (const motion_config_t * config)
+motion_hal_init (const motion_config_t * p_config)
 {
-    unsigned  w;
+    unsigned  wheel;
     uint32_t  mask = 0U;
     uint32_t  irq_state;
     float64_t divider;
 
-    g_motor_config.max_output    = config->max_output;
-    g_motor_config.reversal_time = config->reversal_time;
-    g_motor_config.flags         = config->brake ? MOTOR_BRAKE_ENABLED : 0u;
+    g_motor_config.max_output    = p_config->max_output;
+    g_motor_config.reversal_time = p_config->reversal_time;
+    g_motor_config.flags         = p_config->brake ? MOTOR_BRAKE_ENABLED : 0u;
 
-    if (config->motor_sign[0] < 0)
+    if (p_config->motor_sign[0] < 0)
     {
         g_motor_config.flags |= 2u;
     }
 
-    if (config->motor_sign[1] < 0)
+    if (p_config->motor_sign[1] < 0)
     {
         g_motor_config.flags |= 4u;
     }
@@ -182,13 +184,13 @@ motion_hal_init (const motion_config_t * config)
     }
 
     /* Keep safe GPIO levels when settings have not been confirmed. */
-    if ((config->pwm_hz < 1000U) || (config->pwm_hz > 20000U))
+    if ((p_config->pwm_hz < 1000U) || (p_config->pwm_hz > 20000U))
     {
         return false;
     }
 
-    wrap    = 4095U;
-    divider = 125000000.0 / ((float64_t)config->pwm_hz * (wrap + 1U));
+    g_wrap  = 4095U;
+    divider = 125000000.0 / ((float64_t)p_config->pwm_hz * (g_wrap + 1U));
     /* Never exceed the requested/max 20 kHz. */
     divider = ceil(divider * 16.0) / 16.0;
 
@@ -197,25 +199,26 @@ motion_hal_init (const motion_config_t * config)
         return false;
     }
 
-    configured_divider_16 = (uint16_t)(divider * 16.0);
+    g_configured_divider_16 = (uint16_t)(divider * 16.0);
 
-    for (w = 0; w < 2U; ++w)
+    for (wheel = 0; wheel < 2U; ++wheel)
     {
         unsigned channel;
 
         pwm_config pwm = pwm_get_default_config();
-        pwm_config_set_wrap(&pwm, wrap);
+        pwm_config_set_wrap(&pwm, g_wrap);
         pwm_config_set_clkdiv(&pwm, (float32_t)divider);
-        pwm_init(pwm_gpio_to_slice_num(motor_pins[w][0]), &pwm, false);
-        pwm_set_both_levels(pwm_gpio_to_slice_num(motor_pins[w][0]), 0U, 0U);
-        last_compare[w][0] = last_compare[w][1] = 0U;
-        last_requested[w] = last_applied[w] = 0.0;
+        pwm_init(pwm_gpio_to_slice_num(g_motor_pins[wheel][0]), &pwm, false);
+        pwm_set_both_levels(pwm_gpio_to_slice_num(g_motor_pins[wheel][0]), 0U,
+                            0U);
+        g_last_compare[wheel][0] = g_last_compare[wheel][1] = 0U;
+        g_last_requested[wheel] = g_last_applied[wheel] = 0.0;
 
         for (channel = 0; channel < 2U; ++channel)
         {
-            unsigned pin = encoder_pins[w][channel];
+            unsigned pin = g_encoder_pins[wheel][channel];
 
-            if ((1U == channel) && (!config->quadrature[w]))
+            if ((1U == channel) && (!p_config->quadrature[wheel]))
             {
                 continue;
             }
@@ -226,12 +229,13 @@ motion_hal_init (const motion_config_t * config)
             gpio_disable_pulls(pin);
             gpio_set_irq_enabled(pin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL,
                                  false);
-            encoder_event_mask[pin / 8U] |= (config->quadrature[w] ? 12UL : 8UL)
-                                            << ((pin % 8U) * 4U);
+            g_encoder_event_mask[pin / 8U]
+                |= (p_config->quadrature[wheel] ? 12UL : 8UL)
+                   << ((pin % 8U) * 4U);
             mask |= 1UL << pin;
         }
 
-        neutral_since[w] = motion_hal_time();
+        g_neutral_since[wheel] = motion_hal_time();
     }
 
     /* Board dispatcher owns IRQ 13; each registered handler owns only its pin
@@ -244,25 +248,26 @@ motion_hal_init (const motion_config_t * config)
     motor_state_set(DRIVER_IRQ_REGISTERED, true);
     irq_state = save_and_disable_interrupts();
 
-    for (w = 0U; w < 4U; ++w)
+    for (wheel = 0U; wheel < 4U; ++wheel)
     {
-        out_w(IO_BANK0_BASE + 0xf0U + (w * 4U), encoder_event_mask[w]);
+        out_w(IO_BANK0_BASE + 0xf0U + (wheel * 4U),
+              g_encoder_event_mask[wheel]);
     }
 
-    encoder_capture_init(&capture, encoder_pins, config->quadrature,
-                         config->encoder_sign, in_w(GPIO_IN));
+    encoder_capture_init(&g_capture, g_encoder_pins, p_config->quadrature,
+                         p_config->encoder_sign, in_w(GPIO_IN));
 
-    for (w = 0; w < 2U; ++w)
+    for (wheel = 0; wheel < 2U; ++wheel)
     {
-        gpio_set_irq_enabled(encoder_pins[w][0],
-                             config->quadrature[w]
+        gpio_set_irq_enabled(g_encoder_pins[wheel][0],
+                             p_config->quadrature[wheel]
                                  ? GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL
                                  : GPIO_IRQ_EDGE_RISE,
                              true);
 
-        if (config->quadrature[w])
+        if (p_config->quadrature[wheel])
         {
-            gpio_set_irq_enabled(encoder_pins[w][1],
+            gpio_set_irq_enabled(g_encoder_pins[wheel][1],
                                  GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
         }
     }
@@ -275,20 +280,20 @@ motion_hal_init (const motion_config_t * config)
      */
     return true;
 #else
-    if (!config->hardware_confirmed)
+    if (!p_config->hardware_confirmed)
     {
         return true;
     }
 
-    for (w = 0; w < 2U; ++w)
+    for (wheel = 0; wheel < 2U; ++wheel)
     {
-        gpio_set_function(motor_pins[w][0], GPIO_FUNC_PWM);
-        gpio_set_function(motor_pins[w][1], GPIO_FUNC_PWM);
-        pwm_set_enabled(pwm_gpio_to_slice_num(motor_pins[w][0]), true);
+        gpio_set_function(g_motor_pins[wheel][0], GPIO_FUNC_PWM);
+        gpio_set_function(g_motor_pins[wheel][1], GPIO_FUNC_PWM);
+        pwm_set_enabled(pwm_gpio_to_slice_num(g_motor_pins[wheel][0]), true);
     }
 
     motor_state_set(DRIVER_PWM_READY, true);
-    last_write_us = in_w(TIMER_TIMERAWL);
+    g_last_write_us = in_w(TIMER_TIMERAWL);
     return true;
 #endif
 }
@@ -299,51 +304,54 @@ motion_hal_sample (void)
     encoder_sample_t sample;
     uint32_t         irq_state = save_and_disable_interrupts();
 
-    sample.count[0]   = capture.count[0];
-    sample.count[1]   = capture.count[1];
-    sample.invalid[0] = capture.invalid[0];
-    sample.invalid[1] = capture.invalid[1];
+    sample.count[0]   = g_capture.count[0];
+    sample.count[1]   = g_capture.count[1];
+    sample.invalid[0] = g_capture.invalid[0];
+    sample.invalid[1] = g_capture.invalid[1];
     sample.reliable   = motor_state_get(DRIVER_ENCODER_READY);
     restore_interrupts(irq_state);
     return sample;
 }
 
 void
-motion_hal_encoder_diagnostics (encoder_diagnostics_t * d)
+motion_hal_encoder_diagnostics (encoder_diagnostics_t * p_diagnostics)
 {
-    unsigned w;
+    unsigned wheel;
     unsigned channel;
     uint32_t irq_state = save_and_disable_interrupts();
 
-    d->levels           = in_w(GPIO_IN);
-    d->initialised      = motor_state_get(DRIVER_ENCODER_READY);
-    d->irq_registered   = motor_state_get(DRIVER_IRQ_REGISTERED);
-    d->nvic_enabled     = 0U != (in_w(0xe000e100U) & (1UL << 13U));
-    d->motors_inhibited = !motor_state_get(DRIVER_PWM_READY);
+    p_diagnostics->levels           = in_w(GPIO_IN);
+    p_diagnostics->initialised      = motor_state_get(DRIVER_ENCODER_READY);
+    p_diagnostics->irq_registered   = motor_state_get(DRIVER_IRQ_REGISTERED);
+    p_diagnostics->nvic_enabled     = 0U != (in_w(0xe000e100U) & (1UL << 13U));
+    p_diagnostics->motors_inhibited = !motor_state_get(DRIVER_PWM_READY);
 #ifdef ROBO_SAFE_MOTOR_TEST
-    d->motors_inhibited = !motor_test_active();
+    p_diagnostics->motors_inhibited = !motor_test_active();
 #endif
 #ifdef ROBO_ANGLE_TEST
-    d->motors_inhibited = !angle_test_active();
+    p_diagnostics->motors_inhibited = !angle_test_active();
 #endif
-    d->sample.reliable = motor_state_get(DRIVER_ENCODER_READY);
+    p_diagnostics->sample.reliable = motor_state_get(DRIVER_ENCODER_READY);
 
-    for (w = 0; w < 2U; ++w)
+    for (wheel = 0; wheel < 2U; ++wheel)
     {
-        d->sample.count[w]   = capture.count[w];
-        d->sample.invalid[w] = capture.invalid[w];
-        d->previous_ab[w]    = encoder_capture_previous_ab(&capture, w);
+        p_diagnostics->sample.count[wheel]   = g_capture.count[wheel];
+        p_diagnostics->sample.invalid[wheel] = g_capture.invalid[wheel];
+        p_diagnostics->previous_ab[wheel]
+            = encoder_capture_previous_ab(&g_capture, wheel);
 
         for (channel = 0; channel < 2U; ++channel)
         {
-            unsigned pin = encoder_pins[w][channel];
+            unsigned pin = g_encoder_pins[wheel][channel];
 
-            d->pins[w][channel]  = pin;
-            d->edges[w][channel] = capture.edges[w][channel];
-            d->irq_events[w][channel]
+            p_diagnostics->pins[wheel][channel] = pin;
+            p_diagnostics->edges[wheel][channel]
+                = g_capture.edges[wheel][channel];
+            p_diagnostics->irq_events[wheel][channel]
                 = (uint8_t)((in_w(irq_reg(pin, 0x100U)) >> ((pin % 8U) * 4U))
                             & 15U);
-            d->function[w][channel] = (uint8_t)(in_w(GPIO_CTRL(pin)) & 31U);
+            p_diagnostics->function[wheel][channel]
+                = (uint8_t)(in_w(GPIO_CTRL(pin)) & 31U);
         }
     }
 
@@ -362,155 +370,164 @@ diagnostic_permille (float64_t value)
 }
 
 void
-motion_hal_motor_diagnostics (motor_diagnostics_t * d)
+motion_hal_motor_diagnostics (motor_diagnostics_t * p_diagnostics)
 {
-    if (NULL == d)
+    if (NULL == p_diagnostics)
     {
         return;
     }
 
-    d->ready                 = motor_state_get(DRIVER_PWM_READY);
-    d->inhibited             = last_inhibited;
-    d->reversal_wait_mask    = reversal_wait_mask;
-    d->enabled_mask          = 0U;
-    d->mismatch_mask         = 0U;
-    d->configured_top        = wrap;
-    d->configured_divider_16 = configured_divider_16;
-    d->cap_permille  = ((isfinite(g_motor_config.max_output))
-                        && (g_motor_config.max_output > 0.0)
-                        && (g_motor_config.max_output <= 1.0))
-                           ? (int32_t)(g_motor_config.max_output * 1000.0)
-                           : 0;
-    d->output_age_ms = (in_w(TIMER_TIMERAWL) - last_write_us) / 1000U;
+    p_diagnostics->ready                 = motor_state_get(DRIVER_PWM_READY);
+    p_diagnostics->inhibited             = gb_last_inhibited;
+    p_diagnostics->reversal_wait_mask    = g_reversal_wait_mask;
+    p_diagnostics->enabled_mask          = 0U;
+    p_diagnostics->mismatch_mask         = 0U;
+    p_diagnostics->configured_top        = g_wrap;
+    p_diagnostics->configured_divider_16 = g_configured_divider_16;
+    p_diagnostics->cap_permille
+        = ((isfinite(g_motor_config.max_output))
+           && (g_motor_config.max_output > 0.0)
+           && (g_motor_config.max_output <= 1.0))
+              ? (int32_t)(g_motor_config.max_output * 1000.0)
+              : 0;
+    p_diagnostics->output_age_ms
+        = (in_w(TIMER_TIMERAWL) - g_last_write_us) / 1000U;
 
-    for (unsigned w = 0U; w < 2U; ++w)
+    for (unsigned wheel = 0U; wheel < 2U; ++wheel)
     {
         uint32_t base
-            = PWM_BASE + (pwm_gpio_to_slice_num(motor_pins[w][0]) * 0x14U);
+            = PWM_BASE
+              + (pwm_gpio_to_slice_num(g_motor_pins[wheel][0]) * 0x14U);
         uint32_t compare = in_w(base + 12U);
 
-        d->requested_permille[w]  = diagnostic_permille(last_requested[w]);
-        d->applied_permille[w]    = diagnostic_permille(last_applied[w]);
-        d->compare[w][0]          = (uint16_t)compare;
-        d->compare[w][1]          = (uint16_t)(compare >> 16U);
-        d->expected_compare[w][0] = last_compare[w][0];
-        d->expected_compare[w][1] = last_compare[w][1];
-        d->top[w]                 = (uint16_t)in_w(base + 16U);
-        d->divider_16[w]          = (uint16_t)in_w(base + 4U);
+        p_diagnostics->requested_permille[wheel]
+            = diagnostic_permille(g_last_requested[wheel]);
+        p_diagnostics->applied_permille[wheel]
+            = diagnostic_permille(g_last_applied[wheel]);
+        p_diagnostics->compare[wheel][0]          = (uint16_t)compare;
+        p_diagnostics->compare[wheel][1]          = (uint16_t)(compare >> 16U);
+        p_diagnostics->expected_compare[wheel][0] = g_last_compare[wheel][0];
+        p_diagnostics->expected_compare[wheel][1] = g_last_compare[wheel][1];
+        p_diagnostics->top[wheel]                 = (uint16_t)in_w(base + 16U);
+        p_diagnostics->divider_16[wheel]          = (uint16_t)in_w(base + 4U);
 
         if (0U != (in_w(base) & 1U))
         {
-            d->enabled_mask |= (uint8_t)(1U << w);
+            p_diagnostics->enabled_mask |= (uint8_t)(1U << wheel);
         }
 
         for (unsigned channel = 0U; channel < 2U; ++channel)
         {
-            d->pin_function[w][channel]
-                = (uint8_t)(in_w(GPIO_CTRL(motor_pins[w][channel])) & 31U);
+            p_diagnostics->pin_function[wheel][channel]
+                = (uint8_t)(in_w(GPIO_CTRL(g_motor_pins[wheel][channel]))
+                            & 31U);
         }
 
-        if ((d->ready)
-            && ((d->compare[w][0] != last_compare[w][0])
-                || (d->compare[w][1] != last_compare[w][1])
-                || (d->top[w] != wrap)
-                || (d->divider_16[w] != configured_divider_16)
-                || (0U == (d->enabled_mask & (1U << w)))
-                || (GPIO_FUNC_PWM != d->pin_function[w][0])
-                || (GPIO_FUNC_PWM != d->pin_function[w][1])))
+        if ((p_diagnostics->ready)
+            && ((p_diagnostics->compare[wheel][0] != g_last_compare[wheel][0])
+                || (p_diagnostics->compare[wheel][1]
+                    != g_last_compare[wheel][1])
+                || (p_diagnostics->top[wheel] != g_wrap)
+                || (p_diagnostics->divider_16[wheel] != g_configured_divider_16)
+                || (0U == (p_diagnostics->enabled_mask & (1U << wheel)))
+                || (GPIO_FUNC_PWM != p_diagnostics->pin_function[wheel][0])
+                || (GPIO_FUNC_PWM != p_diagnostics->pin_function[wheel][1])))
         {
-            d->mismatch_mask |= (uint8_t)(1U << w);
+            p_diagnostics->mismatch_mask |= (uint8_t)(1U << wheel);
         }
     }
 }
 
 void
-motion_hal_write (const float64_t output[2], bool inhibited, float64_t now)
+motion_hal_write (const float64_t output[2], bool b_inhibited, float64_t now)
 {
 #if defined(ROBO_ENCODER_DIAGNOSTICS_ONLY) || defined(ROBO_SAFE_MOTOR_TEST) \
     || defined(ROBO_ANGLE_TEST)
     (void)output;
-    (void)inhibited;
+    (void)b_inhibited;
     (void)now;
     /* Startup left all motor outputs LOW; no drive path in this build. */
     return;
 #else
-    unsigned w;
+    unsigned wheel;
 
     if (!motor_state_get(DRIVER_PWM_READY))
     {
-        last_inhibited = true;
+        gb_last_inhibited = true;
         return;
     }
 
-    last_inhibited     = inhibited;
-    reversal_wait_mask = 0U;
+    gb_last_inhibited    = b_inhibited;
+    g_reversal_wait_mask = 0U;
 
-    for (w = 0; w < 2U; ++w)
+    for (wheel = 0; wheel < 2U; ++wheel)
     {
         float64_t requested
-            = isfinite(output[w])
+            = isfinite(output[wheel])
                   ? fmax(-g_motor_config.max_output,
-                         fmin(g_motor_config.max_output, output[w]))
+                         fmin(g_motor_config.max_output, output[wheel]))
                   : 0.0;
-        float64_t value     = inhibited ? 0.0 : requested;
+        float64_t value     = b_inhibited ? 0.0 : requested;
         int       direction = (value > 0.0) ? 1 : ((value < 0.0) ? -1 : 0);
-        uint16_t  a         = 0U;
-        uint16_t  b         = 0U;
+        uint16_t  level_a   = 0U;
+        uint16_t  level_b   = 0U;
 
-        if ((0 != direction) && (0 != motor_direction_get(w))
-            && (direction != motor_direction_get(w))
-            && ((!motor_is_neutral(w))
-                || ((now - neutral_since[w]) < g_motor_config.reversal_time)))
+        if ((0 != direction) && (0 != motor_direction_get(wheel))
+            && (direction != motor_direction_get(wheel))
+            && ((!motor_is_neutral(wheel))
+                || ((now - g_neutral_since[wheel])
+                    < g_motor_config.reversal_time)))
         {
             value     = 0.0;
             direction = 0;
-            reversal_wait_mask |= (uint8_t)(1U << w);
+            g_reversal_wait_mask |= (uint8_t)(1U << wheel);
         }
 
         if (0 == direction)
         {
-            if (!motor_is_neutral(w))
+            if (!motor_is_neutral(wheel))
             {
-                neutral_since[w] = now;
+                g_neutral_since[wheel] = now;
             }
 
-            motor_neutral_set(w, true);
+            motor_neutral_set(wheel, true);
 
             if ((0u == ((uint32_t)g_motor_config.flags & MOTOR_BRAKE_ENABLED)))
             {
-                a = (uint16_t)(wrap + 1U);
-                b = a;
+                level_a = (uint16_t)(g_wrap + 1U);
+                level_b = level_a;
             }
         }
         else
         {
-            uint16_t duty      = (uint16_t)(fabs(value) * (wrap + 1U));
+            uint16_t duty      = (uint16_t)(fabs(value) * (g_wrap + 1U));
             uint32_t irq_state = save_and_disable_interrupts();
 
-            encoder_capture_set_direction(&capture, w, direction);
+            encoder_capture_set_direction(&g_capture, wheel, direction);
             restore_interrupts(irq_state);
-            motor_direction_set(w, direction);
-            motor_neutral_set(w, false);
+            motor_direction_set(wheel, direction);
+            motor_neutral_set(wheel, false);
 
-            if ((direction * motor_sign_get(w)) > 0)
+            if ((direction * motor_sign_get(wheel)) > 0)
             {
-                a = duty;
+                level_a = duty;
             }
             else
             {
-                b = duty;
+                level_b = duty;
             }
         }
 
         /* Both compare values share a single slice register write. */
-        pwm_set_both_levels(pwm_gpio_to_slice_num(motor_pins[w][0]), a, b);
-        last_requested[w]  = requested;
-        last_applied[w]    = value;
-        last_compare[w][0] = a;
-        last_compare[w][1] = b;
+        pwm_set_both_levels(pwm_gpio_to_slice_num(g_motor_pins[wheel][0]),
+                            level_a, level_b);
+        g_last_requested[wheel]  = requested;
+        g_last_applied[wheel]    = value;
+        g_last_compare[wheel][0] = level_a;
+        g_last_compare[wheel][1] = level_b;
     }
 
-    last_write_us = in_w(TIMER_TIMERAWL);
+    g_last_write_us = in_w(TIMER_TIMERAWL);
 #endif
 }
 

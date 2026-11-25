@@ -4,50 +4,50 @@ static struct
     uint32_t mask;
 
     void (*handler)(void);
-} owners[4];
-static unsigned owner_count;
+} g_owners[4];
+static unsigned g_owner_count;
 static void
 dispatch (UINT number)
 {
-    unsigned i;
+    unsigned index;
 
     (void)number;
 
-    for (i = 0; i < owner_count; ++i)
+    for (index = 0; index < g_owner_count; ++index)
     {
-        owners[i].handler();
+        g_owners[index].handler();
     }
 }
 
 bool
-board_gpio_irq_register (uint32_t mask, void (*handler)(void))
+board_gpio_irq_register (uint32_t mask, void (*p_handler)(void))
 {
-    unsigned i;
+    unsigned index;
     UINT     state;
     T_DINT   definition = {.intatr = TA_HLNG, .inthdr = (FP)dispatch};
 
-    if ((0U == mask) || (NULL == handler) || (4U == owner_count))
+    if ((0U == mask) || (NULL == p_handler) || (4U == g_owner_count))
     {
         return false;
     }
 
-    for (i = 0; i < owner_count; ++i)
+    for (index = 0; index < g_owner_count; ++index)
     {
-        if (0U != (owners[i].mask & mask))
+        if (0U != (g_owners[index].mask & mask))
         {
             return false;
         }
     }
 
-    if ((0U == owner_count) && (E_OK != tk_def_int(13U, &definition)))
+    if ((0U == g_owner_count) && (E_OK != tk_def_int(13U, &definition)))
     {
         return false;
     }
 
     DI(state);
-    owners[owner_count].mask    = mask;
-    owners[owner_count].handler = handler;
-    ++owner_count;
+    g_owners[g_owner_count].mask    = mask;
+    g_owners[g_owner_count].handler = p_handler;
+    ++g_owner_count;
     EI(state);
     EnableInt(13U, 1);
     return true;

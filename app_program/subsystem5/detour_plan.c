@@ -218,20 +218,20 @@ s5_line_expected (float64_t y_mm, float64_t heading_deg)
 /* t >= 0 along a ray stays inside the half-plane a + t * d >= 0: narrow [*p_lo,
  * *p_hi]. */
 static bool
-clip_ray (float64_t a, float64_t d, float64_t * p_lo, float64_t * p_hi)
+clip_ray (float64_t offset, float64_t slope, float64_t * p_lo, float64_t * p_hi)
 {
-    if (fabs(d) < 1e-12)
+    if (fabs(slope) < 1e-12)
     {
-        return a >= 0.0;
+        return offset >= 0.0;
     }
 
-    if (d > 0.0)
+    if (slope > 0.0)
     {
-        *p_lo = fmax(*p_lo, -a / d);
+        *p_lo = fmax(*p_lo, -offset / slope);
     }
     else
     {
-        *p_hi = fmin(*p_hi, -a / d);
+        *p_hi = fmin(*p_hi, -offset / slope);
     }
 
     return *p_lo <= *p_hi;
@@ -253,19 +253,19 @@ s5_obstacle_range (const s5_detour_plan_t * p_plan, float64_t x_mm,
     for (offset = -S5_KNOWN_BEAM_HALF_DEG; offset <= S5_KNOWN_BEAM_HALF_DEG;
          offset++)
     {
-        float64_t ray = (look_deg + (float64_t)offset) * DEG_TO_RAD;
-        float64_t ux  = cos(ray);
-        float64_t uy  = sin(ray);
-        float64_t lo  = 0.0;
-        float64_t hi  = INFINITY;
+        float64_t ray    = (look_deg + (float64_t)offset) * DEG_TO_RAD;
+        float64_t unit_x = cos(ray);
+        float64_t unit_y = sin(ray);
+        float64_t low    = 0.0;
+        float64_t high   = INFINITY;
 
         /* Beyond the face (x >= face_mm), on the obstacle's side of the passed
          * end */
-        if ((clip_ray(servo_x - p_plan->face_mm, ux, &lo, &hi))
-            && (clip_ray(-sign * (servo_y - p_plan->edge_mm), -sign * uy, &lo,
-                         &hi)))
+        if ((clip_ray(servo_x - p_plan->face_mm, unit_x, &low, &high))
+            && (clip_ray(-sign * (servo_y - p_plan->edge_mm), -sign * unit_y,
+                         &low, &high)))
         {
-            nearest = fmin(nearest, lo);
+            nearest = fmin(nearest, low);
         }
     }
 

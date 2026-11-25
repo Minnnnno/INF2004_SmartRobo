@@ -11,11 +11,11 @@
 #include <tk/tkernel.h>
 
 static BOOL
-log_starts_with (const UB * text, const char * prefix)
+log_starts_with (const UB * p_text, const char * p_prefix)
 {
-    while (*prefix != '\0')
+    while (*p_prefix != '\0')
     {
-        if ((char)*text++ != *prefix++)
+        if ((char)*p_text++ != *p_prefix++)
         {
             return FALSE;
         }
@@ -25,20 +25,20 @@ log_starts_with (const UB * text, const char * prefix)
 }
 
 BOOL
-robo_log_allowed (const UB * format)
+robo_log_allowed (const UB * p_format)
 {
     static const char * const keep[]
         = {"barcode", "[S3-",      "route",      "calibration",
            "bc t=",   "firmware=", "LAST CRASH", "[ERROR]"};
 
-    if (NULL == format)
+    if (NULL == p_format)
     {
         return FALSE;
     }
 
-    for (unsigned i = 0U; i < sizeof keep / sizeof keep[0]; ++i)
+    for (unsigned index = 0U; index < sizeof keep / sizeof keep[0]; ++index)
     {
-        if (log_starts_with(format, keep[i]))
+        if (log_starts_with(p_format, keep[index]))
         {
             return TRUE;
         }
