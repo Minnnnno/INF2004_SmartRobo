@@ -21,7 +21,7 @@ Ranges assume the production constants: track 115 mm (`B4_TRACK_MM`), 20 ms task
 period, ±2 g accelerometer range at 12 bits, and the 250 mm/s wheel speed limit.
 
 Sections 1–9 are the representation tables. Sections 10–12 give the measured RAM
-and message-size comparisons and the correctness and timing evidence (Week 13).
+and message-size comparisons and the correctness and timing evidence (Week 8).
 
 ## 1. GY-511 samples (`gy511_read.h`)
 
@@ -153,7 +153,7 @@ measures them.
 | Overturned (motors stopped) | motion class 7 | 3 (shared code) | **In code** |
 | Cause of the fault | `ER` kernel code | 32 | **Kept wide**: console diagnostic only, never sent |
 
-## 10. RAM usage comparison (Week 13)
+## 10. RAM usage comparison (Week 8)
 
 **What "before" means.** The first integrated Buddy 4 (commit `b96a929`,
 11 October 2026) used unpacked types:
@@ -195,7 +195,7 @@ object files):
 - **Whole image:** `bss 111792` for every buddy and the kernel together. Buddy 4's
   264 bytes are about 0.2 % of it.
 
-## 11. Message size comparison (Week 13)
+## 11. Message size comparison (Week 8)
 
 Measured from the original message formats and today's frame definition
 (`testing/subsystem4/logs/compact_representation_2026-11-25/messages.txt`).
@@ -221,7 +221,7 @@ Measured from the original message formats and today's frame definition
 
 Result: **8.4× to 11.9× less data per second**, while updating 2.5× as often.
 
-## 12. Correctness and performance (Week 13)
+## 12. Correctness and performance (Week 8)
 
 **No loss of required functionality:**
 - **Frame round-trip** (`buddy1_frame_checks`, team suite, 24/24 pass in

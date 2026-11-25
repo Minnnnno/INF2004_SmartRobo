@@ -1,4 +1,4 @@
-"""Measure Buddy 4's minimum-bit representation (Change Requirement 1, Week 13).
+"""Measure Buddy 4's minimum-bit representation (Change Requirement 1, Week 8).
 
 Usage (from the repository root, after building the firmware):
     python tests/subsystem4/measure_compact.py <firmware build dir> <output dir>

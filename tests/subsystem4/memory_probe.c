@@ -1,4 +1,4 @@
-/* Buddy 4 minimum-bit RAM probe (Change Requirement 1, Week 13 evidence).
+/* Buddy 4 minimum-bit RAM probe (Change Requirement 1, Week 8 evidence).
  *
  * Not part of the firmware or the host tests. measure_compact.py compiles this
  * file with the Pico's own compiler (arm-none-eabi-gcc, Cortex-M0+) and reads

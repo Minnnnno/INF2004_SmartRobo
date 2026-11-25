@@ -378,7 +378,7 @@ the frame (since layout v2).
 Nothing is sent as MQTT text any more; data reaches the dashboard only through
 the binary status frame (Change Requirement 1). The minimum-bit evidence (data
 representation table, measured RAM and message sizes, correctness and timing) is in
-`docs/BUDDY4_COMPACT_REPRESENTATION.md`.
+`testing/subsystem4/BUDDY4_COMPACT_REPRESENTATION.md`.
 
 ## Console
 
