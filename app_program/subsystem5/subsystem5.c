@@ -50,6 +50,7 @@
 #define S5_HUMP_STOP_MM 100.0
 
 /* stop latch until the next 10 ms motion tick */
+#define S5_WIDTH_SCALE    0.8 /* the scan reads wide; reported width only */
 #define S5_STOP_LATENCY_S 0.010
 #define S5_BRAKE_MM       3.0 /* travel while braking from line speed; tune */
 #define S5_PING_PERIOD_S  ((float64_t)S5_US_CYCLE_MS / 1000.0)
@@ -604,27 +605,11 @@ print_face (const s5_scan_t * p_scan)
               s5_round(S5_FACE_CENTRE_FRACTION * p_face->distance_mm));
 }
 
+/* Every reading of the scan, then the two edges. */
 static void
-report_scan (const s5_scan_t * p_scan)
+report_points (const s5_scan_t * p_scan)
 {
     unsigned index;
-    int      width;
-    int      distance;
-    int      offset;
-    bool     b_complete;
-
-    if (!p_scan->b_valid)
-    {
-        tm_printf((const UB *)"[OBSTACLE] no echo straight ahead when the scan "
-                              "began; no width measured\n");
-        return;
-    }
-
-    distance = s5_round(s5_point_range(p_scan->centre));
-    tm_printf((const UB *)"[OBSTACLE] stopped %d mm from the obstacle (target "
-                          "%d mm), %u/%u pings agree\n",
-              distance, s5_round(S5_STOP_MM), s5_point_support(p_scan->centre),
-              s5_point_total(p_scan->centre));
 
     tm_printf((const UB *)"[OBSTACLE] coarse sweep, %d deg steps (obstacle = "
                           "forward distance within %d mm of 90 deg)\n",
@@ -660,6 +645,73 @@ report_scan (const s5_scan_t * p_scan)
 
     print_edge("left ", &p_scan->edge[S5_LEFT], S5_ANGLE_LEFT_DEG);
     print_edge("right", &p_scan->edge[S5_RIGHT], S5_ANGLE_RIGHT_DEG);
+}
+
+/* Two bounded text diagnostics: the combined report exceeds the queue's 96-byte
+   buffer even for ordinary readings. */
+static void
+send_scan (const s5_scan_t * p_scan, int width, int distance, int offset,
+           bool b_complete)
+{
+    char payload[COMMS_PAYLOAD_MAX];
+    INT length = tm_snprintf((UB *)payload, (INT)sizeof(payload),
+                             (const UB *)"obstacle width_mm=%d dist_mm=%d "
+                                         "offset_mm=%d complete=%d position=%s",
+                             width, distance, offset, b_complete ? 1 : 0,
+                             position_name(p_scan->placement.position));
+
+    if ((length > 0) && ((size_t)length < sizeof(payload)))
+    {
+        (void)comms_send_telemetry("obstacle", payload);
+    }
+    else
+    {
+        tm_printf((const UB *)"[OBSTACLE] measurement event too long (%d "
+                              "bytes); skipped\n",
+                  length);
+    }
+
+    length = tm_snprintf(
+        (UB *)payload, (INT)sizeof(payload),
+        (const UB *)"obstacle avoid=%s shift_l_mm=%d shift_r_mm=%d",
+        avoid_name(p_scan->avoid.side),
+        s5_round(p_scan->avoid.shift_mm[S5_LEFT]),
+        s5_round(p_scan->avoid.shift_mm[S5_RIGHT]));
+
+    if ((length > 0) && ((size_t)length < sizeof(payload)))
+    {
+        (void)comms_send_telemetry("obstacle", payload);
+    }
+    else
+    {
+        tm_printf((const UB *)"[OBSTACLE] avoidance event too long (%d "
+                              "bytes); skipped\n",
+                  length);
+    }
+}
+
+static void
+report_scan (const s5_scan_t * p_scan)
+{
+    int  width;
+    int  distance;
+    int  offset;
+    bool b_complete;
+
+    if (!p_scan->b_valid)
+    {
+        tm_printf((const UB *)"[OBSTACLE] no echo straight ahead when the scan "
+                              "began; no width measured\n");
+        return;
+    }
+
+    distance = s5_round(s5_point_range(p_scan->centre));
+    tm_printf((const UB *)"[OBSTACLE] stopped %d mm from the obstacle (target "
+                          "%d mm), %u/%u pings agree\n",
+              distance, s5_round(S5_STOP_MM), s5_point_support(p_scan->centre),
+              s5_point_total(p_scan->centre));
+
+    report_points(p_scan);
 
     width      = s5_round(p_scan->width_mm);
     offset     = s5_round(p_scan->offset_mm);
@@ -686,45 +738,7 @@ report_scan (const s5_scan_t * p_scan)
 
     if (comms_is_online())
     {
-        char payload[COMMS_PAYLOAD_MAX];
-        /* The combined report exceeds the queue's 96-byte buffer even for
-           ordinary readings. Bound each write, and send two text diagnostics.
-         */
-        INT length
-            = tm_snprintf((UB *)payload, (INT)sizeof(payload),
-                          (const UB *)"obstacle width_mm=%d dist_mm=%d "
-                                      "offset_mm=%d complete=%d position=%s",
-                          width, distance, offset, b_complete ? 1 : 0,
-                          position_name(p_scan->placement.position));
-
-        if ((length > 0) && ((size_t)length < sizeof(payload)))
-        {
-            (void)comms_send_telemetry("obstacle", payload);
-        }
-        else
-        {
-            tm_printf((const UB *)"[OBSTACLE] measurement event too long (%d "
-                                  "bytes); skipped\n",
-                      length);
-        }
-
-        length = tm_snprintf(
-            (UB *)payload, (INT)sizeof(payload),
-            (const UB *)"obstacle avoid=%s shift_l_mm=%d shift_r_mm=%d",
-            avoid_name(p_scan->avoid.side),
-            s5_round(p_scan->avoid.shift_mm[S5_LEFT]),
-            s5_round(p_scan->avoid.shift_mm[S5_RIGHT]));
-
-        if ((length > 0) && ((size_t)length < sizeof(payload)))
-        {
-            (void)comms_send_telemetry("obstacle", payload);
-        }
-        else
-        {
-            tm_printf((const UB *)"[OBSTACLE] avoidance event too long (%d "
-                                  "bytes); skipped\n",
-                      length);
-        }
+        send_scan(p_scan, width, distance, offset, b_complete);
     }
 }
 
@@ -1041,23 +1055,12 @@ _Static_assert((4U + S5_RETRY_WAITS)
                    == (sizeof(g_s5_attempts) / sizeof(g_s5_attempts[0])),
                "one waited retry per S5_RETRY_WAITS");
 
-/* Drive round the held obstacle and back onto the line, trying the ways in
-   s5_attempts while the way out is blocked before the robot has left (see
-   detour_plan.h).  True: back on the line and released, so the line follower
-   drives on.  False: the robot is stopped and held (or was never released),
-   and report_abort() has said why. */
+/* A side to pass on, the line sensors answering, and the line follower told to
+   keep off.  False: report_abort() has said why. */
 static bool
-drive_round (void)
+detour_ready (void)
 {
-    s5_detour_plan_t plan;
-    s5_detour_plan_t last;
-    robot_status_t   status;
-    unsigned         index;
-    unsigned         tries       = 0U;
-    bool             b_have_last = false;
-    s5_why_t         why;
-    int              detail_a = 0;
-    int              detail_b = 0;
+    robot_status_t status;
 
     if ((!g_s5_task.decided) || (S5_AVOID_NONE == g_s5_scan.avoid.side))
     {
@@ -1087,6 +1090,57 @@ drive_round (void)
         tm_printf((const UB *)"[OBSTACLE] could not tell the line follower to "
                               "keep off; holding\n");
         report_abort(S5_WHY_PUBLISH_FAILED, 0, 0, 0U, false);
+        return false;
+    }
+
+    return true;
+}
+
+/* Every try failed: hold, and say why. */
+static void
+detour_failed (unsigned tries)
+{
+    s5_why_t why;
+    int      detail_a = 0;
+    int      detail_b = 0;
+
+    motion_stop();
+    s5_servo_move(S5_ANGLE_CENTRE_DEG);
+    g_s5_task.blocked = true;
+    why               = s5_detour_reason(&detail_a, &detail_b);
+
+    if (0U == tries)
+    {
+        tm_printf((const UB *)"[OBSTACLE] no safe detour on either side (it "
+                              "would need over %d mm of "
+                              "reversing); holding\n",
+                  s5_round(S5_BACKUP_MAX_MM));
+        why      = S5_WHY_NO_SAFE_DETOUR;
+        detail_a = s5_round(S5_BACKUP_MAX_MM);
+        detail_b = 0;
+    }
+
+    report_abort((S5_WHY_NONE != why) ? why : S5_WHY_UNKNOWN, detail_a,
+                 detail_b, tries, tries > 0U);
+    (void)publish_verified();
+}
+
+/* Drive round the held obstacle and back onto the line, trying the ways in
+   s5_attempts while the way out is blocked before the robot has left (see
+   detour_plan.h).  True: back on the line and released, so the line follower
+   drives on.  False: the robot is stopped and held (or was never released),
+   and report_abort() has said why. */
+static bool
+drive_round (void)
+{
+    s5_detour_plan_t plan;
+    s5_detour_plan_t last;
+    unsigned         index;
+    unsigned         tries       = 0U;
+    bool             b_have_last = false;
+
+    if (!detour_ready())
+    {
         return false;
     }
 
@@ -1150,25 +1204,7 @@ drive_round (void)
         }
     }
 
-    motion_stop();
-    s5_servo_move(S5_ANGLE_CENTRE_DEG);
-    g_s5_task.blocked = true;
-    why               = s5_detour_reason(&detail_a, &detail_b);
-
-    if (0U == tries)
-    {
-        tm_printf((const UB *)"[OBSTACLE] no safe detour on either side (it "
-                              "would need over %d mm of "
-                              "reversing); holding\n",
-                  s5_round(S5_BACKUP_MAX_MM));
-        why      = S5_WHY_NO_SAFE_DETOUR;
-        detail_a = s5_round(S5_BACKUP_MAX_MM);
-        detail_b = 0;
-    }
-
-    report_abort((S5_WHY_NONE != why) ? why : S5_WHY_UNKNOWN, detail_a,
-                 detail_b, tries, tries > 0U);
-    (void)publish_verified();
+    detour_failed(tries);
     return false;
 }
 
@@ -1329,20 +1365,21 @@ resume_line (const s5_scan_t * p_scan)
 }
 #endif
 
-/* ---- task ---- */
-
-void
-obstacle_task (INT code, void * p_context)
+/* What the task remembers while it watches. */
+typedef struct
 {
     s5_history_t history;
-    bool         b_scanned    = false; /* this obstacle has been measured */
-    bool         b_announced  = false; /* approach zone already reported */
-    bool         b_hump_noted = false; /* "on a hump" printed for this hump */
-    float64_t    next_warning = 0.0;
+    bool         b_scanned;    /* this obstacle has been measured */
+    bool         b_announced;  /* approach zone already reported */
+    bool         b_hump_noted; /* "on a hump" printed for this hump */
+    float64_t    next_warning;
+} s5_watch_t;
 
-    (void)code;
-    (void)p_context;
 #ifdef S5_DIAG
+/* Only S5_DIAG 3 returns. */
+static void
+run_diagnostic (void)
+{
     /* Diagnostic builds (-DS5_DIAG=n) to find which part of this task the
        watchdog freeze needs: 0 nothing, 1 servo only, 2 ultrasonic pings only,
        3 everything except the ultrasonic, 4 servo PWM slice without its pin,
@@ -1376,8 +1413,355 @@ obstacle_task (INT code, void * p_context)
         (void)tk_slp_tsk(TMO_FEVR);
     }
 #endif
+}
 #endif
-    history_clear(&history);
+
+/* One ping; paces the loop, 60 ms. */
+static s5_us_status_t
+watch_ping (float64_t * p_range_mm, float64_t * p_time_s)
+{
+    s5_us_status_t result;
+
+#if defined(S5_DIAG) && (S5_DIAG == 3)
+    (void)tk_dly_tsk(S5_US_CYCLE_MS); /* ultrasonic left off */
+    *p_range_mm = 0.0;
+    *p_time_s   = 0.0;
+    result      = S5_US_NO_ECHO;
+#else
+    result = s5_us_ping(p_range_mm, p_time_s);
+#endif
+
+    return result;
+}
+
+/* What the robot is doing: whether a stop could be needed, its speed, and
+   whether an echo can be trusted (not on a hump).  True: it may be moving. */
+static bool
+watch_motion (s5_watch_t * p_watch, const robot_status_t * p_status,
+              float64_t range_mm, bool * p_echo, float64_t * p_speed_mm_s)
+{
+    bool    b_may_move;
+    uint8_t terrain = terrain_published_state(&p_status->terrain);
+    bool    b_hump  = (TERRAIN_TS_CLIMBING == terrain)
+                      || (TERRAIN_TS_DESCENDING == terrain);
+
+    s5_curve_note(&g_s5_curve, p_status->motion.path * 1000.0,
+                  p_status->motion.heading * S5_RAD_TO_DEG);
+    *p_speed_mm_s
+        = 500.0 * (p_status->motion.speed[0] + p_status->motion.speed[1]);
+    b_may_move        = (!p_status->motion.hold)
+                        && ((READY == p_status->motion.state)
+                            || (DRIVING == p_status->motion.state));
+    g_s5_task.blocked = (g_s5_task.blocked) && (p_status->motion.hold);
+
+    if (!g_s5_task.blocked)
+    {
+        g_s5_task.decided = false; /* released: the decision is spent */
+        g_s5_task.phase   = S5_PHASE_IDLE;
+    }
+
+    /* On a hump the nose pitches and the floor can echo: only near
+     * echoes count */
+    if (b_hump && (*p_echo) && (range_mm > S5_HUMP_STOP_MM))
+    {
+        if (!p_watch->b_hump_noted)
+        {
+            tm_printf((const UB *)"[OBSTACLE] on a hump: echoes beyond "
+                                  "%d mm ignored until level "
+                                  "(first %d mm)\n",
+                      s5_round(S5_HUMP_STOP_MM), s5_round(range_mm));
+            p_watch->b_hump_noted = true;
+        }
+
+        *p_echo = false;
+    }
+
+    if (!b_hump)
+    {
+        p_watch->b_hump_noted = false;
+    }
+
+    return b_may_move;
+}
+
+/* Back off and square up before the scan.  False: report_abort() said why. */
+static bool
+prepare_scan (float64_t * p_squared_deg)
+{
+    bool b_ready = true;
+
+#if S5_AVOID_DRIVE
+    s5_detour_reason_clear();
+
+    if ((!back_off_if_close()) || (!face_obstacle(p_squared_deg)))
+    {
+        int      detail_a = 0;
+        int      detail_b = 0;
+        s5_why_t why      = s5_detour_reason(&detail_a, &detail_b);
+
+        g_s5_task.decided = false;
+        report_abort((S5_WHY_NONE != why) ? why
+                     : ((uint8_t)S5_WHY_NONE != g_s5_scan_why)
+                         ? (s5_why_t)g_s5_scan_why
+                         : S5_WHY_SCAN_SETUP_FAILED,
+                     detail_a, detail_b, 0U, false);
+        (void)publish_verified();
+        b_ready = false;
+    }
+#else
+    (void)p_squared_deg;
+#endif
+
+    return b_ready;
+}
+
+/* The full scan, the decision and the report.  True: measured. */
+static bool
+measure_obstacle (float64_t squared_deg)
+{
+    bool b_measured;
+
+    tm_printf((const UB *)"[OBSTACLE] scanning %d..%d deg\n", S5_ANGLE_LEFT_DEG,
+              S5_ANGLE_RIGHT_DEG);
+    crash_mark(CRASH_MARK_OBSTACLE, CRASH_OBSTACLE_SCAN);
+    g_s5_task.decided = false;
+    (void)s5_log_encoders("scan-before", 0U);
+    tm_printf((const UB *)"[OBSTACLE] curve check: heading changed "
+                          "%d deg in the last %d mm "
+                          "(curve from %d deg) -> %s\n",
+              s5_round((float64_t)g_s5_curve.swing_ddeg / 10.0),
+              S5_CURVE_WINDOW_MM, s5_round(S5_CURVE_MIN_DEG),
+              s5_curve_recent(&g_s5_curve) ? "after a curve"
+                                           : "not after a curve");
+    b_measured = s5_scan_run(&g_s5_scan, scan_measure, NULL);
+    g_s5_scan.width_mm *= S5_WIDTH_SCALE;
+    g_s5_scan.squared_deg = squared_deg;
+
+    if (b_measured)
+    {
+        /* knows the tilt it started with now */
+        s5_avoidance(&g_s5_scan, &g_s5_scan.avoid);
+        g_s5_task.decided = true;
+    }
+    else
+    {
+        motion_stop();
+        report_abort(((uint8_t)S5_WHY_NONE != g_s5_scan_why)
+                         ? (s5_why_t)g_s5_scan_why
+                         : S5_WHY_SCAN_FAILED,
+                     0, 0, 0U, false);
+    }
+
+    (void)s5_log_encoders("scan-after", 0U);
+    s5_servo_move(S5_ANGLE_CENTRE_DEG);
+
+    if (g_s5_scan.b_valid)
+    {
+        g_s5_width_m  = g_s5_scan.width_mm / 1000.0;
+        g_s5_offset_m = g_s5_scan.offset_mm / 1000.0;
+    }
+
+    crash_mark(CRASH_MARK_OBSTACLE, CRASH_OBSTACLE_REPORT);
+    report_scan(&g_s5_scan);
+
+    return b_measured;
+}
+
+#if S5_AVOID_DRIVE
+/* After the scan: resume, drive round it, or stay held. */
+static void
+act_on_scan (s5_watch_t * p_watch, robot_status_t * p_status, bool b_measured)
+{
+    if (!b_measured)
+    {
+        /* held: report_abort() above said why */
+    }
+    else if (spurious_stop(&g_s5_scan))
+    {
+        if (resume_line(&g_s5_scan))
+        {
+            p_watch->b_scanned   = false; /* watch for it again */
+            p_watch->b_announced = false;
+        }
+    }
+    else if (drive_round())
+    {
+        g_s5_task.spurious_count = 0U;
+        /* passed: arm for the next obstacle */
+        p_watch->b_scanned   = false;
+        p_watch->b_announced = false;
+
+        /* The hand-back leaves the robot at an angle across the
+           line, just as a curve can. */
+        if (s5_status(p_status))
+        {
+            s5_curve_mark(&g_s5_curve, p_status->motion.path * 1000.0);
+        }
+    }
+    else
+    {
+        /* Nothing to do in any other case. */
+    }
+}
+#endif
+
+/* Something is close enough to stop for.  False: the scan could not be made and
+   the state has been published already. */
+static bool
+handle_stop (s5_watch_t * p_watch, robot_status_t * p_status,
+             float64_t speed_mm_s)
+{
+    bool b_handled = false;
+
+    crash_mark(CRASH_MARK_OBSTACLE, CRASH_OBSTACLE_STOP);
+    motion_stop();
+    g_s5_task.blocked = true;
+    tm_printf((const UB *)"[OBSTACLE] STOP: %d mm ahead at %d mm/s\n",
+              s5_round(g_s5_front_mm), s5_round(speed_mm_s));
+    (void)s5_log_encoders("stop-requested", 0U);
+    crash_mark(CRASH_MARK_OBSTACLE, CRASH_OBSTACLE_SETTLE);
+
+    if (!s5_wait_still())
+    {
+        g_s5_task.decided = false;
+        tm_printf((const UB *)"[OBSTACLE] robot not confirmed still; "
+                              "scan cancelled, holding\n");
+        report_abort(S5_WHY_NOT_STILL, 0, 0, 0U, false);
+        (void)publish_verified();
+    }
+    else if (p_watch->b_scanned)
+    {
+        tm_printf((const UB *)"[OBSTACLE] the measured obstacle is "
+                              "still ahead; holding\n");
+        b_handled = true;
+    }
+    else
+    {
+        float64_t squared_deg = 0.0;
+
+        g_s5_scan_why = (uint8_t)S5_WHY_NONE;
+
+        if (prepare_scan(&squared_deg))
+        {
+            bool b_measured = measure_obstacle(squared_deg);
+
+            p_watch->b_scanned   = true;
+            p_watch->b_announced = true;
+#if S5_AVOID_DRIVE
+            act_on_scan(p_watch, p_status, b_measured);
+#else
+            (void)p_status;
+            (void)b_measured;
+#endif
+            b_handled = true;
+        }
+    }
+
+    history_clear(&p_watch->history); /* pings from the sweep are not "ahead" */
+
+    return b_handled;
+}
+
+/* The ultrasonic sensor is not answering: say so now and then. */
+static void
+warn_sensor (s5_watch_t * p_watch, s5_us_status_t result, float64_t now)
+{
+    if ((!g_s5_task.sensor_ok) && (now >= p_watch->next_warning))
+    {
+        p_watch->next_warning = now + S5_WARN_PERIOD_S;
+        tm_printf((const UB *)"[OBSTACLE] ultrasonic not answering (%s); "
+                              "check GP16/GP17 wiring and 3.3 V supply\n",
+                  (S5_US_BUSY == result) ? "ECHO stuck high" : "no ECHO pulse");
+    }
+}
+
+/* One pass: ping, then decide.  */
+static void
+watch_once (s5_watch_t * p_watch)
+{
+    robot_status_t status;
+    float64_t      range_mm;
+    float64_t      time_s;
+    float64_t      now;
+    float64_t      speed_mm_s = 0.0;
+    bool           b_may_move = false;
+    bool           b_echo;
+    bool           b_publish = true;
+    s5_us_status_t result;
+
+    crash_mark(CRASH_MARK_OBSTACLE, CRASH_OBSTACLE_PING);
+    result = watch_ping(&range_mm, &time_s);
+    crash_mark(CRASH_MARK_OBSTACLE, CRASH_OBSTACLE_DECIDE);
+    note_sensor(result);
+    b_echo = (S5_US_OK == result);
+    now    = motion_hal_time();
+
+    if (s5_status(&status))
+    {
+        b_may_move
+            = watch_motion(p_watch, &status, range_mm, &b_echo, &speed_mm_s);
+    }
+
+    history_add(&p_watch->history, b_echo, range_mm, time_s);
+    g_s5_front_mm = history_front(&p_watch->history, now, speed_mm_s);
+
+    if ((!g_s5_task.sensor_ok) && b_may_move)
+    {
+        motion_stop();
+        g_s5_task.blocked = true;
+        b_may_move        = false;
+        report_abort(S5_WHY_SENSOR_FAILED, (int)result, 0, 0U, false);
+    }
+
+    if (g_s5_front_mm > S5_CLEAR_MM)
+    {
+        /* path clear: arm for the next obstacle */
+        p_watch->b_scanned   = false;
+        p_watch->b_announced = false;
+    }
+
+    if (b_may_move && (!p_watch->b_announced) && (g_s5_front_mm <= S5_SLOW_MM))
+    {
+        p_watch->b_announced = true;
+        tm_printf(
+            (const UB *)"[OBSTACLE] approaching: %d mm ahead at %d mm/s\n",
+            s5_round(g_s5_front_mm), s5_round(speed_mm_s));
+    }
+
+    /* The line task's junction pivot (it publishes line values[3] = 1 while
+       pivoting) is not cancelled by a wall ahead. Braking, the advance and
+       normal following still stop. */
+    if (b_may_move && (should_stop(g_s5_front_mm, speed_mm_s))
+        && (!((status.line.values[3] > 0.5) && (status.owner_valid)
+              && (SOURCE_LINE == status.owner)
+              && (DRIVING == status.motion.state))))
+    {
+        b_publish = handle_stop(p_watch, &status, speed_mm_s);
+    }
+    else
+    {
+        warn_sensor(p_watch, result, now);
+    }
+
+    if (b_publish)
+    {
+        (void)publish_status(motion_hal_time());
+    }
+}
+
+/* ---- task ---- */
+
+void
+obstacle_task (INT code, void * p_context)
+{
+    s5_watch_t watch = {0};
+
+    (void)code;
+    (void)p_context;
+#ifdef S5_DIAG
+    run_diagnostic();
+#endif
+    history_clear(&watch.history);
     s5_curve_reset(&g_s5_curve);
     s5_servo_init(S5_ANGLE_CENTRE_DEG);
 #if !defined(S5_DIAG) || (S5_DIAG != 3)
@@ -1391,250 +1775,7 @@ obstacle_task (INT code, void * p_context)
 
     for (;;)
     {
-        robot_status_t status;
-        float64_t      range_mm;
-        float64_t      time_s;
-        float64_t      now;
-        float64_t      speed_mm_s = 0.0;
-        bool           b_may_move = false;
-        bool           b_echo;
-        s5_us_status_t result;
-
-        crash_mark(CRASH_MARK_OBSTACLE, CRASH_OBSTACLE_PING);
-#if defined(S5_DIAG) && (S5_DIAG == 3)
-        (void)tk_dly_tsk(S5_US_CYCLE_MS); /* ultrasonic left off */
-        range_mm = 0.0;
-        time_s   = 0.0;
-        result   = S5_US_NO_ECHO;
-#else
-        result = s5_us_ping(&range_mm, &time_s); /* paces the loop, 60 ms */
-#endif
-        crash_mark(CRASH_MARK_OBSTACLE, CRASH_OBSTACLE_DECIDE);
-        note_sensor(result);
-        b_echo = S5_US_OK == result;
-        now    = motion_hal_time();
-
-        if (s5_status(&status))
-        {
-            uint8_t terrain = terrain_published_state(&status.terrain);
-            bool    b_hump  = (TERRAIN_TS_CLIMBING == terrain)
-                              || (TERRAIN_TS_DESCENDING == terrain);
-
-            s5_curve_note(&g_s5_curve, status.motion.path * 1000.0,
-                          status.motion.heading * S5_RAD_TO_DEG);
-            speed_mm_s
-                = 500.0 * (status.motion.speed[0] + status.motion.speed[1]);
-            b_may_move        = (!status.motion.hold)
-                                && ((READY == status.motion.state)
-                                    || (DRIVING == status.motion.state));
-            g_s5_task.blocked = (g_s5_task.blocked) && (status.motion.hold);
-
-            if (!g_s5_task.blocked)
-            {
-                g_s5_task.decided = false; /* released: the decision is spent */
-                g_s5_task.phase   = S5_PHASE_IDLE;
-            }
-
-            /* On a hump the nose pitches and the floor can echo: only near
-             * echoes count */
-            if (b_hump && b_echo && (range_mm > S5_HUMP_STOP_MM))
-            {
-                if (!b_hump_noted)
-                {
-                    tm_printf((const UB *)"[OBSTACLE] on a hump: echoes beyond "
-                                          "%d mm ignored until level "
-                                          "(first %d mm)\n",
-                              s5_round(S5_HUMP_STOP_MM), s5_round(range_mm));
-                    b_hump_noted = true;
-                }
-
-                b_echo = false;
-            }
-
-            if (!b_hump)
-            {
-                b_hump_noted = false;
-            }
-        }
-
-        history_add(&history, b_echo, range_mm, time_s);
-        g_s5_front_mm = history_front(&history, now, speed_mm_s);
-
-        if ((!g_s5_task.sensor_ok) && b_may_move)
-        {
-            motion_stop();
-            g_s5_task.blocked = true;
-            b_may_move        = false;
-            report_abort(S5_WHY_SENSOR_FAILED, (int)result, 0, 0U, false);
-        }
-
-        if (g_s5_front_mm > S5_CLEAR_MM)
-        {
-            b_scanned   = false; /* path clear: arm for the next obstacle */
-            b_announced = false;
-        }
-
-        if (b_may_move && (!b_announced) && (g_s5_front_mm <= S5_SLOW_MM))
-        {
-            b_announced = true;
-            tm_printf(
-                (const UB *)"[OBSTACLE] approaching: %d mm ahead at %d mm/s\n",
-                s5_round(g_s5_front_mm), s5_round(speed_mm_s));
-        }
-
-        /* The line task's junction pivot (it publishes line values[3] = 1 while
-           pivoting) is not cancelled by a wall ahead. Braking, the advance and
-           normal following still stop. */
-        if (b_may_move && (should_stop(g_s5_front_mm, speed_mm_s))
-            && (!((status.line.values[3] > 0.5) && (status.owner_valid)
-                  && (SOURCE_LINE == status.owner)
-                  && (DRIVING == status.motion.state))))
-        {
-            crash_mark(CRASH_MARK_OBSTACLE, CRASH_OBSTACLE_STOP);
-            motion_stop();
-            g_s5_task.blocked = true;
-            tm_printf((const UB *)"[OBSTACLE] STOP: %d mm ahead at %d mm/s\n",
-                      s5_round(g_s5_front_mm), s5_round(speed_mm_s));
-            (void)s5_log_encoders("stop-requested", 0U);
-            crash_mark(CRASH_MARK_OBSTACLE, CRASH_OBSTACLE_SETTLE);
-
-            if (!s5_wait_still())
-            {
-                g_s5_task.decided = false;
-                tm_printf((const UB *)"[OBSTACLE] robot not confirmed still; "
-                                      "scan cancelled, holding\n");
-                report_abort(S5_WHY_NOT_STILL, 0, 0, 0U, false);
-                (void)publish_verified();
-                history_clear(&history);
-                continue;
-            }
-
-            if (!b_scanned)
-            {
-                float64_t squared_deg = 0.0;
-                bool      b_measured;
-
-                g_s5_scan_why = (uint8_t)S5_WHY_NONE;
-#if S5_AVOID_DRIVE
-                s5_detour_reason_clear();
-
-                if ((!back_off_if_close()) || (!face_obstacle(&squared_deg)))
-                {
-                    int      detail_a = 0;
-                    int      detail_b = 0;
-                    s5_why_t why      = s5_detour_reason(&detail_a, &detail_b);
-
-                    g_s5_task.decided = false;
-                    report_abort((S5_WHY_NONE != why) ? why
-                                 : ((uint8_t)S5_WHY_NONE != g_s5_scan_why)
-                                     ? (s5_why_t)g_s5_scan_why
-                                     : S5_WHY_SCAN_SETUP_FAILED,
-                                 detail_a, detail_b, 0U, false);
-                    (void)publish_verified();
-                    history_clear(&history);
-                    continue;
-                }
-#endif
-                tm_printf((const UB *)"[OBSTACLE] scanning %d..%d deg\n",
-                          S5_ANGLE_LEFT_DEG, S5_ANGLE_RIGHT_DEG);
-                crash_mark(CRASH_MARK_OBSTACLE, CRASH_OBSTACLE_SCAN);
-                g_s5_task.decided = false;
-                (void)s5_log_encoders("scan-before", 0U);
-                tm_printf((const UB *)"[OBSTACLE] curve check: heading changed "
-                                      "%d deg in the last %d mm "
-                                      "(curve from %d deg) -> %s\n",
-                          s5_round((float64_t)g_s5_curve.swing_ddeg / 10.0),
-                          S5_CURVE_WINDOW_MM, s5_round(S5_CURVE_MIN_DEG),
-                          s5_curve_recent(&g_s5_curve) ? "after a curve"
-                                                       : "not after a curve");
-                b_measured = s5_scan_run(&g_s5_scan, scan_measure, NULL);
-                /* scan reads wide; reported width only */
-                g_s5_scan.width_mm *= 0.8;
-                g_s5_scan.squared_deg = squared_deg;
-
-                if (b_measured)
-                {
-                    /* knows the tilt it started with now */
-                    s5_avoidance(&g_s5_scan, &g_s5_scan.avoid);
-                    g_s5_task.decided = true;
-                }
-                else
-                {
-                    motion_stop();
-                    report_abort(((uint8_t)S5_WHY_NONE != g_s5_scan_why)
-                                     ? (s5_why_t)g_s5_scan_why
-                                     : S5_WHY_SCAN_FAILED,
-                                 0, 0, 0U, false);
-                }
-
-                (void)s5_log_encoders("scan-after", 0U);
-                s5_servo_move(S5_ANGLE_CENTRE_DEG);
-
-                if (g_s5_scan.b_valid)
-                {
-                    g_s5_width_m  = g_s5_scan.width_mm / 1000.0;
-                    g_s5_offset_m = g_s5_scan.offset_mm / 1000.0;
-                }
-
-                crash_mark(CRASH_MARK_OBSTACLE, CRASH_OBSTACLE_REPORT);
-                report_scan(&g_s5_scan);
-                b_scanned   = true;
-                b_announced = true;
-#if S5_AVOID_DRIVE
-                if (!b_measured)
-                {
-                    /* held: report_abort() above said why */
-                }
-                else if (spurious_stop(&g_s5_scan))
-                {
-                    if (resume_line(&g_s5_scan))
-                    {
-                        b_scanned   = false; /* watch for it again */
-                        b_announced = false;
-                    }
-                }
-                else if (drive_round())
-                {
-                    g_s5_task.spurious_count = 0U;
-                    /* passed: arm for the next obstacle */
-                    b_scanned   = false;
-                    b_announced = false;
-
-                    /* The hand-back leaves the robot at an angle across the
-                       line, just as a curve can. */
-                    if (s5_status(&status))
-                    {
-                        s5_curve_mark(&g_s5_curve, status.motion.path * 1000.0);
-                    }
-                }
-                else
-                {
-                    /* Nothing to do in any other case. */
-                }
-#endif
-            }
-            else
-            {
-                tm_printf((const UB *)"[OBSTACLE] the measured obstacle is "
-                                      "still ahead; holding\n");
-            }
-
-            history_clear(&history); /* pings from the sweep are not "ahead" */
-        }
-        else if ((!g_s5_task.sensor_ok) && (now >= next_warning))
-        {
-            next_warning = now + S5_WARN_PERIOD_S;
-            tm_printf((const UB *)"[OBSTACLE] ultrasonic not answering (%s); "
-                                  "check GP16/GP17 wiring and 3.3 V supply\n",
-                      (S5_US_BUSY == result) ? "ECHO stuck high"
-                                             : "no ECHO pulse");
-        }
-        else
-        {
-            /* Nothing to do in any other case. */
-        }
-
-        (void)publish_status(motion_hal_time());
+        watch_once(&watch);
     }
 }
 

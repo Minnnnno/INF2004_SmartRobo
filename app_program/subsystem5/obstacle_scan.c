@@ -273,7 +273,7 @@ s5_estimate (const float64_t range_mm[], uint16_t echo, unsigned count,
             if ((best == count) || (support > best_support)
                 || ((support == best_support)
                     && ((spread < best_spread)
-                        || ((spread == best_spread)
+                        || ((!(spread > best_spread))
                             && (range_mm[index] < range_mm[best])))))
             {
                 best         = index;
@@ -805,15 +805,77 @@ s5_face_flat_end (const s5_profile_t * p_profile, int start, int end, int step)
            <= S5_FACE_FLAT_MM;
 }
 
+/* The coarse sweep and the outward fine walks, by angle. */
+static void
+s5_face_profile (const s5_scan_t * p_scan, s5_profile_t * p_profile)
+{
+    unsigned side;
+    unsigned side_point;
+
+    memset(p_profile, 0, sizeof(*p_profile));
+
+    for (side_point = 0U; side_point < p_scan->coarse_count; side_point++)
+    {
+        s5_profile_add(p_profile, p_scan->coarse[side_point]);
+    }
+
+    for (side = S5_LEFT; side <= S5_RIGHT; side++)
+    {
+        for (side_point = 0U; side_point < p_scan->fine_outward[side];
+             side_point++)
+        {
+            s5_profile_add(p_profile, p_scan->fine[side][side_point]);
+        }
+    }
+}
+
+/* Where the shortest range near straight ahead is, or -1. */
+static int
+s5_face_nearest (const s5_profile_t * p_profile)
+{
+    int index;
+    int nearest = -1;
+
+    for (index = S5_FACE_CENTRE - S5_FACE_SEARCH_DEG;
+         index <= (S5_FACE_CENTRE + S5_FACE_SEARCH_DEG); index++)
+    {
+        if ((s5_profile_taken(p_profile, index))
+            && (s5_profile_echo(p_profile, index))
+            && ((nearest < 0)
+                || (s5_profile_mm(p_profile, index)
+                    < s5_profile_mm(p_profile, nearest))))
+        {
+            nearest = index;
+        }
+    }
+
+    return nearest;
+}
+
+/* Both ends heard: half the beam's width cancels between them */
+static float64_t
+s5_face_edge_tilt (const s5_face_t * p_face, int left, int right,
+                   float64_t distance, float64_t tilt)
+{
+    float64_t middle
+        = (float64_t)S5_FACE_CENTRE - (0.5 * (float64_t)(left + right));
+    float64_t edges = middle
+                      - ((0.5
+                          * (atan(p_face->left_mm / distance)
+                             - atan(p_face->right_mm / distance)))
+                         / S5_DEG_TO_RAD);
+
+    return (fabs(edges - tilt) <= S5_FACE_EDGE_AGREE_DEG)
+               ? (0.5 * (tilt + edges))
+               : tilt;
+}
+
 void
 s5_face_fit (const s5_scan_t * p_scan, s5_face_t * p_out)
 {
     s5_profile_t profile;
 
-    unsigned side;
-    unsigned side_point;
-    int      index;
-    int      nearest = -1;
+    int nearest;
 
     int      left;
     int      right;
@@ -839,34 +901,8 @@ s5_face_fit (const s5_scan_t * p_scan, s5_face_t * p_out)
         return;
     }
 
-    memset(&profile, 0, sizeof(profile));
-
-    for (side_point = 0U; side_point < p_scan->coarse_count; side_point++)
-    {
-        s5_profile_add(&profile, p_scan->coarse[side_point]);
-    }
-
-    for (side = S5_LEFT; side <= S5_RIGHT; side++)
-    {
-        for (side_point = 0U; side_point < p_scan->fine_outward[side];
-             side_point++)
-        {
-            s5_profile_add(&profile, p_scan->fine[side][side_point]);
-        }
-    }
-
-    for (index = S5_FACE_CENTRE - S5_FACE_SEARCH_DEG;
-         index <= (S5_FACE_CENTRE + S5_FACE_SEARCH_DEG); index++)
-    {
-        if ((s5_profile_taken(&profile, index))
-            && (s5_profile_echo(&profile, index))
-            && ((nearest < 0)
-                || (s5_profile_mm(&profile, index)
-                    < s5_profile_mm(&profile, nearest))))
-        {
-            nearest = index;
-        }
-    }
+    s5_face_profile(p_scan, &profile);
+    nearest = s5_face_nearest(&profile);
 
     if (nearest < 0)
     {
@@ -934,21 +970,9 @@ s5_face_fit (const s5_scan_t * p_scan, s5_face_t * p_out)
     p_out->width_mm  = p_out->left_mm + p_out->right_mm;
     p_out->offset_mm = 0.5 * (p_out->left_mm - p_out->right_mm);
 
-    /* Both ends heard: half the beam's width cancels between them */
     if (b_jump_left && b_jump_right)
     {
-        float64_t middle
-            = (float64_t)S5_FACE_CENTRE - (0.5 * (float64_t)(left + right));
-        float64_t edges = middle
-                          - ((0.5
-                              * (atan(p_out->left_mm / distance)
-                                 - atan(p_out->right_mm / distance)))
-                             / S5_DEG_TO_RAD);
-
-        if (fabs(edges - tilt) <= S5_FACE_EDGE_AGREE_DEG)
-        {
-            tilt = 0.5 * (tilt + edges);
-        }
+        tilt = s5_face_edge_tilt(p_out, left, right, distance, tilt);
     }
 
     tilt += S5_FACE_TILT_BIAS_DEG;
