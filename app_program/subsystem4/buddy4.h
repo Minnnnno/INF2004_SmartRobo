@@ -1,6 +1,6 @@
 /* Task-owned Buddy 4 lifecycle. No motor writes, queues or console calls.
- * Integration stage 1: acceleration, tilt and terrain phases only. Magnetic
- * heading and its calibration are deliberately not integrated yet.
+ * Reads acceleration (tilt, hump phases, lift/overturn latch) and the
+ * magnetometer (raw counts for the compass in terrain_task.c).
  */
 #ifndef BUDDY4_H
 #define BUDDY4_H
@@ -26,6 +26,9 @@
  * captured only after START and the capture timeout cannot fire while waiting.
  * Ignored once a reference exists (recovery goes straight to MONITORING). */
 #define B4_WAIT_START     (0x01U)
+/* MOTORS_STOPPED, CMD_RESET and CAUSE_CLEARED only drive the STOP/FAULT -> INIT
+ * reset. The firmware never sends RESET (terrain_inputs): a new run and a
+ * latched fault are cleared by power-up. Only the host tests use this path. */
 #define B4_MOTORS_STOPPED (0x02U)
 #define B4_CMD_STOP       (0x04U)
 #define B4_CMD_RESET      (0x08U)
@@ -36,7 +39,13 @@
  * progress; run maximum and last peak are kept. Recording resumes when the
  * bit clears (START). Tilt and lift/overturn detection keep running. */
 #define B4_HUMP_PAUSE     (0x40U)
-/* Bit 0x80 is reserved. */
+/* TURN_PAUSE: the robot is pivoting or spinning on the spot (one wheel stopped
+ * or the wheels opposite), or did so in the last 0.5 s. The accelerometer has
+ * no gyroscope and reads the sideways jolt of a starting or stopping turn as
+ * tilt, i.e. as a false hump. Same handling as HUMP_PAUSE: no humps, the one in
+ * progress is discarded, run maximum and last peak kept. Lift detection keeps
+ * running. */
+#define B4_TURN_PAUSE     (0x80U)
 
 #define B4_STALE_MS      (100U)
 #define B4_LOSS_MS       (500U)
@@ -94,7 +103,7 @@ typedef struct
 /* Cold-start a fresh context. Only call once; reset commands preserve reference. */
 void buddy4_begin(buddy4_t *p_context, uint32_t now_ms);
 /* Advance one state-machine step in task context. Checks STOP before I2C.
- * Monitoring reads acceleration only; no retry loops or delays.
+ * Monitoring reads acceleration and the magnetometer; no retry loops or delays.
  * Driver calls are synchronous and may exceed the nominal task period.
  * This context belongs to one task; external tasks must not mutate it directly.
  */

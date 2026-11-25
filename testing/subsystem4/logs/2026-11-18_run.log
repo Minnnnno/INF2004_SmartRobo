@@ -1,0 +1,1541 @@
+17:11:00.020 INFO  broker dashboard connected to MQTT broker 192.168.137.1:1883
+17:11:00.023 INFO  robot  robot is ONLINE
+17:11:00.081 INFO  B2     first status frame: motion STOPPED, fault NONE
+17:11:03.407 WARN  B1     no status frames for 2.0 s (robot online)
+17:11:03.407 WARN  B1     no encoder frames for 2.0 s (robot online)
+17:11:03.908 INFO  B1     status frames resumed
+17:11:03.908 INFO  B1     encoder frames resumed
+17:11:06.410 WARN  B1     no status frames for 1.4 s (robot online)
+17:11:06.410 WARN  B1     no encoder frames for 1.4 s (robot online)
+17:11:07.412 INFO  B1     status frames resumed
+17:11:07.412 INFO  B1     encoder frames resumed
+17:11:08.914 WARN  B1     no status frames for 1.1 s (robot online)
+17:11:08.916 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:11:09.417 INFO  B1     status frames resumed
+17:11:09.417 INFO  B1     encoder frames resumed
+17:11:10.920 WARN  B1     no status frames for 1.2 s (robot online)
+17:11:10.920 WARN  B1     no encoder frames for 1.2 s (robot online)
+17:11:11.421 INFO  B1     status frames resumed
+17:11:11.421 INFO  B1     encoder frames resumed
+17:11:13.924 WARN  B1     no status frames for 1.4 s (robot online)
+17:11:13.924 WARN  B1     no encoder frames for 1.4 s (robot online)
+17:11:14.925 WARN  B1     no heartbeat for 3.3 s (robot online)
+17:11:15.426 INFO  B1     status frames resumed
+17:11:15.426 INFO  B1     encoder frames resumed
+17:11:15.426 INFO  B1     heartbeat resumed
+17:11:16.427 WARN  B1     no status frames for 1.2 s (robot online)
+17:11:16.427 WARN  B1     no encoder frames for 1.2 s (robot online)
+17:11:18.429 WARN  B1     no heartbeat for 3.3 s (robot online)
+17:11:30.470 ERROR robot  robot is OFFLINE (Wi-Fi dropped, or the Pico reset or lost power)
+17:11:42.013 INFO  robot  robot is ONLINE
+17:11:42.104 WARN  robot  robot uptime went back to 6.7 s: the robot rebooted
+17:11:42.457 INFO  B1     status frames resumed
+17:11:42.957 INFO  B1     encoder frames resumed
+17:11:43.458 INFO  B1     heartbeat resumed
+17:11:48.293 INFO  you    sent START #138
+17:11:48.410 INFO  B1     robot received START #138: queued for the controller
+17:11:48.439 INFO  B2     motion STOPPED -> READY
+17:11:48.439 INFO  B2     movement released
+17:11:50.466 INFO  B3     line sensor status available
+17:11:50.466 INFO  B4     terrain INIT -> WAITING
+17:11:54.468 WARN  B1     no status frames for 1.2 s (robot online)
+17:11:54.468 WARN  B1     no encoder frames for 1.2 s (robot online)
+17:11:55.906 INFO  B4     terrain WAITING -> CLIMBING
+17:11:55.906 DEBUG B4     motion class CLIMBING
+17:11:55.908 INFO  B2     motion READY -> DRIVING
+17:11:55.908 INFO  ctrl   motion owner: none -> line
+17:11:55.908 INFO  B3     line found
+17:11:55.969 INFO  B1     status frames resumed
+17:11:55.969 INFO  B1     encoder frames resumed
+17:11:56.029 ERROR B2     motion DRIVING -> FAULT
+17:11:56.029 ERROR B2     FAULT FEEDBACK: Encoder feedback cannot be trusted (see the encoder cause). Check encoder wiring and that the wheel turns freely. Needs the checked reset on the robot.
+17:11:56.030 INFO  B2     movement HELD (stopped)
+17:11:56.030 INFO  ctrl   motion owner: line -> none
+17:11:56.030 INFO  B4     terrain CLIMBING -> WAITING
+17:11:56.030 DEBUG B4     motion class MOVING
+17:11:56.030 WARN  B2     encoder feedback trusted: NO
+17:11:56.030 WARN  B2     encoder cause no_progress: Wheel commanded to move but its encoder count did not change: stalled wheel, motor power or encoder wiring.
+17:11:56.212 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:11:56.212 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:11:56.213 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:11:56.213 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:11:57.471 WARN  B1     no status frames for 1.1 s (robot online)
+17:11:57.471 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:11:58.472 INFO  B1     status frames resumed
+17:11:58.472 INFO  B1     encoder frames resumed
+17:11:59.472 WARN  B1     no status frames for 1.1 s (robot online)
+17:11:59.472 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:11:59.472 WARN  B1     no heartbeat for 3.3 s (robot online)
+17:11:59.973 INFO  B1     status frames resumed
+17:11:59.973 INFO  B1     encoder frames resumed
+17:11:59.973 INFO  B1     heartbeat resumed
+17:11:59.981 WARN  B3     event: line lost
+17:12:03.977 WARN  B1     no status frames for 1.0 s (robot online)
+17:12:03.977 WARN  B1     no encoder frames for 1.0 s (robot online)
+17:12:04.478 INFO  B1     status frames resumed
+17:12:04.478 INFO  B1     encoder frames resumed
+17:12:07.985 WARN  B1     no status frames for 1.0 s (robot online)
+17:12:07.985 WARN  B1     no encoder frames for 1.0 s (robot online)
+17:12:09.993 WARN  B1     no heartbeat for 3.4 s (robot online)
+17:12:22.533 ERROR robot  robot is OFFLINE (Wi-Fi dropped, or the Pico reset or lost power)
+17:12:24.198 INFO  robot  robot is ONLINE
+17:12:24.260 WARN  robot  robot uptime went back to 12.6 s: the robot rebooted
+17:12:24.260 INFO  B2     motion FAULT -> STOPPED
+17:12:24.260 INFO  B2     fault cleared
+17:12:24.260 WARN  B3     line sensor status UNAVAILABLE
+17:12:24.260 INFO  B4     terrain WAITING -> INIT
+17:12:24.292 INFO  B2     encoder feedback trusted: yes
+17:12:24.508 INFO  B1     status frames resumed
+17:12:24.508 INFO  B1     encoder frames resumed
+17:12:25.509 INFO  B1     heartbeat resumed
+17:12:30.514 WARN  B1     no status frames for 1.3 s (robot online)
+17:12:30.514 WARN  B1     no encoder frames for 1.3 s (robot online)
+17:12:31.515 WARN  B1     no heartbeat for 3.3 s (robot online)
+17:12:32.016 INFO  B1     status frames resumed
+17:12:32.016 INFO  B1     encoder frames resumed
+17:12:32.016 INFO  B1     heartbeat resumed
+17:12:32.147 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:12:32.147 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:12:32.148 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:12:32.148 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:12:32.360 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:12:35.210 INFO  you    sent START #139
+17:12:35.451 INFO  B1     robot received START #139: queued for the controller
+17:12:35.455 INFO  B2     motion STOPPED -> READY
+17:12:35.455 INFO  B2     movement released
+17:12:37.023 WARN  B1     no status frames for 1.4 s (robot online)
+17:12:37.023 WARN  B1     no encoder frames for 1.4 s (robot online)
+17:12:38.524 WARN  B1     no heartbeat for 3.1 s (robot online)
+17:12:40.026 INFO  B1     status frames resumed
+17:12:40.026 INFO  B1     encoder frames resumed
+17:12:40.054 INFO  B4     terrain INIT -> WAITING
+17:12:40.166 INFO  B3     line sensor status available
+17:12:40.167 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:12:40.167 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:12:40.168 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:12:40.168 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:12:40.232 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:12:40.233 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:12:40.234 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:12:40.234 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:12:40.353 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:12:40.527 INFO  B1     heartbeat resumed
+17:12:45.033 WARN  B1     no status frames for 1.2 s (robot online)
+17:12:45.033 WARN  B1     no encoder frames for 1.2 s (robot online)
+17:12:46.534 WARN  B1     no heartbeat for 3.1 s (robot online)
+17:12:51.540 INFO  B1     status frames resumed
+17:12:51.540 INFO  B1     encoder frames resumed
+17:12:51.804 ERROR B2     motion READY -> FAULT
+17:12:51.804 ERROR B2     FAULT FEEDBACK: Encoder feedback cannot be trusted (see the encoder cause). Check encoder wiring and that the wheel turns freely. Needs the checked reset on the robot.
+17:12:51.804 INFO  B2     movement HELD (stopped)
+17:12:51.804 INFO  B3     line found
+17:12:51.805 DEBUG B4     motion class MOVING
+17:12:51.805 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:12:51.805 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:12:51.806 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:12:51.806 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:12:51.912 WARN  B1     robot dropped 2 outgoing message(s): Wi-Fi or broker too slow
+17:12:51.913 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:12:51.914 WARN  B2     encoder feedback trusted: NO
+17:12:51.914 WARN  B2     encoder cause no_progress: Wheel commanded to move but its encoder count did not change: stalled wheel, motor power or encoder wiring.
+17:12:51.915 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:12:52.041 INFO  B1     heartbeat resumed
+17:12:53.543 WARN  B1     no status frames for 1.0 s (robot online)
+17:12:53.543 WARN  B1     no encoder frames for 1.0 s (robot online)
+17:12:54.044 INFO  B1     status frames resumed
+17:12:54.044 INFO  B1     encoder frames resumed
+17:12:55.045 WARN  B1     no status frames for 1.1 s (robot online)
+17:12:55.045 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:12:55.399 WARN  B3     event: line lost
+17:12:55.545 INFO  B1     status frames resumed
+17:12:55.545 INFO  B1     encoder frames resumed
+17:12:58.048 WARN  B1     no status frames for 1.1 s (robot online)
+17:12:58.048 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:12:58.468 INFO  you    sent STOP #140
+17:12:59.049 INFO  B1     status frames resumed
+17:12:59.049 INFO  B1     encoder frames resumed
+17:12:59.198 INFO  B1     robot received STOP #140: queued for the controller
+17:13:03.555 WARN  B1     no status frames for 1.2 s (robot online)
+17:13:03.555 WARN  B1     no encoder frames for 1.2 s (robot online)
+17:13:03.669 INFO  you    sent STOP #141
+17:13:05.057 INFO  B1     status frames resumed
+17:13:05.057 INFO  B1     encoder frames resumed
+17:13:05.057 WARN  B1     no heartbeat for 3.3 s (robot online)
+17:13:05.149 INFO  B1     robot received STOP #141: queued for the controller
+17:13:05.323 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:13:05.324 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:13:05.325 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:13:05.325 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:13:05.431 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:13:05.558 INFO  B1     heartbeat resumed
+17:13:15.571 WARN  B1     no status frames for 1.1 s (robot online)
+17:13:15.571 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:13:17.073 WARN  B1     no heartbeat for 3.2 s (robot online)
+17:13:22.426 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:13:22.427 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:13:22.427 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:13:22.427 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:13:22.558 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:13:22.559 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:13:22.560 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:13:22.560 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:13:22.561 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:13:22.580 INFO  B1     status frames resumed
+17:13:22.580 INFO  B1     encoder frames resumed
+17:13:22.580 INFO  B1     heartbeat resumed
+17:13:28.086 WARN  B1     no status frames for 1.0 s (robot online)
+17:13:28.086 WARN  B1     no encoder frames for 1.0 s (robot online)
+17:13:29.904 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:13:30.010 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:13:30.089 INFO  B1     status frames resumed
+17:13:30.089 INFO  B1     encoder frames resumed
+17:13:35.601 WARN  B1     no status frames for 1.4 s (robot online)
+17:13:35.601 WARN  B1     no encoder frames for 1.4 s (robot online)
+17:13:36.602 INFO  B1     status frames resumed
+17:13:36.602 INFO  B1     encoder frames resumed
+17:13:44.055 INFO  you    sent STOP #142
+17:13:44.333 INFO  B1     robot received STOP #142: queued for the controller
+17:13:46.633 WARN  B1     no status frames for 1.0 s (robot online)
+17:13:46.633 WARN  B1     no encoder frames for 1.0 s (robot online)
+17:13:48.636 WARN  B1     no heartbeat for 3.5 s (robot online)
+17:13:52.343 ERROR robot  robot is OFFLINE (Wi-Fi dropped, or the Pico reset or lost power)
+17:13:52.439 INFO  robot  robot is ONLINE
+17:13:52.465 WARN  robot  robot uptime went back to 6.0 s: the robot rebooted
+17:13:52.465 INFO  B2     motion FAULT -> STOPPED
+17:13:52.465 INFO  B2     fault cleared
+17:13:52.465 WARN  B3     line sensor status UNAVAILABLE
+17:13:52.465 INFO  B4     terrain WAITING -> INIT
+17:13:52.541 INFO  B2     encoder feedback trusted: yes
+17:13:52.639 INFO  B1     status frames resumed
+17:13:52.639 INFO  B1     encoder frames resumed
+17:13:53.641 INFO  B1     heartbeat resumed
+17:13:58.548 INFO  you    sent START #143
+17:13:58.789 INFO  B1     robot received START #143: queued for the controller
+17:13:58.812 INFO  B2     motion STOPPED -> READY
+17:13:58.812 INFO  B2     movement released
+17:14:01.129 INFO  B2     motion READY -> DRIVING
+17:14:01.130 INFO  ctrl   motion owner: none -> line
+17:14:01.130 INFO  B3     line sensor status available
+17:14:01.130 INFO  B3     line found
+17:14:01.130 INFO  B4     terrain INIT -> WAITING
+17:14:01.244 DEBUG B4     motion class MOVING
+17:14:01.341 DEBUG B4     motion class ACCELERATING
+17:14:01.459 DEBUG B4     motion class MOVING
+17:14:05.861 INFO  B2     movement HELD (stopped)
+17:14:05.861 INFO  ctrl   motion owner: line -> none
+17:14:05.861 WARN  B4     robot OVERTURNED: Buddy 4 stopped the motors
+17:14:05.863 INFO  B2     motion DRIVING -> STOPPING
+17:14:06.178 INFO  B2     motion STOPPING -> STOPPED
+17:14:11.161 WARN  B1     no status frames for 1.0 s (robot online)
+17:14:11.161 WARN  B1     no encoder frames for 1.0 s (robot online)
+17:14:12.162 INFO  B1     status frames resumed
+17:14:12.162 INFO  B1     encoder frames resumed
+17:14:12.663 WARN  B1     no heartbeat for 3.1 s (robot online)
+17:14:13.164 WARN  B1     no status frames for 1.0 s (robot online)
+17:14:13.164 WARN  B1     no encoder frames for 1.0 s (robot online)
+17:14:13.665 INFO  B1     status frames resumed
+17:14:13.665 INFO  B1     encoder frames resumed
+17:14:13.665 INFO  B1     heartbeat resumed
+17:14:15.167 WARN  B1     no status frames for 1.1 s (robot online)
+17:14:15.167 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:14:16.802 DEBUG B4     motion class STATIONARY
+17:14:16.812 WARN  B3     event: line lost
+17:14:16.816 DEBUG B4     motion class MOVING
+17:14:16.822 DEBUG B4     motion class STATIONARY
+17:14:16.918 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:14:16.920 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:14:16.920 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:14:16.920 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:14:17.101 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:14:17.168 INFO  B1     status frames resumed
+17:14:17.168 INFO  B1     encoder frames resumed
+17:14:18.366 INFO  you    sent START #144
+17:14:18.534 INFO  B1     robot received START #144: queued for the controller
+17:14:18.536 INFO  B2     motion STOPPED -> READY
+17:14:18.536 INFO  B2     movement released
+17:14:20.673 WARN  B1     no status frames for 1.1 s (robot online)
+17:14:20.673 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:14:21.174 INFO  B1     status frames resumed
+17:14:21.174 INFO  B1     encoder frames resumed
+17:14:22.175 WARN  B1     no status frames for 1.5 s (robot online)
+17:14:22.175 WARN  B1     no encoder frames for 1.5 s (robot online)
+17:14:22.363 INFO  B2     motion READY -> DRIVING
+17:14:22.363 INFO  ctrl   motion owner: none -> line
+17:14:22.363 INFO  B3     line found
+17:14:22.366 DEBUG B4     motion class MOVING
+17:14:22.369 DEBUG B4     motion class ACCELERATING
+17:14:22.543 DEBUG B4     motion class MOVING
+17:14:22.676 INFO  B1     status frames resumed
+17:14:22.676 INFO  B1     encoder frames resumed
+17:14:24.179 WARN  B1     no status frames for 1.4 s (robot online)
+17:14:24.179 WARN  B1     no encoder frames for 1.4 s (robot online)
+17:14:24.689 DEBUG B4     motion class ACCELERATING
+17:14:24.690 DEBUG B4     motion class MOVING
+17:14:24.795 DEBUG B4     motion class ACCELERATING
+17:14:24.796 DEBUG B4     motion class MOVING
+17:14:24.901 INFO  B2     motion DRIVING -> STOPPING
+17:14:24.901 INFO  B2     movement HELD (stopped)
+17:14:24.902 INFO  ctrl   motion owner: line -> none
+17:14:24.902 WARN  B4     robot OVERTURNED: Buddy 4 stopped the motors
+17:14:25.180 INFO  B1     status frames resumed
+17:14:25.180 INFO  B1     encoder frames resumed
+17:14:25.194 INFO  B2     motion STOPPING -> STOPPED
+17:14:26.682 WARN  B1     no status frames for 1.3 s (robot online)
+17:14:26.682 WARN  B1     no encoder frames for 1.3 s (robot online)
+17:14:27.037 DEBUG B4     motion class MOVING
+17:14:27.183 INFO  B1     status frames resumed
+17:14:27.183 INFO  B1     encoder frames resumed
+17:14:27.352 DEBUG B4     motion class STATIONARY
+17:14:29.186 WARN  B1     no status frames for 1.2 s (robot online)
+17:14:29.186 WARN  B1     no encoder frames for 1.2 s (robot online)
+17:14:29.686 INFO  B1     status frames resumed
+17:14:29.686 INFO  B1     encoder frames resumed
+17:14:31.188 WARN  B1     no status frames for 1.4 s (robot online)
+17:14:31.188 WARN  B1     no encoder frames for 1.4 s (robot online)
+17:14:32.189 INFO  B1     status frames resumed
+17:14:32.189 INFO  B1     encoder frames resumed
+17:14:33.691 WARN  B1     no status frames for 1.1 s (robot online)
+17:14:33.691 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:14:34.192 INFO  B1     status frames resumed
+17:14:34.192 INFO  B1     encoder frames resumed
+17:14:35.693 WARN  B1     no status frames for 1.3 s (robot online)
+17:14:35.693 WARN  B1     no encoder frames for 1.3 s (robot online)
+17:14:37.195 WARN  B1     no heartbeat for 3.3 s (robot online)
+17:14:39.016 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:14:39.017 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:14:39.017 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:14:39.017 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:14:39.132 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:14:39.133 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:14:39.133 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:14:39.134 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:14:39.196 INFO  B1     status frames resumed
+17:14:39.196 INFO  B1     encoder frames resumed
+17:14:39.196 INFO  B1     heartbeat resumed
+17:14:39.235 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:14:40.698 WARN  B1     no status frames for 1.5 s (robot online)
+17:14:40.698 WARN  B1     no encoder frames for 1.5 s (robot online)
+17:14:42.200 INFO  B1     status frames resumed
+17:14:42.200 INFO  B1     encoder frames resumed
+17:14:42.297 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:14:42.298 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:14:42.299 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:14:42.299 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:14:43.202 INFO  you    sent START #145
+17:14:44.203 WARN  B1     no status frames for 1.3 s (robot online)
+17:14:44.203 WARN  B1     no encoder frames for 1.3 s (robot online)
+17:14:44.456 INFO  B1     robot received START #145: queued for the controller
+17:14:44.457 INFO  B2     motion STOPPED -> DRIVING
+17:14:44.457 INFO  B2     movement released
+17:14:44.457 INFO  ctrl   motion owner: none -> line
+17:14:44.457 INFO  B4     terrain WAITING -> CLIMBING
+17:14:44.457 DEBUG B4     motion class CLIMBING
+17:14:44.704 INFO  B1     status frames resumed
+17:14:44.704 INFO  B1     encoder frames resumed
+17:14:46.206 WARN  B1     no status frames for 1.2 s (robot online)
+17:14:46.206 WARN  B1     no encoder frames for 1.2 s (robot online)
+17:14:46.707 INFO  B1     status frames resumed
+17:14:46.707 INFO  B1     encoder frames resumed
+17:14:50.210 WARN  B1     no status frames for 1.4 s (robot online)
+17:14:50.211 WARN  B1     no encoder frames for 1.4 s (robot online)
+17:14:51.041 INFO  B4     terrain CLIMBING -> DESCENDING
+17:14:51.042 DEBUG B4     motion class DESCENDING
+17:14:51.206 INFO  B4     event: hump completed
+17:14:51.212 INFO  B1     status frames resumed
+17:14:51.212 INFO  B1     encoder frames resumed
+17:14:52.435 INFO  B4     terrain DESCENDING -> WAITING
+17:14:52.435 INFO  B4     highest hump this run: 36 mm
+17:14:52.435 DEBUG B4     motion class MOVING
+17:14:52.436 INFO  B4     terrain WAITING -> CLIMBING
+17:14:52.436 DEBUG B4     motion class STATIONARY
+17:14:52.438 DEBUG B4     motion class CLIMBING
+17:14:52.438 INFO  B3     line found
+17:14:54.074 WARN  B3     event: line lost
+17:14:54.075 INFO  B4     terrain CLIMBING -> DESCENDING
+17:14:54.075 DEBUG B4     motion class DESCENDING
+17:14:54.487 INFO  B3     line found
+17:14:57.218 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:14:57.719 WARN  B1     no status frames for 1.5 s (robot online)
+17:14:59.002 WARN  B3     event: line lost
+17:14:59.198 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:14:59.199 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:14:59.200 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:14:59.201 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:14:59.221 INFO  B1     status frames resumed
+17:14:59.221 INFO  B1     encoder frames resumed
+17:14:59.400 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:14:59.812 INFO  you    sent STOP #146
+17:15:00.022 INFO  B1     robot received STOP #146: queued for the controller
+17:15:00.024 INFO  B2     motion DRIVING -> STOPPING
+17:15:00.024 INFO  B2     movement HELD (stopped)
+17:15:00.024 INFO  ctrl   motion owner: line -> none
+17:15:00.024 INFO  B4     terrain DESCENDING -> WAITING
+17:15:00.110 DEBUG B4     motion class MOVING
+17:15:00.325 INFO  B2     motion STOPPING -> STOPPED
+17:15:00.418 DEBUG B4     motion class STATIONARY
+17:15:02.729 WARN  B1     no status frames for 1.3 s (robot online)
+17:15:02.729 WARN  B1     no encoder frames for 1.3 s (robot online)
+17:15:04.231 WARN  B1     no heartbeat for 3.1 s (robot online)
+17:15:07.734 INFO  B1     status frames resumed
+17:15:07.734 INFO  B1     encoder frames resumed
+17:15:08.736 WARN  B1     no status frames for 1.2 s (robot online)
+17:15:08.736 WARN  B1     no encoder frames for 1.2 s (robot online)
+17:15:12.133 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:12.137 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:12.138 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:12.140 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:12.141 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:12.143 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:12.146 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:12.149 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:12.151 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:12.205 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:12.206 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:12.206 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:12.206 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:12.239 INFO  B1     status frames resumed
+17:15:12.239 INFO  B1     encoder frames resumed
+17:15:12.239 INFO  B1     heartbeat resumed
+17:15:12.299 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:12.404 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:12.405 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:12.405 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:12.835 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:14.242 WARN  B1     no status frames for 1.3 s (robot online)
+17:15:14.242 WARN  B1     no encoder frames for 1.3 s (robot online)
+17:15:15.743 INFO  B1     status frames resumed
+17:15:15.743 INFO  B1     encoder frames resumed
+17:15:15.889 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:15.889 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:15.890 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:15.890 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:15.986 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:22.249 WARN  B1     no status frames for 1.4 s (robot online)
+17:15:22.249 WARN  B1     no encoder frames for 1.5 s (robot online)
+17:15:23.751 WARN  B1     no heartbeat for 3.3 s (robot online)
+17:15:28.758 INFO  B1     status frames resumed
+17:15:28.758 INFO  B1     encoder frames resumed
+17:15:28.891 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:28.892 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:28.893 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:28.894 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:28.989 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:28.990 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:28.991 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:28.991 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:29.098 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:29.259 INFO  B1     heartbeat resumed
+17:15:30.760 WARN  B1     no status frames for 1.3 s (robot online)
+17:15:30.760 WARN  B1     no encoder frames for 1.3 s (robot online)
+17:15:32.263 WARN  B1     no heartbeat for 3.5 s (robot online)
+17:15:33.765 INFO  B1     status frames resumed
+17:15:33.765 INFO  B1     encoder frames resumed
+17:15:33.765 INFO  B1     heartbeat resumed
+17:15:33.808 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:33.809 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:33.810 WARN  B1     robot dropped 2 outgoing message(s): Wi-Fi or broker too slow
+17:15:33.810 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:33.905 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:33.905 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:33.906 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:40.273 WARN  B1     no status frames for 1.0 s (robot online)
+17:15:40.273 WARN  B1     no encoder frames for 1.0 s (robot online)
+17:15:40.774 INFO  B1     status frames resumed
+17:15:40.774 INFO  B1     encoder frames resumed
+17:15:45.778 WARN  B1     no status frames for 1.0 s (robot online)
+17:15:45.778 WARN  B1     no encoder frames for 1.0 s (robot online)
+17:15:47.785 WARN  B1     no heartbeat for 3.0 s (robot online)
+17:15:49.287 INFO  B1     status frames resumed
+17:15:49.287 INFO  B1     encoder frames resumed
+17:15:49.370 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:49.370 WARN  B1     robot dropped 2 outgoing message(s): Wi-Fi or broker too slow
+17:15:49.370 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:49.371 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:49.479 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:49.479 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:49.479 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:49.479 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:49.589 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:15:49.788 INFO  B1     heartbeat resumed
+17:16:00.297 WARN  B1     no status frames for 1.1 s (robot online)
+17:16:00.297 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:16:01.798 INFO  B1     status frames resumed
+17:16:01.798 INFO  B1     encoder frames resumed
+17:16:02.063 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:16:02.064 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:16:02.182 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:16:06.314 WARN  B1     no status frames for 1.3 s (robot online)
+17:16:06.314 WARN  B1     no encoder frames for 1.3 s (robot online)
+17:16:08.315 WARN  B1     no heartbeat for 3.3 s (robot online)
+17:16:12.222 ERROR robot  robot is OFFLINE (Wi-Fi dropped, or the Pico reset or lost power)
+17:16:12.298 INFO  robot  robot is ONLINE
+17:16:12.399 WARN  robot  robot uptime went back to 4.8 s: the robot rebooted
+17:16:12.399 WARN  B3     line sensor status UNAVAILABLE
+17:16:12.399 INFO  B4     terrain WAITING -> INIT
+17:16:12.819 INFO  B1     status frames resumed
+17:16:12.819 INFO  B1     encoder frames resumed
+17:16:13.821 INFO  B1     heartbeat resumed
+17:16:20.177 INFO  you    sent START #147
+17:16:20.294 INFO  B1     robot received START #147: queued for the controller
+17:16:20.295 INFO  B2     motion STOPPED -> READY
+17:16:20.295 INFO  B2     movement released
+17:16:22.337 INFO  B3     line sensor status available
+17:16:22.338 INFO  B4     terrain INIT -> WAITING
+17:16:24.630 INFO  you    sent STOP #148
+17:16:24.838 WARN  B1     no status frames for 1.2 s (robot online)
+17:16:24.838 WARN  B1     no encoder frames for 1.3 s (robot online)
+17:16:25.727 INFO  B1     robot received STOP #148: queued for the controller
+17:16:25.731 INFO  B2     movement HELD (stopped)
+17:16:25.734 INFO  B2     motion READY -> STOPPED
+17:16:25.839 INFO  B1     status frames resumed
+17:16:25.839 INFO  B1     encoder frames resumed
+17:16:28.283 INFO  you    sent START #149
+17:16:28.342 WARN  B1     no status frames for 1.2 s (robot online)
+17:16:28.342 WARN  B1     no encoder frames for 1.2 s (robot online)
+17:16:28.842 INFO  B1     status frames resumed
+17:16:28.842 INFO  B1     encoder frames resumed
+17:16:28.910 INFO  B1     robot received START #149: queued for the controller
+17:16:28.913 INFO  B2     motion STOPPED -> READY
+17:16:28.914 INFO  B2     movement released
+17:16:30.345 WARN  B1     no status frames for 1.2 s (robot online)
+17:16:30.345 WARN  B1     no encoder frames for 1.2 s (robot online)
+17:16:31.847 INFO  B1     status frames resumed
+17:16:31.847 INFO  B1     encoder frames resumed
+17:16:31.872 INFO  B4     terrain WAITING -> DESCENDING
+17:16:31.872 DEBUG B4     motion class CLIMBING
+17:16:31.873 DEBUG B4     motion class DESCENDING
+17:16:31.876 INFO  B4     terrain DESCENDING -> CLIMBING
+17:16:31.876 DEBUG B4     motion class CLIMBING
+17:16:31.878 INFO  B2     motion READY -> DRIVING
+17:16:31.878 INFO  ctrl   motion owner: none -> line
+17:16:31.878 INFO  B3     line found
+17:16:31.958 ERROR B2     motion DRIVING -> FAULT
+17:16:31.958 ERROR B2     FAULT FEEDBACK: Encoder feedback cannot be trusted (see the encoder cause). Check encoder wiring and that the wheel turns freely. Needs the checked reset on the robot.
+17:16:31.959 INFO  B2     movement HELD (stopped)
+17:16:31.959 INFO  ctrl   motion owner: line -> none
+17:16:31.959 INFO  B4     terrain CLIMBING -> WAITING
+17:16:31.959 DEBUG B4     motion class MOVING
+17:16:31.960 WARN  B2     encoder feedback trusted: NO
+17:16:31.960 WARN  B2     encoder cause no_progress: Wheel commanded to move but its encoder count did not change: stalled wheel, motor power or encoder wiring.
+17:16:31.960 DEBUG B4     motion class ACCELERATING
+17:16:32.071 DEBUG B4     motion class MOVING
+17:16:32.071 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:16:32.072 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:16:32.073 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:16:32.073 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:16:32.192 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:16:32.376 WARN  B3     event: line lost
+17:16:38.355 WARN  B1     no status frames for 1.4 s (robot online)
+17:16:38.355 WARN  B1     no encoder frames for 1.4 s (robot online)
+17:16:39.858 WARN  B1     no heartbeat for 3.3 s (robot online)
+17:16:44.189 ERROR robot  robot is OFFLINE (Wi-Fi dropped, or the Pico reset or lost power)
+17:16:44.272 INFO  robot  robot is ONLINE
+17:16:44.369 WARN  robot  robot uptime went back to 4.4 s: the robot rebooted
+17:16:44.369 INFO  B2     motion FAULT -> STOPPED
+17:16:44.369 INFO  B2     fault cleared
+17:16:44.369 WARN  B3     line sensor status UNAVAILABLE
+17:16:44.369 INFO  B4     terrain WAITING -> INIT
+17:16:44.389 INFO  B2     encoder feedback trusted: yes
+17:16:44.863 INFO  B1     status frames resumed
+17:16:44.863 INFO  B1     encoder frames resumed
+17:16:45.864 INFO  B1     heartbeat resumed
+17:16:47.753 INFO  you    sent START #150
+17:16:47.844 INFO  B1     robot received START #150: queued for the controller
+17:16:47.944 INFO  B2     motion STOPPED -> READY
+17:16:47.944 INFO  B2     movement released
+17:16:49.889 INFO  B2     motion READY -> DRIVING
+17:16:49.890 INFO  ctrl   motion owner: none -> line
+17:16:49.890 INFO  B3     line sensor status available
+17:16:49.890 INFO  B3     line found
+17:16:49.890 INFO  B4     terrain INIT -> WAITING
+17:16:50.188 DEBUG B4     motion class ACCELERATING
+17:16:50.512 DEBUG B4     motion class MOVING
+17:16:52.342 INFO  B2     motion DRIVING -> STOPPING
+17:16:52.342 INFO  B2     movement HELD (stopped)
+17:16:52.342 INFO  ctrl   motion owner: line -> none
+17:16:52.342 WARN  B4     robot OVERTURNED: Buddy 4 stopped the motors
+17:16:52.973 INFO  B2     motion STOPPING -> STOPPED
+17:16:53.871 DEBUG B4     motion class STATIONARY
+17:16:59.879 INFO  you    sent START #151
+17:17:00.039 INFO  B1     robot received START #151: queued for the controller
+17:17:00.121 INFO  B2     motion STOPPED -> DRIVING
+17:17:00.121 INFO  B2     movement released
+17:17:00.121 INFO  ctrl   motion owner: none -> line
+17:17:00.241 INFO  B4     terrain WAITING -> CLIMBING
+17:17:00.326 DEBUG B4     motion class CLIMBING
+17:17:00.950 ERROR B2     event: motion fault raised
+17:17:00.951 ERROR B2     motion DRIVING -> FAULT
+17:17:00.951 ERROR B2     FAULT FEEDBACK: Encoder feedback cannot be trusted (see the encoder cause). Check encoder wiring and that the wheel turns freely. Needs the checked reset on the robot.
+17:17:00.951 INFO  B2     movement HELD (stopped)
+17:17:00.951 INFO  ctrl   motion owner: line -> none
+17:17:00.951 INFO  B4     terrain CLIMBING -> WAITING
+17:17:00.951 DEBUG B4     motion class MOVING
+17:17:00.951 WARN  B2     encoder feedback trusted: NO
+17:17:00.951 WARN  B2     encoder cause no_progress: Wheel commanded to move but its encoder count did not change: stalled wheel, motor power or encoder wiring.
+17:17:01.048 DEBUG B4     motion class ACCELERATING
+17:17:01.157 DEBUG B4     motion class MOVING
+17:17:02.378 WARN  B3     event: line lost
+17:17:02.383 WARN  ctrl   START had no effect: the robot is still held. It is only released when STOPPED, fault-free, stationary and with trusted encoder feedback (motion FAULT, fault FEEDBACK)
+17:17:08.386 WARN  B1     no status frames for 1.5 s (robot online)
+17:17:08.386 WARN  B1     no encoder frames for 1.5 s (robot online)
+17:17:09.894 WARN  B1     no heartbeat for 3.4 s (robot online)
+17:17:22.483 ERROR robot  robot is OFFLINE (Wi-Fi dropped, or the Pico reset or lost power)
+17:17:30.349 INFO  robot  robot is ONLINE
+17:17:30.451 INFO  B2     motion FAULT -> STOPPED
+17:17:30.451 INFO  B2     fault cleared
+17:17:30.451 WARN  B3     line sensor status UNAVAILABLE
+17:17:30.451 INFO  B4     terrain WAITING -> INIT
+17:17:30.526 INFO  B2     encoder feedback trusted: yes
+17:17:30.921 INFO  B1     status frames resumed
+17:17:30.921 INFO  B1     encoder frames resumed
+17:17:31.922 WARN  B1     no status frames for 1.1 s (robot online)
+17:17:31.922 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:17:33.300 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:17:33.396 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:17:33.424 INFO  B1     status frames resumed
+17:17:33.424 INFO  B1     encoder frames resumed
+17:17:33.424 INFO  B1     heartbeat resumed
+17:17:55.225 INFO  you    sent START #152
+17:17:55.424 INFO  B1     robot received START #152: queued for the controller
+17:17:55.425 INFO  B2     motion STOPPED -> READY
+17:17:55.425 INFO  B2     movement released
+17:17:56.448 WARN  B1     no status frames for 1.0 s (robot online)
+17:17:56.448 WARN  B1     no encoder frames for 1.0 s (robot online)
+17:17:56.950 INFO  B1     status frames resumed
+17:17:56.950 INFO  B1     encoder frames resumed
+17:17:58.452 WARN  B1     no status frames for 1.4 s (robot online)
+17:17:58.452 WARN  B1     no encoder frames for 1.4 s (robot online)
+17:17:59.231 INFO  B3     line sensor status available
+17:17:59.231 INFO  B4     terrain INIT -> WAITING
+17:17:59.453 INFO  B1     status frames resumed
+17:17:59.453 INFO  B1     encoder frames resumed
+17:18:00.956 WARN  B1     no status frames for 1.3 s (robot online)
+17:18:00.956 WARN  B1     no encoder frames for 1.3 s (robot online)
+17:18:01.310 INFO  you    sent STOP #153
+17:18:01.706 INFO  B1     robot received STOP #153: queued for the controller
+17:18:01.957 INFO  B1     status frames resumed
+17:18:01.957 INFO  B1     encoder frames resumed
+17:18:02.958 WARN  B1     no status frames for 1.2 s (robot online)
+17:18:02.958 WARN  B1     no encoder frames for 1.2 s (robot online)
+17:18:03.096 INFO  B2     motion READY -> STOPPED
+17:18:03.096 INFO  B2     movement HELD (stopped)
+17:18:03.460 INFO  B1     status frames resumed
+17:18:03.460 INFO  B1     encoder frames resumed
+17:18:03.521 INFO  B3     line found
+17:18:05.462 WARN  B1     no status frames for 1.4 s (robot online)
+17:18:05.462 WARN  B1     no encoder frames for 1.4 s (robot online)
+17:18:06.964 WARN  B1     no heartbeat for 3.2 s (robot online)
+17:18:19.531 ERROR robot  robot is OFFLINE (Wi-Fi dropped, or the Pico reset or lost power)
+17:18:20.646 INFO  robot  robot is ONLINE
+17:18:20.744 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:18:20.811 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:18:20.812 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:18:20.812 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:18:20.910 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:18:20.911 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:18:20.914 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:18:20.915 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:18:20.980 INFO  B1     status frames resumed
+17:18:21.029 WARN  B1     robot dropped 2 outgoing message(s): Wi-Fi or broker too slow
+17:18:21.481 INFO  B1     encoder frames resumed
+17:18:21.481 INFO  B1     heartbeat resumed
+17:18:24.193 DEBUG B4     motion class MOVING
+17:18:24.642 INFO  B3     line found
+17:18:24.643 DEBUG B4     motion class STATIONARY
+17:18:25.986 WARN  B1     no status frames for 1.3 s (robot online)
+17:18:25.986 WARN  B1     no encoder frames for 1.3 s (robot online)
+17:18:27.488 INFO  B1     status frames resumed
+17:18:27.488 INFO  B1     encoder frames resumed
+17:18:27.597 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:18:27.598 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:18:27.667 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:18:28.697 DEBUG B4     motion class MOVING
+17:18:29.107 DEBUG B4     motion class STATIONARY
+17:18:38.937 WARN  B3     event: line lost
+17:18:41.917 INFO  B3     line found
+17:18:43.334 INFO  you    sent START #154
+17:18:43.459 INFO  B1     robot received START #154: queued for the controller
+17:18:43.543 INFO  B2     motion STOPPED -> DRIVING
+17:18:43.543 INFO  B2     movement released
+17:18:43.543 INFO  ctrl   motion owner: none -> line
+17:18:43.661 INFO  B4     terrain WAITING -> CLIMBING
+17:18:43.661 DEBUG B4     motion class CLIMBING
+17:18:44.283 ERROR B2     event: motion fault raised
+17:18:44.284 ERROR B2     motion DRIVING -> FAULT
+17:18:44.284 ERROR B2     FAULT FEEDBACK: Encoder feedback cannot be trusted (see the encoder cause). Check encoder wiring and that the wheel turns freely. Needs the checked reset on the robot.
+17:18:44.285 INFO  B2     movement HELD (stopped)
+17:18:44.285 INFO  ctrl   motion owner: line -> none
+17:18:44.285 WARN  B2     encoder feedback trusted: NO
+17:18:44.285 WARN  B2     encoder cause no_progress: Wheel commanded to move but its encoder count did not change: stalled wheel, motor power or encoder wiring.
+17:18:44.371 INFO  B4     terrain CLIMBING -> WAITING
+17:18:44.371 DEBUG B4     motion class ACCELERATING
+17:18:44.475 DEBUG B4     motion class MOVING
+17:18:45.851 WARN  ctrl   START had no effect: the robot is still held. It is only released when STOPPED, fault-free, stationary and with trusted encoder feedback (motion FAULT, fault FEEDBACK)
+17:18:46.476 INFO  you    sent STOP #155
+17:18:48.016 WARN  B1     no status frames for 1.4 s (robot online)
+17:18:48.016 WARN  B1     no encoder frames for 1.4 s (robot online)
+17:18:49.518 WARN  B1     no heartbeat for 3.0 s (robot online)
+17:19:02.494 ERROR robot  robot is OFFLINE (Wi-Fi dropped, or the Pico reset or lost power)
+17:19:03.625 INFO  robot  robot is ONLINE
+17:19:03.728 WARN  robot  robot uptime went back to 11.9 s: the robot rebooted
+17:19:03.728 INFO  B2     motion FAULT -> STOPPED
+17:19:03.728 INFO  B2     fault cleared
+17:19:03.728 WARN  B3     line sensor status UNAVAILABLE
+17:19:03.729 INFO  B4     terrain WAITING -> INIT
+17:19:03.835 INFO  B2     encoder feedback trusted: yes
+17:19:04.041 INFO  B1     status frames resumed
+17:19:04.041 INFO  B1     encoder frames resumed
+17:19:05.042 INFO  B1     heartbeat resumed
+17:19:06.688 INFO  you    sent START #156
+17:19:06.905 INFO  B1     robot received START #156: queued for the controller
+17:19:06.929 INFO  B2     motion STOPPED -> READY
+17:19:06.929 INFO  B2     movement released
+17:19:08.948 INFO  B3     line sensor status available
+17:19:08.949 INFO  B4     terrain INIT -> WAITING
+17:19:10.997 INFO  B2     motion READY -> DRIVING
+17:19:10.998 INFO  ctrl   motion owner: none -> line
+17:19:10.998 INFO  B3     line found
+17:19:10.999 DEBUG B4     motion class MOVING
+17:19:11.097 DEBUG B4     motion class ACCELERATING
+17:19:11.194 DEBUG B4     motion class MOVING
+17:19:11.440 INFO  B4     terrain WAITING -> CLIMBING
+17:19:11.441 DEBUG B4     motion class CLIMBING
+17:19:11.711 INFO  B4     terrain CLIMBING -> DESCENDING
+17:19:11.711 DEBUG B4     motion class DESCENDING
+17:19:12.736 INFO  B4     event: hump completed
+17:19:12.738 INFO  B4     terrain DESCENDING -> WAITING
+17:19:12.738 INFO  B4     highest hump this run: 8 mm
+17:19:12.753 DEBUG B4     motion class MOVING
+17:19:12.937 INFO  B2     motion DRIVING -> STOPPING
+17:19:12.938 INFO  B2     movement HELD (stopped)
+17:19:12.938 INFO  ctrl   motion owner: line -> none
+17:19:13.162 DEBUG B4     motion class ACCELERATING
+17:19:13.345 DEBUG B4     motion class MOVING
+17:19:13.452 INFO  B2     motion STOPPING -> STOPPED
+17:19:13.452 DEBUG B4     motion class STATIONARY
+17:19:18.468 DEBUG B4     motion class MOVING
+17:19:18.783 DEBUG B4     motion class STATIONARY
+17:19:20.392 INFO  you    sent START #157
+17:19:20.524 INFO  B1     robot received START #157: queued for the controller
+17:19:20.526 INFO  B2     motion STOPPED -> DRIVING
+17:19:20.526 INFO  B2     movement released
+17:19:20.526 INFO  ctrl   motion owner: none -> line
+17:19:20.620 INFO  B4     terrain WAITING -> CLIMBING
+17:19:20.620 DEBUG B4     motion class CLIMBING
+17:19:23.068 WARN  B1     no status frames for 1.3 s (robot online)
+17:19:23.068 WARN  B1     no encoder frames for 1.3 s (robot online)
+17:19:23.398 INFO  B4     terrain CLIMBING -> DESCENDING
+17:19:23.401 DEBUG B4     motion class DESCENDING
+17:19:23.568 INFO  B1     status frames resumed
+17:19:23.569 INFO  B1     encoder frames resumed
+17:19:26.071 WARN  B1     no status frames for 1.4 s (robot online)
+17:19:26.071 WARN  B1     no encoder frames for 1.4 s (robot online)
+17:19:27.073 WARN  B1     no heartbeat for 3.3 s (robot online)
+17:19:32.579 INFO  B1     status frames resumed
+17:19:32.579 INFO  B1     encoder frames resumed
+17:19:32.579 INFO  B1     heartbeat resumed
+17:19:32.608 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:19:32.608 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:19:32.609 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:19:32.609 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:19:32.711 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:19:32.711 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:19:32.712 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:19:32.713 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:19:32.805 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:19:39.587 WARN  B1     no status frames for 1.1 s (robot online)
+17:19:39.587 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:19:40.589 INFO  B1     status frames resumed
+17:19:40.589 INFO  B1     encoder frames resumed
+17:19:49.602 WARN  B1     no status frames for 1.1 s (robot online)
+17:19:49.602 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:19:50.603 INFO  B1     status frames resumed
+17:19:50.604 INFO  B1     encoder frames resumed
+17:19:51.104 WARN  B1     no heartbeat for 3.0 s (robot online)
+17:19:51.605 WARN  B1     no status frames for 1.2 s (robot online)
+17:19:51.605 WARN  B1     no encoder frames for 1.2 s (robot online)
+17:19:52.106 INFO  B1     status frames resumed
+17:19:52.106 INFO  B1     encoder frames resumed
+17:19:52.106 INFO  B1     heartbeat resumed
+17:19:52.668 WARN  B3     event: line lost
+17:19:53.281 INFO  B4     event: hump completed
+17:19:53.282 INFO  B4     terrain DESCENDING -> WAITING
+17:19:53.282 INFO  B4     highest hump this run: 36 mm
+17:19:53.282 DEBUG B4     motion class STATIONARY
+17:19:55.109 WARN  B1     no status frames for 1.3 s (robot online)
+17:19:55.109 WARN  B1     no encoder frames for 1.3 s (robot online)
+17:19:56.110 WARN  B1     no heartbeat for 3.1 s (robot online)
+17:19:56.611 INFO  B1     status frames resumed
+17:19:56.611 INFO  B1     encoder frames resumed
+17:19:56.611 INFO  B1     heartbeat resumed
+17:19:56.664 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:19:56.665 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:19:56.666 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:19:56.782 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:20:01.921 INFO  B3     line found
+17:20:01.921 INFO  B4     terrain WAITING -> CLIMBING
+17:20:01.921 DEBUG B4     motion class CLIMBING
+17:20:04.041 INFO  B4     terrain CLIMBING -> DESCENDING
+17:20:04.140 DEBUG B4     motion class DESCENDING
+17:20:04.371 INFO  you    sent STOP #158
+17:20:04.554 INFO  B1     robot received STOP #158: queued for the controller
+17:20:04.556 INFO  B2     motion DRIVING -> STOPPING
+17:20:04.556 INFO  B2     movement HELD (stopped)
+17:20:04.556 INFO  ctrl   motion owner: line -> none
+17:20:04.557 INFO  B4     terrain DESCENDING -> WAITING
+17:20:04.578 DEBUG B4     motion class MOVING
+17:20:04.861 INFO  B2     motion STOPPING -> STOPPED
+17:20:04.976 DEBUG B4     motion class STATIONARY
+17:20:06.273 INFO  you    sent START #159
+17:20:06.397 INFO  B1     robot received START #159: queued for the controller
+17:20:06.399 INFO  B2     motion STOPPED -> DRIVING
+17:20:06.399 INFO  B2     movement released
+17:20:06.399 INFO  ctrl   motion owner: none -> line
+17:20:06.491 INFO  B4     terrain WAITING -> CLIMBING
+17:20:06.602 DEBUG B4     motion class CLIMBING
+17:20:07.027 INFO  B4     terrain CLIMBING -> DESCENDING
+17:20:07.027 DEBUG B4     motion class DESCENDING
+17:20:08.623 WARN  B1     no status frames for 1.3 s (robot online)
+17:20:08.623 WARN  B1     no encoder frames for 1.3 s (robot online)
+17:20:10.125 INFO  B1     status frames resumed
+17:20:10.125 INFO  B1     encoder frames resumed
+17:20:10.626 WARN  B1     no heartbeat for 3.5 s (robot online)
+17:20:11.127 WARN  B1     no status frames for 1.2 s (robot online)
+17:20:11.127 WARN  B1     no encoder frames for 1.2 s (robot online)
+17:20:11.947 WARN  B3     event: line lost
+17:20:11.969 INFO  B4     terrain DESCENDING -> WAITING
+17:20:11.969 DEBUG B4     motion class STATIONARY
+17:20:11.969 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:20:11.970 WARN  B1     robot dropped 2 outgoing message(s): Wi-Fi or broker too slow
+17:20:12.128 INFO  B1     status frames resumed
+17:20:12.128 INFO  B1     encoder frames resumed
+17:20:12.128 INFO  B1     heartbeat resumed
+17:20:12.233 INFO  B4     terrain WAITING -> CLIMBING
+17:20:12.233 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:20:12.234 DEBUG B4     motion class CLIMBING
+17:20:12.331 INFO  B4     terrain CLIMBING -> DESCENDING
+17:20:12.434 DEBUG B4     motion class DESCENDING
+17:20:14.133 WARN  B1     no status frames for 1.4 s (robot online)
+17:20:14.133 WARN  B1     no encoder frames for 1.4 s (robot online)
+17:20:15.635 WARN  B1     no heartbeat for 3.5 s (robot online)
+17:20:22.175 ERROR robot  robot is OFFLINE (Wi-Fi dropped, or the Pico reset or lost power)
+17:20:22.281 INFO  robot  robot is ONLINE
+17:20:22.375 WARN  robot  robot uptime went back to 4.5 s: the robot rebooted
+17:20:22.375 INFO  B2     motion DRIVING -> STOPPED
+17:20:22.375 INFO  B2     movement HELD (stopped)
+17:20:22.376 INFO  ctrl   motion owner: line -> none
+17:20:22.376 WARN  B3     line sensor status UNAVAILABLE
+17:20:22.376 INFO  B4     terrain DESCENDING -> INIT
+17:20:22.643 INFO  B1     status frames resumed
+17:20:22.643 INFO  B1     encoder frames resumed
+17:20:23.652 INFO  B1     heartbeat resumed
+17:20:30.358 INFO  you    sent START #160
+17:20:30.470 INFO  B1     robot received START #160: queued for the controller
+17:20:30.558 INFO  B2     motion STOPPED -> READY
+17:20:30.558 INFO  B2     movement released
+17:20:32.528 INFO  B3     line sensor status available
+17:20:32.528 INFO  B4     terrain INIT -> WAITING
+17:20:35.995 INFO  B2     motion READY -> DRIVING
+17:20:35.995 INFO  ctrl   motion owner: none -> line
+17:20:35.995 INFO  B3     line found
+17:20:36.087 DEBUG B4     motion class MOVING
+17:20:36.196 DEBUG B4     motion class ACCELERATING
+17:20:36.305 INFO  B4     terrain WAITING -> CLIMBING
+17:20:36.305 DEBUG B4     motion class CLIMBING
+17:20:42.021 INFO  B4     terrain CLIMBING -> DESCENDING
+17:20:42.021 DEBUG B4     motion class DESCENDING
+17:20:42.637 INFO  B4     event: hump completed
+17:20:42.638 INFO  B4     terrain DESCENDING -> WAITING
+17:20:42.639 INFO  B4     highest hump this run: 28 mm
+17:20:42.639 DEBUG B4     motion class MOVING
+17:20:44.080 INFO  B2     motion DRIVING -> STOPPING
+17:20:44.080 INFO  B2     movement HELD (stopped)
+17:20:44.080 INFO  ctrl   motion owner: line -> none
+17:20:44.194 DEBUG B4     motion class ACCELERATING
+17:20:44.271 DEBUG B4     motion class MOVING
+17:20:44.582 INFO  B2     motion STOPPING -> STOPPED
+17:20:44.582 DEBUG B4     motion class STATIONARY
+17:20:52.091 INFO  you    sent START #161
+17:20:52.271 INFO  B1     robot received START #161: queued for the controller
+17:20:52.304 INFO  B2     motion STOPPED -> DRIVING
+17:20:52.306 INFO  B2     movement released
+17:20:52.306 INFO  ctrl   motion owner: none -> line
+17:20:52.468 INFO  B4     terrain WAITING -> CLIMBING
+17:20:52.608 DEBUG B4     motion class CLIMBING
+17:20:55.011 INFO  you    sent STOP #162
+17:20:55.137 INFO  B1     robot received STOP #162: queued for the controller
+17:20:55.139 INFO  B2     motion DRIVING -> STOPPING
+17:20:55.139 INFO  B2     movement HELD (stopped)
+17:20:55.139 INFO  ctrl   motion owner: line -> none
+17:20:55.139 INFO  B4     terrain CLIMBING -> WAITING
+17:20:55.235 DEBUG B4     motion class MOVING
+17:20:55.443 INFO  B2     motion STOPPING -> STOPPED
+17:20:55.540 DEBUG B4     motion class STATIONARY
+17:21:19.222 WARN  B1     no status frames for 1.1 s (robot online)
+17:21:19.222 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:21:20.723 INFO  B1     status frames resumed
+17:21:20.723 INFO  B1     encoder frames resumed
+17:21:20.723 WARN  B1     no heartbeat for 3.2 s (robot online)
+17:21:20.946 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:21:20.946 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:21:20.947 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:21:21.041 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:21:21.224 INFO  B1     heartbeat resumed
+17:21:25.227 WARN  B1     no status frames for 1.3 s (robot online)
+17:21:25.227 WARN  B1     no encoder frames for 1.3 s (robot online)
+17:21:26.729 INFO  B1     status frames resumed
+17:21:26.729 INFO  B1     encoder frames resumed
+17:21:26.730 WARN  B1     no heartbeat for 3.1 s (robot online)
+17:21:27.730 WARN  B1     no status frames for 1.0 s (robot online)
+17:21:27.730 WARN  B1     no encoder frames for 1.0 s (robot online)
+17:21:28.825 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:21:28.825 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:21:28.826 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:21:28.826 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:21:28.827 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:21:29.232 INFO  B1     status frames resumed
+17:21:29.232 INFO  B1     encoder frames resumed
+17:21:29.232 INFO  B1     heartbeat resumed
+17:21:30.233 WARN  B1     no status frames for 1.3 s (robot online)
+17:21:30.233 WARN  B1     no encoder frames for 1.3 s (robot online)
+17:21:30.734 INFO  B1     status frames resumed
+17:21:30.734 INFO  B1     encoder frames resumed
+17:21:38.578 INFO  you    sent START #163
+17:21:38.741 WARN  B1     no status frames for 1.1 s (robot online)
+17:21:38.741 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:21:40.242 INFO  B1     status frames resumed
+17:21:40.242 INFO  B1     encoder frames resumed
+17:21:40.242 WARN  B1     no heartbeat for 3.4 s (robot online)
+17:21:40.322 INFO  B1     robot received START #163: queued for the controller
+17:21:40.326 INFO  B2     motion STOPPED -> DRIVING
+17:21:40.326 INFO  B2     movement released
+17:21:40.327 INFO  ctrl   motion owner: none -> line
+17:21:40.330 INFO  B4     terrain WAITING -> CLIMBING
+17:21:40.330 DEBUG B4     motion class CLIMBING
+17:21:40.497 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:21:40.498 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:21:40.499 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:21:40.500 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:21:40.616 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:21:40.744 INFO  B1     heartbeat resumed
+17:21:42.245 WARN  B1     no status frames for 1.3 s (robot online)
+17:21:42.245 WARN  B1     no encoder frames for 1.3 s (robot online)
+17:21:44.247 WARN  B1     no heartbeat for 3.4 s (robot online)
+17:21:51.755 INFO  B1     status frames resumed
+17:21:51.755 INFO  B1     encoder frames resumed
+17:21:52.757 WARN  B1     no status frames for 1.5 s (robot online)
+17:21:52.757 WARN  B1     no encoder frames for 1.5 s (robot online)
+17:21:52.829 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:21:52.836 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:21:52.838 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:21:52.843 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:21:52.845 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:21:52.848 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:21:52.852 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:21:52.859 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:21:52.864 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:21:52.914 INFO  B4     terrain CLIMBING -> DESCENDING
+17:21:52.914 DEBUG B4     motion class DESCENDING
+17:21:53.258 INFO  B1     status frames resumed
+17:21:53.258 INFO  B1     encoder frames resumed
+17:21:53.258 INFO  B1     heartbeat resumed
+17:21:57.762 WARN  B1     no status frames for 1.5 s (robot online)
+17:21:57.762 WARN  B1     no encoder frames for 1.5 s (robot online)
+17:21:59.131 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:21:59.131 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:21:59.236 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:21:59.264 INFO  B1     status frames resumed
+17:21:59.264 INFO  B1     encoder frames resumed
+17:22:05.813 WARN  B3     event: line lost
+17:22:07.773 WARN  B1     no status frames for 1.5 s (robot online)
+17:22:07.773 WARN  B1     no encoder frames for 1.5 s (robot online)
+17:22:08.961 INFO  B4     event: hump completed
+17:22:08.962 INFO  B4     terrain DESCENDING -> WAITING
+17:22:08.962 INFO  B4     highest hump this run: 40 mm
+17:22:08.963 DEBUG B4     motion class STATIONARY
+17:22:09.194 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:22:09.195 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:22:09.275 INFO  B1     status frames resumed
+17:22:09.275 INFO  B1     encoder frames resumed
+17:22:09.286 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:22:15.781 WARN  B1     no status frames for 1.2 s (robot online)
+17:22:15.781 WARN  B1     no encoder frames for 1.2 s (robot online)
+17:22:17.283 WARN  B1     no heartbeat for 3.2 s (robot online)
+17:22:19.099 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:22:19.099 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:22:19.220 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:22:19.220 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:22:19.221 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:22:19.222 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:22:19.223 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:22:19.285 INFO  B1     status frames resumed
+17:22:19.285 INFO  B1     encoder frames resumed
+17:22:19.285 INFO  B1     heartbeat resumed
+17:22:20.286 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:22:20.788 WARN  B1     no status frames for 1.5 s (robot online)
+17:22:22.214 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:22:22.216 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:22:22.275 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:22:22.290 INFO  B1     status frames resumed
+17:22:22.290 INFO  B1     encoder frames resumed
+17:22:29.296 WARN  B1     no status frames for 1.3 s (robot online)
+17:22:29.296 WARN  B1     no encoder frames for 1.3 s (robot online)
+17:22:30.297 INFO  B1     status frames resumed
+17:22:30.297 INFO  B1     encoder frames resumed
+17:22:37.305 WARN  B1     no status frames for 1.1 s (robot online)
+17:22:37.305 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:22:38.807 WARN  B1     no heartbeat for 3.5 s (robot online)
+17:22:40.714 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:22:40.715 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:22:40.715 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:22:40.716 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:22:40.809 INFO  B1     status frames resumed
+17:22:40.809 INFO  B1     encoder frames resumed
+17:22:40.809 INFO  B1     heartbeat resumed
+17:22:40.931 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:22:40.931 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:22:40.932 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:22:40.932 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:22:40.933 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:22:43.812 WARN  B1     no status frames for 1.4 s (robot online)
+17:22:43.812 WARN  B1     no encoder frames for 1.4 s (robot online)
+17:22:45.314 INFO  B1     status frames resumed
+17:22:45.315 INFO  B1     encoder frames resumed
+17:22:45.316 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:22:45.317 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:22:45.317 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:22:45.415 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:22:51.821 WARN  B1     no status frames for 1.1 s (robot online)
+17:22:51.821 WARN  B1     no encoder frames for 1.2 s (robot online)
+17:22:52.322 INFO  B1     status frames resumed
+17:22:52.322 INFO  B1     encoder frames resumed
+17:23:02.835 WARN  B1     no status frames for 1.1 s (robot online)
+17:23:02.835 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:23:03.336 INFO  B1     status frames resumed
+17:23:03.336 INFO  B1     encoder frames resumed
+17:23:04.337 WARN  B1     no status frames for 1.2 s (robot online)
+17:23:04.337 WARN  B1     no encoder frames for 1.2 s (robot online)
+17:23:04.581 DEBUG B4     motion class MOVING
+17:23:04.583 INFO  B4     terrain WAITING -> CLIMBING
+17:23:04.584 INFO  B4     terrain CLIMBING -> DESCENDING
+17:23:04.584 DEBUG B4     motion class CLIMBING
+17:23:04.584 DEBUG B4     motion class DESCENDING
+17:23:04.677 INFO  B4     event: hump completed
+17:23:04.678 INFO  B4     terrain DESCENDING -> WAITING
+17:23:04.678 DEBUG B4     motion class STATIONARY
+17:23:04.838 INFO  B1     status frames resumed
+17:23:04.838 INFO  B1     encoder frames resumed
+17:23:05.187 DEBUG B4     motion class MOVING
+17:23:06.339 WARN  B1     no status frames for 1.0 s (robot online)
+17:23:06.339 WARN  B1     no encoder frames for 1.0 s (robot online)
+17:23:06.716 DEBUG B4     motion class STATIONARY
+17:23:06.840 INFO  B1     status frames resumed
+17:23:06.840 INFO  B1     encoder frames resumed
+17:23:10.844 WARN  B1     no status frames for 1.3 s (robot online)
+17:23:10.844 WARN  B1     no encoder frames for 1.3 s (robot online)
+17:23:10.844 WARN  B1     no heartbeat for 3.3 s (robot online)
+17:23:11.131 INFO  B3     line found
+17:23:11.134 INFO  B4     terrain WAITING -> CLIMBING
+17:23:11.135 INFO  B4     terrain CLIMBING -> DESCENDING
+17:23:11.135 DEBUG B4     motion class DESCENDING
+17:23:11.229 INFO  B4     event: hump completed
+17:23:11.230 INFO  B4     terrain DESCENDING -> WAITING
+17:23:11.231 DEBUG B4     motion class STATIONARY
+17:23:11.344 INFO  B1     status frames resumed
+17:23:11.344 INFO  B1     encoder frames resumed
+17:23:11.344 INFO  B1     heartbeat resumed
+17:23:13.281 INFO  B4     terrain WAITING -> CLIMBING
+17:23:13.282 DEBUG B4     motion class CLIMBING
+17:23:14.848 WARN  B1     no status frames for 1.4 s (robot online)
+17:23:14.848 WARN  B1     no encoder frames for 1.4 s (robot online)
+17:23:16.351 INFO  B1     status frames resumed
+17:23:16.351 INFO  B1     encoder frames resumed
+17:23:17.353 WARN  B1     no status frames for 1.1 s (robot online)
+17:23:17.353 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:23:17.796 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:23:17.796 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:23:17.796 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:23:17.796 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:23:17.803 INFO  B4     terrain CLIMBING -> DESCENDING
+17:23:17.803 DEBUG B4     motion class DESCENDING
+17:23:17.854 INFO  B1     status frames resumed
+17:23:17.854 INFO  B1     encoder frames resumed
+17:23:20.857 WARN  B1     no status frames for 1.4 s (robot online)
+17:23:20.857 WARN  B1     no encoder frames for 1.4 s (robot online)
+17:23:21.859 WARN  B1     no heartbeat for 3.2 s (robot online)
+17:23:23.863 INFO  B1     status frames resumed
+17:23:23.864 INFO  B1     encoder frames resumed
+17:23:23.864 INFO  B1     heartbeat resumed
+17:23:24.063 WARN  B3     event: line lost
+17:23:24.064 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:23:24.066 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:23:24.066 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:23:24.067 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:23:24.068 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:23:24.068 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:23:24.069 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:23:24.069 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:23:24.070 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:23:24.148 INFO  B4     event: hump completed
+17:23:24.237 INFO  B4     terrain DESCENDING -> WAITING
+17:23:24.237 DEBUG B4     motion class STATIONARY
+17:23:38.386 WARN  B1     no status frames for 1.1 s (robot online)
+17:23:38.386 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:23:39.388 INFO  B1     status frames resumed
+17:23:39.388 INFO  B1     encoder frames resumed
+17:23:46.896 WARN  B1     no status frames for 1.2 s (robot online)
+17:23:46.896 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:23:47.297 DEBUG B4     motion class MOVING
+17:23:47.397 INFO  B1     status frames resumed
+17:23:47.397 INFO  B1     encoder frames resumed
+17:23:47.582 DEBUG B4     motion class STATIONARY
+17:23:47.799 INFO  B4     terrain WAITING -> CLIMBING
+17:23:47.799 INFO  B4     terrain CLIMBING -> DESCENDING
+17:23:47.799 DEBUG B4     motion class CLIMBING
+17:23:47.886 DEBUG B4     motion class DESCENDING
+17:23:48.197 INFO  B4     event: hump completed
+17:23:48.198 INFO  B4     terrain DESCENDING -> WAITING
+17:23:48.198 DEBUG B4     motion class STATIONARY
+17:23:50.400 WARN  B1     no status frames for 1.1 s (robot online)
+17:23:50.400 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:23:50.902 INFO  B1     status frames resumed
+17:23:50.902 INFO  B1     encoder frames resumed
+17:23:53.936 DEBUG B4     motion class MOVING
+17:23:54.237 DEBUG B4     motion class ACCELERATING
+17:23:54.334 DEBUG B4     motion class MOVING
+17:23:55.475 DEBUG B4     motion class ACCELERATING
+17:23:55.572 DEBUG B4     motion class MOVING
+17:23:55.769 DEBUG B4     motion class STATIONARY
+17:23:55.886 DEBUG B4     motion class MOVING
+17:23:56.186 DEBUG B4     motion class STATIONARY
+17:23:57.097 DEBUG B4     motion class MOVING
+17:23:57.724 DEBUG B4     motion class STATIONARY
+17:23:57.814 DEBUG B4     motion class MOVING
+17:23:58.026 DEBUG B4     motion class REVERSING
+17:23:58.336 DEBUG B4     motion class ACCELERATING
+17:23:58.444 DEBUG B4     motion class MOVING
+17:23:58.739 DEBUG B4     motion class ACCELERATING
+17:23:58.838 DEBUG B4     motion class MOVING
+17:24:00.495 INFO  B4     terrain WAITING -> CLIMBING
+17:24:00.495 DEBUG B4     motion class CLIMBING
+17:24:01.505 INFO  B4     terrain CLIMBING -> DESCENDING
+17:24:01.505 DEBUG B4     motion class DESCENDING
+17:24:08.917 WARN  B1     no status frames for 1.3 s (robot online)
+17:24:08.917 WARN  B1     no encoder frames for 1.5 s (robot online)
+17:24:10.420 INFO  B1     status frames resumed
+17:24:10.420 INFO  B1     encoder frames resumed
+17:24:10.420 WARN  B1     no heartbeat for 3.1 s (robot online)
+17:24:10.514 INFO  B4     terrain DESCENDING -> WAITING
+17:24:10.514 DEBUG B4     motion class STATIONARY
+17:24:10.515 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:24:10.617 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:24:10.617 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:24:10.618 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:24:10.618 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:24:10.740 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:24:10.921 INFO  B1     heartbeat resumed
+17:24:12.055 DEBUG B4     motion class MOVING
+17:24:12.478 DEBUG B4     motion class ACCELERATING
+17:24:12.664 DEBUG B4     motion class MOVING
+17:24:14.925 WARN  B1     no status frames for 1.1 s (robot online)
+17:24:14.925 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:24:16.427 WARN  B1     no heartbeat for 3.2 s (robot online)
+17:24:19.931 INFO  B1     status frames resumed
+17:24:19.931 INFO  B1     encoder frames resumed
+17:24:19.944 DEBUG B4     motion class ACCELERATING
+17:24:19.946 DEBUG B4     motion class MOVING
+17:24:19.956 INFO  B4     terrain WAITING -> CLIMBING
+17:24:19.956 DEBUG B4     motion class CLIMBING
+17:24:20.047 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:24:20.048 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:24:20.049 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:24:20.049 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:24:20.154 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:24:20.155 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:24:20.156 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:24:20.156 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:24:20.243 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:24:20.432 INFO  B1     heartbeat resumed
+17:24:20.994 INFO  B4     terrain CLIMBING -> DESCENDING
+17:24:20.994 DEBUG B4     motion class DESCENDING
+17:24:22.434 WARN  B1     no status frames for 1.0 s (robot online)
+17:24:22.434 WARN  B1     no encoder frames for 1.0 s (robot online)
+17:24:23.435 INFO  B1     status frames resumed
+17:24:23.436 INFO  B1     encoder frames resumed
+17:24:30.692 INFO  B4     event: hump completed
+17:24:30.692 INFO  B4     terrain DESCENDING -> WAITING
+17:24:30.785 DEBUG B4     motion class MOVING
+17:24:31.101 DEBUG B4     motion class STATIONARY
+17:24:33.662 DEBUG B4     motion class MOVING
+17:24:33.980 DEBUG B4     motion class STATIONARY
+17:24:34.383 DEBUG B4     motion class MOVING
+17:24:34.487 DEBUG B4     motion class ACCELERATING
+17:24:34.695 DEBUG B4     motion class MOVING
+17:24:36.430 INFO  B4     terrain WAITING -> CLIMBING
+17:24:36.430 DEBUG B4     motion class CLIMBING
+17:24:37.950 WARN  B1     no status frames for 1.4 s (robot online)
+17:24:37.950 WARN  B1     no encoder frames for 1.4 s (robot online)
+17:24:38.451 INFO  B1     status frames resumed
+17:24:38.451 INFO  B1     encoder frames resumed
+17:24:40.308 INFO  B4     terrain CLIMBING -> DESCENDING
+17:24:40.308 DEBUG B4     motion class DESCENDING
+17:24:44.200 INFO  B4     event: hump completed
+17:24:44.201 INFO  B4     terrain DESCENDING -> WAITING
+17:24:44.300 DEBUG B4     motion class MOVING
+17:24:45.326 DEBUG B4     motion class ACCELERATING
+17:24:45.427 DEBUG B4     motion class MOVING
+17:24:45.633 DEBUG B4     motion class ACCELERATING
+17:24:45.735 DEBUG B4     motion class MOVING
+17:24:45.948 DEBUG B4     motion class STATIONARY
+17:24:55.469 WARN  B1     no status frames for 1.4 s (robot online)
+17:24:55.469 WARN  B1     no encoder frames for 1.4 s (robot online)
+17:24:56.470 INFO  B1     status frames resumed
+17:24:56.470 INFO  B1     encoder frames resumed
+17:25:03.477 WARN  B1     no status frames for 1.3 s (robot online)
+17:25:03.477 WARN  B1     no encoder frames for 1.3 s (robot online)
+17:25:03.570 DEBUG B4     motion class MOVING
+17:25:03.571 INFO  B3     line found
+17:25:03.572 DEBUG B4     motion class STATIONARY
+17:25:03.578 WARN  B3     event: line lost
+17:25:03.579 INFO  B4     terrain WAITING -> DESCENDING
+17:25:03.579 DEBUG B4     motion class CLIMBING
+17:25:03.580 INFO  B4     terrain DESCENDING -> CLIMBING
+17:25:03.581 INFO  B4     terrain CLIMBING -> DESCENDING
+17:25:03.668 DEBUG B4     motion class DESCENDING
+17:25:03.977 INFO  B1     status frames resumed
+17:25:03.977 INFO  B1     encoder frames resumed
+17:25:04.978 WARN  B1     no status frames for 1.3 s (robot online)
+17:25:04.978 WARN  B1     no encoder frames for 1.4 s (robot online)
+17:25:05.135 INFO  B4     event: hump completed
+17:25:05.137 INFO  B4     terrain DESCENDING -> WAITING
+17:25:05.137 DEBUG B4     motion class STATIONARY
+17:25:05.139 INFO  B2     motion DRIVING -> STOPPING
+17:25:05.140 INFO  B2     movement HELD (stopped)
+17:25:05.140 INFO  ctrl   motion owner: line -> none
+17:25:05.141 DEBUG B4     motion class MOVING
+17:25:05.145 INFO  B2     motion STOPPING -> STOPPED
+17:25:05.148 DEBUG B4     motion class STATIONARY
+17:25:05.154 INFO  B5     obstacle: held / scanning
+17:25:05.155 DEBUG B4     motion class MOVING
+17:25:05.480 INFO  B1     status frames resumed
+17:25:05.481 INFO  B1     encoder frames resumed
+17:25:05.507 DEBUG B4     motion class STATIONARY
+17:25:09.409 INFO  you    sent STOP #164
+17:25:09.511 INFO  B1     robot received STOP #164: queued for the controller
+17:25:11.442 INFO  you    sent STOP #165
+17:25:11.553 INFO  B1     robot received STOP #165: queued for the controller
+17:25:12.491 WARN  B1     no status frames for 1.0 s (robot online)
+17:25:12.491 WARN  B1     no encoder frames for 1.0 s (robot online)
+17:25:12.588 INFO  you    sent STOP #166
+17:25:12.753 INFO  you    sent STOP #167
+17:25:12.878 INFO  you    sent STOP #168
+17:25:13.028 INFO  you    sent STOP #169
+17:25:13.150 INFO  you    sent STOP #170
+17:25:13.992 INFO  B1     status frames resumed
+17:25:13.992 WARN  B1     no heartbeat for 3.4 s (robot online)
+17:25:14.993 WARN  B1     no status frames for 1.4 s (robot online)
+17:25:15.075 INFO  B1     robot received STOP #166: queued for the controller
+17:25:15.085 INFO  B1     robot received STOP #167: queued for the controller
+17:25:15.088 INFO  B1     robot received STOP #168: queued for the controller
+17:25:15.139 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:25:15.139 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:25:15.141 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:25:15.494 INFO  B1     status frames resumed
+17:25:15.494 INFO  B1     encoder frames resumed
+17:25:15.494 INFO  B1     heartbeat resumed
+17:25:16.496 WARN  B1     no status frames for 1.0 s (robot online)
+17:25:16.496 WARN  B1     no encoder frames for 1.0 s (robot online)
+17:25:18.498 WARN  B1     no heartbeat for 3.3 s (robot online)
+17:25:29.691 ERROR robot  robot is OFFLINE (Wi-Fi dropped, or the Pico reset or lost power)
+17:25:29.771 INFO  robot  robot is ONLINE
+17:25:29.878 WARN  robot  robot uptime went back to 12.5 s: the robot rebooted
+17:25:29.878 WARN  B3     line sensor status UNAVAILABLE
+17:25:29.878 INFO  B4     terrain WAITING -> INIT
+17:25:29.878 INFO  B5     obstacle: clear
+17:25:30.008 INFO  B1     status frames resumed
+17:25:30.008 INFO  B1     encoder frames resumed
+17:25:31.009 INFO  B1     heartbeat resumed
+17:25:33.578 INFO  you    sent START #171
+17:25:33.663 INFO  B1     robot received START #171: queued for the controller
+17:25:33.863 INFO  B2     motion STOPPED -> READY
+17:25:33.863 INFO  B2     movement released
+17:25:35.820 INFO  B3     line sensor status available
+17:25:35.820 INFO  B4     terrain INIT -> WAITING
+17:25:40.518 WARN  B1     no status frames for 1.2 s (robot online)
+17:25:40.518 WARN  B1     no encoder frames for 1.2 s (robot online)
+17:25:42.019 INFO  B1     status frames resumed
+17:25:42.019 WARN  B1     no heartbeat for 3.2 s (robot online)
+17:25:42.074 DEBUG B4     motion class MOVING
+17:25:42.079 INFO  B2     motion READY -> DRIVING
+17:25:42.079 INFO  ctrl   motion owner: none -> line
+17:25:42.079 INFO  B3     line found
+17:25:42.084 DEBUG B4     motion class ACCELERATING
+17:25:42.086 DEBUG B4     motion class MOVING
+17:25:42.093 INFO  B4     terrain WAITING -> CLIMBING
+17:25:42.093 DEBUG B4     motion class CLIMBING
+17:25:42.158 INFO  B2     motion DRIVING -> STOPPING
+17:25:42.158 INFO  B2     movement HELD (stopped)
+17:25:42.158 INFO  ctrl   motion owner: line -> none
+17:25:42.158 INFO  B4     terrain CLIMBING -> WAITING
+17:25:42.159 WARN  B4     robot OVERTURNED: Buddy 4 stopped the motors
+17:25:42.262 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:25:42.263 INFO  B2     motion STOPPING -> STOPPED
+17:25:42.263 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:25:42.263 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:25:42.264 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:25:42.370 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:25:42.520 INFO  B1     encoder frames resumed
+17:25:42.520 INFO  B1     heartbeat resumed
+17:25:44.007 DEBUG B4     motion class STATIONARY
+17:25:44.721 WARN  B3     event: line lost
+17:25:46.025 WARN  B1     no encoder frames for 1.3 s (robot online)
+17:25:46.064 DEBUG B4     motion class MOVING
+17:25:46.068 DEBUG B4     motion class STATIONARY
+17:25:46.525 INFO  B1     encoder frames resumed
+17:25:47.065 INFO  you    sent START #172
+17:25:48.451 INFO  B1     robot received START #172: queued for the controller
+17:25:48.530 INFO  B2     motion STOPPED -> READY
+17:25:48.530 INFO  B2     movement released
+17:25:49.250 DEBUG B4     motion class MOVING
+17:25:49.647 DEBUG B4     motion class STATIONARY
+17:25:55.035 WARN  B1     no status frames for 1.4 s (robot online)
+17:25:55.035 WARN  B1     no encoder frames for 1.4 s (robot online)
+17:25:55.176 DEBUG B4     motion class MOVING
+17:25:55.179 DEBUG B4     motion class STATIONARY
+17:25:55.536 INFO  B1     status frames resumed
+17:25:55.536 INFO  B1     encoder frames resumed
+17:25:57.539 WARN  B1     no encoder frames for 1.0 s (robot online)
+17:25:58.040 INFO  B1     encoder frames resumed
+17:25:58.149 DEBUG B4     motion class MOVING
+17:25:58.350 DEBUG B4     motion class STATIONARY
+17:25:59.542 WARN  B1     no status frames for 1.2 s (robot online)
+17:25:59.542 WARN  B1     no encoder frames for 1.2 s (robot online)
+17:26:00.042 INFO  B1     status frames resumed
+17:26:00.042 INFO  B1     encoder frames resumed
+17:26:02.545 WARN  B1     no status frames for 1.2 s (robot online)
+17:26:02.545 WARN  B1     no encoder frames for 1.2 s (robot online)
+17:26:02.659 DEBUG B4     motion class MOVING
+17:26:02.660 DEBUG B4     motion class ACCELERATING
+17:26:02.661 DEBUG B4     motion class MOVING
+17:26:03.045 INFO  B1     status frames resumed
+17:26:03.045 INFO  B1     encoder frames resumed
+17:26:05.047 WARN  B1     no status frames for 1.5 s (robot online)
+17:26:05.047 WARN  B1     no encoder frames for 1.5 s (robot online)
+17:26:06.051 INFO  B1     status frames resumed
+17:26:06.051 INFO  B1     encoder frames resumed
+17:26:08.052 WARN  B1     no status frames for 1.2 s (robot online)
+17:26:08.052 WARN  B1     no encoder frames for 1.2 s (robot online)
+17:26:08.553 INFO  B1     status frames resumed
+17:26:08.553 INFO  B1     encoder frames resumed
+17:26:09.562 WARN  B1     no status frames for 1.5 s (robot online)
+17:26:09.563 WARN  B1     no encoder frames for 1.5 s (robot online)
+17:26:09.563 WARN  B1     no heartbeat for 3.4 s (robot online)
+17:26:09.607 INFO  B4     terrain WAITING -> CLIMBING
+17:26:09.608 DEBUG B4     motion class CLIMBING
+17:26:10.064 INFO  B1     status frames resumed
+17:26:10.064 INFO  B1     encoder frames resumed
+17:26:10.064 INFO  B1     heartbeat resumed
+17:26:11.065 WARN  B1     no status frames for 1.1 s (robot online)
+17:26:11.065 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:26:11.566 INFO  B1     status frames resumed
+17:26:11.566 INFO  B1     encoder frames resumed
+17:26:12.567 WARN  B1     no status frames for 1.4 s (robot online)
+17:26:12.567 WARN  B1     no encoder frames for 1.4 s (robot online)
+17:26:13.068 INFO  B1     status frames resumed
+17:26:13.068 INFO  B1     encoder frames resumed
+17:26:13.701 INFO  B4     terrain CLIMBING -> DESCENDING
+17:26:13.829 DEBUG B4     motion class DESCENDING
+17:26:15.961 INFO  B4     event: hump completed
+17:26:15.961 INFO  B4     terrain DESCENDING -> WAITING
+17:26:15.961 INFO  B4     highest hump this run: 11 mm
+17:26:15.962 DEBUG B4     motion class MOVING
+17:26:17.388 DEBUG B4     motion class STATIONARY
+17:26:21.077 WARN  B1     no status frames for 1.0 s (robot online)
+17:26:21.077 WARN  B1     no encoder frames for 1.0 s (robot online)
+17:26:22.578 WARN  B1     no heartbeat for 3.3 s (robot online)
+17:26:23.023 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:26:23.079 INFO  B1     status frames resumed
+17:26:23.079 INFO  B1     encoder frames resumed
+17:26:23.079 INFO  B1     heartbeat resumed
+17:26:23.140 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:26:23.140 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:26:23.141 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:26:23.142 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:26:23.143 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:26:28.086 WARN  B1     no status frames for 1.4 s (robot online)
+17:26:28.086 WARN  B1     no encoder frames for 1.4 s (robot online)
+17:26:29.383 INFO  B2     motion READY -> DRIVING
+17:26:29.383 INFO  ctrl   motion owner: none -> line
+17:26:29.383 INFO  B3     line found
+17:26:29.384 DEBUG B4     motion class MOVING
+17:26:29.386 DEBUG B4     motion class ACCELERATING
+17:26:29.388 INFO  B4     terrain WAITING -> CLIMBING
+17:26:29.388 DEBUG B4     motion class CLIMBING
+17:26:29.472 WARN  B3     event: line lost
+17:26:29.473 INFO  B4     terrain CLIMBING -> DESCENDING
+17:26:29.473 DEBUG B4     motion class DESCENDING
+17:26:29.480 INFO  B4     terrain DESCENDING -> WAITING
+17:26:29.480 DEBUG B4     motion class MOVING
+17:26:29.481 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:26:29.481 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:26:29.588 INFO  B1     status frames resumed
+17:26:29.588 INFO  B1     encoder frames resumed
+17:26:29.596 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:26:29.596 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:26:29.597 DEBUG B4     motion class ACCELERATING
+17:26:29.778 DEBUG B4     motion class MOVING
+17:26:30.711 INFO  B2     motion DRIVING -> STOPPING
+17:26:30.711 INFO  B2     movement HELD (stopped)
+17:26:30.711 INFO  ctrl   motion owner: line -> none
+17:26:30.866 INFO  you    sent STOP #173
+17:26:30.907 DEBUG B4     motion class ACCELERATING
+17:26:31.006 INFO  B1     robot received STOP #173: queued for the controller
+17:26:31.008 DEBUG B4     motion class MOVING
+17:26:31.113 INFO  B2     motion STOPPING -> STOPPED
+17:26:31.218 DEBUG B4     motion class STATIONARY
+17:26:33.596 WARN  B1     no status frames for 1.0 s (robot online)
+17:26:33.596 WARN  B1     no encoder frames for 1.0 s (robot online)
+17:26:35.598 WARN  B1     no heartbeat for 3.2 s (robot online)
+17:26:39.524 ERROR robot  robot is OFFLINE (Wi-Fi dropped, or the Pico reset or lost power)
+17:26:39.631 INFO  robot  robot is ONLINE
+17:26:39.719 WARN  robot  robot uptime went back to 4.4 s: the robot rebooted
+17:26:39.720 WARN  B3     line sensor status UNAVAILABLE
+17:26:39.720 INFO  B4     terrain WAITING -> INIT
+17:26:40.104 INFO  B1     status frames resumed
+17:26:40.104 INFO  B1     encoder frames resumed
+17:26:41.105 INFO  B1     heartbeat resumed
+17:26:42.867 INFO  you    sent START #174
+17:26:42.983 INFO  B1     robot received START #174: queued for the controller
+17:26:42.984 INFO  B2     motion STOPPED -> READY
+17:26:42.984 INFO  B2     movement released
+17:26:43.619 INFO  B2     motion READY -> STOPPED
+17:26:43.619 INFO  B2     movement HELD (stopped)
+17:26:43.619 WARN  B5     obstacle: detour abandoned
+17:26:45.031 INFO  B3     line sensor status available
+17:26:45.031 INFO  B4     terrain INIT -> WAITING
+17:26:45.376 WARN  ctrl   START had no effect: the robot is still held. It is only released when STOPPED, fault-free, stationary and with trusted encoder feedback (motion STOPPED, fault NONE)
+17:26:51.295 DEBUG B4     motion class MOVING
+17:26:51.580 DEBUG B4     motion class STATIONARY
+17:26:51.627 INFO  B3     line found
+17:26:53.625 WARN  B1     no status frames for 1.0 s (robot online)
+17:26:53.625 WARN  B1     no encoder frames for 1.0 s (robot online)
+17:26:54.126 INFO  B1     status frames resumed
+17:26:54.126 INFO  B1     encoder frames resumed
+17:26:55.127 WARN  B1     no status frames for 1.3 s (robot online)
+17:26:55.127 WARN  B1     no encoder frames for 1.3 s (robot online)
+17:26:55.301 WARN  B4     robot OVERTURNED: Buddy 4 stopped the motors
+17:26:55.628 INFO  B1     status frames resumed
+17:26:55.628 INFO  B1     encoder frames resumed
+17:26:56.629 WARN  B1     no status frames for 1.3 s (robot online)
+17:26:56.629 WARN  B1     no encoder frames for 1.3 s (robot online)
+17:26:57.130 INFO  B1     status frames resumed
+17:26:57.130 INFO  B1     encoder frames resumed
+17:26:58.131 WARN  B1     no status frames for 1.1 s (robot online)
+17:26:58.131 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:26:58.632 INFO  B1     status frames resumed
+17:26:58.632 INFO  B1     encoder frames resumed
+17:26:59.200 DEBUG B4     motion class STATIONARY
+17:26:59.569 WARN  B3     event: line lost
+17:27:00.486 DEBUG B4     motion class MOVING
+17:27:00.908 DEBUG B4     motion class STATIONARY
+17:27:01.104 DEBUG B4     motion class MOVING
+17:27:01.416 DEBUG B4     motion class STATIONARY
+17:27:02.577 INFO  you    sent START #175
+17:27:02.654 INFO  B1     robot received START #175: queued for the controller
+17:27:02.658 INFO  B2     motion STOPPED -> READY
+17:27:02.658 INFO  B2     movement released
+17:27:02.658 INFO  B5     obstacle: clear
+17:27:06.778 INFO  B2     motion READY -> STOPPED
+17:27:06.778 INFO  B2     movement HELD (stopped)
+17:27:06.778 WARN  B5     obstacle: detour abandoned
+17:27:08.142 WARN  B1     no status frames for 1.4 s (robot online)
+17:27:08.142 WARN  B1     no encoder frames for 1.3 s (robot online)
+17:27:09.644 INFO  B1     status frames resumed
+17:27:09.644 INFO  B1     encoder frames resumed
+17:27:09.716 DEBUG B4     motion class MOVING
+17:27:09.716 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:27:09.716 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:27:09.827 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:27:09.938 DEBUG B4     motion class STATIONARY
+17:27:10.031 DEBUG B4     motion class MOVING
+17:27:12.646 WARN  B1     no status frames for 1.2 s (robot online)
+17:27:12.646 WARN  B1     no encoder frames for 1.2 s (robot online)
+17:27:13.647 INFO  B1     status frames resumed
+17:27:13.647 INFO  B1     encoder frames resumed
+17:27:16.149 WARN  B1     no status frames for 1.3 s (robot online)
+17:27:16.149 WARN  B1     no encoder frames for 1.3 s (robot online)
+17:27:17.150 WARN  B1     no heartbeat for 3.2 s (robot online)
+17:27:17.597 DEBUG B4     motion class STATIONARY
+17:27:17.651 INFO  B1     status frames resumed
+17:27:17.651 INFO  B1     encoder frames resumed
+17:27:17.651 INFO  B1     heartbeat resumed
+17:27:17.723 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:27:17.724 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:27:17.815 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+17:27:17.898 DEBUG B4     motion class MOVING
+17:27:23.960 DEBUG B4     motion class STATIONARY
+17:27:24.253 DEBUG B4     motion class MOVING
+17:27:24.461 INFO  B3     line found
+17:27:24.575 DEBUG B4     motion class STATIONARY
+17:27:25.474 WARN  B3     event: line lost
+17:27:27.331 DEBUG B4     motion class MOVING
+17:27:27.632 DEBUG B4     motion class STATIONARY
+17:27:31.932 DEBUG B4     motion class MOVING
+17:27:32.127 DEBUG B4     motion class ACCELERATING
+17:27:33.169 WARN  B1     no status frames for 1.0 s (robot online)
+17:27:33.169 WARN  B1     no encoder frames for 1.2 s (robot online)
+17:27:33.485 DEBUG B4     motion class MOVING
+17:27:33.669 INFO  B1     status frames resumed
+17:27:33.669 INFO  B1     encoder frames resumed
+17:27:36.171 WARN  B1     no status frames for 1.2 s (robot online)
+17:27:36.171 WARN  B1     no encoder frames for 1.2 s (robot online)
+17:27:36.672 INFO  B1     status frames resumed
+17:27:36.672 INFO  B1     encoder frames resumed
+17:27:39.607 DEBUG B4     motion class ACCELERATING
+17:27:39.732 DEBUG B4     motion class MOVING
+17:27:40.024 DEBUG B4     motion class STATIONARY
+17:27:43.682 WARN  B1     no status frames for 1.1 s (robot online)
+17:27:43.682 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:27:44.039 INFO  B3     line found
+17:27:44.121 DEBUG B4     motion class MOVING
+17:27:44.125 DEBUG B4     motion class STATIONARY
+17:27:44.182 INFO  B1     status frames resumed
+17:27:44.182 INFO  B1     encoder frames resumed
+17:27:45.688 WARN  B1     no status frames for 1.1 s (robot online)
+17:27:45.688 WARN  B1     no encoder frames for 1.1 s (robot online)
+17:27:46.689 INFO  B1     status frames resumed
+17:27:46.689 INFO  B1     encoder frames resumed
+17:27:46.704 WARN  B3     event: line lost
+17:27:47.963 INFO  you    sent START #176
+17:27:48.328 INFO  B1     robot received START #176: queued for the controller
+17:27:48.329 INFO  B2     motion STOPPED -> READY
+17:27:48.329 INFO  B2     movement released
+17:27:48.512 INFO  B5     obstacle: clear
+17:27:53.333 DEBUG B4     motion class MOVING
+17:27:53.959 DEBUG B4     motion class STATIONARY
+17:27:54.277 DEBUG B4     motion class MOVING
+17:27:54.761 DEBUG B4     motion class STATIONARY
+17:27:56.215 DEBUG B4     motion class MOVING
+17:27:56.216 DEBUG B4     motion class ACCELERATING
+17:27:56.217 DEBUG B4     motion class MOVING
+17:28:00.203 WARN  B1     no status frames for 1.0 s (robot online)
+17:28:00.203 WARN  B1     no encoder frames for 1.0 s (robot online)
+17:28:00.704 INFO  B1     status frames resumed
+17:28:00.704 INFO  B1     encoder frames resumed
+17:28:00.710 INFO  B4     terrain WAITING -> CLIMBING
+17:28:00.710 DEBUG B4     motion class CLIMBING
+17:28:05.147 INFO  B4     terrain CLIMBING -> DESCENDING
+17:28:05.215 DEBUG B4     motion class DESCENDING
+17:28:07.302 INFO  B4     event: hump completed
+17:28:07.303 INFO  B4     terrain DESCENDING -> WAITING
+17:28:07.303 INFO  B4     highest hump this run: 10 mm
+17:28:07.303 DEBUG B4     motion class MOVING
+17:28:08.790 DEBUG B4     motion class STATIONARY
+17:28:15.067 INFO  B2     movement HELD (stopped)
+17:28:15.067 WARN  B5     obstacle: detour abandoned
+17:28:15.239 INFO  B2     motion READY -> STOPPED
+17:28:22.726 WARN  B1     no status frames for 1.4 s (robot online)
+17:28:22.726 WARN  B1     no encoder frames for 1.4 s (robot online)
+17:28:23.728 WARN  B1     no heartbeat for 3.2 s (robot online)
+17:28:36.528 ERROR robot  robot is OFFLINE (Wi-Fi dropped, or the Pico reset or lost power)
+17:35:05.120 ERROR broker dashboard lost the MQTT broker 192.168.137.1:1883

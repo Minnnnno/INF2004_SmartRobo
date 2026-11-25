@@ -93,7 +93,9 @@ void buddy4_step(buddy4_t *p_context, uint8_t inputs)
         }
         if ((LIFT_NONE != lift_state(&p_context->lift)) ||
             (B4_FREEZE_NONE != p_context->hump_freeze) ||
-            (0U != (inputs & B4_HUMP_PAUSE))) /* Stopped: no humps until START. */
+            /* Stopped (no humps until START) or turning on the spot (the
+             * turn's sideways jolt reads as tilt): no humps. */
+            (0U != (inputs & (B4_HUMP_PAUSE | B4_TURN_PAUSE))))
         {
             terrain_discard(&p_context->terrain);
             return;
@@ -192,7 +194,8 @@ static void buddy4_retry_failed(buddy4_t *p_context, uint32_t now_ms, ER error)
     }
 }
 /* Configure once, allow positioning, then capture one sample per update.
- * A retained reference bypasses capture after explicit reset/reinitialisation.
+ * A retained reference bypasses capture after a STOP/FAULT reset (host tests
+ * only; sensor recovery returns to MONITORING directly).
  */
 
  //INIT state handler
@@ -235,12 +238,12 @@ static void buddy4_initialise(buddy4_t *p_context, uint8_t inputs, uint32_t now_
             p_context->phase_started = now_ms;
             return;
         }
-        //waits 5 second to so ask to set the robot down and level it
+        //waits B4_POSITION_MS (1 s) so the robot settles level and still
         if ((now_ms - p_context->phase_started) < B4_POSITION_MS)
         {
             return;
         }
-        //after 5 second move to CAPTURE
+        //after the settle time move to CAPTURE
         buddy4_set_phase(p_context, B4_INIT_CAPTURE, now_ms);
         p_context->last_fresh = now_ms;//reset timer.
         return;

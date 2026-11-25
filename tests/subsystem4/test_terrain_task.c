@@ -73,6 +73,8 @@ bool motion_get_status(robot_status_t *p_status)
     if (MOTION_DRIVING == g_motion)
     {
         p_status->motion.speed[0] = g_speed[0]; p_status->motion.speed[1] = g_speed[1];
+        /* Commanded speeds: the fake wheels follow them at once. */
+        p_status->motion.target[0] = g_speed[0]; p_status->motion.target[1] = g_speed[1];
         g_heading_rad += (g_speed[1] - g_speed[0]) / 0.115 * 0.020; /* one 20 ms cycle */
     }
     p_status->motion.heading = g_heading_rad;
@@ -96,6 +98,7 @@ static unsigned g_turn_lines;
 static unsigned g_frozen_lines, g_resumed_lines; /* [TERRAIN] hump freeze console lines. */
 static unsigned g_wait_lines, g_start_lines;     /* [B4] web Start gate console lines. */
 static unsigned g_paused_lines;                  /* [TERRAIN] hump pause (STOP) lines. */
+static unsigned g_turn_paused_lines, g_turn_resumed_lines; /* [TERRAIN] turning pause lines. */
 static bool g_boot_hold; /* Controller hold at boot (ROBO_REQUIRE_START images boot held). */
 static char g_turn_reason[16]; /* Last "%s" passed with a "compass n/a (%s)" [TURN] line. */
 INT tm_printf(UB const *format, ...)
@@ -119,6 +122,8 @@ INT tm_printf(UB const *format, ...)
     if (0 == strncmp((char const *)format, "[B4] waiting for dashboard START", 32U)) { g_wait_lines++; }
     if (0 == strncmp((char const *)format, "[B4] START:", 11U)) { g_start_lines++; }
     if (0 == strncmp((char const *)format, "[TERRAIN] hump recording resumed", 32U)) { g_resumed_lines++; }
+    if (0 == strncmp((char const *)format, "[TERRAIN] turning on the spot", 29U)) { g_turn_paused_lines++; }
+    if (0 == strncmp((char const *)format, "[TERRAIN] turn finished", 23U)) { g_turn_resumed_lines++; }
     return 0;
 }
 
@@ -464,6 +469,69 @@ static void tilt_script(uint32_t t)
     }
 }
 
+/* Turns are not humps (S4-H15): the sideways jolt of a spin or a one-wheel
+ * pivot (~6 mm) is ignored during the turn and 0.5 s after it; the same
+ * height while steering forward (both wheels forward) is a real hump. */
+static unsigned g_wstep;
+static void turn_script(uint32_t t)
+{
+    if ((0U == g_wstep) && (t >= 4000U))
+    {
+        check(S4_TS_WAITING == code_of() && 0U == g_events, "monitoring before the turn checks");
+        g_motion = MOTION_DRIVING; g_speed[0] = 0.080; g_speed[1] = -0.080; /* route spin */
+        right_hump(52, -999); /* ~6 mm sideways jolt */
+        g_wstep = 1U;
+    }
+    else if ((1U == g_wstep) && (t >= 5000U))
+    {
+        check(S4_TS_WAITING == code_of() && 0U == g_events, "spin: no CLIMBING, no hump");
+        check(1U == g_turn_paused_lines, "spin: one paused line");
+        g_speed[0] = 0.100; g_speed[1] = 0.100; /* turn ends; the stop still jolts */
+        g_wstep = 2U;
+    }
+    else if ((2U == g_wstep) && (t >= 5400U))
+    {
+        check(S4_TS_WAITING == code_of() && 0U == g_turn_resumed_lines, "within 0.5 s after: still paused");
+        level();
+        g_wstep = 3U;
+    }
+    else if ((3U == g_wstep) && (t >= 6500U))
+    {
+        check(0U == g_events && 1U == g_turn_resumed_lines, "settled: resumed once, nothing recorded");
+        g_speed[0] = 0.050; g_speed[1] = 0.0; /* line-search pivot on one wheel */
+        right_hump(52, -999);
+        g_wstep = 4U;
+    }
+    else if ((4U == g_wstep) && (t >= 7500U))
+    {
+        check(S4_TS_WAITING == code_of() && 2U == g_turn_paused_lines, "one-wheel pivot: paused, no hump");
+        g_speed[0] = 0.100; g_speed[1] = 0.100;
+        level();
+        g_wstep = 5U;
+    }
+    else if ((5U == g_wstep) && (t >= 9000U))
+    {
+        check(0U == g_events && 0U == (valid_of() & TF_TV_HUMP), "no hump from either turn");
+        g_speed[0] = 0.107; g_speed[1] = 0.033; /* line-following steering: both forward */
+        right_hump(52, -999);
+        g_wstep = 6U;
+    }
+    else if ((6U == g_wstep) && (t >= 10500U))
+    {
+        check(S4_TS_CLIMBING == code_of() || S4_TS_DESCENDING == code_of(), "steering forward: hump measured");
+        level();
+        g_wstep = 7U;
+    }
+    else if ((7U == g_wstep) && (t >= 12000U))
+    {
+        check(1U == g_events && g_last.values[2] > 0.0045 && g_last.values[2] < 0.0075,
+              "steering forward: the ~6 mm hump is recorded");
+        check(2U == g_turn_paused_lines && 2U == g_turn_resumed_lines, "two turns: two paused, two resumed lines");
+        check(0U == g_stops, "turns never stop the robot");
+        g_wstep = 8U;
+    }
+}
+
 /* Compass n/a reason: turn 1 has a good compass; then, driving straight, the
  * field goes bad for a while ("field") and recovers; during turn 2 the
  * magnetometer reads out of range ("no data"). Turn 2 must say "no data":
@@ -602,6 +670,11 @@ int main(void)
     check(4U == g_tstep, "all tilt checkpoints reached");
     check(0U == g_stops, "no stop during the whole tilt run");
     check(1U == g_turn_lines, "one [TURN] line printed when the pivot ends");
+
+    /* Turning on the spot pauses hump recording; steering forward does not. */
+    g_wstep = 0U; g_turn_paused_lines = 0U; g_turn_resumed_lines = 0U;
+    run(MOTION_STILL, 12100U, turn_script);
+    check(8U == g_wstep, "all turn checkpoints reached");
 
     /* n/a reason comes from the turn itself, not a stale earlier reason. */
     g_turn_lines = 0U;
