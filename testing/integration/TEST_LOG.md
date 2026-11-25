@@ -62,9 +62,9 @@ Add a new row for every run. Never edit or delete old rows.
 | 2026-11-19 | INT-03 | main after `610725f` | 2500910 | PASS | <https://youtu.be/b0VxlQ2r320> | Steps 1 and 4 PASS (same video as S4-H01/H03). Steps 2–3 not run on the robot; host only (S4-U03 `../subsystem4/logs/2026-11-24_host.txt`). B2 sign-off pending |
 | 2026-11-19 | INT-04 | main after `610725f` | 2500910 | PASS | <https://youtu.be/OaEkDdhVMTM>, <https://youtu.be/O-3cIuu86ew>, <https://youtu.be/b0VxlQ2r320> | Evidence reused from S4-H10/H11/H12/H01; dashboard and console not compared side by side. Frame mapping: S1-H03 (2026-11-14). B1 sign-off pending |
 | 2026-11-19 | INT-05 | `fa36f67` | Claude Code for 2500910 | PASS | `../subsystem4/logs/2026-11-19_start_gate.txt` | `line_imu_wait_checks`, `line_imu_wait_start_gate_checks` passed (same run as S4-U04). B3 sign-off pending |
-| 2026-11-25 | INT-04 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-6-LINK> @ m:ss | Dashboard IMU & terrain card and console side by side (re-run on the current build). B1 sign-off; B4 sign-off pending |
-| 2026-11-25 | INT-08 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-6-LINK> @ m:ss | Motion and Encoders cards vs console during the run. B2 sign-off pending |
-| 2026-11-25 | INT-11 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-6-LINK> @ m:ss | Line tracking, line lost and each barcode letter match the console. B3 sign-off pending |
-| 2026-11-25 | INT-13 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-6-LINK> @ m:ss | Obstacle distance/width/side and events match the console. B5 sign-off pending |
-| 2026-11-25 | INT-12 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-7-LINK> @ m:ss | Route B C D A → left after B; route C B D A after power-cycle → right after B. B3 sign-off pending |
-| 2026-11-25 | INT-09 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-8-LINK> @ m:ss | Line-following case only (not detour). Held ≥ 5 s after the wheels stopped, START resumed. B2 sign-off pending |
+| 2026-11-25 | INT-04 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-5-LINK> @ m:ss | Dashboard IMU & terrain card and console side by side (re-run on the current build). B1 sign-off; B4 sign-off pending |
+| 2026-11-25 | INT-08 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-5-LINK> @ m:ss | Motion and Encoders cards vs console during the run. B2 sign-off pending |
+| 2026-11-25 | INT-11 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-5-LINK> @ m:ss | Line tracking, line lost and each barcode letter match the console. B3 sign-off pending |
+| 2026-11-25 | INT-13 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-5-LINK> @ m:ss | Obstacle distance/width/side and events match the console. B5 sign-off pending |
+| 2026-11-25 | INT-12 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-6-LINK> @ m:ss | Route B C D A → left after B; route C B D A after power-cycle → right after B. B3 sign-off pending |
+| 2026-11-25 | INT-09 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-7-LINK> @ m:ss | Line-following case only (not detour). Held ≥ 5 s after the wheels stopped, START resumed. B2 sign-off pending |

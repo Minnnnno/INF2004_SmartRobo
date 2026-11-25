@@ -152,42 +152,41 @@ and observed on the robot by S1-U17 (U04, U06) and S1-U15 (U01, U02).
 
 ## Recording plan (2026-11-25)
 
-Nine videos cover every Buddy 1 robot, integration and system test. Videos
-1–5 are Buddy 1 alone; 6–9 are team runs where Buddy 1's dashboard must be in
-frame. The *Results* rows below, the integration and system logs and
-`videos/README.md` already have a row for each, with `VIDEO-n-LINK`,
-`m:ss` and **TO RECORD** in place of the link, the timestamp and the result.
+Record **4 Buddy 1 videos**, one test each: the most important function for
+each requirement. Then Buddy 1 is filmed in **4 team videos** (5 to 8) for the
+integration and system tests. Every row is already written in the *Results*
+table below, in the integration and system logs and in `videos/README.md`.
 
-**After uploading:** in VS Code press Ctrl+Shift+H (replace in files) and
-replace each `VIDEO-n-LINK` (n = 1 to 9) with that video's YouTube link, one
-video at a time: it fills in every file at once. Then, row by row, replace
-`m:ss` with the time the test starts in the video, fill in the `___` blanks,
-and replace each
-**TO RECORD** with PASS or FAIL. A FAIL needs a note saying what happened. A
-test you did not get to: delete its row (it was never a result).
+| Video | Test | Requirement | Set-up | What to do |
+|---|---|---|---|---|
+| 1 Telemetry | S1-U15 | R1-2 (FR16): data sent 10 times a second | Stand | Show the Link card. Start a 60 s stopwatch. Show the Link card again |
+| 2 Buttons | S1-U17 | R1-4 (FR17): commands from the dashboard | Stand | Press START, STOP, E-STOP, then START again. Turn the robot off and on to clear the E-STOP |
+| 3 Route | S1-U18 | R1-5 (FR17): route from the dashboard | Stand | Send B C D A. Send B B D A (should be rejected). Turn the robot off and on |
+| 4 Wi-Fi loss | S1-U19 | R1-6 (FR18): reconnects by itself; R1-1 (FR15): online status | Stand | Turn the hotspot off for 15 s, then on. Don't touch the robot |
+| 5 Full run (team) | INT-04, INT-08, INT-11, INT-13, SYS-01, SYS-07 | | Full course | Keep the whole dashboard and the serial console in frame |
+| 6 Route run (with B3) | INT-12 | | Junction, code B | Send B C D A, robot turns left after B; send C B D A, turn off and on, robot turns right |
+| 7 STOP mid-run (with B2) | INT-09 | | Course | STOP while driving, wait 5 s, START |
+| 8 Wi-Fi loss mid-run | SYS-08 | | Course | Hotspot off 10 s while driving |
+
+Not recorded this round (still defined above, can be run later): S1-U05 to
+U08, U11 to U14, U16, U20, U21.
 
 **Before leaving home:**
 
 - [ ] Build and flash the MQTT image from this branch (VS Code "Compile Project"). Firmware = `b51982f`; if you flash anything newer, replace `b51982f` in the new rows.
-- [ ] `git rev-parse --short HEAD` in a terminal you can show on camera.
-- [ ] Pack the stand, a ruler, the laptop charger and the phone (DroidCam). OBS scene: browser + serial console + phone camera.
+- [ ] Pack the stand, the laptop charger and the phone (DroidCam). OBS scene: browser + serial console + phone camera.
 
-**At school, every video:** start PuTTY logging (`logs/2026-11-25_Vn.txt`) and
-the dashboard with `--log testing/subsystem1/logs/2026-11-25_Vn_dashboard.log`.
-Start each test by saying *"S1-Uxx, &lt;name&gt;, commit b51982f"*, and end each on
-the value that proves it, saying PASS or FAIL.
+**Every video:** start PuTTY logging (`logs/2026-11-25_Vn.txt`) and the
+dashboard with `--log testing/subsystem1/logs/2026-11-25_Vn_dashboard.log`.
+Start by saying *"S1-Uxx, &lt;name&gt;, commit b51982f"*. End on the value that
+proves it and say PASS or FAIL.
 
-| Video | Tests, in order | Set-up | What to do (details: the test tables above) |
-|---|---|---|---|
-| 1 Start-up and buttons | S1-U21, S1-U17 | Stand | Power up, stopwatch 30 s held, STOP, 10 s, START, STOP. Then START, STOP, E-STOP, START (stays stopped). Power-cycle |
-| 2 Telemetry and route | S1-U15, S1-U16, S1-U18, S1-U12 | Stand | Read *Status frames* / *Lost* on the Link card, 60 s stopwatch, read again. Turn each wheel forward and back by hand. Route boxes B C D A → send; B B D A → send (rejected); power-cycle and show the route ack again. Zoom on a `comms:` console line |
-| 3 Terminal tools | S1-U05, S1-U06 | Stand | Terminal: `python tools/dashboard.py listen --host 127.0.0.1 --csv testing/subsystem1/logs/2026-11-25_frames.csv`; second terminal: `python tools/dashboard.py send stop --host 127.0.0.1` |
-| 4 Connection loss | S1-U07, S1-U19, S1-U20, S1-U08 | Stand | Stop mosquitto 20 s, start it (console back-off 1, 2, 4, 8, 10 s). Hotspot off 15 s, on. Unplug the robot: stale within 1 s; keep `listen` open until `robot/status offline` (up to 90 s); plug back in |
-| 5 On the course | S1-U13, S1-U14, S1-U11 | Floor, course | START; straight, right turn, left turn, hump; same barcode twice; lift the IR sensor off the line twice quickly; overturn by hand to end |
-| 6 Integrated full run (team) | INT-04, INT-08, INT-11, INT-13, SYS-01, SYS-07 | Full course: barcodes, obstacle, hump | Power up, 30 s held, START. Keep the **whole dashboard and the console** in frame for the full run. Lift to end. Each buddy checks their card |
-| 7 Route (with B3) | INT-12 | Junction, code B before it | Send B C D A; START; robot turns left after B. Send C B D A; power-cycle; START; turns right |
-| 8 STOP mid-run (with B2) | INT-09 | Course | While line following: STOP, wait 5 s after the wheels stop, START. Shares footage with SYS-09 |
-| 9 Wi-Fi loss mid-run | SYS-08 | Course | While driving: hotspot off 10 s, then on. Robot keeps driving; dashboard stale, then reconnects by itself |
+**After uploading:** in VS Code press Ctrl+Shift+H (replace in files) and
+replace each `VIDEO-n-LINK` (n = 1 to 8) with that video's YouTube link, one
+video at a time: it fills in every file at once. Then, row by row, replace
+`m:ss` with the time the test starts in the video, fill in the `___` blanks,
+and replace **TO RECORD** with PASS or FAIL. A FAIL needs a note saying what
+happened. A test you did not get to: delete its row (it was never a result).
 
 ## Results
 
@@ -212,18 +211,7 @@ Add a new row for every run. Never edit or delete old rows.
 | 2026-11-17 | S1-U12 | image built 2026-11-14 (before `8ca46a0`) | 2500842 | PASS | `logs/2026-11-17_console.txt` | Recorded 2026-11-24 from the saved capture. ~8 min of telemetry (frames 2200 → 7100): `skipped=0` throughout, `copy_us_max=675` µs (6.8 % of the 10 ms motion period), no motion fault. `dropped` 5 → 147, mostly the burst around the broker reconnect (`mqtt: 44 messages dropped in last 5 s`): drops instead of blocking, as designed. Not the current build: re-run |
 | 2026-11-17 | S1-U07 | image built 2026-11-14 (before `8ca46a0`) | 2500842 | PARTIAL | `logs/2026-11-17_console.txt` (lines 2724–2729) | Recorded 2026-11-24 from the saved capture. One unplanned broker drop (`mqtt: connection status 256`), `mqtt: retrying in 1000 ms`, then `mqtt: connected` and re-subscribed by itself. The full 1, 2, 4, 8, 10 s back-off after a 20 s broker stop was not shown. Re-run on the current build |
 | 2026-11-24 | S1-H05 | `b51982f` + new `tests/buddy1_frame/web_dashboard_check.py` (uncommitted; `tools/` unchanged) | Claude Code for 2500842 | PASS | `logs/2026-11-24_web_dashboard_demo.txt` | `PASS: web dashboard demo, 12 passed, 0 failed`; Python 3.14 |
-| 2026-11-25 | S1-U21 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-1-LINK> @ m:ss, `logs/2026-11-25_V1.txt` | Show: turn the robot on and wait 30 s. The wheels must not move and the Motion card says STOPPED (held). Press START: the robot is released. Press STOP: it is held again. |
-| 2026-11-25 | S1-U17 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-1-LINK> @ m:ss, `logs/2026-11-25_V1_dashboard.log` | Show: press START, STOP, E-STOP, then START again. Each press gets a "robot received ..." line in the log. After E-STOP, START does nothing (the robot stays stopped). Turn it off and on to clear. |
-| 2026-11-25 | S1-U15 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-2-LINK> @ m:ss, `logs/2026-11-25_V2_dashboard.log` | Show: the Link card, then a 60 s stopwatch, then the Link card again. Write down: Status frames went up by ___ (should be about 600), Lost went up by ___ (6 or less), Bad went up by ___ (should be 0). |
-| 2026-11-25 | S1-U16 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-2-LINK> @ m:ss | Show: turn each wheel by hand, forward then backward. Only that wheel's number changes on the Encoders card, and it goes the other way when you turn it back. |
-| 2026-11-25 | S1-U18 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-2-LINK> @ m:ss, `logs/2026-11-25_V2.txt` | Show: send route B C D A, and the log says "robot route: ok". Send B B D A, and the log says "rejected". Turn the robot off and on, and the log says "robot route: ok" again by itself. |
-| 2026-11-25 | S1-U12 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-2-LINK> @ m:ss, `logs/2026-11-25_V2.txt` | Show: zoom in on a `comms:` line in the serial console. Write down: skipped=___ (should be 0) and copy_us_max=___ (should be well under 10000). |
-| 2026-11-25 | S1-U05 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-3-LINK> @ m:ss, `logs/2026-11-25_frames.csv` | Show: the `listen` terminal printing "online", a heartbeat every second and a frame about every 0.1 s. Write down: lost=___ (should be 0). |
-| 2026-11-25 | S1-U06 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-3-LINK> @ m:ss | Show: run `send stop` in a second terminal. The `listen` terminal prints `ACK ok opcode=2`. |
-| 2026-11-25 | S1-U07 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-4-LINK> @ m:ss, `logs/2026-11-25_V4.txt` | Show: stop mosquitto for 20 s, then start it again. The serial console shows retries after 1, 2, 4, 8 and 10 s, then "mqtt: connected". You don't touch the robot. |
+| 2026-11-25 | S1-U15 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-1-LINK> @ m:ss, `logs/2026-11-25_V1_dashboard.log` | Show: the Link card, then a 60 s stopwatch, then the Link card again. Write down: Status frames went up by ___ (should be about 600), Lost went up by ___ (6 or less), Bad went up by ___ (should be 0). |
+| 2026-11-25 | S1-U17 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-2-LINK> @ m:ss, `logs/2026-11-25_V2_dashboard.log` | Show: press START, STOP, E-STOP, then START again. Each press gets a "robot received ..." line in the log. After E-STOP, START does nothing (the robot stays stopped). Turn it off and on to clear. |
+| 2026-11-25 | S1-U18 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-3-LINK> @ m:ss, `logs/2026-11-25_V3.txt` | Show: send route B C D A, and the log says "robot route: ok". Send B B D A, and the log says "rejected". Turn the robot off and on, and the log says "robot route: ok" again by itself. |
 | 2026-11-25 | S1-U19 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-4-LINK> @ m:ss, `logs/2026-11-25_V4.txt` | Show: turn the hotspot off for 15 s, then back on. The dashboard says stale, then comes back to "robot online" by itself. Write down: it came back after ___ s. |
-| 2026-11-25 | S1-U20 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-4-LINK> @ m:ss, `logs/2026-11-25_V4_dashboard.log` | Show: unplug the robot. Within about 1 s the dashboard says "telemetry stale" and the cards go grey. Plug it back in, and it says "telemetry live" again. |
-| 2026-11-25 | S1-U08 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-4-LINK> @ m:ss | Show: after unplugging, keep `listen` open until it prints `robot/status offline`. Write down: it took ___ s (can be up to 90 s). |
-| 2026-11-25 | S1-U13 | `b51982f` | 2500842 | **TO RECORD** | <https://www.youtube.com/watch?v=b0VxlQ2r320> @ m:ss | Show: drive straight, turn right, turn left, go over a hump, then flip the robot over. The IMU & terrain card shows the motion class changing (MOVING, TURNING, ...). Turn rate is minus on right turns and plus on left. It shows OVERTURNED at the end. |
-| 2026-11-25 | S1-U14 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-5-LINK> @ m:ss | Show: drive over the same barcode twice. The Line & barcode card shows the letter, and the read count goes up by 1 each time. |
-| 2026-11-25 | S1-U11 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-5-LINK> @ m:ss, `logs/2026-11-25_V5_dashboard.log` | Show: lift the IR sensor off the line twice, quickly. The log shows "event: line lost" once for each lift, not doubled. |
