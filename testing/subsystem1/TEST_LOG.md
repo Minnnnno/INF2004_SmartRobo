@@ -151,42 +151,31 @@ and observed on the robot by S1-U17 (U04, U06) and S1-U15 (U01, U02).
 - `logs/2026-11-04_frames.csv`: a `listen --csv` frame log from 4 November
   (layout v1, robot idle). Not a test result; S1-U05 needs a fresh run.
 
-## Recording plan (2026-11-25)
+## Recording status (2026-11-25)
 
-Record **3 Buddy 1 videos**. The route test (S1-U18) uses Buddy 3's route
-video. Then Buddy 1 is filmed in **4 team videos** (4 to 7) for the
-integration and system tests. Every row is already written in the *Results*
-table below, in the integration and system logs and in `videos/README.md`.
-
-| Video | Test | What it proves (brief) | Set-up | What to do |
-|---|---|---|---|---|
-| 1 Buttons and live telemetry | S1-U17 | Command subscription; telemetry reporting; heartbeat/status (R1-4, R1-2, R1-1) | Floor, on the line. **Whole dashboard** in frame | Show the Link card and "robot online" pill for a moment. START (drives: wheel speed, distance and encoder counts rise), STOP (stops: speed 0, STOPPED), START (drives), E-STOP while driving (stops), START (doesn't move). Turn the robot off and on to clear the E-STOP |
-| 2 Wi-Fi loss | S1-U19 | Connection recovery; online status (R1-6, R1-1) | Stand | Turn the hotspot off for 15 s, then on. Don't touch the robot |
-| 3 Telemetry run | S1-U22 | Demonstration of telemetry reporting: all 8 telemetry examples (R1-2, R1-3) | Floor: line with a barcode, a hump and a box. **Whole dashboard** in frame | START. Let it run over the barcode, the hump and up to the box. Point at each card as its value changes. STOP at the end |
-| 4 Full run (team) | INT-04, INT-08, INT-12, INT-14, SYS-01, SYS-07 | | Full course | Keep the whole dashboard and the serial console in frame |
-| 5 Route run (with B3) | INT-13 | | Junction, code B | Send B C D A, robot turns left after B; send C B D A, turn off and on, robot turns right |
-| 6 STOP mid-run (with B2) | INT-09 | | Course | STOP while driving, wait 5 s, START |
-| 7 Wi-Fi loss mid-run | SYS-08 | | Course | Hotspot off 10 s while driving |
+| Video | Test | What it proves (brief) | Status |
+|---|---|---|---|
+| Buttons and live telemetry | S1-U17 | Command subscription; telemetry reporting; heartbeat/status (R1-4, R1-2, R1-1) | **Done**: <https://youtu.be/PYgbj6G5Cm4> |
+| Telemetry run | S1-U22 | Demonstration of telemetry reporting: all 8 telemetry examples (R1-2, R1-3) | **Done**: <https://youtu.be/6yEvUo8oVAE> |
+| Route (Buddy 3's video) | S1-U18 | Command subscription: route from the dashboard (R1-5) | **Reused**: <https://youtu.be/GsEvuXFR86U> (S3-H03/H04) |
+| Wi-Fi loss | S1-U19 | Connection recovery; online status (R1-6, R1-1) | **Observed, no evidence**: worked, but not recorded on video or in a log |
+| Full run (team) | INT-04, INT-08, INT-12, INT-14, SYS-01, SYS-07 | | To record: whole dashboard and serial console in frame |
+| Route run (with B3) | INT-13 | | To record: send B C D A, left after B; send C B D A, restart, right after B |
+| STOP mid-run (with B2) | INT-09 | | To record: STOP while driving, wait 5 s, START |
+| Wi-Fi loss mid-run | SYS-08 | | To record: hotspot off 10 s while driving |
 
 Not recorded this round (still defined above, can be run later): S1-U05 to
 U08, U11 to U16, U20, U21.
 
-**Before leaving home:**
-
-- [ ] Build and flash the MQTT image from this branch (VS Code "Compile Project"). Firmware = `b51982f`; if you flash anything newer, replace `b51982f` in the new rows.
-- [ ] Pack the stand, the laptop charger and the phone (DroidCam). OBS scene: browser + serial console + phone camera.
-
-**Every video:** start PuTTY logging (`logs/2026-11-25_Vn.txt`) and the
-dashboard with `--log testing/subsystem1/logs/2026-11-25_Vn_dashboard.log`.
-Start by saying *"S1-Uxx, &lt;name&gt;, commit b51982f"*. End on the value that
-proves it and say PASS or FAIL.
-
-**After uploading:** in VS Code press Ctrl+Shift+H (replace in files) and
-replace each `VIDEO-n-LINK` (n = 1 to 7) with that video's YouTube link, one
-video at a time: it fills in every file at once. Then, row by row, replace
-`m:ss` with the time the test starts in the video, fill in the `___` blanks,
-and replace **TO RECORD** with PASS or FAIL. A FAIL needs a note saying what
-happened. A test you did not get to: delete its row (it was never a result).
+**For each video still to record:** say the test ID and commit at the start;
+end on the value that proves it and say PASS or FAIL. Upload as unlisted
+YouTube, then in VS Code press Ctrl+Shift+H and replace its placeholder
+(`VIDEO-4-LINK` to `VIDEO-7-LINK` for the team
+runs) with the link: it fills in every file at once. Then replace `m:ss` with
+where the test starts in the video (or delete `@ m:ss` if the whole video is
+that test) and **TO RECORD** with PASS or FAIL. A test you do not record:
+delete its rows here, in the integration and system logs and in
+`videos/README.md`, so no placeholder is left at hand-in.
 
 ## Results
 
@@ -204,14 +193,15 @@ Add a new row for every run. Never edit or delete old rows.
 | 2026-11-14 | S1-H01 | not committed yet | Claude Code for 2500842 | PASS | console: `PASS: 935 checks, 0 failed`; `size: JSON 395 bytes, packed 21 bytes (163 bits used, 5 spare), 5.3% of JSON` | layout v2; MinGW gcc, -Wall -Wextra -Werror -Wconversion -Wshadow |
 | 2026-11-14 | S1-H02 | not committed yet | Claude Code for 2500842 | PASS | console: `PASS: dashboard selftest, 0 failures` | layout v2 golden `20730394…7b00` matches the C test |
 | 2026-11-14 | S1-H03 | not committed yet | Claude Code for 2500842 | PASS | same run as S1-H01 | |
+| 2026-11-17 | S1-U12 | image built 2026-11-14 (before `8ca46a0`) | 2500842 | PASS | `logs/2026-11-17_console.txt` | Recorded 2026-11-24 from the saved capture. ~8 min of telemetry (frames 2200 → 7100): `skipped=0` throughout, `copy_us_max=675` µs (6.8 % of the 10 ms motion period), no motion fault. `dropped` 5 → 147, mostly the burst around the broker reconnect (`mqtt: 44 messages dropped in last 5 s`): drops instead of blocking, as designed. Not the current build: re-run |
+| 2026-11-17 | S1-U07 | image built 2026-11-14 (before `8ca46a0`) | 2500842 | PARTIAL | `logs/2026-11-17_console.txt` (lines 2724–2729) | Recorded 2026-11-24 from the saved capture. One unplanned broker drop (`mqtt: connection status 256`), `mqtt: retrying in 1000 ms`, then `mqtt: connected` and re-subscribed by itself. The full 1, 2, 4, 8, 10 s back-off after a 20 s broker stop was not shown. Re-run on the current build |
 | 2026-11-24 | S1-H01 | `b51982f` | Claude Code for 2500842 | PASS | `logs/2026-11-24_host.txt` | `PASS: 947 checks, 0 failed`; layout v3, `167 bits used, 1 spare`, 5.3 % of JSON |
 | 2026-11-24 | S1-H02 | `b51982f` | Claude Code for 2500842 | PASS | `logs/2026-11-24_dashboard_selftest.txt` | `PASS: dashboard selftest, 0 failures` |
 | 2026-11-24 | S1-H03 | `b51982f` | Claude Code for 2500842 | PASS | `logs/2026-11-24_host.txt` | same run as S1-H01 |
 | 2026-11-24 | S1-H04 | `b51982f` | Claude Code for 2500842 | PASS | `logs/2026-11-24_host.txt` | same run as S1-H01 |
-| 2026-11-17 | S1-U12 | image built 2026-11-14 (before `8ca46a0`) | 2500842 | PASS | `logs/2026-11-17_console.txt` | Recorded 2026-11-24 from the saved capture. ~8 min of telemetry (frames 2200 → 7100): `skipped=0` throughout, `copy_us_max=675` µs (6.8 % of the 10 ms motion period), no motion fault. `dropped` 5 → 147, mostly the burst around the broker reconnect (`mqtt: 44 messages dropped in last 5 s`): drops instead of blocking, as designed. Not the current build: re-run |
-| 2026-11-17 | S1-U07 | image built 2026-11-14 (before `8ca46a0`) | 2500842 | PARTIAL | `logs/2026-11-17_console.txt` (lines 2724–2729) | Recorded 2026-11-24 from the saved capture. One unplanned broker drop (`mqtt: connection status 256`), `mqtt: retrying in 1000 ms`, then `mqtt: connected` and re-subscribed by itself. The full 1, 2, 4, 8, 10 s back-off after a 20 s broker stop was not shown. Re-run on the current build |
 | 2026-11-24 | S1-H05 | `b51982f` + new `tests/buddy1_frame/web_dashboard_check.py` (uncommitted; `tools/` unchanged) | Claude Code for 2500842 | PASS | `logs/2026-11-24_web_dashboard_demo.txt` | `PASS: web dashboard demo, 12 passed, 0 failed`; Python 3.14 |
-| 2026-11-25 | S1-U17 | `b51982f` | 2500842 | **PASS** | <https://youtu.be/PYgbj6G5Cm4> @ m:ss, `logs/2026-11-25_V1_dashboard.log` | Start, Stop, E-Stop functionaility works |
-| 2026-11-25 | S1-U18 | `b51982f` | 2500842 | **PASS** | <https://www.youtube.com/watch?v=GsEvuXFR86U> @ m:ss, `logs/2026-11-25_V3.txt` | Barcode Route Defining works on dashboard |
-| 2026-11-25 | S1-U19 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-2-LINK> @ m:ss, `logs/2026-11-25_V2.txt` | Show: turn the hotspot off for 15 s, then back on. The dashboard says stale, then comes back to "robot online" by itself. Write down: it came back after ___ s. |
-| 2026-11-25 | S1-U22 | `b51982f` | 2500842 | **PASS** | <https://youtu.be/6yEvUo8oVAE> @ m:ss, `logs/2026-11-25_V3_dashboard.log`, `logs/2026-11-25_V3.txt` | each card changing as the robot drives: state, wheel speed, encoder counts, distance, line sensor, barcode, hump, obstacle.|
+| 2026-11-24 | S1-U18 | `fd5955a` | 2500622 (Buddy 3's video), checked by 2500842 | PASS | <https://youtu.be/GsEvuXFR86U> | Evidence reused from S3-H03/H04: a barcode route set on the dashboard is accepted (`robot route: ok`) and the robot turns as the route says at the junction. Steps 2–3 (rejected route, route kept after restart) are only PASS if this video shows them; otherwise PARTIAL |
+| 2026-11-25 | S1-U17 | `b51982f` | 2500842 | PASS | <https://youtu.be/PYgbj6G5Cm4> | START, STOP and E-STOP from the dashboard work: the robot drives, stops, and stays stopped after E-STOP until restarted. Firmware built 2026-11-25 10:44 from `buddy1-test-logs` (firmware identical to `b51982f`) |
+| 2026-11-25 | S1-U19 | `b51982f` | 2500842 | **OBSERVED (no evidence)** | none | Hotspot off about 15 s, then on: the dashboard went stale and came back to "robot online" by itself without touching the robot. Not captured on video or in a log, so not a verified result |
+| 2026-11-25 | S1-U22 | `b51982f` | 2500842 | PASS | <https://youtu.be/6yEvUo8oVAE> | Every card changes live as the robot drives: state, wheel speed, encoder counts, distance, line sensor, barcode, hump and obstacle. Same firmware build as S1-U17 |
+| 2026-11-25 | S1-U22 | `b51982f` | 2500842 | **PARTIAL** | <https://youtu.be/0tZDy3p91Oc> | Partial run: telemetry updating live on the dashboard while the robot drives. Cards shown changing: ___ (e.g. state, wheel speed, encoder counts, distance, line sensor). Not shown: ___ |

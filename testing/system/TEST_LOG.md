@@ -121,10 +121,12 @@ What Buddy 1 brings to the system tests (details in
   `robot route: ok ...` before START.
 - **SYS-09 (support B2):** STOP and START are sent from the dashboard; show
   both acknowledgements in the log.
-- Already verified at subsystem level: S1-H01 to S1-H05 (laptop, 2026-11-24),
-  S1-U01 to S1-U04 (October), S1-U12 (17 Nov, image before the Start gate).
-  Robot tests on the current build (S1-U05 to S1-U21) and INT-12 to INT-14
-  still to run. S1-U21 (boots held until START) is the subsystem half of SYS-01.
+- Already verified at subsystem level: S1-H01 to S1-H05 (laptop, 2026-11-24);
+  S1-U17 (START / STOP / E-STOP with live telemetry) and S1-U22 (every
+  telemetry card updating during a run) on the robot (2026-11-25, `b51982f`);
+  S1-U18 (route) from Buddy 3's video. S1-U22 is the Buddy 1 half of SYS-07.
+- Still to run: INT-12 to INT-14 and the Buddy 1 rows for SYS-01, SYS-07
+  and SYS-08 below.
 
 ## Buddy 4 checklist
 
