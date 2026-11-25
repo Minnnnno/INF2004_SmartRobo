@@ -131,6 +131,6 @@ these teammate request APIs. Its empirically tuned mat scaling/braking policy ha
 not been transferred into production PID by the representation work. Production
 distance/speed/turn performance still needs validation in the combined robot.
 
-See [Buddy2 representation audit](BUDDY2_COMPACT_REPRESENTATION.md) for the bit
+See [Buddy2 representation audit](../testing/subsystem2/BUDDY2_COMPACT_REPRESENTATION.md) for the bit
 layout, retained precision, measured RAM/flash costs, BARR-C notes, public-schema
 changes deferred to the team, and remaining hardware checks.

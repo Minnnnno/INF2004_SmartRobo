@@ -1,0 +1,46 @@
+RAM per structure (arm-none-eabi-gcc 15.2, firmware flags: -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft -ffreestanding -O2 -std=gnu11)
+before = b96a929 type or plain unpacked type; after = current header type
+
+Data                                                 before B  after B  saved B  after representation
+Raw GY-511 sample (acc + mag, 3 axes each)                 12       10        2  2 x 5-byte packed 3 x 12-bit
+Tilt result (pitch, roll, conditions, valid)               20        4       16  27 bits in one uint32_t
+Lifecycle control (state, attempts, phase)                 12        1       11  3+2+2-bit field, 1 byte
+Hump results (last peak + side, run max + valid)           16        2       14  7-bit mm + 1 flag bit, x2
+Hump detector phase + 4 flags                               5        1        4  2-bit phase + flags, 1 byte
+Tilt capture progress + 2 conditions                        8        2        6  6-bit count + 2 flags; 2+2-bit conditions
+Motion class debounce (reported, candidate, count)          3        1        2  3+3+2 bits, 1 byte
+Compass validity, 5 heading slots                           5        1        4  5-bit mask
+Lift latch (condition + 3 timing flags)                     4        1        3  2-bit condition + 3 flags, 1 byte
+Total                                                      85       23       62  (73 % smaller)
+
+Today's whole Buddy 4 structures (bytes):
+  buddy4           152
+  motion_class      92
+  tilt              80
+  terrain           16
+  lift              20
+
+Buddy 4 in the production firmware (arm-none-eabi-size on its object files):
+  buddy4.c.obj                 text   2690  data    0  bss     0
+  gy511_read.c.obj             text    904  data    0  bss     0
+  lift.c.obj                   text   1011  data    0  bss     0
+  mag_heading.c.obj            text   1650  data    0  bss     0
+  motion_class.c.obj           text   2339  data    0  bss     0
+  subsystem4.c.obj             text    220  data    0  bss     0
+  terrain.c.obj                text    555  data    0  bss     0
+  terrain_task.c.obj           text   6196  data    0  bss   264
+  tilt.c.obj                   text   2235  data    0  bss     0
+  Buddy 4 static RAM = data 0 + bss 264 = 264 bytes (+ 4096-byte task stack, app_main.c)
+
+Whole firmware image:
+  text	   data	    bss	    dec	    hex	filename
+   476876	    120	 111792	 588788	  8fbf4	build-minbit-fw\mtkernel_3.elf
+HEAD: 133289f Subsystem 4: update to main's latest (hump pause while turning, turn dropped on invalid heading, docs and test logs); nm of terrain_task.c.obj (RAM symbols)
+  00000000 00000001 b s_hump_paused
+  00000000 00000001 b s_start_gate
+  00000000 00000001 b s_turn_paused
+  00000000 00000001 b s_turn_seen
+  00000000 00000004 b s_turn_ms
+  00000000 0000000c b s_compass
+  00000000 0000005c b s_class.1
+  00000000 00000098 b s_context.2

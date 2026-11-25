@@ -101,6 +101,31 @@ Preserve existing team results and append actual new runs with their tested
 commit, testers, result and evidence. Owner sign-off is not implied by adding
 this checklist.
 
+## Buddy 1 checklist
+
+What Buddy 1 brings to the system tests (details in
+`testing/subsystem1/TEST_LOG.md`):
+
+- **SYS-01 (lead):** show the dashboard before START (pill **robot online**,
+  **telemetry live**, Link card counts rising) and the START acknowledgement in
+  the log (`robot received START #n: queued for the controller`). Sign off the
+  2026-11-19 SYS-01 result, or record a new run.
+- **SYS-07 (lead):** keep the whole dashboard in the video; ask each buddy to
+  compare their card with the console. The Link card must show **Lost / bad**
+  not rising and Frame layout **v3**.
+- **SYS-08 (lead):** switch the hotspot off for 10 s **mid-run** (not while
+  parked). The robot keeps driving; the dashboard shows **telemetry stale**,
+  then reconnects by itself (`wifi: link up`, `mqtt: connected to ...`,
+  `status frames resumed`). S1-U19 is the same test on a stand.
+- **SYS-03 (support B3):** send the route from the dashboard and show
+  `robot route: ok ...` before START.
+- **SYS-09 (support B2):** STOP and START are sent from the dashboard; show
+  both acknowledgements in the log.
+- Already verified at subsystem level: S1-H01 to S1-H05 (laptop, 2026-11-24),
+  S1-U01 to S1-U04 (October), S1-U12 (17 Nov, image before the Start gate).
+  Robot tests on the current build (S1-U05 to S1-U21) and INT-12 to INT-14
+  still to run. S1-U21 (boots held until START) is the subsystem half of SYS-01.
+
 ## Buddy 4 checklist
 
 What Buddy 4 brings to the system tests (details in
@@ -123,6 +148,28 @@ What Buddy 4 brings to the system tests (details in
   `testing/subsystem4/TEST_LOG.md`);
   at integration level: INT-03, INT-04, INT-05.
 
+## Buddy 3 checklist
+
+What Buddy 3 brings to the system tests (details in
+`testing/subsystem3/TEST_LOG.md`):
+
+- **SYS-02 (lead):** one unbroken run over the **whole** course, no barcodes or
+  obstacles; keep the dashboard's *On the line* in the video. S3-H01 covers
+  straights, curves and finding a lost line; Buddy 4's full-run video shows the
+  whole course.
+- **SYS-03 (lead):** send the route from the dashboard boxes and wait for
+  `robot route: ok`; put a code before a junction for **each** action (left,
+  right, straight, U-turn). S3-H03/H04 show left and U-turn; Buddy 4's full-run
+  video shows right and straight. A failed read is never acted on: the robot
+  carries on (`route: barcode read failed, carrying on`).
+- **SYS-04 (support):** confirm line following resumes after the detour
+  (`[S3-LINE]` back to FOLLOWING).
+- **SYS-07 (support):** *On the line* and the barcode letter/action update on
+  the dashboard.
+- **SYS-11:** send the route before START. Only the four route letters are read;
+  any other code is reported as a failed read and the robot carries on.
+- Already verified at subsystem level: S3-U01 to U03, S3-H01 to H04.
+
 ## Other logs in this folder
 
 The `com4_2026-11-0*.log` files are raw serial captures from Buddy 2's
@@ -134,9 +181,20 @@ and `docs/MEMORY_DEBUG_2026-11-04.md`. They are not system test results.
 
 Add a new row for every run. Never edit or delete old rows.
 
-| Date | Test ID | Commit | Tester | Result | Log / evidence | Notes |
+Buddy 2 entries below reuse the 2026-11-24 results in [the subsystem log](../subsystem2/TEST_LOG.md); they are not additional test runs. **PASS (B2 portion)** records the reported subsystem behavior, with the remaining case coverage listed in Notes. Hardware entries are single-trial user-reported results; their links identify a code reference, with the exact flashed revision unconfirmed.
+
+| Date | Test ID | Commit / code reference | Tester | Result | Log / evidence | Notes |
 |---|---|---|---|---|---|---|
 | 2026-11-19 | SYS-05 | main after `610725f` | 2500910 | PASS | <https://www.youtube.com/watch?v=O-3cIuu86ew> | 10 mm hump (ruler), reported within ±3 mm; same full-run video as S4-H11/H14 |
 | 2026-11-19 | SYS-06 | main after `610725f` | 2500910 | PASS | <https://www.youtube.com/watch?v=O-3cIuu86ew> | Motion classes and turn rate during the full run; same video as S4-H12 |
 | 2026-11-19 | SYS-10 | main after `610725f` | 2500910 | PASS | <https://www.youtube.com/watch?v=b0VxlQ2r320> | Lift and overturn stop the motors, Highest hump frozen; same video as S4-H01/H03/H07 |
 | 2026-11-19 | SYS-01 | main after `610725f` | 2500910 | PASS | <https://www.youtube.com/watch?v=O-3cIuu86ew> | Start of the full run: held and INIT until START, level reference captured (WAITING), then DRIVING; same video as S4-H08. B1 sign-off pending |
+| 2026-11-24 | SYS-01 | [75d36d0 (code reference)](https://github.com/Minnnnno/INF2004_SmartRobo/tree/75d36d04a00cc8f68c0fb45ae5f6aa335cf00229/app_program/subsystem2) | Buddy 2 | PASS (B2 portion) | [S2-H01 startup and START](https://youtu.be/lzCOjuQXgig) | Reused one-trial startup/START pass. The specified 30-second pre-START wait and dashboard/IMU reference-state sequence remain to be confirmed with B1/B4. |
+| 2026-11-24 | SYS-02 | [75d36d0 (code reference)](https://github.com/Minnnnno/INF2004_SmartRobo/tree/75d36d04a00cc8f68c0fb45ae5f6aa335cf00229/app_program/subsystem2) | Buddy 2 | PASS (B2 portion) | [S2-H03 wheel-speed control](https://youtu.be/8NpKcqakr0c) | Supporting one-trial functional motor/wheel-speed pass. This does not establish complete line-course traversal, curves or an uninterrupted fault-free run; B3 full-course result pending. |
+| 2026-11-24 | SYS-07 | [75d36d0 (code reference)](https://github.com/Minnnnno/INF2004_SmartRobo/tree/75d36d04a00cc8f68c0fb45ae5f6aa335cf00229/app_program/subsystem2) | Buddy 2 | PASS (B2 portion) | [S2-H02 encoders](https://youtu.be/qB7hPMGxUTQ), [S2-H03 wheel speeds](https://youtu.be/8NpKcqakr0c), [S2-H04 STOP/START](https://youtu.be/yS6CX1FzbrM) | Supporting signed-encoder, wheel-speed and stop-state subsystem passes. B1 comparison of serial feedback with dashboard counts, speeds, distance/heading and motion state remains unconfirmed; barcode, terrain and obstacle fields require their owners' results. |
+| 2026-11-24 | SYS-09 | [75d36d0 (code reference)](https://github.com/Minnnnno/INF2004_SmartRobo/tree/75d36d04a00cc8f68c0fb45ae5f6aa335cf00229/app_program/subsystem2) | Buddy 2 | PASS (B2 portion) | [S2-H04 STOP, hold and restart](https://youtu.be/yS6CX1FzbrM) | Reused one-trial functional STOP/hold/restart pass. Five-second hold duration, hump-recording pause/resume, retained Highest hump and the subsequent hump were not established by the submitted result description; B4 coverage pending. |
+| 2026-11-25 | SYS-01 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-5-LINK> @ m:ss | Buddy 1 lead run: online and held 30 s before START, START acknowledged, then DRIVING |
+| 2026-11-25 | SYS-07 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-5-LINK> @ m:ss | Whole dashboard during the full run; Link card lost/bad not rising, layout v3. Each buddy confirms their card |
+| 2026-11-25 | SYS-08 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-8-LINK> @ m:ss | Hotspot off 10 s mid-run: robot kept driving, dashboard reconnected by itself after ___ s |
+| 2026-11-24 | SYS-02 | `fd5955a` | 2500622 | PASS | <https://youtu.be/t8ZaVSFGggE>, <https://www.youtube.com/watch?v=O-3cIuu86ew> | Subsystem video S3-H01: straights, curves, line lost and found again, no FAULT. Supporting: Buddy 4's full-run video (main after `610725f`, same as SYS-01/05/06) follows the whole course without help |
+| 2026-11-24 | SYS-03 | `fd5955a` | 2500622 | PASS | <https://youtu.be/GsEvuXFR86U>, <https://www.youtube.com/watch?v=O-3cIuu86ew> | Subsystem video S3-H03/H04: route sent from the dashboard (`robot route: ok`), Z → left at the junction, A → U-turn. Supporting: Buddy 4's full-run video (main after `610725f`) shows the right and straight actions |
