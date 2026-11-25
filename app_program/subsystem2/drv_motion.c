@@ -560,7 +560,7 @@ motion_hal_console_read (void)
     extern int tm_usb_console_read(void);
     return tm_usb_console_read();
 #else
-    if ((in_w(0x40034018U) & (1U << 4U)) != 0U)
+    if (0U != (in_w(0x40034018U) & (1U << 4U)))
     {
         return -1;
     }

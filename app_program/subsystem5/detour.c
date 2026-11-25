@@ -279,8 +279,8 @@ static const char * const g_s5_why_names[] = {
     "ultrasonic_failed",
     "unknown",
 };
-_Static_assert((sizeof(g_s5_why_names) / sizeof(g_s5_why_names[0]))
-                   == S5_WHY_COUNT,
+_Static_assert(S5_WHY_COUNT
+                   == (sizeof(g_s5_why_names) / sizeof(g_s5_why_names[0])),
                "one name per code");
 _Static_assert(S5_WHY_COUNT <= 64, "a code is 6 bits");
 

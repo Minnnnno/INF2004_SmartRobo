@@ -315,22 +315,24 @@ line_search_step (line_search_t * p_search, const motion_status_t * p_motion,
         search_toward(p_search, last_side);
         p_search->lost_centre = p_motion->centre;
 #ifdef ROBO_LINE_LOSS_TEST
-        s->phase     = SEARCH_STOP;
-        s->stop_from = lost_for;
+        p_search->phase     = SEARCH_STOP;
+        p_search->stop_from = lost_for;
 #endif
     }
 #ifdef ROBO_LINE_LOSS_TEST
-    if (SEARCH_STOP == s->phase && lost_for - s->stop_from >= LINE_STOP_TIME)
+    if ((SEARCH_STOP == p_search->phase)
+        && ((lost_for - p_search->stop_from) >= LINE_STOP_TIME))
     {
-        s->phase     = SEARCH_SPIN;
-        s->spin_from = motion->heading;
+        p_search->phase     = SEARCH_SPIN;
+        p_search->spin_from = p_motion->heading;
     }
 
-    if (s->phase == SEARCH_SPIN
-        && s->dir * (motion->heading - s->spin_from) >= LINE_SPIN_ANGLE)
+    if ((SEARCH_SPIN == p_search->phase)
+        && ((p_search->dir * (p_motion->heading - p_search->spin_from))
+            >= LINE_SPIN_ANGLE))
     {
         /* Full turn without the line: normal sweep. */
-        search_toward(s, last_side);
+        search_toward(p_search, last_side);
     }
 #endif
     if ((p_search->phase <= SEARCH_OTHER_SIDE)
@@ -379,15 +381,15 @@ line_search_step (line_search_t * p_search, const motion_status_t * p_motion,
         return motion_steer(SOURCE_LINE, LINE_SESSION, -LINE_BACKUP_SPEED, 0.0);
     }
 #ifdef ROBO_LINE_LOSS_TEST
-    if (SEARCH_STOP == s->phase)
+    if (SEARCH_STOP == p_search->phase)
     {
         return line_hold();
     }
 
-    if (SEARCH_SPIN == s->phase)
+    if (SEARCH_SPIN == p_search->phase)
     {
         return motion_steer(SOURCE_LINE, LINE_SESSION, 0.0,
-                            s->dir * LINE_SPIN_RATE);
+                            p_search->dir * LINE_SPIN_RATE);
     }
 #endif
     return line_pivot(p_search->dir);
@@ -979,8 +981,8 @@ line_restart (line_ctx_t * p_context)
     p_context->search     = (line_search_t){0};
     p_context->lost_since = motion_hal_time();
 #ifdef ROBO_LINE_LOSS_TEST
-    c->on_line_since = -1.0;
-    c->search_began  = -1.0;
+    p_context->on_line_since = -1.0;
+    p_context->search_began  = -1.0;
 #endif
 }
 
@@ -1311,12 +1313,14 @@ line_drive (line_ctx_t * p_context, const robot_status_t * p_status,
     /* A glimpse of tape during a search is not "found": keep the 360 deg budget
      * and the search clock, and stand still until the tape has stayed in view
      * for LINE_REACQUIRE_TIME. No blind grace drive while searching. */
-    bool settled = c->on_line_since >= 0.0
-                   && (now - c->on_line_since) >= LINE_REACQUIRE_TIME;
-    bool glimpse = LINE_LOST != direction && direction != LINE_WAIT
-                   && SEARCH_IDLE != c->search.phase && !settled;
+    bool b_settled
+        = (p_context->on_line_since >= 0.0)
+          && ((now - p_context->on_line_since) >= LINE_REACQUIRE_TIME);
+    bool b_glimpse = (LINE_LOST != direction) && (LINE_WAIT != direction)
+                     && (SEARCH_IDLE != p_context->search.phase)
+                     && (!b_settled);
 
-    grace_ok = SEARCH_IDLE == c->search.phase;
+    b_grace_ok = SEARCH_IDLE == p_context->search.phase;
 #else
     const bool b_glimpse = false;
 #endif
@@ -1369,14 +1373,15 @@ line_drive (line_ctx_t * p_context, const robot_status_t * p_status,
 #endif
 #ifdef ROBO_LINE_LOSS_TEST
 #ifdef ROBO_LINE_VEER_TEST
-        if (now < c->veer_until && usable && line_can_drive(status, owns))
+        if ((now < p_context->veer_until) && b_usable
+            && (line_can_drive(p_status, b_owns)))
     {
         result = motion_steer(SOURCE_LINE, LINE_SESSION, LINE_SPEED,
                               LINE_TEST_VEER_RATE);
     }
     else
 #endif
-        if (glimpse && usable && line_driving(status, owns))
+        if (b_glimpse && b_usable && (line_driving(p_status, b_owns)))
     {
         result = line_hold();
         next   = LS_SEARCHING;
@@ -1421,13 +1426,13 @@ line_drive (line_ctx_t * p_context, const robot_status_t * p_status,
     {
         float64_t lost_for = now - p_context->lost_since;
 #ifdef ROBO_LINE_LOSS_TEST
-        if (SEARCH_IDLE == c->search.phase)
+        if (SEARCH_IDLE == p_context->search.phase)
         {
-            c->search_began = c->lost_since;
+            p_context->search_began = p_context->lost_since;
         }
 
         /* Glimpses must not restart the clock. */
-        lost_for = now - c->search_began;
+        lost_for = now - p_context->search_began;
 #endif
         result = line_search_step(&p_context->search, &p_status->motion,
                                   p_context->last_side, lost_for);
@@ -1480,10 +1485,10 @@ line_loop (void)
     p_context->run_start = -1.0;
 #endif
 #ifdef ROBO_LINE_LOSS_TEST
-    c->on_line_since = -1.0;
-    c->search_began  = -1.0;
+    p_context->on_line_since = -1.0;
+    p_context->search_began  = -1.0;
 #ifdef ROBO_LINE_VEER_TEST
-    c->veer_until = -1.0;
+    p_context->veer_until = -1.0;
 #endif
 #endif
 #if defined(ROBO_SUBSYSTEM4) && ROBO_SUBSYSTEM4
@@ -1543,20 +1548,20 @@ line_loop (void)
             p_context->lost_since = now;
         }
 #ifdef ROBO_LINE_LOSS_TEST
-        if (LINE_LOST == direction || LINE_WAIT == direction)
+        if ((LINE_LOST == direction) || (LINE_WAIT == direction))
         {
-            c->on_line_since = -1.0;
+            p_context->on_line_since = -1.0;
         }
-        else if (c->on_line_since < 0.0)
+        else if (p_context->on_line_since < 0.0)
         {
-            c->on_line_since = now;
+            p_context->on_line_since = now;
         }
 #ifdef ROBO_LINE_VEER_TEST
-        if (!c->veered && c->on_line_since >= 0.0
-            && (now - c->on_line_since) >= LINE_TEST_FOLLOW_TIME)
+        if ((!p_context->veered) && (p_context->on_line_since >= 0.0)
+            && ((now - p_context->on_line_since) >= LINE_TEST_FOLLOW_TIME))
         {
-            c->veered     = true;
-            c->veer_until = now + LINE_TEST_VEER_TIME;
+            p_context->veered     = true;
+            p_context->veer_until = now + LINE_TEST_VEER_TIME;
             tm_printf((const UB *)"line_test: veering off the line now\n");
         }
 #endif

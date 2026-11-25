@@ -238,10 +238,10 @@ manual_console (void)
                 (const UB *)"motor_test_done wheel=%s direction=%s reason=%s "
                             "delta_counts=%s%lu,%s%lu invalid_delta=%lu,%lu "
                             "motors_stopped=1\n",
-                (const UB *)(result.wheel == 2U
+                (const UB *)((2U == result.wheel)
                                  ? "both"
-                                 : (0U == result.wheel ? "left" : "right")),
-                (const UB *)(result.direction > 0 ? "forward" : "reverse"),
+                                 : ((0U == result.wheel) ? "left" : "right")),
+                (const UB *)((result.direction > 0) ? "forward" : "reverse"),
                 (const UB *)(result.timed_out ? "timeout" : "stop"),
                 count_sign(result.delta[0]), count_magnitude(result.delta[0]),
                 count_sign(result.delta[1]), count_magnitude(result.delta[1]),

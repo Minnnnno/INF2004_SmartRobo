@@ -549,7 +549,7 @@ barcode_elements (uint16_t * p_samples, unsigned count, uint32_t * p_widths,
 
     bars = barcode_bars(p_samples, count, prominence, peak, trough);
 #ifdef BARCODE_DEBUG
-    BARCODE_DEBUG(m, count, peak, trough, bars, white, prominence);
+    BARCODE_DEBUG(p_samples, count, peak, trough, bars, white, prominence);
 #endif
     contrast = highest - white;
 
