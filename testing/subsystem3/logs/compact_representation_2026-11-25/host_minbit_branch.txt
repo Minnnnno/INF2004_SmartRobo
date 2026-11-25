@@ -1,0 +1,27 @@
+Buddy 3 host tests, 2026-11-24, branch buddy2/minimum-bit-review (base d74a93a) + line_read_ir() change
+Build: cmake -DROBO_HOST_TESTS=ON -DCMAKE_C_FLAGS=-Wno-error=float-conversion (gcc 15, Buddy 2 files)
+Firmware: integrated and shuttle images built with no warnings.
+
+Test project build-host
+    Start  4: line_test_checks
+1/9 Test  #4: line_test_checks ......................   Passed    0.01 sec
+    Start  7: line_pid_checks
+2/9 Test  #7: line_pid_checks .......................   Passed    0.03 sec
+    Start 16: barcode_decode_checks
+3/9 Test #16: barcode_decode_checks .................   Passed    0.04 sec
+    Start 17: barcode_decode_letters_checks
+4/9 Test #17: barcode_decode_letters_checks .........   Passed    0.04 sec
+    Start 18: barcode_decode_reject_checks
+5/9 Test #18: barcode_decode_reject_checks ..........   Passed    0.04 sec
+    Start 19: barcode_decode_ladder_checks
+6/9 Test #19: barcode_decode_ladder_checks ..........   Passed    0.04 sec
+    Start 20: barcode_decode_ladder_reject_checks
+7/9 Test #20: barcode_decode_ladder_reject_checks ...   Passed    0.05 sec
+    Start 21: barcode_decode_route4_checks
+8/9 Test #21: barcode_decode_route4_checks ..........   Passed    0.04 sec
+    Start 22: route_checks
+9/9 Test #22: route_checks ..........................   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 9
+
+Total Test time (real) =   0.30 sec

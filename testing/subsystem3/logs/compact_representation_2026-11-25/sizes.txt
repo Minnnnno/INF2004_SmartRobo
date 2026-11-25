@@ -1,0 +1,41 @@
+Subsystem 3 static RAM, integrated MQTT firmware build/mtkernel_3.elf
+Build: smartrobo-integrated-v1-20261124T150618Z, main code at 4a29d68 (Subsystem 3 unchanged since)
+Command: arm-none-eabi-nm -S -l build/mtkernel_3.elf | symbols in app_program/subsystem3
+Columns: bytes  symbol  source
+   396  e.1                  subsystem3/barcode_decode.c:162
+  8424  seg.5                subsystem3/barcode.c:450
+   176  ctx.6                subsystem3/line_following.c:824
+     4  hits.1               subsystem3/barcode.c:431
+     4  bc_div               subsystem3/barcode.c:64
+  2000  bc_work              subsystem3/barcode.c:179
+     1  bc_mode              subsystem3/barcode.c:49
+     4  bc_reads             subsystem3/barcode.c:149
+     1  bc_dirty             subsystem3/barcode.c:153
+   576  status.4             subsystem3/line_following.c:347
+   576  status.2             subsystem3/line_following.c:364
+   576  status.1             subsystem3/line_following.c:390
+   576  status.3             subsystem3/line_following.c:437
+     8  bc_letter            subsystem3/barcode.c:150
+   396  bc_widths            subsystem3/barcode.c:180
+     1  bc_cal_ok            subsystem3/barcode.c:74
+     2  bc_heading           subsystem3/barcode.c:134
+     4  cal_seen.4           subsystem3/barcode.c:98
+     4  route_word           subsystem3/route.c:5
+     4  bc_failures          subsystem3/barcode.c:152
+     4  bc_arm_rise          subsystem3/barcode.c:159
+     4  bc_path_now          subsystem3/barcode.c:92
+     1  bc_code_pass         subsystem3/barcode.c:115
+     4  bc_junctions         subsystem3/barcode.c:151
+     4  bc_sample_no         subsystem3/barcode.c:154
+     4  ignore_seen.3        subsystem3/barcode.c:98
+     4  bc_cal_results       subsystem3/barcode.c:73
+     4  bc_cal_requests      subsystem3/barcode.c:70
+     4  bc_ignore_until      subsystem3/barcode.c:93
+     4  bc_stretch_start     subsystem3/barcode.c:155
+     1  bc_junction_seen     subsystem3/barcode.c:157
+     4  bc_junction_sample   subsystem3/barcode.c:156
+     4  bc_ignore_requests   subsystem3/barcode.c:71
+     4  bc_ignore_distance   subsystem3/barcode.c:72
+     4  bc_cal_results_seen  subsystem3/barcode.c:75
+TOTAL 13787 bytes
+Task stacks (app_main.c): line_task 4096, barcode_task 4096
