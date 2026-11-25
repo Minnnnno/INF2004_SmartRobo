@@ -31,7 +31,7 @@ who runs and records the test; everyone else checks their own subsystem's part.
 | ID | What is tested | Requirement | Lead | Steps | Expected result (dashboard / console) |
 |---|---|---|---|---|---|
 | SYS-01 | Safe start-up and remote START | FR15, FR17, NFR9 | B1 (B4 supports) | Power up on the course with the dashboard open; wait 30 s; press START; keep still ~2 s | Before START: robot shown online, Motion **STOPPED (held)**, wheels 0 / 0, IMU card **INIT**. After START: IMU card **WAITING** with Pitch ~0° (level reference captured), then Motion **DRIVING** |
-| SYS-02 | Line following over the full course | Mission 1; FR1, FR5 | B3 | START; follow the course from start to end, no barcodes or obstacles | Stays on the line to the end without help; no FAULT |
+| SYS-02 | Line following over the full course | Mission 1; FR1, FR5 | B3 | START; follow the course from start to end, no obstacles (barcodes may be on the course) | Stays on the line to the end without help; no FAULT |
 | SYS-03 | Barcode navigation from a dashboard route | Mission 2; FR2, FR3, FR17 | B3 | Send a route from the dashboard (e.g. `L=B R=C S=D U=A`); place the codes before the junctions; START | Route acknowledged (`robot/route/ack`); every code read as the right letter (never a wrong letter) and its action (left / right / straight / U-turn) done at the junction after it; barcode events on the dashboard |
 | SYS-04 | Obstacle detection, profiling and bypass | Mission 4; FR10–FR14, NFR5, NFR10, NFR11 | B5 | Box of measured width at a documented position on the line; START; 5 runs with different left/right offsets | Every run: stops before contact (sensor ~150 mm), reports width and side, bypasses and reacquires the line (or stays stopped if no safe path). Record per run: detected, width error (NFR11 ± 1 cm), side correct, line reacquired, bypass time. Briefing A-grade: 100 % detection, width error ≤ 10 %, 100 % direction, 100 % reacquisition, bypass < 3 s |
 | SYS-05 | Hump detection and highest hump peak | Mission 3; FR7, FR8 | **B4** | A hump of ruler-measured height beside the line under the **right** wheel; full line-following run | IMU card **WAITING → CLIMBING → DESCENDING → WAITING** on the hump; **Highest hump** = the ruler height ± 3 mm and kept for the rest of the run; never **LIFTED**; console `[TERRAIN] Hump completed: peak=X mm under RIGHT wheel` |
@@ -153,8 +153,7 @@ What Buddy 4 brings to the system tests (details in
 What Buddy 3 brings to the system tests (details in
 `testing/subsystem3/TEST_LOG.md`):
 
-- **SYS-02 (lead):** one unbroken run over the **whole** course, no barcodes or
-  obstacles; keep the dashboard's *On the line* in the video. S3-H01 covers
+- **SYS-02 (lead):** one unbroken run over the **whole** course, no obstacles; keep the dashboard's *On the line* in the video. S3-H01 covers
   straights, curves and finding a lost line; Buddy 4's full-run video shows the
   whole course.
 - **SYS-03 (lead):** send the route from the dashboard boxes and wait for
