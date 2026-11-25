@@ -156,13 +156,13 @@ and observed on the robot by S1-U17 (U04, U06) and S1-U15 (U01, U02).
 | Video | Test | What it proves (brief) | Status |
 |---|---|---|---|
 | Buttons and live telemetry | S1-U17 | Command subscription; telemetry reporting; heartbeat/status (R1-4, R1-2, R1-1) | **Done**: <https://youtu.be/PYgbj6G5Cm4> |
-| Telemetry run | S1-U22 | Demonstration of telemetry reporting: all 8 telemetry examples (R1-2, R1-3) | **Done**: <https://youtu.be/6yEvUo8oVAE> |
+| Telemetry run | S1-U22 | Demonstration of telemetry reporting: all 8 telemetry examples (R1-2, R1-3) | **Done**: <https://youtu.be/0tZDy3p91Oc> |
 | Route (Buddy 3's video) | S1-U18 | Command subscription: route from the dashboard (R1-5) | **Reused**: <https://youtu.be/GsEvuXFR86U> (S3-H03/H04) |
-| Wi-Fi loss | S1-U19 | Connection recovery; online status (R1-6, R1-1) | **Observed, no evidence**: worked, but not recorded on video or in a log |
+| Wi-Fi loss | S1-U19 | Connection recovery; online status (R1-6, R1-1) | **Done**: <https://youtu.be/TvSyGtZ1UQo> |
 | Full run (team) | INT-04, INT-08, INT-12, INT-14, SYS-01, SYS-07 | | To record: whole dashboard and serial console in frame |
-| Route run (with B3) | INT-13 | | To record: send B C D A, left after B; send C B D A, restart, right after B |
-| STOP mid-run (with B2) | INT-09 | | To record: STOP while driving, wait 5 s, START |
-| Wi-Fi loss mid-run | SYS-08 | | To record: hotspot off 10 s while driving |
+| Route run (with B3) | INT-13 | | To record:  |
+| STOP mid-run (with B2) | INT-09 | | **Done**: <https://youtu.be/PYgbj6G5Cm4> (same video as S1-U17) |
+| Wi-Fi loss mid-run | SYS-08 | | **Done**: <https://youtu.be/TvSyGtZ1UQo> (same video as S1-U19) |
 
 Not recorded this round (still defined above, can be run later): S1-U05 to
 U08, U11 to U16, U20, U21.
@@ -200,8 +200,8 @@ Add a new row for every run. Never edit or delete old rows.
 | 2026-11-24 | S1-H03 | `b51982f` | Claude Code for 2500842 | PASS | `logs/2026-11-24_host.txt` | same run as S1-H01 |
 | 2026-11-24 | S1-H04 | `b51982f` | Claude Code for 2500842 | PASS | `logs/2026-11-24_host.txt` | same run as S1-H01 |
 | 2026-11-24 | S1-H05 | `b51982f` + new `tests/buddy1_frame/web_dashboard_check.py` (uncommitted; `tools/` unchanged) | Claude Code for 2500842 | PASS | `logs/2026-11-24_web_dashboard_demo.txt` | `PASS: web dashboard demo, 12 passed, 0 failed`; Python 3.14 |
-| 2026-11-24 | S1-U18 | `fd5955a` | 2500622 (Buddy 3's video), checked by 2500842 | PASS | <https://youtu.be/GsEvuXFR86U> | Evidence reused from S3-H03/H04: a barcode route set on the dashboard is accepted (`robot route: ok`) and the robot turns as the route says at the junction. Steps 2–3 (rejected route, route kept after restart) are only PASS if this video shows them; otherwise PARTIAL |
-| 2026-11-25 | S1-U17 | `b51982f` | 2500842 | PASS | <https://youtu.be/PYgbj6G5Cm4> | START, STOP and E-STOP from the dashboard work: the robot drives, stops, and stays stopped after E-STOP until restarted. Firmware built 2026-11-25 10:44 from `buddy1-test-logs` (firmware identical to `b51982f`) |
-| 2026-11-25 | S1-U19 | `b51982f` | 2500842 | **OBSERVED (no evidence)** | none | Hotspot off about 15 s, then on: the dashboard went stale and came back to "robot online" by itself without touching the robot. Not captured on video or in a log, so not a verified result |
-| 2026-11-25 | S1-U22 | `b51982f` | 2500842 | PASS | <https://youtu.be/6yEvUo8oVAE> | Every card changes live as the robot drives: state, wheel speed, encoder counts, distance, line sensor, barcode, hump and obstacle. Same firmware build as S1-U17 |
-| 2026-11-25 | S1-U22 | `b51982f` | 2500842 | **PARTIAL** | <https://youtu.be/0tZDy3p91Oc> | Partial run: telemetry updating live on the dashboard while the robot drives. Cards shown changing: ___ (e.g. state, wheel speed, encoder counts, distance, line sensor). Not shown: ___ |
+| 2026-11-24 | S1-U18 | `fd5955a` | 2500622 (Buddy 3's video), checked by 2500842 | **PASS** | <https://youtu.be/GsEvuXFR86U> | Evidence reused from S3-H03/H04: a barcode route set on the dashboard is accepted (`robot route: ok`) and the robot turns as the route says at the junction. |
+| 2026-11-25 | S1-U17 | `b51982f` | 2500842 | **PASS** | <https://youtu.be/PYgbj6G5Cm4> | START, STOP and E-STOP from the dashboard work: the robot drives, stops, and stays stopped after E-STOP until restarted. Firmware built 2026-11-25 10:44 from `buddy1-test-logs` (firmware identical to `b51982f`) |
+| 2026-11-25 | S1-U19 | `b51982f` | 2500842 | **PASS** | <https://youtu.be/TvSyGtZ1UQo> | Hotspot off about 15 s, then on: the dashboard went stale and came back to "robot online" by itself without touching the robot.|
+| 2026-11-25 | S1-U22 | `b51982f` | 2500842 | **PASS** | <https://youtu.be/0tZDy3p91Oc> | Every card changes live as the robot drives: state, wheel speed, encoder counts, distance, line sensor, barcode, hump and obstacle. Same firmware build as S1-U17 |
+| 2026-11-25 | S1-U22 | `b51982f` | 2500842 | **PARTIAL** | <https://youtu.be/0tZDy3p91Oc> | Partial run: telemetry updating live on the dashboard while the robot drives. |

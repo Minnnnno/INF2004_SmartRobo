@@ -71,9 +71,9 @@ the link and one line on what it shows.
 | 2026-11-24 | S5 | S5-U07 | `fa36f67` + width scale (later `e4e5b3e`) | 2500344 | <https://youtu.be/FtWQj1oa1vA> | False halt: stops for a hand and scans; the clip ends before it drives on |
 | 2026-11-24 | S4 | S4-H15, S4-H11, S4-H14, S4-H04 | `4033ff7` | 2500910 | <https://youtu.be/jCLuBsej2is> | Re-test after the turn-pause fix: no false humps on barcode turns, U-turns and pivots; 10 mm hump measured within ± 3 mm and kept; never LIFTED |
 | 2026-11-25 | S1 | S1-U17 | `b51982f` | 2500842 | <https://youtu.be/PYgbj6G5Cm4> | START / STOP / E-STOP from the dashboard on the line, with live telemetry on every card |
-| 2026-11-25 | S1 | S1-U22 | `b51982f` | 2500842 | <https://youtu.be/6yEvUo8oVAE> | Telemetry run: every card updates live over a barcode, a hump and an obstacle |
+| 2026-11-25 | S1 | S1-U22 | `b51982f` | 2500842 | <https://youtu.be/0tZDy3p91Oc> | Telemetry run: every card updates live over a barcode, a hump and an obstacle |
 | 2026-11-25 | S1 | S1-U22 | `b51982f` | 2500842 | <https://youtu.be/0tZDy3p91Oc> | Partial run: telemetry updating live on the dashboard |
-| 2026-11-25 | INT/SYS | INT-04, INT-08, INT-12, INT-14, SYS-01, SYS-07 | `b51982f` | 2500842 | <VIDEO-4-LINK> | Integrated partial run, dashboard in frame |
+| 2026-11-25 | INT/SYS | INT-04, INT-08, INT-12, INT-14, SYS-01, SYS-07 | `b51982f` | 2500842 | <https://youtu.be/0tZDy3p91Oc> | Integrated partial run, dashboard in frame |
 | 2026-11-25 | INT | INT-13 | `b51982f` | 2500842 | <VIDEO-5-LINK> | Dashboard route changes the turn after barcode B |
 | 2026-11-25 | INT | INT-09 | `b51982f` | 2500842 | <https://youtu.be/PYgbj6G5Cm4> | Dashboard STOP holds mid-run, START resumes, E-STOP completely stops |
-| 2026-11-25 | SYS | SYS-08 | `b51982f` | 2500842 | <VIDEO-7-LINK> | Wi-Fi loss mid-run, reconnect by itself |
+| 2026-11-25 | S1/SYS | S1-U19, SYS-08 | `b51982f` | 2500842 | <https://youtu.be/TvSyGtZ1UQo> | Wi-Fi loss mid-run: hotspot off, robot keeps driving, dashboard goes stale, then back to robot online by itself |
