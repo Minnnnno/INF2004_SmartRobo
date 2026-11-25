@@ -148,6 +148,28 @@ What Buddy 4 brings to the system tests (details in
   `testing/subsystem4/TEST_LOG.md`);
   at integration level: INT-03, INT-04, INT-05.
 
+## Buddy 3 checklist
+
+What Buddy 3 brings to the system tests (details in
+`testing/subsystem3/TEST_LOG.md`):
+
+- **SYS-02 (lead):** one unbroken run over the **whole** course, no barcodes or
+  obstacles; keep the dashboard's *On the line* in the video. S3-H01 covers
+  straights, curves and finding a lost line; Buddy 4's full-run video shows the
+  whole course.
+- **SYS-03 (lead):** send the route from the dashboard boxes and wait for
+  `robot route: ok`; put a code before a junction for **each** action (left,
+  right, straight, U-turn). S3-H03/H04 show left and U-turn; Buddy 4's full-run
+  video shows right and straight. A failed read is never acted on: the robot
+  carries on (`route: barcode read failed, carrying on`).
+- **SYS-04 (support):** confirm line following resumes after the detour
+  (`[S3-LINE]` back to FOLLOWING).
+- **SYS-07 (support):** *On the line* and the barcode letter/action update on
+  the dashboard.
+- **SYS-11:** send the route before START. Only the four route letters are read;
+  any other code is reported as a failed read and the robot carries on.
+- Already verified at subsystem level: S3-U01 to U03, S3-H01 to H04.
+
 ## Other logs in this folder
 
 The `com4_2026-11-0*.log` files are raw serial captures from Buddy 2's
@@ -174,3 +196,5 @@ Buddy 2 entries below reuse the 2026-11-24 results in [the subsystem log](../sub
 | 2026-11-25 | SYS-01 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-5-LINK> @ m:ss | Buddy 1 lead run: online and held 30 s before START, START acknowledged, then DRIVING |
 | 2026-11-25 | SYS-07 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-5-LINK> @ m:ss | Whole dashboard during the full run; Link card lost/bad not rising, layout v3. Each buddy confirms their card |
 | 2026-11-25 | SYS-08 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-8-LINK> @ m:ss | Hotspot off 10 s mid-run: robot kept driving, dashboard reconnected by itself after ___ s |
+| 2026-11-24 | SYS-02 | `fd5955a` | 2500622 | PASS | <https://youtu.be/t8ZaVSFGggE>, <https://www.youtube.com/watch?v=O-3cIuu86ew> | Subsystem video S3-H01: straights, curves, line lost and found again, no FAULT. Supporting: Buddy 4's full-run video (main after `610725f`, same as SYS-01/05/06) follows the whole course without help |
+| 2026-11-24 | SYS-03 | `fd5955a` | 2500622 | PASS | <https://youtu.be/GsEvuXFR86U>, <https://www.youtube.com/watch?v=O-3cIuu86ew> | Subsystem video S3-H03/H04: route sent from the dashboard (`robot route: ok`), Z → left at the junction, A → U-turn. Supporting: Buddy 4's full-run video (main after `610725f`) shows the right and straight actions |
