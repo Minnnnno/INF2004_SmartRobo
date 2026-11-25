@@ -60,28 +60,36 @@ bool s5_detour_retryable(void);
 
 /* Why a scan or detour stopped (README.md "Why a detour stopped"): a 6-bit
    index kept in one byte, with one table of names for the console and MQTT. */
-#define S5_WHY_CODES(X)                                                        \
-    X(ahead_blocked)                                                           \
-    X(diagonal_blocked)                                                        \
-    X(lifted)                                                                  \
-    X(line_lost_at_stop)                                                       \
-    X(line_not_found)                                                          \
-    X(line_not_reporting)                                                      \
-    X(look_moved)                                                              \
-    X(look_unstable)                                                           \
-    X(motion_fault)                                                            \
-    X(move_event)                                                              \
-    X(moved)                                                                   \
-    X(moved_while_scanning)                                                    \
-    X(no_progress) X(no_release) X(no_safe_detour) X(no_status)                \
-        X(no_way_around) X(not_accepted) X(not_still) X(noted_line_blocked)    \
-            X(noted_line_not_found) X(obstacle_too_long) X(parallel_blocked)   \
-                X(pass_ahead_blocked) X(pass_look_failed) X(publish_failed)    \
-                    X(refused) X(released_while_scanning) X(repeated_spurious) \
-                        X(scan_failed) X(scan_setup_failed) X(sensor_failed)   \
-                            X(sensor_fault) X(side_too_close)                  \
-                                X(stall_no_escape) X(stalled) X(stopped)       \
-                                    X(timeout) X(ultrasonic_failed) X(unknown)
+#define S5_WHY_CODES(X)                                                    \
+    X(ahead_blocked)                                                       \
+    X(diagonal_blocked)                                                    \
+    X(lifted)                                                              \
+    X(line_lost_at_stop)                                                   \
+    X(line_not_found)                                                      \
+    X(line_not_reporting)                                                  \
+    X(look_moved)                                                          \
+    X(look_unstable)                                                       \
+    X(motion_fault)                                                        \
+    X(move_event)                                                          \
+    X(moved)                                                               \
+    X(moved_while_scanning)                                                \
+    X(no_progress)                                                         \
+    X(no_release)                                                          \
+    X(no_safe_detour)                                                      \
+    X(no_status)                                                           \
+    X(no_way_around)                                                       \
+    X(not_accepted)                                                        \
+    X(not_still)                                                           \
+    X(noted_line_blocked)                                                  \
+    X(noted_line_not_found)                                                \
+    X(obstacle_too_long)                                                   \
+    X(parallel_blocked)                                                    \
+    X(pass_ahead_blocked)                                                  \
+    X(pass_look_failed) X(publish_failed) X(refused)                       \
+        X(released_while_scanning) X(repeated_spurious) X(scan_failed)     \
+            X(scan_setup_failed) X(sensor_failed) X(sensor_fault)          \
+                X(side_too_close) X(stall_no_escape) X(stalled) X(stopped) \
+                    X(timeout) X(ultrasonic_failed) X(unknown)
 #define S5_WHY_ENUM(name) S5_WHY_##name,
 typedef enum
 {

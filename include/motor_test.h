@@ -6,7 +6,8 @@ typedef struct
     unsigned wheel; /* 0=left, 1=right, 2=both */
     int      direction;
 
-    uint32_t delta[2], invalid_delta[2];
+    uint32_t delta[2];
+    uint32_t invalid_delta[2];
     bool     timed_out;
 } motor_test_result_t;
 

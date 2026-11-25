@@ -13,18 +13,18 @@
 
 static void s5_face_apply(s5_scan_t * p_scan);
 
-_Static_assert(S5_SAMPLES_PER_POINT + S5_RETRY_SAMPLES <= S5_MAX_SAMPLES,
+_Static_assert((S5_SAMPLES_PER_POINT + S5_RETRY_SAMPLES) <= S5_MAX_SAMPLES,
                "S5_MAX_SAMPLES too small for one point");
 _Static_assert(S5_SAMPLES_PER_POINT >= 3U,
                "take at least three pings per angle");
 _Static_assert(S5_MAX_SAMPLES <= 15U, "support and valid are 4 bits");
-_Static_assert(S5_ANGLE_RIGHT_DEG - S5_ANGLE_LEFT_DEG <= 255,
+_Static_assert((S5_ANGLE_RIGHT_DEG - S5_ANGLE_LEFT_DEG) <= 255,
                "a stored angle is 8 bits");
-_Static_assert(S5_FINE_MAX_POINTS + S5_INWARD_MAX_STEPS <= 255,
+_Static_assert((S5_FINE_MAX_POINTS + S5_INWARD_MAX_STEPS) <= 255,
                "point counts are 8 bits");
 _Static_assert(S5_CURVE_SAMPLES == 16, "s5_curve_t.count is 5 bits, .next 4");
-_Static_assert(sizeof(s5_point_t) == 4U, "a stored reading is one word");
-_Static_assert(sizeof(s5_curve_t) == 72U, "packed curve history");
+_Static_assert(4U == sizeof(s5_point_t), "a stored reading is one word");
+_Static_assert(72U == sizeof(s5_curve_t), "packed curve history");
 
 static double
 s5_bearing_rad (double angle_deg)
@@ -64,12 +64,12 @@ s5_range_code (double range_mm)
         return 0U;
     }
 
-    if (range_mm >= (double)S5_RANGE_CODE_MAX / S5_RANGE_STEPS_PER_MM)
+    if (range_mm >= ((double)S5_RANGE_CODE_MAX / S5_RANGE_STEPS_PER_MM))
     {
         return (uint16_t)S5_RANGE_CODE_MAX;
     }
 
-    return (uint16_t)(range_mm * S5_RANGE_STEPS_PER_MM + 0.5);
+    return (uint16_t)((range_mm * S5_RANGE_STEPS_PER_MM) + 0.5);
 }
 
 double
@@ -92,7 +92,7 @@ s5_point_pack (int angle_deg, const s5_estimate_t * p_estimate, bool b_object)
     s5_point_t point;
 
     angle = (angle < 0) ? 0
-                        : ((angle > S5_ANGLE_RIGHT_DEG - S5_ANGLE_LEFT_DEG)
+                        : ((angle > (S5_ANGLE_RIGHT_DEG - S5_ANGLE_LEFT_DEG))
                                ? S5_ANGLE_RIGHT_DEG - S5_ANGLE_LEFT_DEG
                                : angle);
     point.bits
@@ -144,7 +144,7 @@ s5_point_valid (s5_point_t point)
 unsigned
 s5_point_total (s5_point_t point)
 {
-    return ((point.bits & S5_POINT_RETRIED) != 0U)
+    return (0U != (point.bits & S5_POINT_RETRIED))
                ? S5_SAMPLES_PER_POINT + S5_RETRY_SAMPLES
                : S5_SAMPLES_PER_POINT;
 }
@@ -152,7 +152,7 @@ s5_point_total (s5_point_t point)
 bool
 s5_point_object (s5_point_t point)
 {
-    return (point.bits & S5_POINT_OBJECT) != 0U;
+    return 0U != (point.bits & S5_POINT_OBJECT);
 }
 
 void
@@ -165,12 +165,12 @@ s5_point_set_object (s5_point_t * p_point)
 static s5_echo_t
 s5_vote (unsigned support, unsigned valid, unsigned total)
 {
-    if ((total - valid) * 2U > total)
+    if (((total - valid) * 2U) > total)
     {
         return S5_ECHO_NONE; /* mostly silent */
     }
 
-    return ((support >= S5_MIN_AGREE) && (support * 2U >= total))
+    return ((support >= S5_MIN_AGREE) && ((support * 2U) >= total))
                ? S5_ECHO_OK
                : S5_ECHO_UNSTABLE;
 }
@@ -179,8 +179,8 @@ static bool
 s5_vote_usable (s5_echo_t status, unsigned support, unsigned valid,
                 unsigned total)
 {
-    return (status == S5_ECHO_OK)
-           || ((status == S5_ECHO_UNSTABLE) && (support > total - valid));
+    return (S5_ECHO_OK == status)
+           || ((S5_ECHO_UNSTABLE == status) && (support > (total - valid)));
 }
 
 s5_echo_t
@@ -200,14 +200,15 @@ s5_point_usable (s5_point_t point)
 static bool
 s5_echo_bit (uint16_t echo, unsigned index)
 {
-    return ((echo >> index) & 1U) != 0U;
+    return 0U != ((echo >> index) & 1U);
 }
 
 void
 s5_estimate (const double range_mm[], uint16_t echo, unsigned count,
              s5_estimate_t * p_out)
 {
-    unsigned i, j;
+    unsigned i;
+    unsigned j;
     unsigned best         = count;
     unsigned best_support = 0U;
     double   best_spread  = 0.0;
@@ -231,12 +232,12 @@ s5_estimate (const double range_mm[], uint16_t echo, unsigned count,
             continue;
         }
 
-        if ((p_out->valid == 0U) || (range_mm[i] < p_out->nearest_mm))
+        if ((0U == p_out->valid) || (range_mm[i] < p_out->nearest_mm))
         {
             p_out->nearest_mm = range_mm[i];
         }
 
-        if ((p_out->valid == 0U) || (range_mm[i] > p_out->farthest_mm))
+        if ((0U == p_out->valid) || (range_mm[i] > p_out->farthest_mm))
         {
             p_out->farthest_mm = range_mm[i];
         }
@@ -247,7 +248,7 @@ s5_estimate (const double range_mm[], uint16_t echo, unsigned count,
         {
             double gap = fabs(range_mm[j] - range_mm[i]);
 
-            if (s5_echo_bit(echo, j) && (gap <= S5_CLUSTER_TOL_MM))
+            if ((s5_echo_bit(echo, j)) && (gap <= S5_CLUSTER_TOL_MM))
             {
                 support++;
                 spread += gap;
@@ -275,7 +276,7 @@ s5_estimate (const double range_mm[], uint16_t echo, unsigned count,
 
     for (j = 0U; j < count; j++)
     {
-        if (s5_echo_bit(echo, j)
+        if ((s5_echo_bit(echo, j))
             && (fabs(range_mm[j] - range_mm[best]) <= S5_CLUSTER_TOL_MM))
         {
             sum += range_mm[j];
@@ -299,10 +300,10 @@ bool
 s5_point_is_object (const s5_estimate_t * p_estimate, int angle_deg,
                     double centre_forward_mm)
 {
-    return s5_estimate_usable(p_estimate)
+    return (s5_estimate_usable(p_estimate))
            && (fabs(s5_forward_mm(p_estimate->range_mm, (double)angle_deg)
                     - centre_forward_mm)
-               <= S5_EDGE_THRESHOLD_FRACTION * centre_forward_mm);
+               <= (S5_EDGE_THRESHOLD_FRACTION * centre_forward_mm));
 }
 
 void
@@ -326,14 +327,14 @@ s5_sample_point (s5_ping_fn ping, void * p_context, s5_estimate_t * p_out)
 
     s5_estimate(range_mm, echo, count, p_out);
 
-    if (p_out->status != S5_ECHO_UNSTABLE)
+    if (S5_ECHO_UNSTABLE != p_out->status)
     {
         return;
     }
 
     /* Disagreement (often half the beam on the edge): vote again with more
      * pings */
-    while (count < S5_SAMPLES_PER_POINT + S5_RETRY_SAMPLES)
+    while (count < (S5_SAMPLES_PER_POINT + S5_RETRY_SAMPLES))
     {
         range_mm[count] = 0.0;
 
@@ -356,13 +357,13 @@ s5_follow_surface (s5_point_t * p_point, double * p_prev_mm, bool * p_have)
     bool   b_usable = s5_point_usable(*p_point);
     double range_mm = s5_point_range(*p_point);
 
-    if (!s5_point_object(*p_point) && *p_have && b_usable
+    if ((!s5_point_object(*p_point)) && (*p_have) && b_usable
         && (fabs(range_mm - *p_prev_mm) <= S5_CONTINUITY_MM))
     {
         s5_point_set_object(p_point);
     }
 
-    if (s5_point_object(*p_point) && b_usable)
+    if ((s5_point_object(*p_point)) && b_usable)
     {
         *p_prev_mm = range_mm;
         *p_have    = true;
@@ -396,7 +397,7 @@ s5_walk_inward (s5_scan_t * p_scan, unsigned side, int last_deg,
                 s5_measure_fn measure, void * p_context)
 {
     s5_edge_t * p_edge = &p_scan->edge[side];
-    int         step = (side == S5_LEFT) ? S5_FINE_STEP_DEG : -S5_FINE_STEP_DEG;
+    int         step = (S5_LEFT == side) ? S5_FINE_STEP_DEG : -S5_FINE_STEP_DEG;
     int         angle            = last_deg;
     int         clear_deg        = last_deg;
     int         first_object_deg = last_deg;
@@ -431,7 +432,7 @@ s5_walk_inward (s5_scan_t * p_scan, unsigned side, int last_deg,
             run       = 0U;
             clear_deg = angle;
         }
-        else if (++run == 1U)
+        else if (1U == ++run)
         {
             first_object_deg = angle;
         }
@@ -455,8 +456,8 @@ s5_find_edge (s5_scan_t * p_scan, unsigned side, int start_deg,
               double start_range_mm, s5_measure_fn measure, void * p_context)
 {
     s5_edge_t * p_edge = &p_scan->edge[side];
-    int         step = (side == S5_LEFT) ? -S5_FINE_STEP_DEG : S5_FINE_STEP_DEG;
-    int    limit = (side == S5_LEFT) ? S5_ANGLE_LEFT_DEG : S5_ANGLE_RIGHT_DEG;
+    int         step = (S5_LEFT == side) ? -S5_FINE_STEP_DEG : S5_FINE_STEP_DEG;
+    int    limit = (S5_LEFT == side) ? S5_ANGLE_LEFT_DEG : S5_ANGLE_RIGHT_DEG;
     int    angle;
     int    last_deg  = start_deg;
     int    clear_deg = start_deg;
@@ -516,8 +517,8 @@ s5_find_edge (s5_scan_t * p_scan, unsigned side, int start_deg,
     p_edge->inward_deg         = p_edge->outward_deg;
     p_scan->fine_outward[side] = p_scan->fine_count[side];
 
-    if (p_edge->b_found
-        && !s5_walk_inward(p_scan, side, last_deg, measure, p_context))
+    if ((p_edge->b_found)
+        && (!s5_walk_inward(p_scan, side, last_deg, measure, p_context)))
     {
         return false;
     }
@@ -526,7 +527,7 @@ s5_find_edge (s5_scan_t * p_scan, unsigned side, int start_deg,
        correction */
     edge_deg = 0.5 * (p_edge->outward_deg + p_edge->inward_deg);
 
-    if (side == S5_LEFT)
+    if (S5_LEFT == side)
     {
         edge_deg = fmin(edge_deg + S5_BEAM_CORRECTION_DEG,
                         (double)S5_ANGLE_CENTRE_DEG);
@@ -551,7 +552,7 @@ static void
 s5_coarse_edge (const s5_scan_t * p_scan, unsigned side, int * p_angle_deg,
                 double * p_range_mm)
 {
-    int step = (side == S5_LEFT) ? -S5_COARSE_STEP_DEG : S5_COARSE_STEP_DEG;
+    int step = (S5_LEFT == side) ? -S5_COARSE_STEP_DEG : S5_COARSE_STEP_DEG;
     int angle;
 
     *p_angle_deg = S5_ANGLE_CENTRE_DEG;
@@ -586,12 +587,12 @@ typedef struct
     uint8_t  echo[(S5_FACE_ANGLES + 7) / 8];
 } s5_profile_t;
 
-_Static_assert(sizeof(s5_profile_t) == 318U, "packed face profile");
+_Static_assert(318U == sizeof(s5_profile_t), "packed face profile");
 
 static bool
 s5_profile_bit (const uint8_t map[], int index)
 {
-    return ((map[index / 8] >> (index % 8)) & 1U) != 0U;
+    return 0U != ((map[index / 8] >> (index % 8)) & 1U);
 }
 
 static bool
@@ -650,7 +651,7 @@ s5_face_walk (const s5_profile_t * p_profile, int start, int step,
             continue;
         }
 
-        if (!s5_profile_echo(p_profile, index)
+        if ((!s5_profile_echo(p_profile, index))
             || (fabs(s5_profile_mm(p_profile, index)
                      - s5_profile_mm(p_profile, end))
                 > S5_FACE_JUMP_MM))
@@ -678,7 +679,8 @@ s5_face_extend (const s5_profile_t * p_profile, int end, int step,
     for (index = end + step; (index >= 0) && (index < S5_FACE_ANGLES);
          index += step)
     {
-        double from_square, axis;
+        double from_square;
+        double axis;
 
         if (!s5_profile_taken(p_profile, index))
         {
@@ -693,11 +695,11 @@ s5_face_extend (const s5_profile_t * p_profile, int end, int step,
         from_square = fabs((double)(S5_FACE_CENTRE - index) - tilt);
         axis        = s5_profile_mm(p_profile, index) + S5_SENSOR_OFFSET_MM;
 
-        if ((axis
-             > S5_FACE_PLANE_OVER * distance / cos(from_square * S5_DEG_TO_RAD))
-            || (axis < distance
-                           / cos(fmax(0.0, from_square - S5_FACE_PLANE_BEAM_DEG)
-                                 * S5_DEG_TO_RAD)))
+        if ((axis > ((S5_FACE_PLANE_OVER * distance)
+                     / cos(from_square * S5_DEG_TO_RAD)))
+            || (axis < (distance
+                        / cos(fmax(0.0, from_square - S5_FACE_PLANE_BEAM_DEG)
+                              * S5_DEG_TO_RAD))))
         {
             return end;
         }
@@ -714,7 +716,7 @@ s5_face_extend (const s5_profile_t * p_profile, int end, int step,
 static double
 s5_face_corner_range (const s5_profile_t * p_profile, int end, int before)
 {
-    return (s5_profile_mm(p_profile, end) - s5_profile_mm(p_profile, before)
+    return ((s5_profile_mm(p_profile, end) - s5_profile_mm(p_profile, before))
             > S5_FACE_TAIL_MM)
                ? s5_profile_mm(p_profile, before)
                : s5_profile_mm(p_profile, end);
@@ -739,10 +741,10 @@ s5_face_cross (const s5_profile_t * p_profile, int start, int end, int step,
         if (s5_profile_mm(p_profile, index) >= level)
         {
             *p_index = (double)previous
-                       + (double)(index - previous)
-                             * (level - s5_profile_mm(p_profile, previous))
-                             / (s5_profile_mm(p_profile, index)
-                                - s5_profile_mm(p_profile, previous));
+                       + (((double)(index - previous)
+                           * (level - s5_profile_mm(p_profile, previous)))
+                          / (s5_profile_mm(p_profile, index)
+                             - s5_profile_mm(p_profile, previous)));
             return true;
         }
 
@@ -756,9 +758,9 @@ s5_face_cross (const s5_profile_t * p_profile, int start, int end, int step,
 static bool
 s5_face_flat_end (const s5_profile_t * p_profile, int start, int end, int step)
 {
-    int index = end - step * S5_FACE_FLAT_DEG;
+    int index = end - (step * S5_FACE_FLAT_DEG);
 
-    if ((index - start) * step < 0)
+    if (((index - start) * step) < 0)
     {
         index = start;
     }
@@ -777,16 +779,27 @@ s5_face_fit (const s5_scan_t * p_scan, s5_face_t * p_out)
 {
     s5_profile_t profile;
 
-    unsigned side, i;
+    unsigned side;
+    unsigned i;
     int      index;
     int      nearest = -1;
 
-    int      left, right, before_left, before_right;
-    bool     b_jump_left, b_jump_right;
+    int      left;
+    int      right;
+    int      before_left;
+    int      before_right;
+    bool     b_jump_left;
+    bool     b_jump_right;
     unsigned count = 1U;
 
-    double range_left, range_right, rise, level, cross_left, cross_right;
-    double distance, tilt;
+    double range_left;
+    double range_right;
+    double rise;
+    double level;
+    double cross_left;
+    double cross_right;
+    double distance;
+    double tilt;
 
     memset(p_out, 0, sizeof(*p_out));
 
@@ -811,10 +824,10 @@ s5_face_fit (const s5_scan_t * p_scan, s5_face_t * p_out)
     }
 
     for (index = S5_FACE_CENTRE - S5_FACE_SEARCH_DEG;
-         index <= S5_FACE_CENTRE + S5_FACE_SEARCH_DEG; index++)
+         index <= (S5_FACE_CENTRE + S5_FACE_SEARCH_DEG); index++)
     {
-        if (s5_profile_taken(&profile, index)
-            && s5_profile_echo(&profile, index)
+        if ((s5_profile_taken(&profile, index))
+            && (s5_profile_echo(&profile, index))
             && ((nearest < 0)
                 || (s5_profile_mm(&profile, index)
                     < s5_profile_mm(&profile, nearest))))
@@ -848,16 +861,16 @@ s5_face_fit (const s5_scan_t * p_scan, s5_face_t * p_out)
         return;
     }
 
-    level = s5_profile_mm(&profile, nearest) + 0.5 * rise;
+    level = s5_profile_mm(&profile, nearest) + (0.5 * rise);
 
-    if (!s5_face_cross(&profile, nearest, left, -1, level, &cross_left)
-        || !s5_face_cross(&profile, nearest, right, 1, level, &cross_right))
+    if ((!s5_face_cross(&profile, nearest, left, -1, level, &cross_left))
+        || (!s5_face_cross(&profile, nearest, right, 1, level, &cross_right)))
     {
         return;
     }
 
     distance = s5_profile_mm(&profile, nearest) + S5_SENSOR_OFFSET_MM;
-    tilt     = (double)S5_FACE_CENTRE - 0.5 * (cross_left + cross_right);
+    tilt     = (double)S5_FACE_CENTRE - (0.5 * (cross_left + cross_right));
 
     if (b_jump_left)
     {
@@ -883,21 +896,21 @@ s5_face_fit (const s5_scan_t * p_scan, s5_face_t * p_out)
           + S5_SENSOR_OFFSET_MM;
     p_out->distance_mm = distance;
     p_out->left_mm
-        = sqrt(fmax(0.0, range_left * range_left - distance * distance));
+        = sqrt(fmax(0.0, (range_left * range_left) - (distance * distance)));
     p_out->right_mm
-        = sqrt(fmax(0.0, range_right * range_right - distance * distance));
+        = sqrt(fmax(0.0, (range_right * range_right) - (distance * distance)));
     p_out->width_mm  = p_out->left_mm + p_out->right_mm;
     p_out->offset_mm = 0.5 * (p_out->left_mm - p_out->right_mm);
 
     /* Both ends heard: half the beam's width cancels between them */
     if (b_jump_left && b_jump_right)
     {
-        double middle = (double)S5_FACE_CENTRE - 0.5 * (double)(left + right);
+        double middle = (double)S5_FACE_CENTRE - (0.5 * (double)(left + right));
         double edges  = middle
-                        - 0.5
-                              * (atan(p_out->left_mm / distance)
-                                 - atan(p_out->right_mm / distance))
-                              / S5_DEG_TO_RAD;
+                        - ((0.5
+                            * (atan(p_out->left_mm / distance)
+                               - atan(p_out->right_mm / distance)))
+                           / S5_DEG_TO_RAD);
 
         if (fabs(edges - tilt) <= S5_FACE_EDGE_AGREE_DEG)
         {
@@ -914,9 +927,9 @@ s5_face_fit (const s5_scan_t * p_scan, s5_face_t * p_out)
 
     p_out->tilt_deg = tilt;
     p_out->b_corner_left
-        = b_jump_left || s5_face_flat_end(&profile, nearest, left, -1);
+        = b_jump_left || (s5_face_flat_end(&profile, nearest, left, -1));
     p_out->b_corner_right
-        = b_jump_right || s5_face_flat_end(&profile, nearest, right, 1);
+        = b_jump_right || (s5_face_flat_end(&profile, nearest, right, 1));
     p_out->end_deg[S5_LEFT]  = (uint8_t)(left + S5_ANGLE_LEFT_DEG);
     p_out->end_deg[S5_RIGHT] = (uint8_t)(right + S5_ANGLE_LEFT_DEG);
     p_out->far_mm
@@ -932,15 +945,16 @@ s5_face_apply (s5_scan_t * p_scan)
     double            tolerance = S5_FACE_CENTRE_FRACTION * p_face->distance_mm;
     s5_placement_t *  p_placement = &p_scan->placement;
 
-    p_scan->width_mm       = p_face->width_mm;
-    p_scan->offset_mm      = p_face->offset_mm;
-    p_placement->b_bounded = !p_face->b_corner_left || !p_face->b_corner_right;
+    p_scan->width_mm  = p_face->width_mm;
+    p_scan->offset_mm = p_face->offset_mm;
+    p_placement->b_bounded
+        = (!p_face->b_corner_left) || (!p_face->b_corner_right);
 
-    if ((p_face->offset_mm > tolerance) && p_face->b_corner_right)
+    if ((p_face->offset_mm > tolerance) && (p_face->b_corner_right))
     {
         p_placement->position = S5_POSITION_LEFT;
     }
-    else if ((p_face->offset_mm < -tolerance) && p_face->b_corner_left)
+    else if ((p_face->offset_mm < -tolerance) && (p_face->b_corner_left))
     {
         p_placement->position = S5_POSITION_RIGHT;
     }
@@ -1071,16 +1085,16 @@ s5_placement (const s5_scan_t * p_scan, s5_placement_t * p_out)
     p_out->left_deg       = (double)S5_ANGLE_CENTRE_DEG - p_left->angle_deg;
     p_out->right_deg      = p_right->angle_deg - (double)S5_ANGLE_CENTRE_DEG;
     p_out->difference_deg = p_out->left_deg - p_out->right_deg;
-    p_out->b_bounded      = !p_left->b_found || !p_right->b_found;
+    p_out->b_bounded      = (!p_left->b_found) || (!p_right->b_found);
 
     /* A side whose edge was not found is at least its angle, so it can only
        make the obstacle lean further towards that side, never less. */
-    if ((p_out->difference_deg > S5_CENTRE_TOLERANCE_DEG) && p_right->b_found)
+    if ((p_out->difference_deg > S5_CENTRE_TOLERANCE_DEG) && (p_right->b_found))
     {
         p_out->position = S5_POSITION_LEFT;
     }
     else if ((p_out->difference_deg < -S5_CENTRE_TOLERANCE_DEG)
-             && p_left->b_found)
+             && (p_left->b_found))
     {
         p_out->position = S5_POSITION_RIGHT;
     }
@@ -1096,7 +1110,8 @@ s5_object_range (const s5_scan_t * p_scan)
 {
     double farthest = s5_point_range(p_scan->centre);
 
-    unsigned side, i;
+    unsigned side;
+    unsigned i;
 
     for (i = 0U; i < p_scan->coarse_count; i++)
     {
@@ -1127,15 +1142,15 @@ s5_beside (const s5_scan_t * p_scan, unsigned side, s5_point_t point,
            double object_range_mm)
 {
     const s5_edge_t * p_edge = &p_scan->edge[side];
-    bool b_outside = (side == S5_LEFT)
+    bool b_outside = (S5_LEFT == side)
                          ? (s5_point_angle(point) <= p_edge->first_clear_deg)
                          : (s5_point_angle(point) >= p_edge->first_clear_deg);
 
-    return b_outside && !s5_point_object(point) && s5_point_usable(point)
-           && (s5_point_range(point) > object_range_mm + S5_SPILL_RANGE_MM)
+    return b_outside && (!s5_point_object(point)) && (s5_point_usable(point))
+           && (s5_point_range(point) > (object_range_mm + S5_SPILL_RANGE_MM))
            && (s5_forward_mm(s5_point_range(point),
                              (double)s5_point_angle(point))
-               <= p_scan->centre_forward_mm + S5_PASS_LOOKAHEAD_MM);
+               <= (p_scan->centre_forward_mm + S5_PASS_LOOKAHEAD_MM));
 }
 
 /* Nearest echo beside the obstacle on one side, mm from the centre line */
@@ -1143,7 +1158,7 @@ static double
 s5_side_clear (const s5_scan_t * p_scan, unsigned side, double object_range_mm)
 {
     double   nearest = INFINITY;
-    double   sign    = (side == S5_LEFT) ? 1.0 : -1.0;
+    double   sign    = (S5_LEFT == side) ? 1.0 : -1.0;
     unsigned i;
 
     for (i = 0U; i < p_scan->coarse_count; i++)
@@ -1179,11 +1194,11 @@ s5_side_clear (const s5_scan_t * p_scan, unsigned side, double object_range_mm)
 static bool
 s5_face_echo_real (const s5_scan_t * p_scan, unsigned side, s5_point_t point)
 {
-    int      sign = (side == S5_LEFT) ? -1 : 1;
+    int      sign = (S5_LEFT == side) ? -1 : 1;
     unsigned i;
     unsigned total = (unsigned)p_scan->coarse_count + p_scan->fine_count[side];
 
-    if (sign * (s5_point_angle(point) - p_scan->face.end_deg[side])
+    if ((sign * (s5_point_angle(point) - p_scan->face.end_deg[side]))
         > S5_FACE_EDGE_ECHO_DEG)
     {
         return true;
@@ -1197,7 +1212,7 @@ s5_face_echo_real (const s5_scan_t * p_scan, unsigned side, s5_point_t point)
         int further = sign * (s5_point_angle(other) - s5_point_angle(point));
 
         if ((further > 0) && (further <= S5_FACE_EDGE_CONFIRM_DEG)
-            && s5_point_usable(other)
+            && (s5_point_usable(other))
             && (fabs(s5_point_range(other) - s5_point_range(point))
                 <= S5_FACE_JUMP_MM))
         {
@@ -1212,7 +1227,7 @@ static double
 s5_face_clear (const s5_scan_t * p_scan, unsigned side, double axle_mm)
 {
     const s5_face_t * p_face  = &p_scan->face;
-    double            sign    = (side == S5_LEFT) ? 1.0 : -1.0;
+    double            sign    = (S5_LEFT == side) ? 1.0 : -1.0;
     double            nearest = INFINITY;
     unsigned          i;
     unsigned total = (unsigned)p_scan->coarse_count + p_scan->fine_count[side];
@@ -1222,23 +1237,23 @@ s5_face_clear (const s5_scan_t * p_scan, unsigned side, double axle_mm)
         s5_point_t point = (i < p_scan->coarse_count)
                                ? p_scan->coarse[i]
                                : p_scan->fine[side][i - p_scan->coarse_count];
-        bool b_beyond = (side == S5_LEFT)
+        bool b_beyond = (S5_LEFT == side)
                             ? (s5_point_angle(point) < p_face->end_deg[side])
                             : (s5_point_angle(point) > p_face->end_deg[side]);
 
-        if (b_beyond && s5_point_usable(point)
-            && (s5_point_range(point) > p_face->far_mm + S5_SPILL_RANGE_MM)
-            && s5_face_echo_real(p_scan, side, point))
+        if (b_beyond && (s5_point_usable(point))
+            && (s5_point_range(point) > (p_face->far_mm + S5_SPILL_RANGE_MM))
+            && (s5_face_echo_real(p_scan, side, point)))
         {
-            double axis = s5_point_range(point) + S5_SENSOR_OFFSET_MM;
-            double angle
-                = (s5_bearing_rad((double)s5_point_angle(point)) / S5_DEG_TO_RAD
-                   - p_face->tilt_deg)
-                  * S5_DEG_TO_RAD;
-            double along = sign * (axis * sin(angle) - axle_mm);
+            double axis  = s5_point_range(point) + S5_SENSOR_OFFSET_MM;
+            double angle = ((s5_bearing_rad((double)s5_point_angle(point))
+                             / S5_DEG_TO_RAD)
+                            - p_face->tilt_deg)
+                           * S5_DEG_TO_RAD;
+            double along = sign * ((axis * sin(angle)) - axle_mm);
 
-            if ((axis * cos(angle)
-                 <= p_face->distance_mm + S5_PASS_LOOKAHEAD_MM)
+            if (((axis * cos(angle))
+                 <= (p_face->distance_mm + S5_PASS_LOOKAHEAD_MM))
                 && (along > 0.0))
             {
                 nearest = fmin(nearest, along);
@@ -1261,12 +1276,12 @@ s5_preferred_side (const s5_scan_t * p_scan)
 {
     double tilt = s5_start_tilt_deg(p_scan);
 
-    if (p_scan->placement.position == S5_POSITION_LEFT)
+    if (S5_POSITION_LEFT == p_scan->placement.position)
     {
         return S5_AVOID_RIGHT;
     }
 
-    if (p_scan->placement.position == S5_POSITION_RIGHT)
+    if (S5_POSITION_RIGHT == p_scan->placement.position)
     {
         return S5_AVOID_LEFT;
     }
@@ -1284,7 +1299,8 @@ s5_avoidance (const s5_scan_t * p_scan, s5_avoid_t * p_out)
 {
     s5_avoid_side_t order[2];
 
-    unsigned side, i;
+    unsigned side;
+    unsigned i;
     double   clearance = S5_ROBOT_HALF_WIDTH_MM + S5_PASS_MARGIN_MM;
 
     memset(p_out, 0, sizeof(*p_out));
@@ -1314,9 +1330,9 @@ s5_avoidance (const s5_scan_t * p_scan, s5_avoid_t * p_out)
         for (side = S5_LEFT; side <= S5_RIGHT; side++)
         {
             p_out->clear_mm[side] = s5_face_clear(p_scan, side, axle_mm);
-            p_out->b_room[side]   = s5_face_corner(p_face, side)
+            p_out->b_room[side]   = (s5_face_corner(p_face, side))
                                     && (p_out->clear_mm[side]
-                                        >= p_out->shift_mm[side] + clearance);
+                                        >= (p_out->shift_mm[side] + clearance));
         }
     }
     else
@@ -1333,18 +1349,18 @@ s5_avoidance (const s5_scan_t * p_scan, s5_avoid_t * p_out)
             p_out->clear_mm[side]
                 = s5_side_clear(p_scan, side, object_range_mm);
             /* After the shift, the robot's far side still keeps the margin */
-            p_out->b_room[side] = p_scan->edge[side].b_found
+            p_out->b_room[side] = (p_scan->edge[side].b_found)
                                   && (p_out->clear_mm[side]
-                                      >= p_out->shift_mm[side] + clearance);
+                                      >= (p_out->shift_mm[side] + clearance));
         }
     }
 
     order[0] = s5_preferred_side(p_scan);
-    order[1] = (order[0] == S5_AVOID_LEFT) ? S5_AVOID_RIGHT : S5_AVOID_LEFT;
+    order[1] = (S5_AVOID_LEFT == order[0]) ? S5_AVOID_RIGHT : S5_AVOID_LEFT;
 
     for (i = 0U; i < 2U; i++)
     {
-        if (p_out->b_room[(order[i] == S5_AVOID_LEFT) ? S5_LEFT : S5_RIGHT])
+        if (p_out->b_room[(S5_AVOID_LEFT == order[i]) ? S5_LEFT : S5_RIGHT])
         {
             p_out->side = order[i];
             return;
@@ -1384,7 +1400,7 @@ s5_curve_note (s5_curve_t * p_curve, double path_mm, double heading_deg)
     unsigned last  = (p_curve->next + S5_CURVE_SAMPLES - 1U) % S5_CURVE_SAMPLES;
     unsigned swing = 0U;
     uint16_t path  = s5_curve_path(path_mm);
-    uint16_t heading = (uint16_t)(int32_t)floor(heading_deg * 10.0 + 0.5);
+    uint16_t heading = (uint16_t)(int32_t)floor((heading_deg * 10.0) + 0.5);
 
     for (i = 0U; i < p_curve->count; i++)
     {
@@ -1402,7 +1418,7 @@ s5_curve_note (s5_curve_t * p_curve, double path_mm, double heading_deg)
     p_curve->swing_ddeg = (uint16_t)swing;
     p_curve->now_mm     = path;
 
-    if ((double)swing >= S5_CURVE_MIN_DEG * 10.0)
+    if ((double)swing >= (S5_CURVE_MIN_DEG * 10.0))
     {
         s5_curve_mark(p_curve, path_mm);
     }
@@ -1412,7 +1428,7 @@ s5_curve_note (s5_curve_t * p_curve, double path_mm, double heading_deg)
         p_curve->marked = 0U;
     }
 
-    if ((p_curve->count == 0U)
+    if ((0U == p_curve->count)
         || ((uint16_t)(path - p_curve->path_mm[last])
             >= (unsigned)S5_CURVE_SPACING_MM))
     {
@@ -1432,7 +1448,7 @@ s5_curve_note (s5_curve_t * p_curve, double path_mm, double heading_deg)
 bool
 s5_curve_recent (const s5_curve_t * p_curve)
 {
-    return p_curve->marked != 0U;
+    return 0U != p_curve->marked;
 }
 
 /*** end of file ***/

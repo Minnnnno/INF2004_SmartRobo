@@ -52,7 +52,9 @@ _Static_assert(((CRASH_MAGIC_FAULT | CRASH_MAGIC_ARMED | CRASH_MAGIC_FREEZE)
  * motion. */
 typedef struct
 {
-    UW   reason, magic, data[3];
+    UW   reason;
+    UW   magic;
+    UW   data[3];
     BOOL encoder_latched;
     UW   encoder_cause;
 } crash_snapshot_t;
@@ -64,17 +66,17 @@ crash_log_capture (crash_snapshot_t * snapshot)
     UW raw_magic     = in_w(CRASH_WDT_SCRATCH0);
 
     snapshot->magic  = raw_magic & ~CRASH_ENCODER_MASK;
-    BOOL known_magic = snapshot->magic == CRASH_MAGIC_FAULT
-                       || snapshot->magic == CRASH_MAGIC_FREEZE
-                       || snapshot->magic == CRASH_MAGIC_ARMED;
+    BOOL known_magic = (CRASH_MAGIC_FAULT == snapshot->magic)
+                       || (CRASH_MAGIC_FREEZE == snapshot->magic)
+                       || (CRASH_MAGIC_ARMED == snapshot->magic);
 
     snapshot->encoder_latched
-        = known_magic && ((raw_magic & CRASH_ENCODER_LATCH) != 0U);
+        = known_magic && (0U != (raw_magic & CRASH_ENCODER_LATCH));
     snapshot->encoder_cause = (raw_magic & CRASH_ENCODER_CAUSE_MASK) >> 4U;
 
     for (UINT i = 0U; i < 3U; ++i)
     {
-        snapshot->data[i] = in_w(CRASH_WDT_SCRATCH0 + 4U * (i + 1U));
+        snapshot->data[i] = in_w(CRASH_WDT_SCRATCH0 + (4U * (i + 1U)));
     }
 }
 
@@ -87,7 +89,7 @@ crash_encoder_fault_update (BOOL latched, UW cause)
 
     if (latched)
     {
-        if ((magic & CRASH_ENCODER_LATCH) == 0U)
+        if (0U == (magic & CRASH_ENCODER_LATCH))
         {
             out_w(CRASH_WDT_SCRATCH0,
                   (magic & ~CRASH_ENCODER_MASK) | CRASH_ENCODER_LATCH
@@ -103,10 +105,10 @@ crash_encoder_fault_update (BOOL latched, UW cause)
 static inline BOOL
 crash_log_present (const crash_snapshot_t * snapshot)
 {
-    return snapshot->magic == CRASH_MAGIC_FAULT
-           || snapshot->magic == CRASH_MAGIC_FREEZE
-           || ((snapshot->reason & CRASH_REASON_TIMER) != 0U
-               && snapshot->magic == CRASH_MAGIC_ARMED);
+    return (CRASH_MAGIC_FAULT == snapshot->magic)
+           || (CRASH_MAGIC_FREEZE == snapshot->magic)
+           || ((0U != (snapshot->reason & CRASH_REASON_TIMER))
+               && (CRASH_MAGIC_ARMED == snapshot->magic));
 }
 
 enum

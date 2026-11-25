@@ -37,7 +37,7 @@ line_loop (void)
     {
         unsigned right  = (unsigned)gpio_get(BOARD_LINE_R);
         unsigned centre = (unsigned)gpio_get(BOARD_LINE_C);
-        bool     move   = (right == 1U) || (centre == 1U);
+        bool     move   = (1U == right) || (1U == centre);
 
         if (!motor_test_active())
         {
@@ -49,7 +49,7 @@ line_loop (void)
             sensor_paused = false;
         }
 
-        if (move && !sensor_paused)
+        if (move && (!sensor_paused))
         {
             sensor_running = motor_test_sensor_forward();
         }
@@ -262,7 +262,7 @@ search_toward (line_search_t * s, line_direction_t last_side)
 {
     s->phase = SEARCH_FIRST_SIDE;
     /* Left if the side is unknown. */
-    s->dir = (last_side == LINE_RIGHT) ? -1.0 : 1.0;
+    s->dir = (LINE_RIGHT == last_side) ? -1.0 : 1.0;
 }
 
 /* Zero-speed refresh on the line session: keeps ownership without a latched
@@ -278,7 +278,7 @@ line_hold (void)
 static bool
 line_motion_ok (const robot_status_t * status)
 {
-    return !status->motion.hold && status->motion.fault == F_NONE;
+    return (!status->motion.hold) && (F_NONE == status->motion.fault);
 }
 
 /* Inner wheel stopped, outer wheel at LINE_SEARCH_SPEED. */
@@ -304,7 +304,7 @@ line_search_step (line_search_t * s, const motion_status_t * motion,
 {
     double turned = motion->heading - s->seen_heading;
 
-    if (s->phase == SEARCH_IDLE)
+    if (SEARCH_IDLE == s->phase)
     {
         search_toward(s, last_side);
         s->lost_centre = motion->centre;
@@ -314,7 +314,7 @@ line_search_step (line_search_t * s, const motion_status_t * motion,
 #endif
     }
 #ifdef ROBO_LINE_LOSS_TEST
-    if (s->phase == SEARCH_STOP && lost_for - s->stop_from >= LINE_STOP_TIME)
+    if (SEARCH_STOP == s->phase && lost_for - s->stop_from >= LINE_STOP_TIME)
     {
         s->phase     = SEARCH_SPIN;
         s->spin_from = motion->heading;
@@ -327,9 +327,10 @@ line_search_step (line_search_t * s, const motion_status_t * motion,
         search_toward(s, last_side);
     }
 #endif
-    if (s->phase <= SEARCH_OTHER_SIDE && s->dir * turned >= LINE_SWEEP_ANGLE)
+    if ((s->phase <= SEARCH_OTHER_SIDE)
+        && ((s->dir * turned) >= LINE_SWEEP_ANGLE))
     {
-        if (s->phase == SEARCH_FIRST_SIDE)
+        if (SEARCH_FIRST_SIDE == s->phase)
         {
             s->phase = SEARCH_OTHER_SIDE;
             s->dir   = -s->dir;
@@ -345,37 +346,37 @@ line_search_step (line_search_t * s, const motion_status_t * motion,
         }
     }
 
-    if (s->phase == SEARCH_TURN_BACK && s->dir * turned >= 0.0)
+    if ((SEARCH_TURN_BACK == s->phase) && ((s->dir * turned) >= 0.0))
     {
         s->phase       = SEARCH_REVERSE;
         s->backup_from = motion->centre;
     }
 
-    if (s->phase == SEARCH_REVERSE
-        && motion->centre
-               <= s->backup_from
-                      - (s->lost_centre - s->seen_centre + LINE_BACKUP_EXTRA))
+    if ((SEARCH_REVERSE == s->phase)
+        && (motion->centre
+            <= (s->backup_from
+                - (s->lost_centre - s->seen_centre + LINE_BACKUP_EXTRA))))
     {
         search_toward(s, last_side);
         s->backed = true;
     }
 
-    if (s->phase == SEARCH_HOLD || lost_for >= LINE_SEARCH_TIMEOUT)
+    if ((SEARCH_HOLD == s->phase) || (lost_for >= LINE_SEARCH_TIMEOUT))
     {
         return line_hold();
     }
 
-    if (s->phase == SEARCH_REVERSE)
+    if (SEARCH_REVERSE == s->phase)
     {
         return motion_steer(SOURCE_LINE, LINE_SESSION, -LINE_BACKUP_SPEED, 0.0);
     }
 #ifdef ROBO_LINE_LOSS_TEST
-    if (s->phase == SEARCH_STOP)
+    if (SEARCH_STOP == s->phase)
     {
         return line_hold();
     }
 
-    if (s->phase == SEARCH_SPIN)
+    if (SEARCH_SPIN == s->phase)
     {
         return motion_steer(SOURCE_LINE, LINE_SESSION, 0.0,
                             s->dir * LINE_SPIN_RATE);
@@ -387,13 +388,13 @@ line_search_step (line_search_t * s, const motion_status_t * motion,
 static motion_result_t
 line_follow (line_direction_t drive, double correction)
 {
-    if (drive == LINE_LEFT)
+    if (LINE_LEFT == drive)
     {
         return motion_steer_left(SOURCE_LINE, LINE_SESSION, LINE_SPEED,
                                  correction);
     }
 
-    if (drive == LINE_RIGHT)
+    if (LINE_RIGHT == drive)
     {
         return motion_steer_right(SOURCE_LINE, LINE_SESSION, LINE_SPEED,
                                   correction);
@@ -409,13 +410,13 @@ static void
 line_publish (line_direction_t direction, double now)
 {
     double error   = 0.0;
-    bool   on_line = direction != LINE_LOST && direction != LINE_WAIT;
+    bool   on_line = (LINE_LOST != direction) && (LINE_WAIT != direction);
 
-    if (direction == LINE_LEFT)
+    if (LINE_LEFT == direction)
     {
         error = -1.0;
     }
-    else if (direction == LINE_RIGHT)
+    else if (LINE_RIGHT == direction)
     {
         error = 1.0;
     }
@@ -426,7 +427,7 @@ line_publish (line_direction_t direction, double now)
            .values    = {error, on_line ? 1.0 : 0.0, 0.0, 0.0}};
 
     line_status.values[LINE_VALUE_BOTH_BLACK]
-        = (direction == LINE_STRAIGHT) ? 1.0 : 0.0;
+        = (LINE_STRAIGHT == direction) ? 1.0 : 0.0;
     (void)robot_update_subsystem(SOURCE_LINE, &line_status);
 }
 
@@ -454,7 +455,7 @@ line_state_name (line_state_t s)
         = {"STARTUP", "WAITING", "FOLLOWING", "BARCODE", "GRACE",   "SEARCHING",
            "LOST",    "HELD",    "MANEUVER",  "STOPPED", "CAL_WAIT"};
 
-    _Static_assert(sizeof names / sizeof names[0] == LS_COUNT,
+    _Static_assert(LS_COUNT == (sizeof names / sizeof names[0]),
                    "one name per line state");
     return names[s];
 }
@@ -466,7 +467,7 @@ line_search_name (line_search_phase_t p)
         = {"IDLE",    "FIRST_SIDE", "OTHER_SIDE", "TURN_BACK",
            "REVERSE", "HOLD",       "STOP",       "SPIN"};
 
-    _Static_assert(sizeof names / sizeof names[0] == SEARCH_PHASE_COUNT,
+    _Static_assert(SEARCH_PHASE_COUNT == (sizeof names / sizeof names[0]),
                    "one name per search phase");
     return names[p];
 }
@@ -476,14 +477,14 @@ line_search_name (line_search_phase_t p)
 static bool
 line_state_coarse (line_state_t s)
 {
-    return s != LS_FOLLOWING && s != LS_BARCODE && s != LS_GRACE;
+    return (LS_FOLLOWING != s) && (LS_BARCODE != s) && (LS_GRACE != s);
 }
 
 static void
 line_set_state (line_state_t * state, line_state_t next)
 {
-    if (next != *state
-        && (line_state_coarse(*state) || line_state_coarse(next)))
+    if ((next != *state)
+        && ((line_state_coarse(*state)) || (line_state_coarse(next))))
     {
         tm_printf((const UB *)"[S3-LINE] %s -> %s\n",
                   (const UB *)line_state_name(*state),
@@ -509,7 +510,7 @@ line_report (unsigned centre, unsigned right, line_direction_t direction,
         (int)(m->output[1] * 1000.0), (int)(m->target[0] * 1000.0),
         (int)(m->target[1] * 1000.0));
 
-    if (m->fault == F_FEEDBACK)
+    if (F_FEEDBACK == m->fault)
     {
         /* Encoder fault details recorded by Motion Control (see motion.h
          * enums). */
@@ -580,18 +581,18 @@ route_brake (void)
     /* Static: the line task stack is nearly full. */
     static robot_status_t status;
 
-    while (motion_hal_time() - start < ROUTE_BRAKE_TIMEOUT)
+    while ((motion_hal_time() - start) < ROUTE_BRAKE_TIMEOUT)
     {
         (void)line_hold();
         (void)tk_dly_tsk(20U);
 
-        if (!motion_get_status(&status) || !line_motion_ok(&status))
+        if ((!motion_get_status(&status)) || (!line_motion_ok(&status)))
         {
             return false;
         }
 
-        if (route_abs(status.motion.speed[0]) < ROUTE_STILL_SPEED
-            && route_abs(status.motion.speed[1]) < ROUTE_STILL_SPEED)
+        if ((route_abs(status.motion.speed[0]) < ROUTE_STILL_SPEED)
+            && (route_abs(status.motion.speed[1]) < ROUTE_STILL_SPEED))
         {
             return true;
         }
@@ -607,7 +608,8 @@ route_brake (void)
 static bool
 route_advance (double metres)
 {
-    double start = motion_hal_time(), from;
+    double start = motion_hal_time();
+    double from;
     /* Static: the line task stack is nearly full. */
     static robot_status_t status;
 
@@ -618,17 +620,17 @@ route_advance (double metres)
 
     from = status.motion.path;
 
-    while (motion_hal_time() - start < ROUTE_MOVE_TIMEOUT)
+    while ((motion_hal_time() - start) < ROUTE_MOVE_TIMEOUT)
     {
         (void)motion_steer(SOURCE_LINE, LINE_SESSION, LINE_SPEED, 0.0);
         (void)tk_dly_tsk(20U);
 
-        if (!motion_get_status(&status) || !line_motion_ok(&status))
+        if ((!motion_get_status(&status)) || (!line_motion_ok(&status)))
         {
             return false;
         }
 
-        if (status.motion.path - from >= metres)
+        if ((status.motion.path - from) >= metres)
         {
             return route_brake();
         }
@@ -660,9 +662,12 @@ route_pivot (double dir, double min_turn, double max_turn)
 {
     static robot_status_t status;
 
-    double   heading0, turned = 0.0, start = motion_hal_time();
+    double   heading0;
+    double   turned    = 0.0;
+    double   start     = motion_hal_time();
     bool     left_line = false;
-    unsigned seen = 0U, rejected = 0U;
+    unsigned seen      = 0U;
+    unsigned rejected  = 0U;
 
     if (!motion_get_status(&status))
     {
@@ -671,15 +676,15 @@ route_pivot (double dir, double min_turn, double max_turn)
 
     heading0 = status.motion.heading;
 
-    while (motion_hal_time() - start < ROUTE_PIVOT_TIMEOUT)
+    while ((motion_hal_time() - start) < ROUTE_PIVOT_TIMEOUT)
     {
         unsigned right  = (unsigned)gpio_get(BOARD_LINE_R);
         unsigned centre = (unsigned)gpio_get(BOARD_LINE_C);
-        bool     black  = right == 1U || centre == 1U;
+        bool     black  = (1U == right) || (1U == centre);
 
         route_flag(true, black);
 
-        if (!motion_get_status(&status) || !line_motion_ok(&status))
+        if ((!motion_get_status(&status)) || (!line_motion_ok(&status)))
         {
             break;
         }
@@ -691,7 +696,7 @@ route_pivot (double dir, double min_turn, double max_turn)
             left_line = true;
         }
 
-        seen = (left_line && black && turned >= min_turn) ? seen + 1U : 0U;
+        seen = (left_line && black && (turned >= min_turn)) ? seen + 1U : 0U;
 
         if (seen >= 2U)
         /* Two samples in a row, as the follower's own debounce: one glitch is
@@ -708,8 +713,8 @@ route_pivot (double dir, double min_turn, double max_turn)
             break;
         }
 #if defined(ROBO_SUBSYSTEM5) && ROBO_SUBSYSTEM5
-        if (!status.obstacle.available
-            || status.obstacle.values[0] < ROUTE_PIVOT_MIN_RANGE)
+        if ((!status.obstacle.available)
+            || (status.obstacle.values[0] < ROUTE_PIVOT_MIN_RANGE))
         {
 #else
         if (false)
@@ -724,13 +729,14 @@ route_pivot (double dir, double min_turn, double max_turn)
 
         /* Not accepted for ~0.2 s (well under the 0.3 s command lifetime): give
          * up rather than wait. */
-        rejected = (((dir < 0.0) ? motion_steer_right(SOURCE_LINE, LINE_SESSION,
-                                                      0.0, ROUTE_SPIN_SPEED)
-                                 : motion_steer_left(SOURCE_LINE, LINE_SESSION,
-                                                     0.0, ROUTE_SPIN_SPEED))
-                    == R_OK)
-                       ? 0U
-                       : rejected + 1U;
+        rejected
+            = (R_OK
+               == ((dir < 0.0) ? motion_steer_right(SOURCE_LINE, LINE_SESSION,
+                                                    0.0, ROUTE_SPIN_SPEED)
+                               : motion_steer_left(SOURCE_LINE, LINE_SESSION,
+                                                   0.0, ROUTE_SPIN_SPEED)))
+                  ? 0U
+                  : rejected + 1U;
 
         if (rejected >= 10U)
         {
@@ -759,7 +765,7 @@ route_run (route_action_t action, bool at_junction, double path_seen,
     /* Static: the line task stack is nearly full. */
     static robot_status_t status;
     /* The U-turn spins left. */
-    double dir = (action == ROUTE_RIGHT) ? -1.0 : 1.0;
+    double dir = (ROUTE_RIGHT == action) ? -1.0 : 1.0;
 
     *side = LINE_STRAIGHT;
 
@@ -774,7 +780,7 @@ route_run (route_action_t action, bool at_junction, double path_seen,
         return false;
     }
 
-    if (at_junction && ROUTE_ADVANCE_M > 0.0)
+    if (at_junction && (ROUTE_ADVANCE_M > 0.0))
     {
         /* Distance still to drive past the trigger, minus what the car coasted
          * (never reverses). */
@@ -785,14 +791,14 @@ route_run (route_action_t action, bool at_junction, double path_seen,
             (int)((status.motion.path - path_seen) * 1000.0),
             (int)(advance * 1000.0));
 
-        if (advance > 0.005 && !route_advance(advance))
+        if ((advance > 0.005) && (!route_advance(advance)))
         {
             tm_printf((const UB *)"route: FAILED during the advance\n");
             return false;
         }
     }
 
-    if (!((action == ROUTE_UTURN)
+    if (!((ROUTE_UTURN == action)
               ? route_pivot(dir, ROUTE_UTURN_MIN, ROUTE_UTURN_MAX)
               : route_pivot(dir, ROUTE_PIVOT_MIN, ROUTE_PIVOT_MAX)))
     {
@@ -821,13 +827,13 @@ line_imu_settled (const robot_status_t * status)
 {
     unsigned state;
 
-    if (!status->terrain.available || !(status->terrain.values[3] >= 0.0))
+    if ((!status->terrain.available) || (!(status->terrain.values[3] >= 0.0)))
     {
         return false;
     }
 
     state = ((unsigned)status->terrain.values[3] >> 3) & 7U;
-    return (state != LINE_TERRAIN_INIT) && (state != LINE_TERRAIN_RECOVERY);
+    return (LINE_TERRAIN_INIT != state) && (LINE_TERRAIN_RECOVERY != state);
 }
 
 /* Runs once before the first motion request; nothing is driving yet.
@@ -841,16 +847,16 @@ line_wait_for_imu (void)
     robot_status_t status;
     bool           settled = false;
 #ifdef ROBO_REQUIRE_START
-    while (!motion_get_status(&status) || status.motion.hold)
+    while ((!motion_get_status(&status)) || (status.motion.hold))
     {
         (void)tk_dly_tsk(20U);
     }
 #endif
     start = motion_hal_time();
 
-    while (!settled && ((motion_hal_time() - start) < LINE_IMU_WAIT_MAX))
+    while ((!settled) && ((motion_hal_time() - start) < LINE_IMU_WAIT_MAX))
     {
-        settled = motion_get_status(&status) && line_imu_settled(&status);
+        settled = (motion_get_status(&status)) && (line_imu_settled(&status));
 
         if (!settled)
         {
@@ -883,7 +889,8 @@ typedef struct
     /* A route action failed: hold still for good (zero-speed refreshes). */
     bool halted;
 
-    unsigned seen_junctions, seen_failures;
+    unsigned seen_junctions;
+    unsigned seen_failures;
 #if ROBO_BARCODE_TASK
     unsigned seen_reads;
     /* route_action_t read before its junction (left/right/U-turn), else NONE.
@@ -924,7 +931,7 @@ typedef struct
 static bool
 line_driving (const robot_status_t * status, bool owns)
 {
-    return owns && status->motion.state == DRIVING;
+    return owns && (DRIVING == status->motion.state);
 }
 
 /* May start or continue a line command: Motion Control idle, or already driving
@@ -932,7 +939,7 @@ line_driving (const robot_status_t * status, bool owns)
 static bool
 line_can_drive (const robot_status_t * status, bool owns)
 {
-    return status->motion.state == READY || line_driving(status, owns);
+    return (READY == status->motion.state) || (line_driving(status, owns));
 }
 
 #if ROBO_BARCODE_TASK
@@ -961,7 +968,7 @@ line_cal_pressed (line_ctx_t * c)
         return false;
     }
 
-    return ++c->cal_presses == 2U;
+    return 2U == ++c->cal_presses;
 }
 
 /* GP21 calibration: press, drive over the calibration code, stop (CAL_WAIT, no
@@ -1000,7 +1007,7 @@ line_calibration_step (line_ctx_t * c, const robot_status_t * status)
 
     if (!c->calibrating)
     {
-        if (pressed && !c->stopped)
+        if (pressed && (!c->stopped))
         {
             c->calibrating = true;
             barcode_calibrate_begin();
@@ -1014,14 +1021,14 @@ line_calibration_step (line_ctx_t * c, const robot_status_t * status)
 
     result = barcode_calibration_result();
 
-    if (result == BARCODE_CAL_NONE)
+    if (BARCODE_CAL_NONE == result)
     {
         return true;
     }
 
     c->calibrating = false;
     tm_printf((const UB *)"calibration %s%s\n",
-              (result == BARCODE_CAL_DONE)
+              (BARCODE_CAL_DONE == result)
                   ? "done"
                   : "FAILED, the sensor could not read the code",
               c->stopped ? "" : " - press GP21 to carry on");
@@ -1066,24 +1073,24 @@ line_route_event (line_ctx_t * c, const robot_status_t * status, bool owns,
         c->seen_reads = reads;
         action        = route_action(route_get(), letter);
 
-        if (action == ROUTE_STRAIGHT)
+        if (ROUTE_STRAIGHT == action)
         {
             tm_printf((const UB *)"route: straight on, junction ignored\n");
         }
 
         c->route_pending
-            = (uint8_t)((action == ROUTE_STRAIGHT) ? ROUTE_NONE : action);
+            = (uint8_t)((ROUTE_STRAIGHT == action) ? ROUTE_NONE : action);
         c->route_read_path = status->motion.path;
         return true; /* Every action waits for its junction. */
     }
 
-    if (action == ROUTE_NONE)
+    if (ROUTE_NONE == action)
     {
         return true;
     }
 
-    if (c->search.phase != SEARCH_IDLE || !owns || !line_motion_ok(status)
-        || status->obstacle.values[3] == LINE_OBSTACLE_AVOIDING)
+    if ((SEARCH_IDLE != c->search.phase) || (!owns) || (!line_motion_ok(status))
+        || (LINE_OBSTACLE_AVOIDING == status->obstacle.values[3]))
     {
         /* A spin or sweep carries the barcode sensor in an arc, possibly back
          * over the code. */
@@ -1092,13 +1099,13 @@ line_route_event (line_ctx_t * c, const robot_status_t * status, bool owns,
         return true;
     }
 
-    if (action == ROUTE_UTURN)
+    if (ROUTE_UTURN == action)
     /* Before turning: the spin sweeps the sensor, then it drives back over the
      * code. */
     {
         barcode_ignore_for(ROUTE_UTURN_IGNORE_M
                            + (status->motion.path - c->route_read_path)
-                           + 2.0 * ROUTE_ADVANCE_M);
+                           + (2.0 * ROUTE_ADVANCE_M));
     }
 
     line_set_state(&c->state, LS_MANEUVER);
@@ -1160,7 +1167,7 @@ line_barcode_events (line_ctx_t * c, const robot_status_t * status, bool owns)
         tm_printf((const UB *)"route: barcode read failed, carrying on\n");
 #if ROBO_BARCODE_TASK
     }
-    else if (reads != c->seen_reads || junctions != c->seen_junctions)
+    else if ((reads != c->seen_reads) || (junctions != c->seen_junctions))
     {
         return line_route_event(c, status, owns, reads, junctions);
 #else
@@ -1201,23 +1208,24 @@ line_barcode_window (line_ctx_t * c, const robot_status_t * status,
         c->bc_hold_from = -1.0;
     }
 
-    *window = c->bc_hold_from >= 0.0
-              && (status->motion.path - c->bc_hold_from) < LINE_BC_HOLD_MAX
-              && c->search.phase == SEARCH_IDLE
-              && status->motion.heading - c->bc_heading_from < LINE_BC_MAX_TURN
-              && c->bc_heading_from - status->motion.heading < LINE_BC_MAX_TURN;
+    *window
+        = (c->bc_hold_from >= 0.0)
+          && ((status->motion.path - c->bc_hold_from) < LINE_BC_HOLD_MAX)
+          && (SEARCH_IDLE == c->search.phase)
+          && ((status->motion.heading - c->bc_heading_from) < LINE_BC_MAX_TURN)
+          && ((c->bc_heading_from - status->motion.heading) < LINE_BC_MAX_TURN);
 
-    if (direction != LINE_LOST)
+    if (LINE_LOST != direction)
     {
         c->bc_lost_from = -1.0;
     }
-    else if (*window && c->bc_lost_from < 0.0)
+    else if ((*window) && (c->bc_lost_from < 0.0))
     {
         c->bc_lost_from = status->motion.path;
     }
 
-    *hold = *window && direction == LINE_LOST
-            && (status->motion.path - c->bc_lost_from) < LINE_BC_HOLD_LOST;
+    *hold = (*window) && (LINE_LOST == direction)
+            && ((status->motion.path - c->bc_lost_from) < LINE_BC_HOLD_LOST);
     return *window ? LINE_BC_CORRECTION : LINE_CORRECTION;
 #else
     (void)c;
@@ -1238,14 +1246,16 @@ line_drive (line_ctx_t * c, const robot_status_t * status, bool owns,
     /* Subsystem 5 drives round obstacles itself; keep off the wheels until it
      * publishes that it is back on the line. Exact compare: the value is
      * copied. */
-    bool avoiding = status->obstacle.values[3] == LINE_OBSTACLE_AVOIDING;
+    bool avoiding = LINE_OBSTACLE_AVOIDING == status->obstacle.values[3];
     /* STOPPED never drives again. */
-    bool            usable = line_motion_ok(status) && !avoiding && !c->stopped;
+    bool usable = (line_motion_ok(status)) && (!avoiding) && (!c->stopped);
     motion_result_t result = R_HELD;
     line_state_t    next
         = usable ? LS_WAITING : (c->stopped ? LS_STOPPED : LS_HELD);
     line_direction_t drive    = direction;
-    bool             grace_ok = true, window, bc_hold;
+    bool             grace_ok = true;
+    bool             window;
+    bool             bc_hold;
     double           correction
         = line_barcode_window(c, status, direction, &window, &bc_hold);
 #ifdef ROBO_LINE_LOSS_TEST
@@ -1254,27 +1264,27 @@ line_drive (line_ctx_t * c, const robot_status_t * status, bool owns,
      * for LINE_REACQUIRE_TIME. No blind grace drive while searching. */
     bool settled = c->on_line_since >= 0.0
                    && (now - c->on_line_since) >= LINE_REACQUIRE_TIME;
-    bool glimpse = direction != LINE_LOST && direction != LINE_WAIT
-                   && c->search.phase != SEARCH_IDLE && !settled;
+    bool glimpse = LINE_LOST != direction && direction != LINE_WAIT
+                   && SEARCH_IDLE != c->search.phase && !settled;
 
-    grace_ok = c->search.phase == SEARCH_IDLE;
+    grace_ok = SEARCH_IDLE == c->search.phase;
 #else
     const bool glimpse = false;
 #endif
-    if (direction != LINE_LOST && !glimpse)
+    if ((LINE_LOST != direction) && (!glimpse))
     {
         c->search.seen_heading = status->motion.heading;
         c->search.seen_centre  = status->motion.centre;
         c->search.phase        = SEARCH_IDLE;
         c->search.backed       = false;
 
-        if (usable && direction != LINE_WAIT)
+        if (usable && (LINE_WAIT != direction))
         {
             next = window ? LS_BARCODE : LS_FOLLOWING;
         }
     }
-    else if (direction == LINE_LOST && grace_ok && !bc_hold && owns
-             && (now - c->lost_since) < LINE_GRACE_TIME)
+    else if ((LINE_LOST == direction) && grace_ok && (!bc_hold) && owns
+             && ((now - c->lost_since) < LINE_GRACE_TIME))
     {
         drive = c->follow; /* Bridge short dropouts. */
 
@@ -1324,13 +1334,14 @@ line_drive (line_ctx_t * c, const robot_status_t * status, bool owns,
     {
         /* Failed read: even if something releases the latched hold, keep
          * refreshing zero speed. */
-        if (line_motion_ok(status) && !avoiding && line_can_drive(status, owns))
+        if ((line_motion_ok(status)) && (!avoiding)
+            && (line_can_drive(status, owns)))
         {
             result = line_hold();
         }
     }
-    else if (bc_hold && drive == LINE_LOST && usable
-             && line_driving(status, owns))
+    else if (bc_hold && (LINE_LOST == drive) && usable
+             && (line_driving(status, owns)))
     {
         double turn = LINE_BC_HOLD_GAIN
                       * (c->search.seen_heading - status->motion.heading);
@@ -1351,11 +1362,11 @@ line_drive (line_ctx_t * c, const robot_status_t * status, bool owns,
         c->lost_since = now;
         next          = LS_BARCODE;
     }
-    else if (drive == LINE_LOST && usable && line_driving(status, owns))
+    else if ((LINE_LOST == drive) && usable && (line_driving(status, owns)))
     {
         double lost_for = now - c->lost_since;
 #ifdef ROBO_LINE_LOSS_TEST
-        if (c->search.phase == SEARCH_IDLE)
+        if (SEARCH_IDLE == c->search.phase)
         {
             c->search_began = c->lost_since;
         }
@@ -1365,13 +1376,13 @@ line_drive (line_ctx_t * c, const robot_status_t * status, bool owns,
 #endif
         result = line_search_step(&c->search, &status->motion, c->last_side,
                                   lost_for);
-        next   = (c->search.phase == SEARCH_HOLD
-                  || lost_for >= LINE_SEARCH_TIMEOUT)
+        next   = ((SEARCH_HOLD == c->search.phase)
+                  || (lost_for >= LINE_SEARCH_TIMEOUT))
                      ? LS_LOST
                      : LS_SEARCHING;
     }
-    else if (drive != LINE_WAIT && drive != LINE_LOST && usable
-             && line_can_drive(status, owns))
+    else if ((LINE_WAIT != drive) && (LINE_LOST != drive) && usable
+             && (line_can_drive(status, owns)))
     {
         c->follow = drive;
         result    = line_follow(drive, correction);
@@ -1449,7 +1460,7 @@ line_loop (void)
          * LINE_LEFT. Right only black: robot drifted left, line is to the right
          * -> LINE_RIGHT. */
         line_direction_t direction
-            = motion_line_direction(&c->filter, centre == 1U, right == 1U);
+            = motion_line_direction(&c->filter, 1U == centre, 1U == right);
         robot_status_t status;
         double         now = motion_hal_time();
 
@@ -1457,19 +1468,19 @@ line_loop (void)
          * counts. */
         if (centre != right)
         {
-            c->last_side = (centre == 1U) ? LINE_LEFT : LINE_RIGHT;
+            c->last_side = (1U == centre) ? LINE_LEFT : LINE_RIGHT;
         }
-        else if (centre == 1U)
+        else if (1U == centre)
         {
             c->last_side = LINE_STRAIGHT;
         }
 
-        if (direction != LINE_LOST)
+        if (LINE_LOST != direction)
         {
             c->lost_since = now;
         }
 #ifdef ROBO_LINE_LOSS_TEST
-        if (direction == LINE_LOST || direction == LINE_WAIT)
+        if (LINE_LOST == direction || LINE_WAIT == direction)
         {
             c->on_line_since = -1.0;
         }
@@ -1491,8 +1502,8 @@ line_loop (void)
 
         if (motion_get_status(&status))
         {
-            bool owns = status.owner_valid && status.owner == SOURCE_LINE
-                        && status.motion.id == LINE_SESSION;
+            bool owns = (status.owner_valid) && (SOURCE_LINE == status.owner)
+                        && (LINE_SESSION == status.motion.id);
 
             if (line_barcode_events(c, &status, owns))
             {

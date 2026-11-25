@@ -105,8 +105,8 @@ static const uint16_t code39_pattern[] = {
     0x08A,
     0x02A,
 };
-_Static_assert(sizeof code39_symbol - 1U
-                   == sizeof code39_pattern / sizeof code39_pattern[0],
+_Static_assert((sizeof code39_symbol - 1U)
+                   == (sizeof code39_pattern / sizeof code39_pattern[0]),
                "one Code 39 pattern per symbol");
 
 /* Marks the count longest elements among bars (first = 0) or spaces (first =
@@ -122,9 +122,9 @@ barcode_widest (const uint32_t * d, unsigned first, unsigned count)
 
         for (unsigned i = first; i < 9U; i += 2U)
         {
-            bool taken = (pattern & (1U << (8U - i))) != 0U;
+            bool taken = 0U != (pattern & (1U << (8U - i)));
 
-            if (!taken && (widest == 9U || d[i] > d[widest]))
+            if ((!taken) && ((9U == widest) || (d[i] > d[widest])))
             {
                 widest = i;
             }
@@ -139,8 +139,8 @@ barcode_widest (const uint32_t * d, unsigned first, unsigned count)
 static char
 barcode_lookup (uint16_t pattern)
 {
-    for (unsigned i = 0U; i < sizeof code39_pattern / sizeof code39_pattern[0];
-         ++i)
+    for (unsigned i = 0U;
+         i < (sizeof code39_pattern / sizeof code39_pattern[0]); ++i)
     {
         if (code39_pattern[i] == pattern)
         {
@@ -161,7 +161,7 @@ barcode_nth (const uint32_t * d, unsigned first, unsigned nth)
 
     for (unsigned i = first; i < 9U; i += 2U)
     {
-        if ((taken & (1U << (8U - i))) == 0U && d[i] > longest)
+        if ((0U == (taken & (1U << (8U - i)))) && (d[i] > longest))
         {
             longest = d[i];
         }
@@ -200,7 +200,8 @@ barcode_decode (const uint32_t * d, unsigned n, char * out)
 {
     unsigned chars = (n + 1U) / 10U;
 
-    if (chars < 3U || chars > BARCODE_MAX_CHARS || n != chars * 10U - 1U)
+    if ((chars < 3U) || (chars > BARCODE_MAX_CHARS)
+        || (n != ((chars * 10U) - 1U)))
     {
         return false;
     }
@@ -209,14 +210,14 @@ barcode_decode (const uint32_t * d, unsigned n, char * out)
     {
         out[c] = barcode_char(&d[c * 10U]);
 
-        if (out[c] == '\0')
+        if ('\0' == out[c])
         {
             return false;
         }
     }
 
     out[chars] = '\0';
-    return out[0] == '*' && out[chars - 1U] == '*';
+    return ('*' == out[0]) && ('*' == out[chars - 1U]);
 }
 
 /* Finds a complete *...* anywhere in the elements, so stray marks before or
@@ -225,13 +226,14 @@ barcode_decode (const uint32_t * d, unsigned n, char * out)
 static unsigned
 barcode_search (const uint32_t * d, unsigned n, unsigned first, char * out)
 {
-    for (unsigned start = first; start + 29U <= n; start += 2U)
+    for (unsigned start = first; (start + 29U) <= n; start += 2U)
     {
         for (unsigned chars = BARCODE_MAX_CHARS; chars >= 3U; --chars)
         {
-            unsigned length = chars * 10U - 1U;
+            unsigned length = (chars * 10U) - 1U;
 
-            if (start + length <= n && barcode_decode(&d[start], length, out))
+            if (((start + length) <= n)
+                && (barcode_decode(&d[start], length, out)))
             {
                 return chars;
             }
@@ -244,7 +246,7 @@ barcode_search (const uint32_t * d, unsigned n, unsigned first, char * out)
 static void
 barcode_reverse (uint32_t * d, unsigned n)
 {
-    for (unsigned i = 0U; i < n / 2U; ++i)
+    for (unsigned i = 0U; i < (n / 2U); ++i)
     {
         uint32_t t = d[i];
 
@@ -260,7 +262,7 @@ barcode_read_strict (uint32_t * d, unsigned n, char * out)
 {
     unsigned chars = barcode_search(d, n, 0U, out);
 
-    if (chars == 0U && n != 0U)
+    if ((0U == chars) && (0U != n))
     {
         barcode_reverse(d, n);
         chars = barcode_search(d, n, (n - 1U) % 2U, out);
@@ -269,7 +271,7 @@ barcode_read_strict (uint32_t * d, unsigned n, char * out)
 
     /* One pass crosses one code: a *...* found among many more elements is a
      * chance match in noise. */
-    if (chars != 0U && n > chars * 10U - 1U + BARCODE_MAX_STRAY)
+    if ((0U != chars) && (n > ((chars * 10U) - 1U + BARCODE_MAX_STRAY)))
     {
         chars = 0U;
     }
@@ -290,14 +292,15 @@ barcode_read (uint32_t * d, unsigned n, char * out)
     static uint32_t e[BARCODE_MAX_ELEMENTS];
     unsigned        chars = barcode_read_strict(d, n, out);
 
-    if (chars != 0U || n < 27U || n + 2U > BARCODE_MAX_ELEMENTS)
+    if ((0U != chars) || (n < 27U) || ((n + 2U) > BARCODE_MAX_ELEMENTS))
     {
         return chars;
     }
 
-    for (unsigned side = 0U; side < 4U && chars == 0U; ++side)
+    for (unsigned side = 0U; (side < 4U) && (0U == chars); ++side)
     {
-        bool reversed = side >= 2U, at_start = (side % 2U) == 0U;
+        bool reversed = side >= 2U;
+        bool at_start = 0U == (side % 2U);
 
         for (unsigned i = 0U; i < n; ++i)
         {
@@ -349,8 +352,10 @@ static unsigned
 barcode_bars (const uint16_t * m, unsigned count, uint32_t prominence,
               unsigned * peak, unsigned * trough)
 {
-    unsigned bars = 0U, low_at = 0U, high_at = 0U;
-    bool     in_bar = false;
+    unsigned bars    = 0U;
+    unsigned low_at  = 0U;
+    unsigned high_at = 0U;
+    bool     in_bar  = false;
 
     for (unsigned i = 0U; i < count; ++i)
     {
@@ -361,7 +366,7 @@ barcode_bars (const uint16_t * m, unsigned count, uint32_t prominence,
                 low_at = i;
             }
 
-            if (m[i] >= m[low_at] + prominence)
+            if (m[i] >= (m[low_at] + prominence))
             {
                 in_bar       = true;
                 high_at      = i;
@@ -375,16 +380,16 @@ barcode_bars (const uint16_t * m, unsigned count, uint32_t prominence,
                 high_at = i;
             }
 
-            if (m[i] + prominence / 2U <= m[high_at]
-                && BARCODE_FALL_DEN * ((uint32_t)m[high_at] - m[i])
-                       >= BARCODE_FALL_NUM
-                              * ((uint32_t)m[high_at] - m[trough[bars]]))
+            if (((m[i] + (prominence / 2U)) <= m[high_at])
+                && ((BARCODE_FALL_DEN * ((uint32_t)m[high_at] - m[i]))
+                    >= (BARCODE_FALL_NUM
+                        * ((uint32_t)m[high_at] - m[trough[bars]]))))
             {
                 peak[bars++] = high_at;
                 in_bar       = false;
                 low_at       = i;
 
-                if (bars == BARCODE_MAX_BARS)
+                if (BARCODE_MAX_BARS == bars)
                 {
                     break;
                 }
@@ -392,7 +397,7 @@ barcode_bars (const uint16_t * m, unsigned count, uint32_t prominence,
         }
     }
 
-    if (in_bar && bars < BARCODE_MAX_BARS)
+    if (in_bar && (bars < BARCODE_MAX_BARS))
     {
         peak[bars++] = high_at;
         low_at       = count - 1U;
@@ -419,7 +424,7 @@ barcode_median_height (const uint16_t * m, const unsigned * peak, unsigned bars,
         uint32_t v = h[k];
         unsigned j = k;
 
-        while (j > 0U && h[j - 1U] > v)
+        while ((j > 0U) && (h[j - 1U] > v))
         {
             h[j] = h[j - 1U];
             --j;
@@ -428,7 +433,7 @@ barcode_median_height (const uint16_t * m, const unsigned * peak, unsigned bars,
         h[j] = v;
     }
 
-    return (bars == 0U) ? 0U : h[bars / 2U];
+    return (0U == bars) ? 0U : h[bars / 2U];
 }
 
 static unsigned
@@ -439,12 +444,18 @@ barcode_elements (uint16_t * m, unsigned count, uint32_t * d,
     uint16_t raw[BARCODE_SMOOTH] = {0};
 
     /* Trough: lowest point before each bar, and after the last. */
-    unsigned peak[BARCODE_MAX_BARS], trough[BARCODE_MAX_BARS + 1U];
-    unsigned bars, n = 0U;
-    uint32_t white = 0U, noise = 0U, prominence, highest = 0U, contrast;
+    unsigned peak[BARCODE_MAX_BARS];
+    unsigned trough[BARCODE_MAX_BARS + 1U];
+    unsigned bars;
+    unsigned n     = 0U;
+    uint32_t white = 0U;
+    uint32_t noise = 0U;
+    uint32_t prominence;
+    uint32_t highest = 0U;
+    uint32_t contrast;
     double   previous_end = 0.0;
 
-    if (count < BARCODE_QUIET || count > BARCODE_SAMPLES)
+    if ((count < BARCODE_QUIET) || (count > BARCODE_SAMPLES))
     {
         return 0U;
     }
@@ -453,7 +464,7 @@ barcode_elements (uint16_t * m, unsigned count, uint32_t * d,
     {
         unsigned from = (i < BARCODE_SMOOTH) ? 0U : i - BARCODE_SMOOTH;
         unsigned to
-            = (i + BARCODE_SMOOTH >= count) ? count - 1U : i + BARCODE_SMOOTH;
+            = ((i + BARCODE_SMOOTH) >= count) ? count - 1U : i + BARCODE_SMOOTH;
         uint32_t sum = 0U;
 
         for (unsigned j = from; j <= to; ++j)
@@ -478,7 +489,7 @@ barcode_elements (uint16_t * m, unsigned count, uint32_t * d,
     }
 
     noise /= BARCODE_QUIET;
-    prominence = BARCODE_BAR_GAIN * noise + BARCODE_BAR_RISE;
+    prominence = (BARCODE_BAR_GAIN * noise) + BARCODE_BAR_RISE;
 
     for (unsigned i = 0U; i < count; ++i)
     {
@@ -503,7 +514,7 @@ barcode_elements (uint16_t * m, unsigned count, uint32_t * d,
         contrast = barcode_median_height(
             m, peak, barcode_bars(m, count, prominence, peak, trough), white);
 
-        if (contrast / contrast_div > prominence)
+        if ((contrast / contrast_div) > prominence)
         {
             prominence = contrast / contrast_div;
         }
@@ -523,30 +534,34 @@ barcode_elements (uint16_t * m, unsigned count, uint32_t * d,
          * one), so a bar the sensor met off-centre does not shrink the widths
          * of the whole pass. */
         unsigned lo = (k < BARCODE_REF_SPAN) ? 0U : k - BARCODE_REF_SPAN;
-        unsigned hi
-            = (k + BARCODE_REF_SPAN >= bars) ? bars - 1U : k + BARCODE_REF_SPAN;
+        unsigned hi = ((k + BARCODE_REF_SPAN) >= bars) ? bars - 1U
+                                                       : k + BARCODE_REF_SPAN;
 
         contrast = 1U;
 
         for (unsigned j = lo; j <= hi; ++j)
         {
-            if (m[peak[j]] > white && m[peak[j]] - white > contrast)
+            if ((m[peak[j]] > white) && ((m[peak[j]] - white) > contrast))
             {
                 contrast = m[peak[j]] - white;
             }
         }
 #endif
         double base = ((double)m[trough[k]] + (double)m[trough[k + 1U]]) / 2.0;
-        double edge = base + (double)prominence / 2.0;
-        double area = 0.0, moment = 0.0, width, centre;
-        unsigned start = peak[k], end = peak[k];
+        double edge = base + ((double)prominence / 2.0);
+        double area = 0.0;
+        double moment = 0.0;
+        double width;
+        double centre;
+        unsigned start = peak[k];
+        unsigned end   = peak[k];
 
-        while (start > trough[k] && (double)m[start - 1U] > edge)
+        while ((start > trough[k]) && ((double)m[start - 1U] > edge))
         {
             --start;
         }
 
-        while (end < trough[k + 1U] && (double)m[end + 1U] > edge)
+        while ((end < trough[k + 1U]) && ((double)m[end + 1U] > edge))
         {
             ++end;
         }
@@ -572,13 +587,13 @@ barcode_elements (uint16_t * m, unsigned count, uint32_t * d,
 
         if (n > 0U)
         {
-            double gap = (centre - width / 2.0) - previous_end;
+            double gap = (centre - (width / 2.0)) - previous_end;
 
             d[n++] = (uint32_t)(((gap > 1.0) ? gap : 1.0) * BARCODE_SAMPLE_US);
         }
 
         d[n++]       = (uint32_t)(width * BARCODE_SAMPLE_US);
-        previous_end = centre + width / 2.0;
+        previous_end = centre + (width / 2.0);
     }
 
     return n;
@@ -587,7 +602,8 @@ barcode_elements (uint16_t * m, unsigned count, uint32_t * d,
 uint32_t
 barcode_level (const uint16_t * s, unsigned n, uint32_t * noise)
 {
-    uint32_t mean = 0U, spread = 0U;
+    uint32_t mean   = 0U;
+    uint32_t spread = 0U;
 
     for (unsigned i = 0U; i < n; ++i)
     {
@@ -609,7 +625,7 @@ barcode_level (const uint16_t * s, unsigned n, uint32_t * noise)
 static uint32_t
 barcode_prominence (uint32_t noise)
 {
-    return BARCODE_NOISE_GAIN * noise + BARCODE_MIN_RISE;
+    return (BARCODE_NOISE_GAIN * noise) + BARCODE_MIN_RISE;
 }
 
 void
@@ -643,23 +659,25 @@ barcode_flat (const barcode_seg_t * g)
     unsigned from = g->count - BARCODE_FLAT;
     uint32_t end  = g->path[g->count - 1U];
 
-    uint16_t low, high;
+    uint16_t low;
+    uint16_t high;
 
-    if (end - g->path[from] >= BARCODE_STILL_PATH)
+    if ((end - g->path[from]) >= BARCODE_STILL_PATH)
     {
-        while (from > BARCODE_QUIET && end - g->path[from] < BARCODE_FLAT_PATH)
+        while ((from > BARCODE_QUIET)
+               && ((end - g->path[from]) < BARCODE_FLAT_PATH))
         {
             --from;
         }
 
-        if (end - g->path[from] < BARCODE_FLAT_PATH)
+        if ((end - g->path[from]) < BARCODE_FLAT_PATH)
         {
             return false;
         } /* Not yet 25 mm since the start. */
     }
 
     barcode_range(&g->samples[from], g->count - from, &low, &high);
-    return (uint32_t)(high - low) < 2U * g->prominence;
+    return (uint32_t)(high - low) < (2U * g->prominence);
 }
 
 /* Copies a stretch into out, resampled to equal steps of driven distance so
@@ -671,7 +689,8 @@ static unsigned
 barcode_resample (const uint16_t * s, const uint32_t * path, unsigned count,
                   uint16_t * out)
 {
-    unsigned n = BARCODE_QUIET, j = BARCODE_QUIET;
+    unsigned n  = BARCODE_QUIET;
+    unsigned j  = BARCODE_QUIET;
     uint32_t at = path[BARCODE_QUIET - 1U] + BARCODE_PATH_STEP;
 
     for (unsigned i = 0U; i < BARCODE_QUIET; ++i)
@@ -679,7 +698,7 @@ barcode_resample (const uint16_t * s, const uint32_t * path, unsigned count,
         out[i] = s[i];
     }
 
-    if (path[count - 1U] < path[BARCODE_QUIET] + BARCODE_MIN_MOVE)
+    if (path[count - 1U] < (path[BARCODE_QUIET] + BARCODE_MIN_MOVE))
     {
         for (unsigned i = BARCODE_QUIET; i < count; ++i)
         {
@@ -691,7 +710,7 @@ barcode_resample (const uint16_t * s, const uint32_t * path, unsigned count,
 
     while (n < BARCODE_SAMPLES)
     {
-        while (j < count && path[j] < at)
+        while ((j < count) && (path[j] < at))
         {
             ++j;
         }
@@ -704,9 +723,9 @@ barcode_resample (const uint16_t * s, const uint32_t * path, unsigned count,
         /* path[j - 1] < at <= path[j]: interpolate the reading at the distance
          * 'at'. */
         out[n++] = (uint16_t)((int32_t)s[j - 1U]
-                              + ((int32_t)s[j] - (int32_t)s[j - 1U])
-                                    * (int32_t)(at - path[j - 1U])
-                                    / (int32_t)(path[j] - path[j - 1U]));
+                              + ((((int32_t)s[j] - (int32_t)s[j - 1U])
+                                  * (int32_t)(at - path[j - 1U]))
+                                 / (int32_t)(path[j] - path[j - 1U])));
         at += BARCODE_PATH_STEP;
     }
 
@@ -719,8 +738,8 @@ barcode_resample (const uint16_t * s, const uint32_t * path, unsigned count,
 static uint16_t
 barcode_pattern_of (char c)
 {
-    for (unsigned i = 0U; i < sizeof code39_pattern / sizeof code39_pattern[0];
-         ++i)
+    for (unsigned i = 0U;
+         i < (sizeof code39_pattern / sizeof code39_pattern[0]); ++i)
     {
         if (code39_symbol[i] == c)
         {
@@ -736,7 +755,7 @@ barcode_bit_count (uint16_t v)
 {
     unsigned n = 0U;
 
-    for (; v != 0U; v = (uint16_t)(v >> 1U))
+    for (; 0U != v; v = (uint16_t)(v >> 1U))
     {
         n += v & 1U;
     }
@@ -768,20 +787,21 @@ barcode_mismatch (const uint32_t * d, uint16_t letter)
 char
 barcode_best_fit (uint32_t * d, unsigned n, const char * letters)
 {
-    unsigned best = 99U, second = 99U;
-    char     found = '\0';
+    unsigned best   = 99U;
+    unsigned second = 99U;
+    char     found  = '\0';
 
-    if (letters == NULL || n < 29U || n > 29U + BARCODE_MAX_STRAY)
+    if ((NULL == letters) || (n < 29U) || (n > (29U + BARCODE_MAX_STRAY)))
     {
         return '\0';
     }
 
-    for (const char * l = letters; *l != '\0'; ++l)
+    for (const char * l = letters; '\0' != *l; ++l)
     {
         uint16_t pattern = barcode_pattern_of(*l);
         unsigned fit     = 99U;
 
-        if (pattern == 0U)
+        if (0U == pattern)
         {
             continue;
         }
@@ -789,12 +809,12 @@ barcode_best_fit (uint32_t * d, unsigned n, const char * letters)
         for (unsigned dir = 0U; dir < 2U; ++dir)
         { /* Forward, then reversed (restored below). */
 
-            if (dir == 1U)
+            if (1U == dir)
             {
                 barcode_reverse(d, n);
             }
 
-            for (unsigned start = 0U; start + 29U <= n; start += 2U)
+            for (unsigned start = 0U; (start + 29U) <= n; start += 2U)
             { /* Every window starts on a bar. */
                 unsigned m = barcode_mismatch(&d[start], pattern);
 
@@ -804,7 +824,7 @@ barcode_best_fit (uint32_t * d, unsigned n, const char * letters)
                 }
             }
 
-            if (dir == 1U)
+            if (1U == dir)
             {
                 barcode_reverse(d, n);
             }
@@ -822,13 +842,14 @@ barcode_best_fit (uint32_t * d, unsigned n, const char * letters)
         }
     }
 
-    return (best <= BARCODE_FIT_MAX_MISMATCH && best < second) ? found : '\0';
+    return ((best <= BARCODE_FIT_MAX_MISMATCH) && (best < second)) ? found
+                                                                   : '\0';
 }
 
 static bool
 barcode_allowed (const char * letters, char c)
 {
-    for (; *letters != '\0'; ++letters)
+    for (; '\0' != *letters; ++letters)
     {
         if (*letters == c)
         {
@@ -852,14 +873,14 @@ barcode_decode_stretch (const uint16_t * samples, const uint32_t * path,
                            widths, contrast_div);
     chars = barcode_read(widths, *elements, text);
 
-    if (letters != NULL && letters[0] != '\0'
-        && (chars != 3U || !barcode_allowed(letters, text[1])))
+    if ((NULL != letters) && ('\0' != letters[0])
+        && ((3U != chars) || (!barcode_allowed(letters, text[1]))))
     {
         char letter = barcode_best_fit(widths, *elements, letters);
 
         chars = 0U;
 
-        if (letter != '\0')
+        if ('\0' != letter)
         {
             text[0] = '*';
             text[1] = letter;
@@ -905,11 +926,12 @@ barcode_seg_feed (barcode_seg_t * g, uint16_t s, uint32_t path,
         g->done  = false;
     }
 
-    if (g->count == 0U)
+    if (0U == g->count)
     {
-        uint32_t noise, mean = 0U;
+        uint32_t noise;
+        uint32_t mean = 0U;
 
-        if (g->filled == BARCODE_QUIET)
+        if (BARCODE_QUIET == g->filled)
         {
             mean          = barcode_level(g->quiet, BARCODE_QUIET, &noise);
             g->prominence = barcode_prominence(noise);
@@ -917,8 +939,8 @@ barcode_seg_feed (barcode_seg_t * g, uint16_t s, uint32_t path,
             g->level_ok   = true;
         }
 
-        if (g->filled < BARCODE_QUIET
-            || ((s > mean) ? s - mean : mean - s) < g->prominence)
+        if ((g->filled < BARCODE_QUIET)
+            || (((s > mean) ? s - mean : mean - s) < g->prominence))
         {
             /* Still quiet: keep it as the lead-in. */
             g->quiet[g->head]         = s;
@@ -951,8 +973,8 @@ barcode_seg_feed (barcode_seg_t * g, uint16_t s, uint32_t path,
     g->heading[g->count]   = heading;
     g->samples[g->count++] = s;
 
-    if (g->count == BARCODE_SAMPLES
-        || (g->count >= BARCODE_QUIET + BARCODE_FLAT && barcode_flat(g)))
+    if ((BARCODE_SAMPLES == g->count)
+        || ((g->count >= (BARCODE_QUIET + BARCODE_FLAT)) && (barcode_flat(g))))
     {
         g->done = true;
         return BARCODE_SEG_DONE;
@@ -966,14 +988,14 @@ barcode_ladder_div (unsigned first, unsigned i)
 {
     static const unsigned ladder[] = BARCODE_LADDER;
 
-    if (i == 0U)
+    if (0U == i)
     {
         return first;
     }
 
-    for (size_t k = 0U; k < sizeof ladder / sizeof ladder[0]; ++k)
+    for (size_t k = 0U; k < (sizeof ladder / sizeof ladder[0]); ++k)
     {
-        if (ladder[k] != first && --i == 0U)
+        if ((ladder[k] != first) && (0U == --i))
         {
             return ladder[k];
         }

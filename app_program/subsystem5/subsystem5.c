@@ -103,7 +103,7 @@ static struct
     bool sensor_ok : 1;
 } s5_task;
 
-_Static_assert(sizeof(s5_task) == 1U, "seven bits of state in one byte");
+_Static_assert(1U == sizeof(s5_task), "seven bits of state in one byte");
 static uint8_t s5_scan_why;        /* s5_why_t: why the last scan step failed */
 static double  s5_spurious_path_m; /* path travelled at the last one */
 
@@ -165,10 +165,10 @@ history_front (const s5_history_t * p_history, double now, double speed_mm_s)
     {
         uint32_t age_ms = now_ms - p_history->time_ms[i];
 
-        value[i] = ((((unsigned)p_history->flags >> i) & 1U) != 0U)
-                           && (age_ms <= S5_HISTORY_AGE_MS)
+        value[i] = ((0U != (((unsigned)p_history->flags >> i) & 1U))
+                    && (age_ms <= S5_HISTORY_AGE_MS))
                        ? s5_range_mm(p_history->range[i])
-                             - speed_mm_s * (double)age_ms / 1000.0
+                             - ((speed_mm_s * (double)age_ms) / 1000.0)
                        : INFINITY;
     }
 
@@ -202,17 +202,17 @@ static bool
 should_stop (double front_mm, double speed_mm_s)
 {
     double speed     = fmax(0.0, speed_mm_s);
-    double predicted = front_mm - speed * S5_STOP_LATENCY_S
+    double predicted = front_mm - (speed * S5_STOP_LATENCY_S)
                        - ((speed > 1.0) ? S5_BRAKE_MM : 0.0);
 
-    return isfinite(predicted)
-           && (predicted - S5_STOP_MM <= 0.5 * speed * S5_PING_PERIOD_S);
+    return (isfinite(predicted))
+           && ((predicted - S5_STOP_MM) <= (0.5 * speed * S5_PING_PERIOD_S));
 }
 
 static void
 note_sensor (s5_us_status_t result)
 {
-    s5_task.sensor_ok = (result == S5_US_OK) || (result == S5_US_NO_ECHO);
+    s5_task.sensor_ok = (S5_US_OK == result) || (S5_US_NO_ECHO == result);
 }
 
 static bool
@@ -227,13 +227,13 @@ publish_status (double now)
     status.values[1] = s5_offset_m;
     status.values[2] = s5_width_m;
     status.values[3]
-        = (s5_task.phase == S5_PHASE_AVOIDING)     ? S5_STATE_AVOIDING
+        = (S5_PHASE_AVOIDING == s5_task.phase)     ? S5_STATE_AVOIDING
           : !s5_task.blocked                       ? S5_STATE_CLEAR
-          : (s5_task.phase == S5_PHASE_FAILED)     ? S5_STATE_AVOID_FAILED
-          : (s5_task.phase == S5_PHASE_STOPPED)    ? S5_STATE_STOPPED
+          : (S5_PHASE_FAILED == s5_task.phase)     ? S5_STATE_AVOID_FAILED
+          : (S5_PHASE_STOPPED == s5_task.phase)    ? S5_STATE_STOPPED
           : !s5_task.decided                       ? S5_STATE_HELD
-          : (s5_scan.avoid.side == S5_AVOID_LEFT)  ? S5_STATE_PASS_LEFT
-          : (s5_scan.avoid.side == S5_AVOID_RIGHT) ? S5_STATE_PASS_RIGHT
+          : (S5_AVOID_LEFT == s5_scan.avoid.side)  ? S5_STATE_PASS_LEFT
+          : (S5_AVOID_RIGHT == s5_scan.avoid.side) ? S5_STATE_PASS_RIGHT
                                                    : S5_STATE_NO_WAY;
     return robot_update_subsystem(SOURCE_OBSTACLE, &status);
 }
@@ -275,7 +275,7 @@ scan_ping (void * p_context, double * p_range_mm)
     result = s5_us_ping(p_range_mm, &time_s);
     note_sensor(result);
     *p_failed = !s5_task.sensor_ok;
-    return result == S5_US_OK;
+    return S5_US_OK == result;
 }
 
 /* The scan needs the robot still.  If something released the motors
@@ -287,8 +287,8 @@ hold_still (void)
 
     bool b_status = s5_status(&status);
 
-    if (b_status && status.motion.hold && !s5_still_moved(&status)
-        && (status.motion.state == STOPPED) && (status.motion.fault == F_NONE))
+    if (b_status && (status.motion.hold) && (!s5_still_moved(&status))
+        && (STOPPED == status.motion.state) && (F_NONE == status.motion.fault))
     {
         return true;
     }
@@ -298,7 +298,7 @@ hold_still (void)
         (const UB *)"[OBSTACLE] hold/still confirmation lost; scan aborted\n");
     s5_scan_why
         = (uint8_t)(!b_status                         ? S5_WHY_no_status
-                    : (status.motion.fault != F_NONE) ? S5_WHY_motion_fault
+                    : (F_NONE != status.motion.fault) ? S5_WHY_motion_fault
                     : !status.motion.hold ? S5_WHY_released_while_scanning
                                           : S5_WHY_moved_while_scanning);
     return false;
@@ -352,7 +352,7 @@ print_point (const char * p_phase, s5_point_t point)
         tm_printf((const UB *)"[OBSTACLE] %s %3d deg: %s (%u/%u pings echoed)  "
                               "        -> clear\n",
                   p_phase, angle_deg,
-                  (s5_point_status(point) == S5_ECHO_NONE) ? "no echo     "
+                  (S5_ECHO_NONE == s5_point_status(point)) ? "no echo     "
                                                            : "no agreement",
                   s5_point_valid(point), s5_point_total(point));
         return;
@@ -397,9 +397,9 @@ print_edge (const char * p_name, const s5_edge_t * p_edge, int limit_deg)
 static const char *
 avoid_name (s5_avoid_side_t side)
 {
-    return (side == S5_AVOID_LEFT)
+    return (S5_AVOID_LEFT == side)
                ? "left"
-               : ((side == S5_AVOID_RIGHT) ? "right" : "none");
+               : ((S5_AVOID_RIGHT == side) ? "right" : "none");
 }
 
 /* The end of the obstacle on this side has been placed */
@@ -449,8 +449,8 @@ print_avoid (const s5_scan_t * p_scan)
             {
                 p_why = "the other side has no room";
             }
-            else if ((p_scan->placement.position == S5_POSITION_LEFT)
-                     || (p_scan->placement.position == S5_POSITION_RIGHT))
+            else if ((S5_POSITION_LEFT == p_scan->placement.position)
+                     || (S5_POSITION_RIGHT == p_scan->placement.position))
             {
                 p_why = "obstacle reaches less far that way";
             }
@@ -465,7 +465,7 @@ print_avoid (const s5_scan_t * p_scan)
 
             tm_printf(
                 (const UB *)"[OBSTACLE] ===== PASS ON THE %s (%s) =====\n",
-                (p_scan->avoid.side == S5_AVOID_LEFT) ? "LEFT" : "RIGHT",
+                (S5_AVOID_LEFT == p_scan->avoid.side) ? "LEFT" : "RIGHT",
                 p_why);
         break;
 
@@ -508,8 +508,14 @@ tenths_of (double degrees, int * p_whole, int * p_tenth)
 static void
 print_placement (const s5_placement_t * p_placement)
 {
-    int diff_whole, diff_tenth, left_whole, left_tenth, right_whole,
-        right_tenth, tol_whole, tol_tenth;
+    int diff_whole;
+    int diff_tenth;
+    int left_whole;
+    int left_tenth;
+    int right_whole;
+    int right_tenth;
+    int tol_whole;
+    int tol_tenth;
 
     tenths_of(p_placement->difference_deg, &diff_whole, &diff_tenth);
     tenths_of(p_placement->left_deg, &left_whole, &left_tenth);
@@ -524,7 +530,7 @@ print_placement (const s5_placement_t * p_placement)
                 (const UB *)"[OBSTACLE] position: %s by %d.%d deg (left edge "
                             "%d.%d deg, right edge %d.%d deg, "
                             "tolerance %d.%d deg)%s\n",
-                (p_placement->position == S5_POSITION_LEFT) ? "LEFT" : "RIGHT",
+                (S5_POSITION_LEFT == p_placement->position) ? "LEFT" : "RIGHT",
                 diff_whole, diff_tenth, left_whole, left_tenth, right_whole,
                 right_tenth, tol_whole, tol_tenth,
                 p_placement->b_bounded ? ", one edge beyond the sweep" : "");
@@ -553,7 +559,8 @@ print_face (const s5_scan_t * p_scan)
 {
     const s5_face_t * p_face = &p_scan->face;
 
-    int whole, tenth;
+    int whole;
+    int tenth;
     int offset = s5_round(p_face->offset_mm);
 
     tenths_of(p_face->tilt_deg, &whole, &tenth);
@@ -628,7 +635,7 @@ report_scan (const s5_scan_t * p_scan)
 
     width      = s5_round(p_scan->width_mm);
     offset     = s5_round(p_scan->offset_mm);
-    b_complete = end_known(p_scan, S5_LEFT) && end_known(p_scan, S5_RIGHT);
+    b_complete = (end_known(p_scan, S5_LEFT)) && (end_known(p_scan, S5_RIGHT));
     tm_printf((const UB *)"[OBSTACLE] ===== OBSTACLE WIDTH %s%d mm (%d.%d cm), "
                           "%d mm ahead, "
                           "centre %d mm %s =====\n",
@@ -714,9 +721,9 @@ robot_lifted (void)
         return false;
     }
 
-    return (terrain_published_state(&status.terrain) == TERRAIN_TS_LIFTED)
-           || (terrain_motion_class(&status.terrain, &motion_class)
-               && (motion_class == TERRAIN_MC_OVERTURNED));
+    return (TERRAIN_TS_LIFTED == terrain_published_state(&status.terrain))
+           || ((terrain_motion_class(&status.terrain, &motion_class))
+               && (TERRAIN_MC_OVERTURNED == motion_class));
 }
 
 /* The robot stays held: say why, on the console and over MQTT.  A stop from
@@ -727,8 +734,8 @@ static void
 report_abort (s5_why_t why, int a, int b, unsigned tries, bool b_pose)
 {
     bool         b_lifted  = robot_lifted();
-    bool         b_outside = b_lifted || (why == S5_WHY_stopped)
-                             || (why == S5_WHY_released_while_scanning);
+    bool         b_outside = b_lifted || (S5_WHY_stopped == why)
+                             || (S5_WHY_released_while_scanning == why);
     const char * p_code    = s5_why_name(b_lifted ? S5_WHY_lifted : why);
     int          x         = 0;
     int          y         = 0;
@@ -742,7 +749,7 @@ report_abort (s5_why_t why, int a, int b, unsigned tries, bool b_pose)
     tm_printf((const UB *)"[OBSTACLE] ===== %s: %s (a %d, b %d), x %d y %d, %u "
                           "detour tr%s; holding =====\n",
               b_outside ? "STOPPED FROM OUTSIDE" : "DETOUR ABANDONED", p_code,
-              a, b, x, y, tries, (tries == 1U) ? "y" : "ies");
+              a, b, x, y, tries, (1U == tries) ? "y" : "ies");
 
     if (comms_is_online())
     {
@@ -857,14 +864,14 @@ square_wanted (const s5_scan_t * p_scan)
 {
     const s5_face_t * p_face = &p_scan->face;
 
-    if (!p_face->b_valid || (fabs(p_face->tilt_deg) < S5_SQUARE_MIN_DEG))
+    if ((!p_face->b_valid) || (fabs(p_face->tilt_deg) < S5_SQUARE_MIN_DEG))
     {
         return false;
     }
 
-    if (p_face->distance_mm
-            + S5_SERVO_AHEAD_MM * cos(p_face->tilt_deg / S5_RAD_TO_DEG)
-        < hypot(S5_FRONT_MM, S5_ROBOT_HALF_WIDTH_MM) + S5_TURN_MARGIN_MM)
+    if ((p_face->distance_mm
+         + (S5_SERVO_AHEAD_MM * cos(p_face->tilt_deg / S5_RAD_TO_DEG)))
+        < (hypot(S5_FRONT_MM, S5_ROBOT_HALF_WIDTH_MM) + S5_TURN_MARGIN_MM))
     {
         tm_printf((const UB *)"[OBSTACLE] too close to turn square; using the "
                               "measured tilt\n");
@@ -928,7 +935,7 @@ face_obstacle (double * p_squared_deg)
             return false;
         }
 
-        if ((squares >= S5_SQUARE_TRIES) || !square_wanted(&s5_scan))
+        if ((squares >= S5_SQUARE_TRIES) || (!square_wanted(&s5_scan)))
         {
             return true;
         }
@@ -940,7 +947,7 @@ face_obstacle (double * p_squared_deg)
             return false;
         }
 
-        if (squares + 1U >= S5_SQUARE_TRIES)
+        if ((squares + 1U) >= S5_SQUARE_TRIES)
         {
             return true; /* no more turns: nothing left to check it for */
         }
@@ -955,7 +962,7 @@ face_obstacle (double * p_squared_deg)
 static s5_avoid_side_t
 other_side (s5_avoid_side_t side)
 {
-    return (side == S5_AVOID_LEFT) ? S5_AVOID_RIGHT : S5_AVOID_LEFT;
+    return (S5_AVOID_LEFT == side) ? S5_AVOID_RIGHT : S5_AVOID_LEFT;
 }
 
 /* A shallower limit that changes nothing would only repeat the same moves */
@@ -982,8 +989,8 @@ static const s5_attempt_t s5_attempts[] = {
     {false, S5_OUT_MAX_DEG, S5_RETRY_WAIT_MS},
     {false, S5_OUT_MAX_DEG, S5_RETRY_WAIT_MS},
 };
-_Static_assert(sizeof(s5_attempts) / sizeof(s5_attempts[0])
-                   == 4U + S5_RETRY_WAITS,
+_Static_assert((4U + S5_RETRY_WAITS)
+                   == (sizeof(s5_attempts) / sizeof(s5_attempts[0])),
                "one waited retry per S5_RETRY_WAITS");
 
 /* Drive round the held obstacle and back onto the line, trying the ways in
@@ -1004,7 +1011,7 @@ drive_round (void)
     int              a = 0;
     int              b = 0;
 
-    if (!s5_task.decided || (s5_scan.avoid.side == S5_AVOID_NONE))
+    if ((!s5_task.decided) || (S5_AVOID_NONE == s5_scan.avoid.side))
     {
         report_abort(S5_WHY_no_way_around,
                      finite_mm(s5_scan.avoid.clear_mm[S5_LEFT]),
@@ -1014,7 +1021,8 @@ drive_round (void)
         return false;
     }
 
-    if (!s5_status(&status) || !s5_line_reporting(&status, motion_hal_time()))
+    if ((!s5_status(&status))
+        || (!s5_line_reporting(&status, motion_hal_time())))
     {
         tm_printf((const UB *)"[OBSTACLE] line sensors not reporting, could "
                               "not find the way back; holding\n");
@@ -1049,8 +1057,8 @@ drive_round (void)
             continue; /* no room that side, or too much reversing */
         }
 
-        if ((p_attempt->wait_ms == 0U) && b_have_last
-            && same_plan(&plan, &last))
+        if ((0U == p_attempt->wait_ms) && b_have_last
+            && (same_plan(&plan, &last)))
         {
             continue;
         }
@@ -1094,7 +1102,7 @@ drive_round (void)
     s5_task.blocked = true;
     why             = s5_detour_reason(&a, &b);
 
-    if (tries == 0U)
+    if (0U == tries)
     {
         tm_printf((const UB *)"[OBSTACLE] no safe detour on either side (it "
                               "would need over %d mm of "
@@ -1105,7 +1113,7 @@ drive_round (void)
         b   = 0;
     }
 
-    report_abort((why != S5_WHY_none) ? why : S5_WHY_unknown, a, b, tries,
+    report_abort((S5_WHY_none != why) ? why : S5_WHY_unknown, a, b, tries,
                  tries > 0U);
     (void)publish_verified();
     return false;
@@ -1138,8 +1146,8 @@ corridor_clear (double reach_mm)
             double near_bearing = fmax(0.0, bearing - S5_GUARD_BEAM_HALF_DEG);
             double far_bearing  = fmin(90.0, bearing + S5_GUARD_BEAM_HALF_DEG);
 
-            if ((axis_range * cos(far_bearing / S5_RAD_TO_DEG) <= needed)
-                && (axis_range * sin(near_bearing / S5_RAD_TO_DEG)
+            if (((axis_range * cos(far_bearing / S5_RAD_TO_DEG)) <= needed)
+                && ((axis_range * sin(near_bearing / S5_RAD_TO_DEG))
                     <= half_width))
             {
                 tm_printf(
@@ -1149,7 +1157,7 @@ corridor_clear (double reach_mm)
                 return false;
             }
         }
-        else if (estimate.status != S5_ECHO_NONE)
+        else if (S5_ECHO_NONE != estimate.status)
         {
             s5_servo_move(S5_ANGLE_CENTRE_DEG);
             return false; /* pings disagree: could be anything */
@@ -1166,9 +1174,9 @@ corridor_clear (double reach_mm)
 static bool
 spurious_stop (const s5_scan_t * p_scan)
 {
-    if (p_scan->b_valid
+    if ((p_scan->b_valid)
         && (s5_point_range(p_scan->centre)
-            <= S5_STOP_MM + S5_SPURIOUS_MARGIN_MM))
+            <= (S5_STOP_MM + S5_SPURIOUS_MARGIN_MM)))
     {
         return false;
     }
@@ -1186,7 +1194,7 @@ resume_line (const s5_scan_t * p_scan)
     double         path_m = s5_status(&status) ? status.motion.path : 0.0;
     int ahead = p_scan->b_valid ? s5_round(s5_point_range(p_scan->centre)) : -1;
     bool b_again = (s5_task.spurious_count > 0U)
-                   && (fabs(path_m - s5_spurious_path_m) * 1000.0
+                   && ((fabs(path_m - s5_spurious_path_m) * 1000.0)
                        < S5_SPURIOUS_TRAVEL_MM);
     bool b_resume;
 
@@ -1328,23 +1336,23 @@ obstacle_task (INT code, void * p_context)
 #endif
         crash_mark(CRASH_MARK_OBSTACLE, CRASH_OBSTACLE_DECIDE);
         note_sensor(result);
-        b_echo = result == S5_US_OK;
+        b_echo = S5_US_OK == result;
         now    = motion_hal_time();
 
         if (s5_status(&status))
         {
             uint8_t terrain = terrain_published_state(&status.terrain);
-            bool    b_hump  = (terrain == TERRAIN_TS_CLIMBING)
-                              || (terrain == TERRAIN_TS_DESCENDING);
+            bool    b_hump  = (TERRAIN_TS_CLIMBING == terrain)
+                              || (TERRAIN_TS_DESCENDING == terrain);
 
             s5_curve_note(&s5_curve, status.motion.path * 1000.0,
                           status.motion.heading * S5_RAD_TO_DEG);
             speed_mm_s
                 = 500.0 * (status.motion.speed[0] + status.motion.speed[1]);
-            b_may_move      = !status.motion.hold
-                              && ((status.motion.state == READY)
-                                  || (status.motion.state == DRIVING));
-            s5_task.blocked = s5_task.blocked && status.motion.hold;
+            b_may_move      = (!status.motion.hold)
+                              && ((READY == status.motion.state)
+                                  || (DRIVING == status.motion.state));
+            s5_task.blocked = (s5_task.blocked) && (status.motion.hold);
 
             if (!s5_task.blocked)
             {
@@ -1377,7 +1385,7 @@ obstacle_task (INT code, void * p_context)
         history_add(&history, b_echo, range_mm, time_s);
         s5_front_mm = history_front(&history, now, speed_mm_s);
 
-        if (!s5_task.sensor_ok && b_may_move)
+        if ((!s5_task.sensor_ok) && b_may_move)
         {
             motion_stop();
             s5_task.blocked = true;
@@ -1391,7 +1399,7 @@ obstacle_task (INT code, void * p_context)
             b_announced = false;
         }
 
-        if (b_may_move && !b_announced && (s5_front_mm <= S5_SLOW_MM))
+        if (b_may_move && (!b_announced) && (s5_front_mm <= S5_SLOW_MM))
         {
             b_announced = true;
             tm_printf(
@@ -1402,10 +1410,10 @@ obstacle_task (INT code, void * p_context)
         /* The line task's junction pivot (it publishes line values[3] = 1 while
            pivoting) is not cancelled by a wall ahead. Braking, the advance and
            normal following still stop. */
-        if (b_may_move && should_stop(s5_front_mm, speed_mm_s)
-            && !((status.line.values[3] > 0.5) && status.owner_valid
-                 && (status.owner == SOURCE_LINE)
-                 && (status.motion.state == DRIVING)))
+        if (b_may_move && (should_stop(s5_front_mm, speed_mm_s))
+            && (!((status.line.values[3] > 0.5) && (status.owner_valid)
+                  && (SOURCE_LINE == status.owner)
+                  && (DRIVING == status.motion.state))))
         {
             crash_mark(CRASH_MARK_OBSTACLE, CRASH_OBSTACLE_STOP);
             motion_stop();
@@ -1435,15 +1443,15 @@ obstacle_task (INT code, void * p_context)
 #if S5_AVOID_DRIVE
                 s5_detour_reason_clear();
 
-                if (!back_off_if_close() || !face_obstacle(&squared_deg))
+                if ((!back_off_if_close()) || (!face_obstacle(&squared_deg)))
                 {
                     int      a   = 0;
                     int      b   = 0;
                     s5_why_t why = s5_detour_reason(&a, &b);
 
                     s5_task.decided = false;
-                    report_abort((why != S5_WHY_none) ? why
-                                 : (s5_scan_why != (uint8_t)S5_WHY_none)
+                    report_abort((S5_WHY_none != why) ? why
+                                 : ((uint8_t)S5_WHY_none != s5_scan_why)
                                      ? (s5_why_t)s5_scan_why
                                      : S5_WHY_scan_setup_failed,
                                  a, b, 0U, false);
@@ -1478,7 +1486,7 @@ obstacle_task (INT code, void * p_context)
                 else
                 {
                     motion_stop();
-                    report_abort((s5_scan_why != (uint8_t)S5_WHY_none)
+                    report_abort(((uint8_t)S5_WHY_none != s5_scan_why)
                                      ? (s5_why_t)s5_scan_why
                                      : S5_WHY_scan_failed,
                                  0, 0, 0U, false);
@@ -1534,12 +1542,12 @@ obstacle_task (INT code, void * p_context)
 
             history_clear(&history); /* pings from the sweep are not "ahead" */
         }
-        else if (!s5_task.sensor_ok && (now >= next_warning))
+        else if ((!s5_task.sensor_ok) && (now >= next_warning))
         {
             next_warning = now + S5_WARN_PERIOD_S;
             tm_printf((const UB *)"[OBSTACLE] ultrasonic not answering (%s); "
                                   "check GP16/GP17 wiring and 3.3 V supply\n",
-                      (result == S5_US_BUSY) ? "ECHO stuck high"
+                      (S5_US_BUSY == result) ? "ECHO stuck high"
                                              : "no ECHO pulse");
         }
 

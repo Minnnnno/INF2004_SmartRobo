@@ -25,9 +25,9 @@
 #define COMMS_STATUS_MS     100 /* status frame period: 10 Hz */
 #define COMMS_REPORT_FRAMES 100 /* console statistics every 10 s */
 
-_Static_assert((int)COMMS_CMD_START == (int)TF_OP_START
-                   && (int)COMMS_CMD_STOP == (int)TF_OP_STOP
-                   && (int)COMMS_CMD_ESTOP == (int)TF_OP_ESTOP,
+_Static_assert(((int)COMMS_CMD_START == (int)TF_OP_START)
+                   && ((int)COMMS_CMD_STOP == (int)TF_OP_STOP)
+                   && ((int)COMMS_CMD_ESTOP == (int)TF_OP_ESTOP),
                "COMMS_CMD must equal the binary opcodes");
 _Static_assert(TF_FRAME_BYTES <= COMMS_PAYLOAD_MAX,
                "frame does not fit a message");
@@ -71,7 +71,7 @@ copy_text (char * dst, const char * src, INT max)
     {
         dst[i] = src[i];
 
-        if (src[i] == '\0')
+        if ('\0' == src[i])
         {
             return i;
         }
@@ -86,20 +86,21 @@ queue_message (ID mbf, UB qos, const char * topic, const char * name,
 {
     COMMS_MSG msg;
 
-    INT tlen, i;
+    INT tlen;
+    INT i;
     ER  er;
 
-    if ((data == NULL) || (len < 0) || (len > COMMS_PAYLOAD_MAX))
+    if ((NULL == data) || (len < 0) || (len > COMMS_PAYLOAD_MAX))
     {
         return E_PAR;
     }
 
     tlen = copy_text(msg.topic, topic, COMMS_TOPIC_MAX);
 
-    if (name != NULL)
+    if (NULL != name)
     {
-        if (name[0] == '\0'
-            || copy_text(&msg.topic[tlen], name, COMMS_NAME_MAX) < 0)
+        if (('\0' == name[0])
+            || (copy_text(&msg.topic[tlen], name, COMMS_NAME_MAX) < 0))
         {
             return E_PAR;
         }
@@ -129,7 +130,7 @@ comms_send_telemetry (const char * name, const char * payload)
     char text[COMMS_PAYLOAD_MAX];
     INT  len;
 
-    if ((name == NULL) || (payload == NULL))
+    if ((NULL == name) || (NULL == payload))
     {
         return E_PAR;
     }
@@ -194,8 +195,8 @@ comms_hook_next (char * topic, unsigned char * payload, int * qos)
     COMMS_MSG msg;
     INT       i;
 
-    if (tk_rcv_mbf(mbf_comms_evt, &msg, TMO_POL) < E_OK
-        && tk_rcv_mbf(mbf_comms_tlm, &msg, TMO_POL) < E_OK)
+    if ((tk_rcv_mbf(mbf_comms_evt, &msg, TMO_POL) < E_OK)
+        && (tk_rcv_mbf(mbf_comms_tlm, &msg, TMO_POL) < E_OK))
     {
         return -1;
     }
@@ -217,7 +218,7 @@ seq_newer (UB seq)
 {
     UB diff = (UB)(seq - cmd_seq);
 
-    return (diff != 0U) && (diff < 128U);
+    return (0U != diff) && (diff < 128U);
 }
 
 void
@@ -229,7 +230,7 @@ comms_hook_command (const unsigned char * payload, int len)
     COMMS_CMD    forward;
     BOOL         same_session;
 
-    if ((len < 0) || !tf_cmd_decode(payload, (size_t)len, &cmd))
+    if ((len < 0) || (!tf_cmd_decode(payload, (size_t)len, &cmd)))
     {
         /* Wrong length, truncated or reserved opcode. */
         result = TF_ACK_REJECTED;
@@ -240,7 +241,8 @@ comms_hook_command (const unsigned char * payload, int len)
     {
         same_session = cmd_seen && (cmd.session == cmd_session);
 
-        if ((cmd.opcode == TF_OP_START) && same_session && !seq_newer(cmd.seq))
+        if ((TF_OP_START == cmd.opcode) && same_session
+            && (!seq_newer(cmd.seq)))
         {
             /* A redelivered or stale START must never restart the
                robot.  STOP/ESTOP are always forwarded. */
@@ -262,7 +264,7 @@ comms_hook_command (const unsigned char * payload, int len)
                 result = TF_ACK_OK;
                 stats.cmd_ok++;
 
-                if (!same_session || seq_newer(cmd.seq))
+                if ((!same_session) || (seq_newer(cmd.seq)))
                 {
                     cmd_seen    = TRUE;
                     cmd_session = cmd.session;
@@ -281,12 +283,13 @@ void
 comms_hook_route (const unsigned char * payload, int len)
 {
     UB           reply[COMMS_PAYLOAD_MAX + 1];
-    const char * head = ((len >= 0) && route_set((const char *)payload, len))
+    const char * head = ((len >= 0) && (route_set((const char *)payload, len)))
                             ? "ok "
                             : "rejected ";
-    INT          n    = 0, i;
+    INT          n    = 0;
+    INT          i;
 
-    while (*head != '\0')
+    while ('\0' != *head)
     {
         reply[n++] = (UB)*head++;
     }
@@ -305,7 +308,7 @@ comms_hook_route (const unsigned char * payload, int len)
 void
 comms_hook_online (int online)
 {
-    comms_online = (online != 0);
+    comms_online = (0 != online);
 }
 
 /* ---- task ---- */
@@ -325,7 +328,7 @@ publish_events (void)
     UB        frame[TF_EVENT_BYTES];
     UB        events = take_events();
 
-    if (events == 0U)
+    if (0U == events)
     {
         return;
     }
@@ -333,9 +336,9 @@ publish_events (void)
     frame[0] = events;
     frame[1] = seq;
 
-    if (queue_message(mbf_comms_evt, 1, COMMS_TOPIC_EVENT, NULL, frame,
-                      TF_EVENT_BYTES)
-        == E_OK)
+    if (E_OK
+        == queue_message(mbf_comms_evt, 1, COMMS_TOPIC_EVENT, NULL, frame,
+                         TF_EVENT_BYTES))
     {
         seq++;
         stats.events++;
@@ -355,9 +358,12 @@ comms_task (INT stacd, void * exinf)
     tf_encoder_t    enc;
     UB              enc_frame[TF_ENC_BYTES];
     BOOL            have_prev     = FALSE;
-    UW              base_rejected = 0, base_drops = 0;
+    UW              base_rejected = 0;
+    UW              base_drops    = 0;
 
-    double t0, t1, t2;
+    double t0;
+    double t1;
+    double t2;
     UW     us;
 
     (void)stacd;
@@ -407,7 +413,7 @@ comms_task (INT stacd, void * exinf)
         info.dropped  = comms_drops - base_drops;
         tm_fill(&snap, &info, values);
 
-        if (tf_pack(values, frame) != 0U)
+        if (0U != tf_pack(values, frame))
         {
             stats.clamped++;
         }
@@ -427,9 +433,9 @@ comms_task (INT stacd, void * exinf)
             stats.pack_us_max = us;
         }
 
-        if (queue_message(mbf_comms_tlm, 0, COMMS_TOPIC_FRAME, NULL, frame,
-                          TF_FRAME_BYTES)
-            == E_OK)
+        if (E_OK
+            == queue_message(mbf_comms_tlm, 0, COMMS_TOPIC_FRAME, NULL, frame,
+                             TF_FRAME_BYTES))
         {
             info.seq++;
             stats.frames++;
@@ -438,14 +444,14 @@ comms_task (INT stacd, void * exinf)
 
             /* Sent only after its status frame, so a SEQ always
                pairs the two.  A failure counts in comms_drops. */
-            if (queue_message(mbf_comms_tlm, 0, COMMS_TOPIC_ENCODER, NULL,
-                              enc_frame, TF_ENC_BYTES)
-                == E_OK)
+            if (E_OK
+                == queue_message(mbf_comms_tlm, 0, COMMS_TOPIC_ENCODER, NULL,
+                                 enc_frame, TF_ENC_BYTES))
             {
                 stats.enc_frames++;
             }
 
-            if ((stats.frames % COMMS_REPORT_FRAMES) == 0U)
+            if (0U == (stats.frames % COMMS_REPORT_FRAMES))
             {
                 tm_printf((UB *)"comms: frames=%u enc=%u skipped=%u clamped=%u "
                                 "dropped=%u copy_us_max=%u pack_us_max=%u\n",

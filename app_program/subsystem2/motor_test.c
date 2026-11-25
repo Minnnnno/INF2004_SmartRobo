@@ -11,7 +11,9 @@
 
 /* No production configuration gates are changed. Only this isolated profile
  * can call the test actuator. Alarm3/IRQ3 is unused elsewhere in this build. */
-static volatile bool ready, active, result_pending;
+static volatile bool ready;
+static volatile bool active;
+static volatile bool result_pending;
 static bool          sensor_forward;
 #ifdef ROBO_BATTERY_FORWARD_TEST
 static volatile bool     sensor_paused = true;
@@ -37,7 +39,8 @@ static volatile bool sensor_paused;
 static encoder_sample_t             baseline;
 static volatile motor_test_result_t completed;
 static uint64_t                     cutoff_at;
-static uint32_t                     cutoff_irq_count, polled_cutoffs;
+static uint32_t                     cutoff_irq_count;
+static uint32_t                     polled_cutoffs;
 static uint64_t                     cooldown_until;
 static int                          motor_sign[2];
 enum
@@ -109,7 +112,7 @@ motor_test_poll (void)
 {
     uint32_t irq_state = save_and_disable_interrupts();
 
-    if (active && time_us_64() >= cutoff_at)
+    if (active && (time_us_64() >= cutoff_at))
     {
         ++polled_cutoffs;
         finish(true); /* Independent fallback if Alarm3 delivery is missed. */
@@ -140,12 +143,12 @@ button_irq (void)
     uint32_t stop_events  = gpio_get_irq_event_mask(21U);
     uint64_t now;
 
-    if (start_events != 0U)
+    if (0U != start_events)
     {
         gpio_acknowledge_irq(20U, start_events);
     }
 
-    if (stop_events != 0U)
+    if (0U != stop_events)
     {
         gpio_acknowledge_irq(21U, stop_events);
     }
@@ -210,16 +213,16 @@ motor_test_init (void)
     gpio_set_irq_enabled(20U, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, false);
     gpio_set_irq_enabled(21U, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, false);
 #endif
-    if (!board_pins_valid() || !sample.reliable
-        || (encoder_pins[0][0] != BOARD_ENC_L_A)
-        || (encoder_pins[0][1] != BOARD_ENC_L_B)
-        || (encoder_pins[1][0] != BOARD_ENC_R_A)
-        || (encoder_pins[1][1] != BOARD_ENC_R_B))
+    if ((!board_pins_valid()) || (!sample.reliable)
+        || (BOARD_ENC_L_A != encoder_pins[0][0])
+        || (BOARD_ENC_L_B != encoder_pins[0][1])
+        || (BOARD_ENC_R_A != encoder_pins[1][0])
+        || (BOARD_ENC_R_B != encoder_pins[1][1]))
     {
         return false;
     }
 
-    if (tk_def_int(3U, &definition) != E_OK)
+    if (E_OK != tk_def_int(3U, &definition))
     {
         return false;
     }
@@ -267,9 +270,9 @@ start_test (unsigned wheel_mask, int direction, bool sensor,
         return false;
     }
 #endif
-    if (!ready || active || result_pending || (now < cooldown_until)
-        || (wheel_mask == 0U) || (wheel_mask > 3U)
-        || ((direction != 1) && (direction != -1)))
+    if ((!ready) || active || result_pending || (now < cooldown_until)
+        || (0U == wheel_mask) || (wheel_mask > 3U)
+        || ((1 != direction) && (-1 != direction)))
     {
         restore_interrupts(irq_state);
         /* Never queue another pulse or extend the running deadline. */
@@ -277,8 +280,8 @@ start_test (unsigned wheel_mask, int direction, bool sensor,
     }
 
     stop_outputs();
-    baseline            = motion_hal_sample();
-    completed.wheel     = wheel_mask == 3U ? 2U : (wheel_mask == 1U ? 0U : 1U);
+    baseline        = motion_hal_sample();
+    completed.wheel = (3U == wheel_mask) ? 2U : ((1U == wheel_mask) ? 0U : 1U);
     completed.direction = direction;
     active              = true;
     sensor_forward      = sensor;
@@ -296,19 +299,20 @@ start_test (unsigned wheel_mask, int direction, bool sensor,
         int      electrical_direction = direction * motor_sign[wheel];
         /* Ground-test setting: serial pairs/button runs use L=24.9%, R=25%.
          * Individual and automatic IR tests retain their original 25% duty. */
-        uint16_t duty = (uint16_t)((wheel_mask == 3U && !sensor && wheel == 0U)
-                                       ? PAIR_LEFT_DUTY
-                                       : TEST_DUTY);
+        uint16_t duty
+            = (uint16_t)(((3U == wheel_mask) && (!sensor) && (0U == wheel))
+                             ? PAIR_LEFT_DUTY
+                             : TEST_DUTY);
 
-        if ((wheel_mask & (1U << wheel)) == 0U)
+        if (0U == (wheel_mask & (1U << wheel)))
         {
             continue;
         }
 
         gpio_set_function(motor_pins[wheel][0], GPIO_FUNC_PWM);
         gpio_set_function(motor_pins[wheel][1], GPIO_FUNC_PWM);
-        pwm_set_both_levels(slice, electrical_direction > 0 ? duty : 0U,
-                            electrical_direction < 0 ? duty : 0U);
+        pwm_set_both_levels(slice, (electrical_direction > 0) ? duty : 0U,
+                            (electrical_direction < 0) ? duty : 0U);
         pwm_set_enabled(slice, true);
     }
 
@@ -405,7 +409,7 @@ motor_test_get_buttons (motor_test_button_diag_t * d)
 {
     uint32_t irq_state;
 
-    if (d == NULL)
+    if (NULL == d)
     {
         return false;
     }

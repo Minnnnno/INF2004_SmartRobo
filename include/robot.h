@@ -50,8 +50,13 @@ typedef struct
 {
     motion_status_t motion;
 
-    subsystem_status_t line, barcode, terrain, obstacle, wifi;
-    uint32_t           rejected_requests, dropped_events;
+    subsystem_status_t line;
+    subsystem_status_t barcode;
+    subsystem_status_t terrain;
+    subsystem_status_t obstacle;
+    subsystem_status_t wifi;
+    uint32_t           rejected_requests;
+    uint32_t           dropped_events;
     motion_event_t     last_event;
     request_source_t   owner;
     bool               owner_valid;
@@ -61,16 +66,21 @@ typedef struct
 {
     robot_request_t requests[8];
 
-    unsigned         head, count;
+    unsigned         head;
+    unsigned         count;
     motion_command_t approved;
     bool             approved_valid;
 
-    uint32_t       controls, generation;
-    bool           checks_ok, external_rest, shutdown_latched;
+    uint32_t       controls;
+    uint32_t       generation;
+    bool           checks_ok;
+    bool           external_rest;
+    bool           shutdown_latched;
     robot_status_t status;
     motion_event_t events[8];
 
-    unsigned event_head, event_count;
+    unsigned event_head;
+    unsigned event_count;
     /* Web Start gate (Buddy 1): set by a remote STOP/ESTOP (and at boot when
      * ROBO_REQUIRE_START), cleared only by an accepted remote START. While set,
      * CONTROL_RELEASE from any other source is ignored, so no subsystem can

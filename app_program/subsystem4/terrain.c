@@ -178,7 +178,7 @@ terrain_step (terrain_t * p_terrain, bool valid, int16_t height_tenths,
 
         p_terrain->smooth_tenths
             = (int16_t)(p_terrain->smooth_tenths
-                        + (step + half) / (1 << TERRAIN_SMOOTH_SHIFT));
+                        + ((step + half) / (1 << TERRAIN_SMOOTH_SHIFT)));
     }
 
     height_tenths          = p_terrain->smooth_tenths;

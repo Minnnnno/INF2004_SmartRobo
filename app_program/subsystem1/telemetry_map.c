@@ -66,14 +66,14 @@ wrap_deg (double rad, int32_t lo)
         return lo;
     }
 
-    d = to_int(fmod(rad * 180.0 / TM_PI, 360.0));
+    d = to_int(fmod((rad * 180.0) / TM_PI, 360.0));
 
     while (d < lo)
     {
         d += 360;
     }
 
-    while (d >= lo + 360)
+    while (d >= (lo + 360))
     {
         d -= 360;
     }
@@ -95,7 +95,7 @@ bc_char_code (double ascii)
         return 0;
     }
 
-    for (i = 0U; i < sizeof(chars) - 1U; i++)
+    for (i = 0U; i < (sizeof(chars) - 1U); i++)
     {
         if ((int32_t)(unsigned char)chars[i] == c)
         {
@@ -114,7 +114,7 @@ bc_count (const subsystem_status_t * s, unsigned slot)
 {
     int32_t v = to_int(s->values[slot]);
 
-    return (s->available && (v > 0)) ? (uint32_t)v : 0U;
+    return ((s->available) && (v > 0)) ? (uint32_t)v : 0U;
 }
 
 static uint32_t
@@ -122,7 +122,7 @@ bits_of (const subsystem_status_t * s, unsigned slot)
 {
     int32_t v = to_int(s->values[slot]);
 
-    return (s->available && (v > 0)) ? (uint32_t)v : 0U;
+    return ((s->available) && (v > 0)) ? (uint32_t)v : 0U;
 }
 
 void
@@ -156,7 +156,7 @@ tm_fill (const robot_status_t * st, const tm_frame_info_t * info,
     values[TF_F_LINE_AVAIL] = st->line.available ? 1 : 0;
     values[TF_F_LINE_ERR] = st->line.available ? to_int(st->line.values[0]) : 0;
     values[TF_F_LINE_TRACK]
-        = (st->line.available && (st->line.values[1] > 0.5)) ? 1 : 0;
+        = ((st->line.available) && (st->line.values[1] > 0.5)) ? 1 : 0;
     values[TF_F_BC_CHAR]
         = st->barcode.available ? bc_char_code(st->barcode.values[0]) : 0;
     values[TF_F_BC_READ] = (int32_t)(bc_count(&st->barcode, 1U) & 1U);
@@ -166,18 +166,18 @@ tm_fill (const robot_status_t * st, const tm_frame_info_t * info,
        Bit 0 is not used by Buddy 4; the frame's TF_TV_MOTION comes from
        bit 9 so a stray bit 0 can never mark a stale class as valid. */
     flags                = bits_of(&st->terrain, 3U);
-    motion_ok            = (flags & TERRAIN_MOTION_VALID) != 0U;
+    motion_ok            = 0U != (flags & TERRAIN_MOTION_VALID);
     values[TF_F_T_VALID] = (int32_t)((flags & (TF_TV_PITCH | TF_TV_HUMP))
                                      | (motion_ok ? TF_TV_MOTION : 0U));
     values[TF_F_T_STATE] = (int32_t)((flags >> 3) & 0x7U);
     values[TF_F_M_CLASS]
         = motion_ok ? (int32_t)((flags >> TERRAIN_MC_SHIFT) & 0x7U) : 0;
-    values[TF_F_PITCH] = ((flags & TF_TV_PITCH) != 0U)
-                             ? to_int(st->terrain.values[1] * 180.0 / TM_PI)
+    values[TF_F_PITCH] = (0U != (flags & TF_TV_PITCH))
+                             ? to_int((st->terrain.values[1] * 180.0) / TM_PI)
                              : 0;
     values[TF_F_TURN_RATE]
-        = motion_ok ? to_int(st->terrain.values[0] * 180.0 / TM_PI) : 0;
-    values[TF_F_HUMP_MM] = ((flags & TF_TV_HUMP) != 0U)
+        = motion_ok ? to_int((st->terrain.values[0] * 180.0) / TM_PI) : 0;
+    values[TF_F_HUMP_MM] = (0U != (flags & TF_TV_HUMP))
                                ? to_int(st->terrain.values[2] * 1000.0)
                                : 0;
 
@@ -220,7 +220,7 @@ tm_fill_encoder (const robot_status_t * st, uint32_t seq, double now_s,
     e->age_ms    = (uint16_t)TF_ENC_AGE_UNKNOWN;
     e->fresh     = false;
 
-    if (!tm_finite(t) || (t < 0.0) || !tm_finite(now_s))
+    if ((!tm_finite(t)) || (t < 0.0) || (!tm_finite(now_s)))
     {
         return;
     }
@@ -240,7 +240,7 @@ tm_fill_encoder (const robot_status_t * st, uint32_t seq, double now_s,
 static bool
 line_ok (const robot_status_t * s)
 {
-    return s->line.available && (s->line.values[1] > 0.5);
+    return (s->line.available) && (s->line.values[1] > 0.5);
 }
 
 uint8_t
@@ -248,21 +248,21 @@ tm_edge_events (const robot_status_t * prev, const robot_status_t * cur)
 {
     uint32_t ev = 0U;
 
-    if ((cur->motion.fault != F_NONE) && (prev->motion.fault == F_NONE))
+    if ((F_NONE != cur->motion.fault) && (F_NONE == prev->motion.fault))
     {
         ev |= TF_EV_MOTION_FAULT;
     }
 
-    if (line_ok(prev) && !line_ok(cur))
+    if ((line_ok(prev)) && (!line_ok(cur)))
     {
         ev |= TF_EV_LINE_LOST;
     }
 
     /* A new decode: B3's valid-read counter changed.  Every read counts,
        including the same letter twice in a row. */
-    if (cur->barcode.available
+    if ((cur->barcode.available)
         && (bc_count(&cur->barcode, 1U) != bc_count(&prev->barcode, 1U))
-        && (bc_count(&cur->barcode, 1U) != 0U))
+        && (0U != bc_count(&cur->barcode, 1U)))
     {
         ev |= TF_EV_BARCODE;
     }

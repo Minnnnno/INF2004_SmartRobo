@@ -18,10 +18,10 @@
 static inline bool
 motion_compact_limits (const motion_config_t * p_config)
 {
-    return (NULL != p_config) && isfinite(p_config->max_distance)
+    return (NULL != p_config) && (isfinite(p_config->max_distance))
            && (p_config->max_distance > 0.0) && (p_config->max_distance <= 5.0)
-           && isfinite(p_config->max_speed) && (p_config->max_speed > 0.0)
-           && (p_config->max_speed <= 0.25) && isfinite(p_config->max_angle)
+           && (isfinite(p_config->max_speed)) && (p_config->max_speed > 0.0)
+           && (p_config->max_speed <= 0.25) && (isfinite(p_config->max_angle))
            && (p_config->max_angle > 0.0)
            && (p_config->max_angle <= (360.0 * MOTION_RAD_PER_DEG));
 }
@@ -33,7 +33,7 @@ motion_compact_quantize (float64_t value, float64_t scale, int32_t limit,
                          int32_t * p_result)
 {
     float64_t scaled  = value * scale;
-    bool      b_valid = (NULL != p_result) && isfinite(scaled)
+    bool      b_valid = (NULL != p_result) && (isfinite(scaled))
                         && (fabs(scaled) <= (float64_t)limit);
 
     if (b_valid)
@@ -79,7 +79,7 @@ motion_compact_get (const uint8_t * p_bytes, uint32_t offset, uint32_t width)
 
     /* Subtraction within int32_t avoids right-shifting signed integers and
      * avoids implementation-defined conversion of large unsigned values. */
-    return ((encoded & (modulus / 2u)) != 0u)
+    return (0u != (encoded & (modulus / 2u)))
                ? (int32_t)encoded - (int32_t)modulus
                : (int32_t)encoded;
 }
@@ -101,16 +101,16 @@ motion_compact_encode (const motion_command_t *   p_public,
     motion_storage_command_t encoded     = {0};
 
     if ((NULL == p_public) || (NULL == p_stored)
-        || !motion_compact_limits(p_config))
+        || (!motion_compact_limits(p_config)))
     {
         return false;
     }
 
     if (((uint32_t)p_public->mode > (uint32_t)ARC_MOVE)
-        || !isfinite(p_public->value) || !isfinite(p_public->angle)
-        || !isfinite(p_public->duration) || !isfinite(p_public->speed[0])
-        || !isfinite(p_public->speed[1]) || !isfinite(p_public->expires)
-        || !isfinite(p_public->deadline))
+        || (!isfinite(p_public->value)) || (!isfinite(p_public->angle))
+        || (!isfinite(p_public->duration)) || (!isfinite(p_public->speed[0]))
+        || (!isfinite(p_public->speed[1])) || (!isfinite(p_public->expires))
+        || (!isfinite(p_public->deadline)))
     {
         return false;
     }
@@ -118,8 +118,8 @@ motion_compact_encode (const motion_command_t *   p_public,
     if ((DISTANCE_MOVE == p_public->mode) || (ARC_MOVE == p_public->mode))
     {
         if ((fabs(p_public->value) > p_config->max_distance)
-            || !motion_compact_quantize(p_public->value, 1000.0,
-                                        MOTION_DISTANCE_LIMIT, &distance))
+            || (!motion_compact_quantize(p_public->value, 1000.0,
+                                         MOTION_DISTANCE_LIMIT, &distance)))
         {
             return false;
         }
@@ -131,8 +131,8 @@ motion_compact_encode (const motion_command_t *   p_public,
                                                              : p_public->angle;
 
         if ((fabs(radians) > p_config->max_angle)
-            || !motion_compact_quantize(radians, 1.0 / MOTION_RAD_PER_DEG,
-                                        MOTION_ANGLE_LIMIT, &angle))
+            || (!motion_compact_quantize(radians, 1.0 / MOTION_RAD_PER_DEG,
+                                         MOTION_ANGLE_LIMIT, &angle)))
         {
             return false;
         }
@@ -184,7 +184,7 @@ motion_compact_decode (const motion_storage_command_t * p_stored,
     motion_command_t decoded = {0};
 
     if ((NULL == p_stored) || (NULL == p_public)
-        || !motion_compact_limits(p_config))
+        || (!motion_compact_limits(p_config)))
     {
         return false;
     }
@@ -232,16 +232,16 @@ motion_compact_decode (const motion_storage_command_t * p_stored,
         /* Preserve the exact timed-arc kinematic identity after quantizing the
          * goal; rounding derived velocities independently would violate it. */
         decoded.speed[0]
-            = (decoded.value - decoded.angle * p_config->track / 2.0)
+            = (decoded.value - ((decoded.angle * p_config->track) / 2.0))
               / decoded.duration;
         decoded.speed[1]
-            = (decoded.value + decoded.angle * p_config->track / 2.0)
+            = (decoded.value + ((decoded.angle * p_config->track) / 2.0))
               / decoded.duration;
     }
 
-    if (!isfinite(decoded.speed[0]) || !isfinite(decoded.speed[1])
-        || !isfinite(decoded.duration) || !isfinite(decoded.expires)
-        || !isfinite(decoded.deadline))
+    if ((!isfinite(decoded.speed[0])) || (!isfinite(decoded.speed[1]))
+        || (!isfinite(decoded.duration)) || (!isfinite(decoded.expires))
+        || (!isfinite(decoded.deadline)))
     {
         return false;
     }
@@ -250,7 +250,7 @@ motion_compact_decode (const motion_storage_command_t * p_stored,
                                                       : p_config->max_speed;
 
     if ((fabs(decoded.speed[0]) > limit) || (fabs(decoded.speed[1]) > limit)
-        || ((DISTANCE_MOVE == decoded.mode || ARC_MOVE == decoded.mode)
+        || (((DISTANCE_MOVE == decoded.mode) || (ARC_MOVE == decoded.mode))
             && (fabs(decoded.value) > p_config->max_distance))
         || ((ENCODER_TURN == decoded.mode)
             && (fabs(decoded.value) > p_config->max_angle))

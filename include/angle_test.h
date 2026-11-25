@@ -20,11 +20,17 @@ typedef struct
     bool            ready;
     int             direction;
 
-    encoder_sample_t baseline, previous;
+    encoder_sample_t baseline;
+    encoder_sample_t previous;
     uint32_t         delta[2];
 
-    double goal[2], output[2], angle, deadline, brake_deadline, last_change[2],
-        quiet_since;
+    double goal[2];
+    double output[2];
+    double angle;
+    double deadline;
+    double brake_deadline;
+    double last_change[2];
+    double quiet_since;
 } angle_control_t;
 
 void angle_control_init(angle_control_t *       control,

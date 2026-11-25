@@ -7,7 +7,9 @@
  * A is bit 1 and B bit 0. Storage uses defined uint32_t modular arithmetic. */
 typedef struct
 {
-    uint32_t count[2], invalid[2], edges[2][2];
+    uint32_t count[2];
+    uint32_t invalid[2];
+    uint32_t edges[2][2];
     uint8_t  pins[2][2];
     /* quadrature bits0:1, negative signs2:3, inferred reverse4:5 */
     uint8_t flags;

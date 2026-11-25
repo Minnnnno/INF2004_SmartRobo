@@ -21,8 +21,8 @@
 static inline bool
 line_rejoin_seen (const robot_status_t * p_status, double now)
 {
-    return p_status->line.available
-           && (now - p_status->line.timestamp <= LINE_REJOIN_FRESH_S)
+    return (p_status->line.available)
+           && ((now - p_status->line.timestamp) <= LINE_REJOIN_FRESH_S)
            && (p_status->line.values[LINE_VALUE_BOTH_BLACK] > 0.5);
 }
 

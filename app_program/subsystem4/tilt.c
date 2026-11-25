@@ -18,7 +18,7 @@
 static float32_t
 tilt_dot (float32_t const a[3], float32_t const b[3])
 {
-    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    return (a[0] * b[0]) + (a[1] * b[1]) + (a[2] * b[2]);
 }
 
 /* Normalise a private vector, rejecting zero/nonfinite magnitudes. */
@@ -33,7 +33,7 @@ tilt_normalise (float32_t vector[3])
     float32_t length = sqrtf(tilt_dot(vector, vector));
 
     // if legnth is infiity , or NAN , return false, dont normalize
-    if (!isfinite(length) || (length < 0.01F))
+    if ((!isfinite(length)) || (length < 0.01F))
     {
         return false;
     }
@@ -61,8 +61,8 @@ tilt_plausible (float32_t const acceleration[3])
 
     // returns true only if its a real number,  total at least 700mg and at most
     // 1300mg
-    return isfinite(square) && (square >= 700.0F * 700.0F)
-           && (square <= 1300.0F * 1300.0F);
+    return (isfinite(square)) && (square >= (700.0F * 700.0F))
+           && (square <= (1300.0F * 1300.0F));
 }
 
 /* Clear transient history without redefining level after a data gap. */
@@ -167,7 +167,7 @@ tilt_capture (tilt_context_t * p_context, int16_t x, int16_t y, int16_t z)
          * forward direction even if the sensor is mounted slightly tilted.
          */
         p_context->forward[i]
-            = ((1U == i) ? 1.0F : 0.0F) - p_context->up[1] * p_context->up[i];
+            = ((1U == i) ? 1.0F : 0.0F) - (p_context->up[1] * p_context->up[i]);
     }
 
     // normalize vector and scale to 1 , if almos nothing left, calibration fail
@@ -179,12 +179,12 @@ tilt_capture (tilt_context_t * p_context, int16_t x, int16_t y, int16_t z)
     }
 
     /* side = forward cross up, giving approximately -X for this mounting. */
-    p_context->side[0]  = p_context->forward[1] * p_context->up[2]
-                          - p_context->forward[2] * p_context->up[1];
-    p_context->side[1]  = p_context->forward[2] * p_context->up[0]
-                          - p_context->forward[0] * p_context->up[2];
-    p_context->side[2]  = p_context->forward[0] * p_context->up[1]
-                          - p_context->forward[1] * p_context->up[0];
+    p_context->side[0]  = (p_context->forward[1] * p_context->up[2])
+                          - (p_context->forward[2] * p_context->up[1]);
+    p_context->side[1]  = (p_context->forward[2] * p_context->up[0])
+                          - (p_context->forward[0] * p_context->up[2]);
+    p_context->side[2]  = (p_context->forward[0] * p_context->up[1])
+                          - (p_context->forward[1] * p_context->up[0]);
     p_context->progress = TILT_CALIBRATED;
     return true;
 }
@@ -228,9 +228,15 @@ tilt_update (tilt_context_t * p_context, int16_t x, int16_t y, int16_t z)
 {
     float32_t a[3] = {(float32_t)x, (float32_t)y, (float32_t)z};
 
-    float32_t forward, side, up, pitch, roll;
-    int16_t   pitch_tenths, roll_tenths;
-    uint8_t   pitch_condition, roll_condition;
+    float32_t forward;
+    float32_t side;
+    float32_t up;
+    float32_t pitch;
+    float32_t roll;
+    int16_t   pitch_tenths;
+    int16_t   roll_tenths;
+    uint8_t   pitch_condition;
+    uint8_t   roll_condition;
     uint32_t  result;
 
     // checks
@@ -273,7 +279,7 @@ tilt_update (tilt_context_t * p_context, int16_t x, int16_t y, int16_t z)
     // working out of the angles
     // pitch angle of gravity towards the front, roll= angle of gravity towards
     // the side
-    pitch = TILT_PITCH_SIGN * atan2f(forward, sqrtf(side * side + up * up))
+    pitch = TILT_PITCH_SIGN * atan2f(forward, sqrtf((side * side) + (up * up)))
             * TILT_RAD_TO_DEG;
     // turns 2 lengths into an angle
     roll = TILT_ROLL_SIGN * atan2f(side, up) * TILT_RAD_TO_DEG;
@@ -281,7 +287,7 @@ tilt_update (tilt_context_t * p_context, int16_t x, int16_t y, int16_t z)
     // reject unusable poses
     //  if Nan/infity , if up<= 0  robot is on its side or upside down
     //  or pitch/roll +- 75 degrees
-    if (!isfinite(pitch) || !isfinite(roll) || (up <= 0.0F)
+    if ((!isfinite(pitch)) || (!isfinite(roll)) || (up <= 0.0F)
         || (fabsf(pitch) > 75.0F) || (fabsf(roll) > 75.0F))
     {
         tilt_discard_history(p_context);
@@ -330,8 +336,9 @@ tilt_side_height_tenths (tilt_context_t const * p_context, uint16_t track_mm)
         return 0;
     }
 
-    height = TILT_ROLL_SIGN * tilt_dot(p_context->filtered, p_context->side)
-             / magnitude * (float32_t)track_mm * 10.0F;
+    height = ((TILT_ROLL_SIGN * tilt_dot(p_context->filtered, p_context->side))
+              / magnitude)
+             * (float32_t)track_mm * 10.0F;
 
     if (!isfinite(height))
     {

@@ -125,7 +125,7 @@ buddy4_step (buddy4_t * p_context, uint8_t inputs)
 
         bool fresh = (0U != (p_context->result & TILT_RESULT_VALID))
                      && ((now_ms - p_context->last_fresh) < B4_STALE_MS)
-                     && !lift_suspect(&p_context->lift);
+                     && (!lift_suspect(&p_context->lift));
 
         terrain_step(
             &p_context->terrain, fresh,
@@ -505,7 +505,7 @@ bool
 buddy4_hump_start (buddy4_t * p_context, bool available, bool held)
 {
     if ((NULL == p_context) || (B4_FREEZE_NONE == p_context->hump_freeze)
-        || !available)
+        || (!available))
     {
         return false;
     }

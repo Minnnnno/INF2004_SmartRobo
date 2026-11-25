@@ -12,7 +12,7 @@
 static double
 side_sign (s5_avoid_side_t side)
 {
-    return (side == S5_AVOID_LEFT) ? 1.0 : -1.0;
+    return (S5_AVOID_LEFT == side) ? 1.0 : -1.0;
 }
 
 /* Every pose of the outward move keeps the robot's front corners (they
@@ -54,17 +54,17 @@ s5_detour_plan_side (const s5_scan_t * p_scan, s5_avoid_side_t side,
     p_plan->tilt_deg    = 0.0;
     p_plan->start_y_mm  = 0.0;
 
-    if (!p_scan->b_valid || (side == S5_AVOID_NONE)
+    if ((!p_scan->b_valid) || (S5_AVOID_NONE == side)
         || (max_out_deg < S5_OUT_MIN_DEG) || (max_out_deg > S5_OUT_MAX_DEG))
     {
         return false;
     }
 
-    index = (side == S5_AVOID_LEFT) ? (unsigned)S5_LEFT : (unsigned)S5_RIGHT;
+    index = (S5_AVOID_LEFT == side) ? (unsigned)S5_LEFT : (unsigned)S5_RIGHT;
 
-    if (!p_scan->avoid.b_room[index]
-        || !(b_face ? s5_face_corner(&p_scan->face, index)
-                    : p_scan->edge[index].b_found))
+    if ((!p_scan->avoid.b_room[index])
+        || (!(b_face ? s5_face_corner(&p_scan->face, index)
+                     : p_scan->edge[index].b_found)))
     {
         return false;
     }
@@ -83,10 +83,10 @@ s5_detour_plan_side (const s5_scan_t * p_scan, s5_avoid_side_t side,
         p_plan->tilt_deg = p_scan->face.tilt_deg;
         p_plan->edge_mm
             = p_plan->start_y_mm
-              + sign * (shift - S5_ROBOT_HALF_WIDTH_MM - S5_PASS_MARGIN_MM);
+              + (sign * (shift - S5_ROBOT_HALF_WIDTH_MM - S5_PASS_MARGIN_MM));
         p_plan->face_mm
             = p_scan->face.distance_mm
-              + S5_SERVO_AHEAD_MM * cos(p_plan->tilt_deg * DEG_TO_RAD);
+              + (S5_SERVO_AHEAD_MM * cos(p_plan->tilt_deg * DEG_TO_RAD));
     }
     else
     {
@@ -94,7 +94,7 @@ s5_detour_plan_side (const s5_scan_t * p_scan, s5_avoid_side_t side,
         p_plan->face_mm = p_scan->centre_forward_mm + S5_SERVO_AHEAD_MM;
     }
 
-    p_plan->shift_mm = p_plan->start_y_mm + sign * shift;
+    p_plan->shift_mm = p_plan->start_y_mm + (sign * shift);
     heading          = -p_plan->tilt_deg * DEG_TO_RAD;
 
     /* Forward travel the centre may make before the front corners reach
@@ -104,8 +104,8 @@ s5_detour_plan_side (const s5_scan_t * p_scan, s5_avoid_side_t side,
     room        = p_plan->face_mm - front_reach - S5_TURN_MARGIN_MM;
     tan_max     = tan(max_out_deg * DEG_TO_RAD);
     p_plan->backup_mm
-        = fmax(0.0, (shift / tan_max - room)
-                        / (cos(heading) - sign * sin(heading) / tan_max));
+        = fmax(0.0, ((shift / tan_max) - room)
+                        / (cos(heading) - ((sign * sin(heading)) / tan_max)));
 
     if (p_plan->backup_mm > S5_BACKUP_MAX_MM)
     {
@@ -113,14 +113,14 @@ s5_detour_plan_side (const s5_scan_t * p_scan, s5_avoid_side_t side,
     }
 
     room += p_plan->backup_mm * cos(heading);
-    travel = shift + sign * p_plan->backup_mm * sin(heading);
+    travel = shift + (sign * p_plan->backup_mm * sin(heading));
 
     angle_deg           = atan2(travel, room) / DEG_TO_RAD;
     angle_deg           = fmax(S5_OUT_MIN_DEG, fmin(max_out_deg, angle_deg));
     p_plan->turn_deg    = sign * angle_deg;
     p_plan->diagonal_mm = travel / sin(angle_deg * DEG_TO_RAD);
-    p_plan->out_x_mm    = travel / tan(angle_deg * DEG_TO_RAD)
-                          - p_plan->backup_mm * cos(heading);
+    p_plan->out_x_mm    = (travel / tan(angle_deg * DEG_TO_RAD))
+                          - (p_plan->backup_mm * cos(heading));
     p_plan->b_ok        = true;
     return true;
 }
@@ -157,10 +157,10 @@ s5_pass_observe (s5_pass_t * p_pass, const s5_detour_plan_t * p_plan,
     p_pass->gap_mm = side_sign(p_plan->side) * (y_mm - p_plan->edge_mm);
 
     if (b_echo
-        && (axis_range_mm * sin(look) <= p_pass->gap_mm + S5_SIDE_SEE_MM))
+        && ((axis_range_mm * sin(look)) <= (p_pass->gap_mm + S5_SIDE_SEE_MM)))
     {
         p_pass->rear_mm
-            = fmax(p_pass->rear_mm, servo_x + axis_range_mm * cos(look));
+            = fmax(p_pass->rear_mm, servo_x + (axis_range_mm * cos(look)));
         p_pass->clear_run = 0U;
 
         if (p_pass->seen < UINT8_MAX)
@@ -170,11 +170,11 @@ s5_pass_observe (s5_pass_t * p_pass, const s5_detour_plan_t * p_plan,
     }
     else
     {
-        crossing = servo_x + p_pass->gap_mm / tan(look);
+        crossing = servo_x + (p_pass->gap_mm / tan(look));
 
         if (crossing > p_pass->rear_mm)
         {
-            if (p_pass->clear_run == 0U)
+            if (0U == p_pass->clear_run)
             {
                 p_pass->end_mm = crossing;
             }
@@ -203,13 +203,13 @@ s5_pass_clear_x (const s5_pass_t * p_pass)
 double
 s5_return_length (double y_mm)
 {
-    return fabs(y_mm) / sin(S5_RETURN_DEG * DEG_TO_RAD) + S5_RETURN_EXTRA_MM;
+    return (fabs(y_mm) / sin(S5_RETURN_DEG * DEG_TO_RAD)) + S5_RETURN_EXTRA_MM;
 }
 
 bool
 s5_line_expected (double y_mm, double heading_deg)
 {
-    return fabs(y_mm + S5_IR_AHEAD_MM * sin(heading_deg * DEG_TO_RAD))
+    return fabs(y_mm + (S5_IR_AHEAD_MM * sin(heading_deg * DEG_TO_RAD)))
            <= S5_LINE_WINDOW_MM;
 }
 
@@ -241,8 +241,8 @@ s5_obstacle_range (const s5_detour_plan_t * p_plan, double x_mm, double y_mm,
 {
     double sign     = side_sign(p_plan->side);
     double heading  = heading_deg * DEG_TO_RAD;
-    double servo_x  = x_mm + S5_SERVO_AHEAD_MM * cos(heading);
-    double servo_y  = y_mm + S5_SERVO_AHEAD_MM * sin(heading);
+    double servo_x  = x_mm + (S5_SERVO_AHEAD_MM * cos(heading));
+    double servo_y  = y_mm + (S5_SERVO_AHEAD_MM * sin(heading));
     double look_deg = heading_deg + (double)(S5_ANGLE_CENTRE_DEG - angle_deg);
     double nearest  = INFINITY;
     int    offset;
@@ -258,9 +258,9 @@ s5_obstacle_range (const s5_detour_plan_t * p_plan, double x_mm, double y_mm,
 
         /* Beyond the face (x >= face_mm), on the obstacle's side of the passed
          * end */
-        if (clip_ray(servo_x - p_plan->face_mm, ux, &lo, &hi)
-            && clip_ray(-sign * (servo_y - p_plan->edge_mm), -sign * uy, &lo,
-                        &hi))
+        if ((clip_ray(servo_x - p_plan->face_mm, ux, &lo, &hi))
+            && (clip_ray(-sign * (servo_y - p_plan->edge_mm), -sign * uy, &lo,
+                         &hi)))
         {
             nearest = fmin(nearest, lo);
         }
@@ -275,13 +275,13 @@ s5_echo_on_obstacle (const s5_detour_plan_t * p_plan, double x_mm, double y_mm,
 {
     double expected;
 
-    if (!p_plan->b_ok || (p_plan->side == S5_AVOID_NONE))
+    if ((!p_plan->b_ok) || (S5_AVOID_NONE == p_plan->side))
     {
         return false;
     }
 
     expected = s5_obstacle_range(p_plan, x_mm, y_mm, heading_deg, angle_deg);
-    return isfinite(expected)
+    return (isfinite(expected))
            && (fabs(range_mm + S5_SENSOR_OFFSET_MM - expected)
                <= S5_KNOWN_RANGE_TOL_MM);
 }

@@ -81,26 +81,50 @@ _Static_assert((SHUTDOWN <= 7) && (ARC_MOVE <= 7) && (F_SETUP_TIMEOUT <= 15)
 
 typedef struct
 {
-    double kp, ki, kd, derivative_tau;
+    double kp;
+    double ki;
+    double kd;
+    double derivative_tau;
 } pid_config_t;
 
 typedef struct
 {
-    double integral, previous, derivative;
+    double integral;
+    double previous;
+    double derivative;
     bool   seeded;
 } pid_t;
 
 typedef struct
 {
-    double counts_per_rev[2], diameter[2], track;
-    int    motor_sign[2], encoder_sign[2];
+    double counts_per_rev[2];
+    double diameter[2];
+    double track;
+    int    motor_sign[2];
+    int    encoder_sign[2];
     bool   quadrature[2]; /* x4 A/B; single channel counts A rising edges. */
 
-    double max_speed, acceleration, max_output, period, max_dt;
-    double distance_tolerance, angle_tolerance, stopped_speed, settle_time;
-    double startup_grace, feedback_timeout, stop_timeout, setup_timeout;
-    double command_lifetime, movement_timeout, max_distance, max_angle;
-    double straight_gain, reversal_time, manual_limit, manual_timeout;
+    double max_speed;
+    double acceleration;
+    double max_output;
+    double period;
+    double max_dt;
+    double distance_tolerance;
+    double angle_tolerance;
+    double stopped_speed;
+    double settle_time;
+    double startup_grace;
+    double feedback_timeout;
+    double stop_timeout;
+    double setup_timeout;
+    double command_lifetime;
+    double movement_timeout;
+    double max_distance;
+    double max_angle;
+    double straight_gain;
+    double reversal_time;
+    double manual_limit;
+    double manual_timeout;
     /* Slowest wheel speed (m/s) the DISTANCE_MOVE/ENCODER_TURN deceleration
      * ramp may ask for before the goal; 0 = ramp all the way down. */
     double min_goal_speed;
@@ -110,23 +134,31 @@ typedef struct
     pid_config_t pid[2];
     unsigned     pwm_hz;
 
-    bool hardware_confirmed, brake, manual_enabled;
+    bool hardware_confirmed;
+    bool brake;
+    bool manual_enabled;
 } motion_config_t;
 
 typedef struct
 {
-    uint32_t      id, generation;
+    uint32_t      id;
+    uint32_t      generation;
     motion_mode_t mode;
 
-    double value, speed[2], expires, deadline;
+    double value;
+    double speed[2];
+    double expires;
+    double deadline;
     /* ARC_MOVE: heading change radians; 0=distance goal, >0=timed trajectory.
      */
-    double angle, duration;
+    double angle;
+    double duration;
 } motion_command_t;
 
 typedef struct
 {
-    uint32_t count[2], invalid[2];
+    uint32_t count[2];
+    uint32_t invalid[2];
     bool     reliable;
 } encoder_sample_t;
 
@@ -134,14 +166,19 @@ typedef struct
 {
     uint32_t previous[2];
 
-    double travel[2], speed[2], centre, path, heading;
+    double travel[2];
+    double speed[2];
+    double centre;
+    double path;
+    double heading;
 } odometry_t;
 
 typedef struct
 {
     motion_event_type_t type;
 
-    uint32_t       id, generation;
+    uint32_t       id;
+    uint32_t       generation;
     motion_fault_t fault;
 } motion_event_t;
 
@@ -149,15 +186,21 @@ typedef struct
  * Integer units keep status copies small. INT32_MIN means an invalid value. */
 typedef struct
 {
-    bool           recorded, finite_goal;
+    bool           recorded;
+    bool           finite_goal;
     uint8_t        stalled_wheels; /* bit 0 left, bit 1 right */
     motion_state_t state;
     motion_mode_t  mode;
     uint32_t       id;
 
-    int32_t time_ms, dt_us;
-    int32_t target_mm_s[2], speed_mm_s[2], output_permille[2];
-    int32_t remaining_um[2], no_progress_ms[2], feedback_limit_ms[2];
+    int32_t time_ms;
+    int32_t dt_us;
+    int32_t target_mm_s[2];
+    int32_t speed_mm_s[2];
+    int32_t output_permille[2];
+    int32_t remaining_um[2];
+    int32_t no_progress_ms[2];
+    int32_t feedback_limit_ms[2];
 } motion_fault_debug_t;
 
 typedef struct
@@ -166,17 +209,29 @@ typedef struct
     motion_mode_t  mode;
     motion_fault_t fault;
 
-    uint32_t id, generation;
-    double   speed[2], travel[2], output[2], target[2], centre, path, heading,
-        sample_time;
+    uint32_t id;
+    uint32_t generation;
+    double   speed[2];
+    double   travel[2];
+    double   output[2];
+    double   target[2];
+    double   centre;
+    double   path;
+    double   heading;
+    double   sample_time;
     /* Latest raw sample, including while faulted; [0] left, [1] right.
      * Counts are modulo 2^32, not fault-time snapshots or distance units. */
     encoder_sample_t encoder;
     double           encoder_sample_time;
 
-    bool stationary, feedback_trusted, inhibited, hold;
+    bool stationary;
+    bool feedback_trusted;
+    bool inhibited;
+    bool hold;
     /* First timing failure is retained until init/reset; never print in ISR. */
-    double                  last_dt, max_observed_dt, timing_fault_dt;
+    double                  last_dt;
+    double                  max_observed_dt;
+    double                  timing_fault_dt;
     motion_state_t          timing_fault_state;
     bool                    timing_fault_recorded;
     uint32_t                startup_gaps;
@@ -184,7 +239,8 @@ typedef struct
     motion_feedback_cause_t feedback_cause;
     encoder_sample_t        feedback_fault_sample;
 
-    uint32_t feedback_previous_count[2], feedback_previous_invalid[2];
+    uint32_t             feedback_previous_count[2];
+    uint32_t             feedback_previous_invalid[2];
     motion_fault_debug_t debug;
 } motion_status_t;
 
@@ -198,8 +254,12 @@ typedef struct
     /* Raw modular counts captured on command entry. */
     uint32_t start_count[2];
 
-    double start[2], last_time, entered, last_progress[2], expected_since[2],
-        still_since;
+    double   start[2];
+    double   last_time;
+    double   entered;
+    double   last_progress[2];
+    double   expected_since[2];
+    double   still_since;
     uint32_t invalid[2];
     /* active remains a public bridge member used by the unchanged controller.
      * Other owner-only booleans and independent fault causes are packed. */

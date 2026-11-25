@@ -68,7 +68,7 @@ subsystem1_test (void)
 
         er = E_OK;
 
-        for (i = 0; i < 20 && er == E_OK; i++)
+        for (i = 0; i < 20 && E_OK == er; i++)
         {
             er = comms_send_telemetry("test", "fill");
         }
@@ -105,11 +105,11 @@ subsystem1_test (void)
         comms_hook_command(junk, 3);
         comms_hook_command(junk, -1);
         comms_hook_command(reserved, 2);
-        none = (take_cmd(&cmd) == E_TMOUT);
+        none = (E_TMOUT == take_cmd(&cmd));
         send_cmd(TF_OP_STOP, 9, 1);
         TEST_CHECK("S1-U04",
                    none && take_cmd(&cmd) == (INT)sizeof(cmd)
-                       && cmd == COMMS_CMD_STOP,
+                       && COMMS_CMD_STOP == cmd,
                    "valid command forwarded, malformed rejected");
     }
 
@@ -120,15 +120,15 @@ subsystem1_test (void)
         BOOL first, again, stale, stop, fresh;
 
         send_cmd(TF_OP_START, 9, 2);
-        first = (take_cmd(&cmd) >= E_OK) && (cmd == COMMS_CMD_START);
+        first = (take_cmd(&cmd) >= E_OK) && (COMMS_CMD_START == cmd);
         send_cmd(TF_OP_START, 9, 2); /* QoS 1 redelivery */
-        again = (take_cmd(&cmd) == E_TMOUT);
+        again = (E_TMOUT == take_cmd(&cmd));
         send_cmd(TF_OP_START, 9, 1); /* older */
-        stale = (take_cmd(&cmd) == E_TMOUT);
+        stale = (E_TMOUT == take_cmd(&cmd));
         send_cmd(TF_OP_STOP, 9, 2); /* repeated stop */
-        stop = (take_cmd(&cmd) >= E_OK) && (cmd == COMMS_CMD_STOP);
+        stop = (take_cmd(&cmd) >= E_OK) && (COMMS_CMD_STOP == cmd);
         send_cmd(TF_OP_START, 10, 0); /* new dashboard session */
-        fresh = (take_cmd(&cmd) >= E_OK) && (cmd == COMMS_CMD_START);
+        fresh = (take_cmd(&cmd) >= E_OK) && (COMMS_CMD_START == cmd);
         TEST_CHECK("S1-U09", first && again && stale && stop && fresh,
                    "duplicate START suppressed, STOP always forwarded");
     }

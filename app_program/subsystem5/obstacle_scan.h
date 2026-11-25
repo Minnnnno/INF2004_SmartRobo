@@ -270,7 +270,7 @@ typedef struct
 static inline bool
 s5_face_corner (const s5_face_t * p_face, unsigned side)
 {
-    return (side == (unsigned)S5_LEFT) ? p_face->b_corner_left
+    return ((unsigned)S5_LEFT == side) ? p_face->b_corner_left
                                        : p_face->b_corner_right;
 }
 

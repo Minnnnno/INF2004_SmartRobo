@@ -81,7 +81,7 @@ typedef struct
     uint8_t phase    : 2;
 } buddy4_control_t;
 
-_Static_assert(sizeof(buddy4_control_t) == 1U,
+_Static_assert(1U == sizeof(buddy4_control_t),
                "Buddy 4 control must occupy one byte");
 
 typedef struct

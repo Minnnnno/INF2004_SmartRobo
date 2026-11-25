@@ -16,22 +16,22 @@ robot_request (robot_bus_t * b, const robot_request_t * r)
     unsigned i;
 
     if (((unsigned)r->source > (unsigned)SOURCE_TERRAIN)
-        || (r->command.id == 0U) || !isfinite(r->command.value)
-        || !isfinite(r->command.speed[0]) || !isfinite(r->command.speed[1])
-        || !isfinite(r->command.angle) || !isfinite(r->command.duration)
+        || (0U == r->command.id) || (!isfinite(r->command.value))
+        || (!isfinite(r->command.speed[0])) || (!isfinite(r->command.speed[1]))
+        || (!isfinite(r->command.angle)) || (!isfinite(r->command.duration))
         || ((unsigned)r->command.mode > (unsigned)ARC_MOVE))
     {
         return R_INVALID;
     }
 
-    if ((r->command.generation != b->generation) || b->shutdown_latched)
+    if ((r->command.generation != b->generation) || (b->shutdown_latched))
     {
         return R_STALE;
     }
 
-    if ((b->controls != 0U) || b->status.motion.hold
-        || ((b->status.motion.state != READY)
-            && (b->status.motion.state != DRIVING)))
+    if ((0U != b->controls) || (b->status.motion.hold)
+        || ((READY != b->status.motion.state)
+            && (DRIVING != b->status.motion.state)))
     {
         return R_HELD;
     }
@@ -42,8 +42,8 @@ robot_request (robot_bus_t * b, const robot_request_t * r)
     {
         robot_request_t * pending = &b->requests[(b->head + i) % 8U];
 
-        if ((r->command.mode == WHEEL_SPEED_TRACKING)
-            && (pending->command.mode == WHEEL_SPEED_TRACKING)
+        if ((WHEEL_SPEED_TRACKING == r->command.mode)
+            && (WHEEL_SPEED_TRACKING == pending->command.mode)
             && (r->source == pending->source)
             && (r->command.id == pending->command.id))
         {
@@ -57,7 +57,7 @@ robot_request (robot_bus_t * b, const robot_request_t * r)
         }
     }
 
-    if (b->count == 8U)
+    if (8U == b->count)
     {
         return R_FULL;
     }
@@ -73,15 +73,15 @@ robot_control (robot_bus_t * b, robot_control_t control, bool checks_ok,
 {
     /* Operator stop latched: only vehicle_controller_remote_command(START) may
      * release. */
-    if ((control == CONTROL_RELEASE) && b->remote_hold)
+    if ((CONTROL_RELEASE == control) && (b->remote_hold))
     {
         return;
     }
 
     b->controls |= (uint32_t)control;
 
-    if ((control == CONTROL_STOP) || (control == CONTROL_FAULT)
-        || (control == CONTROL_ESTOP) || (control == CONTROL_SHUTDOWN))
+    if ((CONTROL_STOP == control) || (CONTROL_FAULT == control)
+        || (CONTROL_ESTOP == control) || (CONTROL_SHUTDOWN == control))
     {
         ++b->generation;
         b->count              = 0U;
@@ -91,7 +91,7 @@ robot_control (robot_bus_t * b, robot_control_t control, bool checks_ok,
         b->controls &= ~(uint32_t)(CONTROL_RELEASE | CONTROL_RESET);
     }
 
-    if (control == CONTROL_SHUTDOWN)
+    if (CONTROL_SHUTDOWN == control)
     {
         b->shutdown_latched = true;
     }
@@ -106,7 +106,7 @@ vehicle_controller_cycle (robot_bus_t * b, double now)
     robot_request_t r;
     unsigned        i;
 
-    if (b->event_count != 0U)
+    if (0U != b->event_count)
     {
         for (i = 0; i < b->event_count; ++i)
         {
@@ -114,8 +114,8 @@ vehicle_controller_cycle (robot_bus_t * b, double now)
 
             b->status.last_event = e;
 
-            if ((e.type == EV_FAULT) || (e.type == EV_COMPLETE)
-                || (e.type == EV_CANCELLED))
+            if ((EV_FAULT == e.type) || (EV_COMPLETE == e.type)
+                || (EV_CANCELLED == e.type))
             {
                 b->status.owner_valid = false;
             }
@@ -125,14 +125,14 @@ vehicle_controller_cycle (robot_bus_t * b, double now)
         b->event_count = 0U;
     }
 
-    if ((b->controls != 0U) || b->shutdown_latched || b->status.motion.hold
-        || (b->status.motion.state == FAULT))
+    if ((0U != b->controls) || (b->shutdown_latched) || (b->status.motion.hold)
+        || (FAULT == b->status.motion.state))
     {
         b->count = 0U;
         return;
     }
 
-    if ((b->count == 0U) || b->approved_valid)
+    if ((0U == b->count) || (b->approved_valid))
     {
         return;
     }
@@ -141,12 +141,12 @@ vehicle_controller_cycle (robot_bus_t * b, double now)
     b->head = (b->head + 1U) % 8U;
     --b->count;
 
-    if ((r.command.generation != b->generation) || !isfinite(r.command.expires)
-        || (r.command.expires <= now)
-        || (b->status.owner_valid
+    if ((r.command.generation != b->generation)
+        || (!isfinite(r.command.expires)) || (r.command.expires <= now)
+        || ((b->status.owner_valid)
             && ((b->status.owner != r.source)
                 || (b->status.motion.id != r.command.id)
-                || (r.command.mode != WHEEL_SPEED_TRACKING))))
+                || (WHEEL_SPEED_TRACKING != r.command.mode))))
     {
         ++b->status.rejected_requests;
         return;
@@ -162,28 +162,29 @@ motion_result_t
 vehicle_controller_remote_command (robot_bus_t *          b,
                                    robot_remote_command_t command)
 {
-    if (command == REMOTE_STOP)
+    if (REMOTE_STOP == command)
     {
         b->remote_hold = true;
         robot_control(b, CONTROL_STOP, false, false);
         return R_OK;
     }
 
-    if (command == REMOTE_ESTOP)
+    if (REMOTE_ESTOP == command)
     {
         b->remote_hold = true;
         robot_control(b, CONTROL_ESTOP, false, false);
         return R_OK;
     }
 
-    if (command != REMOTE_START)
+    if (REMOTE_START != command)
     {
         return R_INVALID;
     }
 
-    if (b->shutdown_latched || b->controls != 0U
-        || b->status.motion.state != STOPPED || b->status.motion.fault != F_NONE
-        || !b->status.motion.stationary || !b->status.motion.feedback_trusted)
+    if ((b->shutdown_latched) || (0U != b->controls)
+        || (STOPPED != b->status.motion.state)
+        || (F_NONE != b->status.motion.fault) || (!b->status.motion.stationary)
+        || (!b->status.motion.feedback_trusted))
     {
         return R_HELD;
     }
@@ -204,12 +205,12 @@ robot_motion_inputs (robot_bus_t * b, motion_t * m, encoder_sample_t sample,
     /* Emergency stop wins a simultaneous system fault; record both causes.
      * Faults win over cancellation; shutdown is terminal and retains the cause.
      */
-    if ((controls & CONTROL_ESTOP) != 0U)
+    if (0U != (controls & CONTROL_ESTOP))
     {
         motion_raise_fault(m, F_ESTOP, now);
     }
 
-    if ((controls & CONTROL_FAULT) != 0U)
+    if (0U != (controls & CONTROL_FAULT))
     {
         motion_raise_fault(m, F_SYSTEM, now);
     }
@@ -218,23 +219,23 @@ robot_motion_inputs (robot_bus_t * b, motion_t * m, encoder_sample_t sample,
     {
         motion_shutdown(m, now);
     }
-    else if ((controls & CONTROL_STOP) != 0U)
+    else if (0U != (controls & CONTROL_STOP))
     {
         motion_cancel(m, now);
     }
-    else if ((controls & (CONTROL_FAULT | CONTROL_ESTOP)) == 0U)
+    else if (0U == (controls & (CONTROL_FAULT | CONTROL_ESTOP)))
     {
-        if ((controls & CONTROL_RESET) != 0U)
+        if (0U != (controls & CONTROL_RESET))
         {
             (void)motion_reset(m, b->checks_ok, b->external_rest, sample, now);
         }
-        else if ((controls & CONTROL_RELEASE) != 0U)
+        else if (0U != (controls & CONTROL_RELEASE))
         {
             (void)motion_release(m, b->checks_ok);
         }
     }
 
-    if (controls != 0U)
+    if (0U != controls)
     {
         b->count          = 0U;
         b->approved_valid = false;
@@ -253,7 +254,7 @@ robot_motion_inputs (robot_bus_t * b, motion_t * m, encoder_sample_t sample,
     {
         motion_result_t result = motion_accept(m, &b->approved, now);
 
-        if (result != R_OK)
+        if (R_OK != result)
         {
             ++b->status.rejected_requests;
             b->status.last_event = (motion_event_t){
@@ -276,7 +277,7 @@ robot_publish (robot_bus_t * b, motion_t * m, double now)
 
     while (motion_next_event(m, &e))
     {
-        if (b->event_count == 8U)
+        if (8U == b->event_count)
         {
             ++b->status.dropped_events;
             motion_raise_fault(m, F_EVENT_OVERFLOW, now);

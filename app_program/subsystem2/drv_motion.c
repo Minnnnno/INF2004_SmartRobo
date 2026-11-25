@@ -15,8 +15,10 @@ static double                     neutral_since[2];
 /* neutral bits0:1; last directions bits2:5 */
 static uint8_t  g_wheel_flags = 3u;
 static uint16_t wrap;
-static uint16_t configured_divider_16, last_compare[2][2];
-static double   last_requested[2], last_applied[2];
+static uint16_t configured_divider_16;
+static uint16_t last_compare[2][2];
+static double   last_requested[2];
+static double   last_applied[2];
 static uint8_t  reversal_wait_mask;
 static bool     last_inhibited = true;
 static uint32_t last_write_us;
@@ -60,7 +62,7 @@ motor_neutral_set (uint32_t wheel, bool b_value)
 static int32_t
 motor_direction_get (uint32_t wheel)
 {
-    uint32_t encoded = ((uint32_t)g_wheel_flags >> (2u + 2u * wheel)) & 3u;
+    uint32_t encoded = ((uint32_t)g_wheel_flags >> (2u + (2u * wheel))) & 3u;
 
     return (1u == encoded) ? 1 : ((2u == encoded) ? -1 : 0);
 }
@@ -68,7 +70,7 @@ motor_direction_get (uint32_t wheel)
 static void
 motor_direction_set (uint32_t wheel, int32_t direction)
 {
-    uint32_t shift   = 2u + 2u * wheel;
+    uint32_t shift   = 2u + (2u * wheel);
     uint32_t encoded = (direction > 0) ? 1u : ((direction < 0) ? 2u : 0u);
     uint32_t flags   = g_wheel_flags;
 
@@ -88,23 +90,24 @@ motor_sign_get (uint32_t wheel)
 static void
 encoder_irq (void)
 {
-    uint32_t pending[4], any = 0U;
+    uint32_t pending[4];
+    uint32_t any = 0U;
     unsigned bank;
     uint32_t levels;
 
     for (bank = 0U; bank < 4U; ++bank)
     {
-        pending[bank] = in_w(IO_BANK0_BASE + 0x120U + bank * 4U)
+        pending[bank] = in_w(IO_BANK0_BASE + 0x120U + (bank * 4U))
                         & encoder_event_mask[bank];
         any |= pending[bank];
 
-        if (pending[bank] != 0U)
+        if (0U != pending[bank])
         {
-            out_w(IO_BANK0_BASE + 0xf0U + bank * 4U, pending[bank]);
+            out_w(IO_BANK0_BASE + 0xf0U + (bank * 4U), pending[bank]);
         }
     }
 
-    if (any == 0U)
+    if (0U == any)
     {
         return;
     }
@@ -124,7 +127,7 @@ motion_hal_emergency_stop (void)
     {
         /* Fixed physical board links, even if edited configuration is invalid.
          */
-        unsigned a = 8U + 2U * w;
+        unsigned a = 8U + (2U * w);
         unsigned b = a + 1U;
 
         /* Cytron Robo Pico truth table: LOW/LOW brake. Preload before
@@ -211,7 +214,7 @@ motion_hal_init (const motion_config_t * config)
         {
             unsigned pin = encoder_pins[w][channel];
 
-            if ((channel == 1U) && !config->quadrature[w])
+            if ((1U == channel) && (!config->quadrature[w]))
             {
                 continue;
             }
@@ -242,7 +245,7 @@ motion_hal_init (const motion_config_t * config)
 
     for (w = 0U; w < 4U; ++w)
     {
-        out_w(IO_BANK0_BASE + 0xf0U + w * 4U, encoder_event_mask[w]);
+        out_w(IO_BANK0_BASE + 0xf0U + (w * 4U), encoder_event_mask[w]);
     }
 
     encoder_capture_init(&capture, encoder_pins, config->quadrature,
@@ -307,13 +310,14 @@ motion_hal_sample (void)
 void
 motion_hal_encoder_diagnostics (encoder_diagnostics_t * d)
 {
-    unsigned w, channel;
+    unsigned w;
+    unsigned channel;
     uint32_t irq_state = save_and_disable_interrupts();
 
     d->levels           = in_w(GPIO_IN);
     d->initialised      = motor_state_get(DRIVER_ENCODER_READY);
     d->irq_registered   = motor_state_get(DRIVER_IRQ_REGISTERED);
-    d->nvic_enabled     = (in_w(0xe000e100U) & (1UL << 13U)) != 0U;
+    d->nvic_enabled     = 0U != (in_w(0xe000e100U) & (1UL << 13U));
     d->motors_inhibited = !motor_state_get(DRIVER_PWM_READY);
 #ifdef ROBO_SAFE_MOTOR_TEST
     d->motors_inhibited = !motor_test_active();
@@ -359,7 +363,7 @@ diagnostic_permille (double value)
 void
 motion_hal_motor_diagnostics (motor_diagnostics_t * d)
 {
-    if (d == NULL)
+    if (NULL == d)
     {
         return;
     }
@@ -371,9 +375,9 @@ motion_hal_motor_diagnostics (motor_diagnostics_t * d)
     d->mismatch_mask         = 0U;
     d->configured_top        = wrap;
     d->configured_divider_16 = configured_divider_16;
-    d->cap_permille  = isfinite(g_motor_config.max_output)
-                               && g_motor_config.max_output > 0.0
-                               && g_motor_config.max_output <= 1.0
+    d->cap_permille  = ((isfinite(g_motor_config.max_output))
+                        && (g_motor_config.max_output > 0.0)
+                        && (g_motor_config.max_output <= 1.0))
                            ? (int32_t)(g_motor_config.max_output * 1000.0)
                            : 0;
     d->output_age_ms = (in_w(TIMER_TIMERAWL) - last_write_us) / 1000U;
@@ -381,7 +385,7 @@ motion_hal_motor_diagnostics (motor_diagnostics_t * d)
     for (unsigned w = 0U; w < 2U; ++w)
     {
         uint32_t base
-            = PWM_BASE + pwm_gpio_to_slice_num(motor_pins[w][0]) * 0x14U;
+            = PWM_BASE + (pwm_gpio_to_slice_num(motor_pins[w][0]) * 0x14U);
         uint32_t compare = in_w(base + 12U);
 
         d->requested_permille[w]  = diagnostic_permille(last_requested[w]);
@@ -393,7 +397,7 @@ motion_hal_motor_diagnostics (motor_diagnostics_t * d)
         d->top[w]                 = (uint16_t)in_w(base + 16U);
         d->divider_16[w]          = (uint16_t)in_w(base + 4U);
 
-        if ((in_w(base) & 1U) != 0U)
+        if (0U != (in_w(base) & 1U))
         {
             d->enabled_mask |= (uint8_t)(1U << w);
         }
@@ -404,13 +408,14 @@ motion_hal_motor_diagnostics (motor_diagnostics_t * d)
                 = (uint8_t)(in_w(GPIO_CTRL(motor_pins[w][channel])) & 31U);
         }
 
-        if (d->ready
-            && (d->compare[w][0] != last_compare[w][0]
-                || d->compare[w][1] != last_compare[w][1] || d->top[w] != wrap
-                || d->divider_16[w] != configured_divider_16
-                || (d->enabled_mask & (1U << w)) == 0U
-                || d->pin_function[w][0] != GPIO_FUNC_PWM
-                || d->pin_function[w][1] != GPIO_FUNC_PWM))
+        if ((d->ready)
+            && ((d->compare[w][0] != last_compare[w][0])
+                || (d->compare[w][1] != last_compare[w][1])
+                || (d->top[w] != wrap)
+                || (d->divider_16[w] != configured_divider_16)
+                || (0U == (d->enabled_mask & (1U << w)))
+                || (GPIO_FUNC_PWM != d->pin_function[w][0])
+                || (GPIO_FUNC_PWM != d->pin_function[w][1])))
         {
             d->mismatch_mask |= (uint8_t)(1U << w);
         }
@@ -451,9 +456,9 @@ motion_hal_write (const double output[2], bool inhibited, double now)
         uint16_t a         = 0U;
         uint16_t b         = 0U;
 
-        if ((direction != 0) && (motor_direction_get(w) != 0)
+        if ((0 != direction) && (0 != motor_direction_get(w))
             && (direction != motor_direction_get(w))
-            && (!motor_is_neutral(w)
+            && ((!motor_is_neutral(w))
                 || ((now - neutral_since[w]) < g_motor_config.reversal_time)))
         {
             value     = 0.0;
@@ -461,7 +466,7 @@ motion_hal_write (const double output[2], bool inhibited, double now)
             reversal_wait_mask |= (uint8_t)(1U << w);
         }
 
-        if (direction == 0)
+        if (0 == direction)
         {
             if (!motor_is_neutral(w))
             {

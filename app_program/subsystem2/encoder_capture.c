@@ -79,7 +79,7 @@ encoder_capture_events (volatile encoder_capture_t * p_capture,
 
             events[channel] = (pending[pin / 8u] >> ((pin % 8u) * 4u)) & 12u;
 
-            if ((1u == channel) && !b_quadrature)
+            if ((1u == channel) && (!b_quadrature))
             {
                 events[channel] = 0u;
             }

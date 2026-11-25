@@ -74,7 +74,7 @@ encoder_diagnostics (void)
         printf(
             "%s A=GP%u level=%u edges=%lu irq_mask=%u func=%u B=GP%u level=%u "
             "edges=%lu irq_mask=%u func=%u prev_AB=%u\n",
-            (const UB *)((wheel == 0U) ? "left" : "right"), d.pins[wheel][0],
+            (const UB *)((0U == wheel) ? "left" : "right"), d.pins[wheel][0],
             (unsigned)((d.levels >> d.pins[wheel][0]) & 1U),
             (unsigned long)d.edges[wheel][0], (unsigned)d.irq_events[wheel][0],
             (unsigned)d.function[wheel][0], d.pins[wheel][1],
@@ -92,13 +92,18 @@ static void
 usb_diagnostics (void)
 {
 #if TM_CONSOLE_USB_CDC
-    extern volatile UW tm_usb_link_state, tm_usb_init_ok, tm_usb_irq_count;
-    extern volatile UW tm_usb_nvic_enabled, tm_usb_dropped;
+    extern volatile UW tm_usb_link_state;
+    extern volatile UW tm_usb_init_ok;
+    extern volatile UW tm_usb_irq_count;
+    extern volatile UW tm_usb_nvic_enabled;
+    extern volatile UW tm_usb_dropped;
     extern volatile W  tm_usb_def_int_ercd;
-    uint32_t           irq_state = save_and_disable_interrupts();
-    UW                 link = tm_usb_link_state, init = tm_usb_init_ok,
-                       interrupts = tm_usb_irq_count;
-    UW                 enabled = tm_usb_nvic_enabled, dropped = tm_usb_dropped;
+    uint32_t           irq_state  = save_and_disable_interrupts();
+    UW                 link       = tm_usb_link_state;
+    UW                 init       = tm_usb_init_ok;
+    UW                 interrupts = tm_usb_irq_count;
+    UW                 enabled    = tm_usb_nvic_enabled;
+    UW                 dropped    = tm_usb_dropped;
 
     W registered = tm_usb_def_int_ercd;
     restore_interrupts(irq_state);
@@ -155,8 +160,9 @@ manual_console (void)
 #endif
     motion_hal_console_init();
 #ifdef ROBO_ANGLE_TEST
-    bool          angle_shutdown = false, angle_discard = false;
-    angle_state_t reported = ANGLE_IDLE;
+    bool          angle_shutdown = false;
+    bool          angle_discard  = false;
+    angle_state_t reported       = ANGLE_IDLE;
 
     printf("firmware=%s angle_test_ready=%u production_inhibited=1 "
            "max_output_percent=25 timeout_ms=8000\n",
@@ -214,7 +220,7 @@ manual_console (void)
                 "motors_stopped=1\n",
                 (const UB *)(result.wheel == 2U
                                  ? "both"
-                                 : (result.wheel == 0U ? "left" : "right")),
+                                 : (0U == result.wheel ? "left" : "right")),
                 (const UB *)(result.direction > 0 ? "forward" : "reverse"),
                 (const UB *)(result.timed_out ? "timeout" : "stop"),
                 count_sign(result.delta[0]), count_magnitude(result.delta[0]),
@@ -223,11 +229,11 @@ manual_console (void)
                 (unsigned long)result.invalid_delta[1]);
         }
 #endif
-        while (budget-- != 0U)
+        while (0U != budget--)
         {
             input = motion_hal_console_read();
 
-            if (input == -2)
+            if (-2 == input)
             {
                 used  = 0U;
                 armed = false;
@@ -251,7 +257,7 @@ manual_console (void)
 #ifdef ROBO_ANGLE_TEST
             if (angle_discard)
             {
-                if (input == '\n' || input == '\r')
+                if (('\n' == input) || ('\r' == input))
                 {
                     angle_discard = false;
                 }
@@ -262,7 +268,7 @@ manual_console (void)
 #ifdef ROBO_SAFE_MOTOR_TEST
             if (discard_line)
             {
-                if ((input == '\n') || (input == '\r'))
+                if (('\n' == input) || ('\r' == input))
                 {
                     discard_line = false;
                 }
@@ -270,14 +276,14 @@ manual_console (void)
                 continue;
             }
 #endif
-            if ((input == '\n') || (input == '\r'))
+            if (('\n' == input) || ('\r' == input))
             {
                 robot_status_t status;
 
                 line[used] = '\0';
                 used       = 0U;
 
-                if (strcmp(line, "status") == 0)
+                if (0 == strcmp(line, "status"))
                 {
                     encoder_sample_t sample = motion_hal_sample();
 
@@ -324,22 +330,22 @@ manual_console (void)
 #endif
 #ifdef ROBO_BATTERY_FORWARD_TEST
                 }
-                else if (strcmp(line, "buttons") == 0)
+                else if (0 == strcmp(line, "buttons"))
                 {
                     button_diagnostics();
 #endif
                 }
-                else if (strcmp(line, "encdiag") == 0)
+                else if (0 == strcmp(line, "encdiag"))
                 {
                     encoder_diagnostics();
                 }
-                else if (strcmp(line, "usbdiag") == 0)
+                else if (0 == strcmp(line, "usbdiag"))
                 {
                     usb_diagnostics();
 #if !defined(ROBO_ENCODER_DIAGNOSTICS_ONLY) && !defined(ROBO_SAFE_MOTOR_TEST) \
     && !defined(ROBO_ANGLE_TEST)
                 }
-                else if (strcmp(line, "ARM") == 0)
+                else if (0 == strcmp(line, "ARM"))
                 {
                     armed    = true;
                     armed_at = motion_hal_time();
@@ -347,7 +353,7 @@ manual_console (void)
                          "still apply.");
 #endif
                 }
-                else if (strcmp(line, "stop") == 0)
+                else if (0 == strcmp(line, "stop"))
                 {
 #ifdef ROBO_ANGLE_TEST
                     angle_test_stop();
@@ -361,7 +367,7 @@ manual_console (void)
                     motion_stop();
                     armed = false;
                 }
-                else if (strcmp(line, "shutdown") == 0)
+                else if (0 == strcmp(line, "shutdown"))
                 {
 #ifdef ROBO_ANGLE_TEST
                     angle_test_stop();
@@ -375,12 +381,12 @@ manual_console (void)
                     armed = false;
 #ifdef ROBO_ANGLE_TEST
                 }
-                else if (strcmp(line, "turn_left_90") == 0
-                         || strcmp(line, "turn_right_90") == 0)
+                else if ((0 == strcmp(line, "turn_left_90"))
+                         || (0 == strcmp(line, "turn_right_90")))
                 {
-                    if (!angle_shutdown
-                        && angle_test_start(
-                            strcmp(line, "turn_left_90") == 0 ? 1 : -1))
+                    if ((!angle_shutdown)
+                        && (angle_test_start(
+                            (0 == strcmp(line, "turn_left_90")) ? 1 : -1)))
                     {
                         puts("angle_test_started target_deg=90 "
                              "max_output_percent=25 timeout_ms=8000");
@@ -393,18 +399,18 @@ manual_console (void)
 #endif
 #ifdef ROBO_SAFE_MOTOR_TEST
                 }
-                else if ((strcmp(line, "left_forward") == 0)
-                         || (strcmp(line, "left_reverse") == 0)
-                         || (strcmp(line, "right_forward") == 0)
-                         || (strcmp(line, "right_reverse") == 0)
-                         || (strcmp(line, "forward") == 0)
-                         || (strcmp(line, "backward") == 0))
+                else if ((0 == strcmp(line, "left_forward"))
+                         || (0 == strcmp(line, "left_reverse"))
+                         || (0 == strcmp(line, "right_forward"))
+                         || (0 == strcmp(line, "right_reverse"))
+                         || (0 == strcmp(line, "forward"))
+                         || (0 == strcmp(line, "backward")))
                 {
-                    unsigned wheel     = line[0] == 'l' ? 0U : 1U;
-                    bool     both      = (strcmp(line, "forward") == 0)
-                                         || (strcmp(line, "backward") == 0);
-                    int      direction = (strstr(line, "reverse") != NULL
-                                          || strcmp(line, "backward") == 0)
+                    unsigned wheel     = ('l' == line[0]) ? 0U : 1U;
+                    bool     both      = (0 == strcmp(line, "forward"))
+                                         || (0 == strcmp(line, "backward"));
+                    int      direction = ((NULL != strstr(line, "reverse"))
+                                          || (0 == strcmp(line, "backward")))
                                              ? -1
                                              : 1;
 
@@ -412,7 +418,7 @@ manual_console (void)
                      * movement. */
                     line_forward_pause();
 
-                    if (!test_shutdown
+                    if ((!test_shutdown)
                         && (both ? motor_test_start_pair(direction)
                                  : motor_test_start(wheel, direction)))
                     {
@@ -442,45 +448,46 @@ manual_console (void)
 
                     armed = false;
 
-                    if (strcmp(line, "left") == 0)
+                    if (0 == strcmp(line, "left"))
                     {
                         result = motion_manual_output(id++, 0.10, 0.0);
                     }
-                    else if (strcmp(line, "right") == 0)
+                    else if (0 == strcmp(line, "right"))
                     {
                         result = motion_manual_output(id++, 0.0, 0.10);
                     }
-                    else if (strcmp(line, "left_reverse") == 0)
+                    else if (0 == strcmp(line, "left_reverse"))
                     {
                         result = motion_manual_output(id++, -0.10, 0.0);
                     }
-                    else if (strcmp(line, "right_reverse") == 0)
+                    else if (0 == strcmp(line, "right_reverse"))
                     {
                         result = motion_manual_output(id++, 0.0, -0.10);
                     }
-                    else if (strcmp(line, "forward") == 0)
+                    else if (0 == strcmp(line, "forward"))
                     {
                         result = motion_move_forward(id++, 0.10);
                     }
-                    else if (strcmp(line, "backward") == 0)
+                    else if (0 == strcmp(line, "backward"))
                     {
                         result = motion_move_backward(id++, 0.10);
                     }
-                    else if (strcmp(line, "turn_left") == 0)
+                    else if (0 == strcmp(line, "turn_left"))
                     {
                         result = motion_turn_left(id++, 1.57079632679);
                     }
-                    else if (strcmp(line, "turn_right") == 0)
+                    else if (0 == strcmp(line, "turn_right"))
                     {
                         result = motion_turn_right(id++, 1.57079632679);
                     }
-                    else if (strcmp(line, "release_checked") == 0)
+                    else if (0 == strcmp(line, "release_checked"))
                     {
                         motion_controller_release(true);
                         result = R_OK;
                     }
-                    else if (strcmp(line, "reset_cause_cleared_rest_verified")
-                             == 0)
+                    else if (0
+                             == strcmp(line,
+                                       "reset_cause_cleared_rest_verified"))
                     {
                         motion_fault_reset(true, true);
                         result = R_OK;
@@ -491,7 +498,7 @@ manual_console (void)
                         result);
 #endif
                 }
-                else if (line[0] != '\0')
+                else if ('\0' != line[0])
                 {
                     puts("status | encdiag | usbdiag | stop | shutdown");
 #ifdef ROBO_BATTERY_FORWARD_TEST
@@ -512,7 +519,7 @@ manual_console (void)
 #endif
                 }
             }
-            else if (used < sizeof(line) - 1U)
+            else if (used < (sizeof(line) - 1U))
             {
                 line[used++] = (char)input;
             }

@@ -234,7 +234,7 @@ terrain_task (INT code, void * p_context)
         class_valid  = motion_class_valid(&s_class);
 #ifndef ROBO_IR_MONITOR
         if (class_valid
-            && ((motion_class != previous_class) || !previous_class_valid))
+            && ((motion_class != previous_class) || (!previous_class_valid)))
         {
             tm_printf((UB const *)"[MOTION] %s -> %s yaw=%d deg/s accel=%d "
                                   "mm/s2 imu_fwd=%d mg\n",
@@ -309,7 +309,7 @@ terrain_inputs (uint8_t state, s4_motion_t const * p_motion, bool wait_start,
 {
     uint8_t start = wait_start ? B4_WAIT_START : 0U;
 
-    if (p_motion->available && (SHUTDOWN == p_motion->state))
+    if ((p_motion->available) && (SHUTDOWN == p_motion->state))
     {
         return B4_CMD_STOP;
     }
@@ -320,7 +320,7 @@ terrain_inputs (uint8_t state, s4_motion_t const * p_motion, bool wait_start,
          * Turning on the spot: no humps either (sideways jolt reads as tilt).
          */
         uint8_t pause
-            = (p_motion->available && p_motion->hold) ? B4_HUMP_PAUSE : 0U;
+            = ((p_motion->available) && (p_motion->hold)) ? B4_HUMP_PAUSE : 0U;
 
         return (uint8_t)(pause | (turning ? B4_TURN_PAUSE : 0U));
     }
@@ -362,11 +362,11 @@ terrain_wait_start (s4_motion_t const * p_motion)
         return false;
     }
 
-    if (p_motion->available && p_motion->hold)
+    if ((p_motion->available) && (p_motion->hold))
     {
         s_start_gate = S4_START_HELD;
     }
-    else if (p_motion->available && (S4_START_HELD == s_start_gate))
+    else if ((p_motion->available) && (S4_START_HELD == s_start_gate))
     {
         s_start_gate = S4_START_GIVEN;
     }
@@ -387,7 +387,7 @@ terrain_wait_start (s4_motion_t const * p_motion)
 #endif
     /* Held, or motion reports but its boot hold has not been seen yet. */
     return (S4_START_HELD == s_start_gate)
-           || ((S4_START_NONE == s_start_gate) && p_motion->available);
+           || ((S4_START_NONE == s_start_gate) && (p_motion->available));
 #else
     (void)p_motion;
     s_start_gate = S4_START_GIVEN;
@@ -494,7 +494,7 @@ terrain_lift (buddy4_t const * p_context, s4_motion_t const * p_motion,
 #endif
         *p_previous = lift;
     }
-    else if ((LIFT_NONE != lift) && p_motion->available && !p_motion->hold)
+    else if ((LIFT_NONE != lift) && (p_motion->available) && (!p_motion->hold))
     {
         motion_stop(); /* The robot was released while still lifted. */
 #ifndef ROBO_IR_MONITOR
@@ -516,7 +516,7 @@ terrain_hump_freeze (buddy4_t * p_context, s4_motion_t const * p_motion,
         = buddy4_hump_start(p_context, p_motion->available, p_motion->hold);
     bool frozen = buddy4_hump_frozen(p_context);
 
-    if (frozen && !*p_previous)
+    if (frozen && (!*p_previous))
     {
 #ifndef ROBO_IR_MONITOR
         tm_printf(
@@ -564,7 +564,7 @@ terrain_turning (buddy4_t const * p_context, s4_motion_t const * p_motion,
         fast = other;
     }
 
-    if (p_motion->available && (fast >= S4_TURN_MIN_MM_S)
+    if ((p_motion->available) && (fast >= S4_TURN_MIN_MM_S)
         && ((left * right) <= 0))
     {
         s_turn_seen = true;
@@ -574,7 +574,7 @@ terrain_turning (buddy4_t const * p_context, s4_motion_t const * p_motion,
     paused = s_turn_seen && ((now_ms - s_turn_ms) < S4_TURN_SETTLE_MS);
 #ifndef ROBO_IR_MONITOR
     if ((paused != s_turn_paused) && (B4_MONITORING == buddy4_state(p_context))
-        && !buddy4_hump_frozen(p_context))
+        && (!buddy4_hump_frozen(p_context)))
     {
         if (paused)
         {
@@ -623,8 +623,8 @@ terrain_hump_label (buddy4_t const * p_context, uint8_t terrain)
 static bool
 terrain_hump_paused (buddy4_t const * p_context, s4_motion_t const * p_motion)
 {
-    return (B4_MONITORING == buddy4_state(p_context)) && p_motion->available
-           && p_motion->hold;
+    return (B4_MONITORING == buddy4_state(p_context)) && (p_motion->available)
+           && (p_motion->hold);
 }
 
 /* Console lines for the pause. The overturn freeze has its own lines and
@@ -671,7 +671,7 @@ terrain_classify (buddy4_t * p_context, motion_class_t * p_class,
 
     input.overturned = (LIFT_OVERTURNED == buddy4_lift(p_context));
     input.valid
-        = (B4_MONITORING == buddy4_state(p_context)) && p_motion->available;
+        = (B4_MONITORING == buddy4_state(p_context)) && (p_motion->available);
     input.stationary    = p_motion->stationary;
     input.speed_mm_s[0] = p_motion->speed_mm_s[0];
     input.speed_mm_s[1] = p_motion->speed_mm_s[1];
@@ -1106,8 +1106,8 @@ terrain_mag_cal (buddy4_t const * p_context, s4_motion_t const * p_motion)
 
     if (S4_CAL_WAIT == s_cal.phase)
     {
-        if ((B4_MONITORING == buddy4_state(p_context)) && p_motion->available
-            && p_motion->stationary && p_motion->heading_valid
+        if ((B4_MONITORING == buddy4_state(p_context)) && (p_motion->available)
+            && (p_motion->stationary) && (p_motion->heading_valid)
             && (READY == p_motion->state))
         {
             mag_cal_begin(&s_cal.acc);
@@ -1121,8 +1121,8 @@ terrain_mag_cal (buddy4_t const * p_context, s4_motion_t const * p_motion)
         return;
     }
 
-    if ((B4_MONITORING != buddy4_state(p_context)) || !p_motion->available
-        || !p_motion->heading_valid)
+    if ((B4_MONITORING != buddy4_state(p_context)) || (!p_motion->available)
+        || (!p_motion->heading_valid))
     {
         terrain_mag_cal_stop("IMU or motion status lost");
         return;
@@ -1131,7 +1131,7 @@ terrain_mag_cal (buddy4_t const * p_context, s4_motion_t const * p_motion)
     if (S4_CAL_SETTLE == s_cal.phase)
     {
         uint32_t left
-            = (now - s_cal.phase_ms >= S4_CAL_SETTLE_MS)
+            = ((now - s_cal.phase_ms) >= S4_CAL_SETTLE_MS)
                   ? 0U
                   : ((S4_CAL_SETTLE_MS - (now - s_cal.phase_ms) + 999U)
                      / 1000U);
@@ -1172,7 +1172,7 @@ terrain_mag_cal (buddy4_t const * p_context, s4_motion_t const * p_motion)
         return;
     }
 
-    if (buddy4_magnetic(p_context, now, S4_MAG_MAX_AGE_MS, &x, &y)
+    if ((buddy4_magnetic(p_context, now, S4_MAG_MAX_AGE_MS, &x, &y))
         && (p_context->mag_ms != s_cal.last_mag_ms))
     {
         mag_cal_add(&s_cal.acc, x, y, turned);

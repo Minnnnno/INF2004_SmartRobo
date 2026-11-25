@@ -31,7 +31,7 @@ robo_log_allowed (const UB * format)
         = {"barcode", "[S3-",      "route",      "calibration",
            "bc t=",   "firmware=", "LAST CRASH", "[ERROR]"};
 
-    if (format == NULL)
+    if (NULL == format)
     {
         return FALSE;
     }

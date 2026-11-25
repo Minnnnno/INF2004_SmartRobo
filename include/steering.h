@@ -20,9 +20,13 @@ typedef struct
 {
     double timestamp_s;
 
-    double left_speed_mm_s, right_speed_mm_s, centre_speed_mm_s;
-    double left_distance_mm, right_distance_mm, centre_distance_mm,
-        path_distance_mm;
+    double         left_speed_mm_s;
+    double         right_speed_mm_s;
+    double         centre_speed_mm_s;
+    double         left_distance_mm;
+    double         right_distance_mm;
+    double         centre_distance_mm;
+    double         path_distance_mm;
     double         heading_deg;
     motion_state_t state;
     motion_fault_t fault;
@@ -56,9 +60,16 @@ motion_result_t motion_steer_time(request_source_t source, uint32_t id,
 
 typedef struct
 {
-    double timestamp_s, left_speed_m_s, right_speed_m_s, centre_speed_m_s;
-    double turn_deg_s, left_metres, right_metres, centre_metres, path_metres,
-        heading_deg;
+    double         timestamp_s;
+    double         left_speed_m_s;
+    double         right_speed_m_s;
+    double         centre_speed_m_s;
+    double         turn_deg_s;
+    double         left_metres;
+    double         right_metres;
+    double         centre_metres;
+    double         path_metres;
+    double         heading_deg;
     motion_state_t state;
     motion_fault_t fault;
     bool           feedback_trusted;
@@ -80,7 +91,8 @@ typedef enum
 
 typedef struct
 {
-    unsigned         candidate, consecutive;
+    unsigned         candidate;
+    unsigned         consecutive;
     line_direction_t direction;
 } line_steering_t;
 

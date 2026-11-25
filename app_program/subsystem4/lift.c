@@ -82,7 +82,7 @@ lift_step (lift_t * p_lift, tilt_context_t const * p_tilt, int16_t x, int16_t y,
     condition = (uint8_t)(p_lift->flags & LIFT_STATE_MASK);
 
     if ((NULL == p_tilt) || (0U == (p_tilt->progress & TILT_CALIBRATED))
-        || !(p_tilt->gravity > 0.0F))
+        || (!(p_tilt->gravity > 0.0F)))
     {
         return condition; /* No reference yet: nothing to compare against. */
     }
@@ -98,10 +98,11 @@ lift_step (lift_t * p_lift, tilt_context_t const * p_tilt, int16_t x, int16_t y,
     p_lift->flags |= LIFT_F_SEEN;
     p_lift->last_ms = now_ms;
 
-    magnitude = sqrtf(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
-    up_mg = a[0] * p_tilt->up[0] + a[1] * p_tilt->up[1] + a[2] * p_tilt->up[2];
-    oriented = isfinite(magnitude)
-               && (magnitude >= (float32_t)LIFT_MIN_MAGNITUDE_MG);
+    magnitude = sqrtf((a[0] * a[0]) + (a[1] * a[1]) + (a[2] * a[2]));
+    up_mg     = (a[0] * p_tilt->up[0]) + (a[1] * p_tilt->up[1])
+                + (a[2] * p_tilt->up[2]);
+    oriented  = (isfinite(magnitude))
+                && (magnitude >= (float32_t)LIFT_MIN_MAGNITUDE_MG);
 
     if (oriented)
     {

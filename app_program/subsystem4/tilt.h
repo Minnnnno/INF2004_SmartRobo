@@ -6,7 +6,7 @@
 
 /* Project alias for the BARR-C single-precision naming convention. */
 typedef float float32_t;
-_Static_assert(sizeof(float32_t) == 4U, "32-bit floating point required");
+_Static_assert(4U == sizeof(float32_t), "32-bit floating point required");
 
 /* Floating-point working precision is retained for reference rotation and
  * filtering. Packed output is quantised to 0.1 degree, not claimed accuracy.

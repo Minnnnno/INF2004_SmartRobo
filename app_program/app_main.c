@@ -63,7 +63,7 @@ usermain (void)
         return 0;
     }
 
-    for (i = 0; i < sizeof(tasks) / sizeof(tasks[0]); ++i)
+    for (i = 0; i < (sizeof(tasks) / sizeof(tasks[0])); ++i)
     {
         T_CTSK task = {.tskatr  = TA_HLNG | TA_RNG0,
                        .task    = tasks[i].entry,
@@ -93,7 +93,7 @@ usermain (void)
         return 0;
     }
 
-    for (i = 0; i < sizeof(tasks) / sizeof(tasks[0]); ++i)
+    for (i = 0; i < (sizeof(tasks) / sizeof(tasks[0])); ++i)
     {
         init_result = tk_sta_tsk(ids[i], 0);
 
@@ -109,7 +109,7 @@ usermain (void)
 
     /* Startup needs priority 1; periodic diagnostics must yield to motion/USB.
      */
-    if (tk_chg_pri(TSK_SELF, 16) != E_OK)
+    if (E_OK != tk_chg_pri(TSK_SELF, 16))
     {
         motion_runtime_emergency_stop();
         motion_request_shutdown();

@@ -30,8 +30,8 @@ servo_write (int angle_deg)
                                              : (double)angle_deg;
     double position
         = fmin(fmax(mapped + (double)S5_SERVO_TRIM_DEG, 0.0), 180.0);
-    double pulse
-        = SERVO_US_AT_0 + position * (SERVO_US_AT_180 - SERVO_US_AT_0) / 180.0;
+    double pulse = SERVO_US_AT_0
+                   + ((position * (SERVO_US_AT_180 - SERVO_US_AT_0)) / 180.0);
 
     /* Odd GPIOs use channel B; the alternate diagnostic pin uses channel A. */
     uint16_t level = (uint16_t)(pulse + 0.5);
@@ -75,7 +75,7 @@ s5_servo_aim (int angle_deg)
     int travel
         = (target > servo_deg) ? (target - servo_deg) : (servo_deg - target);
 
-    if (servo_deg == 0U)
+    if (0U == servo_deg)
     {
         s5_servo_init(target); /* waits for itself */
         return 0U;
@@ -83,7 +83,7 @@ s5_servo_aim (int angle_deg)
 
     servo_write(target);
     servo_deg = (uint8_t)target;
-    return SERVO_SETTLE_BASE_MS + (unsigned)travel * SERVO_SETTLE_PER_DEG_MS;
+    return SERVO_SETTLE_BASE_MS + ((unsigned)travel * SERVO_SETTLE_PER_DEG_MS);
 }
 
 void

@@ -77,7 +77,7 @@ barcode_set_mode (barcode_mode_t next)
     static const char * const names[]
         = {"WATCHING", "CALIBRATING", "ARMED", "IGNORING"};
 
-    _Static_assert(sizeof names / sizeof names[0] == BC_MODE_COUNT,
+    _Static_assert(BC_MODE_COUNT == (sizeof names / sizeof names[0]),
                    "one name per reader mode");
 
     if (next != bc_mode)
@@ -147,7 +147,8 @@ static uint32_t bc_ignore_until;
 static void
 barcode_take_requests (void)
 {
-    static uint32_t cal_seen, ignore_seen;
+    static uint32_t cal_seen;
+    static uint32_t ignore_seen;
 
     if (bc_cal_requests != cal_seen)
     {
@@ -184,9 +185,10 @@ barcode_code_pass (void)
 static uint16_t
 barcode_sample (uint64_t * next)
 {
-    uint32_t sum = 0U, reads = 0U;
+    uint32_t sum   = 0U;
+    uint32_t reads = 0U;
 
-    if (time_us_64() > *next + 100000U)
+    if (time_us_64() > (*next + 100000U))
     {
         *next = time_us_64();
     } /* Fell behind: do not burst. */
@@ -268,15 +270,15 @@ barcode_publish (void)
 static void
 barcode_dump_num (const char * tag, unsigned i, unsigned n, int32_t value)
 {
-    if ((i % 20U) == 0U)
+    if (0U == (i % 20U))
     {
         tm_printf((const UB *)"%s", (const UB *)tag);
     }
 
     tm_printf((const UB *)" %d%s", (int)value,
-              ((i % 20U) == 19U || i + 1U == n) ? "\n" : "");
+              ((19U == (i % 20U)) || ((i + 1U) == n)) ? "\n" : "");
 
-    if ((i % 20U) == 19U)
+    if (19U == (i % 20U))
     {
         (void)tk_dly_tsk(20U);
     }
@@ -294,10 +296,11 @@ barcode_decode_any (const uint16_t * samples, const uint32_t * path,
                     unsigned count, unsigned * n, char * text, unsigned first,
                     const char * letters, unsigned * used)
 {
-    unsigned chars = 0U, div;
+    unsigned chars = 0U;
+    unsigned div;
 
     for (unsigned i = 0U;
-         chars == 0U && (div = barcode_ladder_div(first, i)) != 0U; ++i)
+         (0U == chars) && (0U != (div = barcode_ladder_div(first, i))); ++i)
     {
         if (i > 0U)
         {
@@ -351,7 +354,7 @@ barcode_pass_check (const uint32_t * path, const uint16_t * heading,
         }
     }
 
-    if (path[count - 1U] - path[BARCODE_QUIET] < BARCODE_FAIL_MIN_DRIVE)
+    if ((path[count - 1U] - path[BARCODE_QUIET]) < BARCODE_FAIL_MIN_DRIVE)
     {
         return BC_PASS_NOT_DRIVING;
     }
@@ -370,24 +373,25 @@ barcode_calibrate_pass (const uint16_t * samples, const uint32_t * path,
     static const char expected[] = {ROUTE_CALIBRATION_LETTER, '\0'};
     char              text[BARCODE_MAX_CHARS + 1U];
 
-    unsigned       n, used = BARCODE_CONTRAST_DIV;
+    unsigned       n;
+    unsigned       used = BARCODE_CONTRAST_DIV;
     int            turned;
     barcode_pass_t check = barcode_pass_check(path, heading, count, &turned);
     bool           ok;
 
-    if (check != BC_PASS_OK)
+    if (BC_PASS_OK != check)
     {
         tm_printf((const UB *)"calibration: pass not usable (%s), still "
                               "waiting for *%c*\n",
-                  (check == BC_PASS_NOT_DRIVING) ? "car not driving"
+                  (BC_PASS_NOT_DRIVING == check) ? "car not driving"
                                                  : "car turning",
                   ROUTE_CALIBRATION_LETTER);
         return;
     }
 
-    ok = barcode_decode_any(samples, path, count, &n, text,
-                            BARCODE_CONTRAST_DIV, expected, &used)
-         != 0U;
+    ok = 0U
+         != barcode_decode_any(samples, path, count, &n, text,
+                               BARCODE_CONTRAST_DIV, expected, &used);
 
     if (ok)
     {
@@ -428,22 +432,22 @@ barcode_count_failure (const uint32_t * path, const uint16_t * heading,
     int            turned;
     barcode_pass_t check = barcode_pass_check(path, heading, count, &turned);
 
-    if (check == BC_PASS_NOT_DRIVING)
+    if (BC_PASS_NOT_DRIVING == check)
     {
         tm_printf(
             (const UB *)"barcode: no read while not driving, not counted\n");
     }
-    else if (check == BC_PASS_TURNING)
+    else if (BC_PASS_TURNING == check)
     {
         tm_printf((const UB *)"barcode: no read while turning (%d mrad), not "
                               "counted\n",
                   turned);
     }
     else if (!(bc_junction_seen
-               && bc_stretch_start + BARCODE_JUNCTION_BEFORE
-                      >= bc_junction_sample
-               && bc_stretch_start
-                      <= bc_junction_sample + BARCODE_JUNCTION_AFTER))
+               && ((bc_stretch_start + BARCODE_JUNCTION_BEFORE)
+                   >= bc_junction_sample)
+               && (bc_stretch_start
+                   <= (bc_junction_sample + BARCODE_JUNCTION_AFTER))))
     {
         ++bc_failures;
         barcode_publish();
@@ -502,9 +506,13 @@ barcode_finish (const uint16_t * samples, const uint32_t * path,
 {
     char text[BARCODE_MAX_CHARS + 1U];
 
-    unsigned n, chars, used = bc_div;
-    uint32_t noise, white;
-    uint16_t low, high;
+    unsigned n;
+    unsigned chars;
+    unsigned used = bc_div;
+    uint32_t noise;
+    uint32_t white;
+    uint16_t low;
+    uint16_t high;
 
     /* Decided by where the pass started, so a pass straddling the end of the
      * window is still skipped. */
@@ -515,7 +523,7 @@ barcode_finish (const uint16_t * samples, const uint32_t * path,
         return;
     }
 
-    if (bc_mode == BC_CALIBRATING)
+    if (BC_CALIBRATING == bc_mode)
     {
         if (count >= BARCODE_FULL_PASS)
         {
@@ -529,9 +537,9 @@ barcode_finish (const uint16_t * samples, const uint32_t * path,
     char     letters[5];
     unsigned k = 0U;
 
-    for (uint32_t route = route_get(); route != 0U; route >>= 8)
+    for (uint32_t route = route_get(); 0U != route; route >>= 8)
     {
-        if ((route & 0xFFU) != 0U)
+        if (0U != (route & 0xFFU))
         {
             letters[k++] = (char)(route & 0xFFU);
         }
@@ -543,7 +551,7 @@ barcode_finish (const uint16_t * samples, const uint32_t * path,
     white = barcode_level(samples, BARCODE_QUIET, &noise);
     barcode_range(samples, count, &low, &high);
 
-    if (chars != 0U)
+    if (0U != chars)
     {
         text[chars - 1U] = '\0'; /* Drop the closing '*'. */
         ++bc_reads;
@@ -725,7 +733,8 @@ barcode_check_junction (const barcode_seg_t * seg, uint16_t s, uint32_t at)
 {
     static unsigned hits;
 
-    if (bc_mode != BC_ARMED || !seg->level_ok || s <= seg->level + bc_arm_rise)
+    if ((BC_ARMED != bc_mode) || (!seg->level_ok)
+        || (s <= (seg->level + bc_arm_rise)))
     {
         hits = 0U;
         return;
@@ -796,7 +805,7 @@ barcode_task (INT code, void * context)
 
         barcode_take_requests();
 
-        if (bc_mode == BC_IGNORING && at >= bc_ignore_until)
+        if ((BC_IGNORING == bc_mode) && (at >= bc_ignore_until))
         {
             barcode_set_mode(BC_WATCHING);
         }
@@ -805,17 +814,17 @@ barcode_task (INT code, void * context)
         barcode_check_junction(&seg, s, at);
         event = barcode_seg_feed(&seg, s, at, bc_heading);
 
-        if (event == BARCODE_SEG_IDLE)
+        if (BARCODE_SEG_IDLE == event)
         {
             barcode_idle(s);
         }
-        else if (event == BARCODE_SEG_STARTED)
+        else if (BARCODE_SEG_STARTED == event)
         {
             bc_stretch_start = bc_sample_no;
             bc_code_pass     = true;
             tm_printf((const UB *)"barcode: reading...\n");
         }
-        else if (event == BARCODE_SEG_DONE)
+        else if (BARCODE_SEG_DONE == event)
         {
             bc_code_pass = false;
             barcode_finish(seg.samples, seg.path, seg.heading, seg.count);

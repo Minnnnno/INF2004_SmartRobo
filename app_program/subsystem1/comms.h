@@ -61,7 +61,10 @@ typedef struct
     UW clamped;    /* frames with at least one clamped field */
     UW events;     /* event frames queued */
 
-    UW cmd_ok, cmd_duplicate, cmd_busy, cmd_rejected;
+    UW cmd_ok;
+    UW cmd_duplicate;
+    UW cmd_busy;
+    UW cmd_rejected;
     UW copy_us_max; /* longest snapshot copy, includes the mutex hold */
     UW pack_us_max; /* longest map + pack, done with no lock held */
 } COMMS_STATS;

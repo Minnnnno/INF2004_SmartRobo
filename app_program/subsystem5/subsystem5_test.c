@@ -105,7 +105,7 @@ estimate (const double range_mm[], const bool echo[], unsigned count,
 static double
 world_random (world_t * p_world) /* 0..1, deterministic */
 {
-    p_world->seed = p_world->seed * 1103515245U + 12345U;
+    p_world->seed = (p_world->seed * 1103515245U) + 12345U;
     return (double)((p_world->seed >> 8) & 0xffffU) / 65535.0;
 }
 
@@ -145,22 +145,22 @@ world_ping (void * p_context, double * p_range_mm)
         = ((double)S5_ANGLE_CENTRE_DEG - p_world->servo_deg) * DEG_TO_RAD;
     double sensor_fwd = S5_SENSOR_OFFSET_MM * cos(bearing);
     double other_mm   = 0.0;
-    bool   b_other
-        = (p_world->other_depth_mm > 0.0)
-          && face_echo(p_world, p_world->other_depth_mm, p_world->other_left_mm,
-                       p_world->other_right_mm, &other_mm);
+    bool   b_other    = (p_world->other_depth_mm > 0.0)
+                        && (face_echo(p_world, p_world->other_depth_mm,
+                                      p_world->other_left_mm,
+                                      p_world->other_right_mm, &other_mm));
 
     p_world->pings++;
 
-    if ((p_world->stray_every != 0U)
-        && (p_world->pings % p_world->stray_every == 0U))
+    if ((0U != p_world->stray_every)
+        && (0U == (p_world->pings % p_world->stray_every)))
     {
         if (world_random(p_world) < 0.5)
         {
             return false; /* missed echo */
         }
 
-        *p_range_mm = 150.0 + 1350.0 * world_random(p_world); /* stray echo */
+        *p_range_mm = 150.0 + (1350.0 * world_random(p_world)); /* stray echo */
         return true;
     }
 
@@ -185,7 +185,7 @@ world_ping (void * p_context, double * p_range_mm)
         return false;
     }
 
-    *p_range_mm += p_world->noise_mm * (2.0 * world_random(p_world) - 1.0);
+    *p_range_mm += p_world->noise_mm * ((2.0 * world_random(p_world)) - 1.0);
     return true;
 }
 
@@ -196,7 +196,7 @@ world_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
 
     p_world->measures++;
 
-    if ((p_world->abort_after != 0U)
+    if ((0U != p_world->abort_after)
         && (p_world->measures > p_world->abort_after))
     {
         return false;
@@ -209,7 +209,7 @@ world_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
 
     p_world->commanded_deg = angle_deg;
     p_world->servo_deg = (double)angle_deg
-                         - p_world->backlash_deg * (double)p_world->direction;
+                         - (p_world->backlash_deg * (double)p_world->direction);
     s5_sample_point(world_ping, p_world, p_estimate);
     return true;
 }
@@ -231,7 +231,8 @@ yawed_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
     const yawed_t * p_yawed = (const yawed_t *)p_context;
     double          yaw     = p_yawed->yaw_deg * DEG_TO_RAD;
     double          ray
-        = ((double)S5_ANGLE_CENTRE_DEG - (double)angle_deg) * DEG_TO_RAD + yaw;
+        = (((double)S5_ANGLE_CENTRE_DEG - (double)angle_deg) * DEG_TO_RAD)
+          + yaw;
     double   face     = 180.0 * cos(yaw);
     double   axis     = face / cos(ray);
     double   range[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
@@ -239,7 +240,7 @@ yawed_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
     unsigned i;
 
     if ((cos(ray) > 0.0)
-        && (fabs(axis * sin(ray) - p_yawed->centre_mm)
+        && (fabs((axis * sin(ray)) - p_yawed->centre_mm)
             <= p_yawed->half_width_mm))
     {
         for (i = 0U; i < 5U; i++)
@@ -279,26 +280,26 @@ test_estimate (void)
     const bool    one_miss[5] = {true, true, true, true, false};
 
     estimate(agree, all, 5U, &e);
-    check(e.status == S5_ECHO_OK && e.support == 5U,
+    check((S5_ECHO_OK == e.status) && (5U == e.support),
           "estimate: five agreeing pings");
     check_near(e.range_mm, 400.4, 0.01, "estimate: mean of the agreeing pings");
 
     estimate(stray, all, 5U, &e);
-    check(e.status == S5_ECHO_OK && e.support == 3U,
+    check((S5_ECHO_OK == e.status) && (3U == e.support),
           "estimate: two stray pings outvoted");
     check_near(e.range_mm, 400.0, 0.01,
                "estimate: strays excluded from the mean");
 
     estimate(agree, silent, 5U, &e);
-    check(e.status == S5_ECHO_NONE && !s5_estimate_usable(&e),
+    check((S5_ECHO_NONE == e.status) && (!s5_estimate_usable(&e)),
           "estimate: mostly silent is no echo");
 
     estimate(agree, one_miss, 5U, &e);
-    check(e.status == S5_ECHO_OK && e.valid == 4U,
+    check((S5_ECHO_OK == e.status) && (4U == e.valid),
           "estimate: one miss tolerated");
 
     estimate(spread, all, 5U, &e);
-    check(e.status == S5_ECHO_UNSTABLE && s5_estimate_usable(&e),
+    check((S5_ECHO_UNSTABLE == e.status) && (s5_estimate_usable(&e)),
           "estimate: no agreement is unstable but beats silence");
 
     estimate(tie, all, 4U, &e);
@@ -306,7 +307,7 @@ test_estimate (void)
                "estimate: equal groups prefer the nearer echo");
 
     estimate(agree, silent, 0U, &e);
-    check(e.status == S5_ECHO_NONE && e.total == 0U, "estimate: no pings");
+    check((S5_ECHO_NONE == e.status) && (0U == e.total), "estimate: no pings");
 }
 
 static void
@@ -318,10 +319,10 @@ test_geometry (void)
                "geometry: forward at 90 deg includes the horn offset");
     check(s5_lateral_mm(400.0, 50.0) > 0.0, "geometry: 50 deg is left (+)");
     check(s5_lateral_mm(400.0, 130.0) < 0.0, "geometry: 130 deg is right (-)");
-    check_near(s5_forward_mm(
-                   400.0 / cos(40.0 * DEG_TO_RAD) - S5_SENSOR_OFFSET_MM, 50.0),
-               400.0, 1e-9,
-               "geometry: flat face has constant forward distance");
+    check_near(
+        s5_forward_mm((400.0 / cos(40.0 * DEG_TO_RAD)) - S5_SENSOR_OFFSET_MM,
+                      50.0),
+        400.0, 1e-9, "geometry: flat face has constant forward distance");
 }
 
 static void
@@ -334,7 +335,8 @@ run_box (world_t * p_world, double tolerance_mm, const char * p_name)
 
     check(s5_scan_run(&scan, world_measure, p_world), p_name);
     check(scan.b_valid, p_name);
-    check(scan.edge[S5_LEFT].b_found && scan.edge[S5_RIGHT].b_found, p_name);
+    check((scan.edge[S5_LEFT].b_found) && (scan.edge[S5_RIGHT].b_found),
+          p_name);
     (void)snprintf(name, sizeof(name), "%s: width", p_name);
     check_near(scan.width_mm, width, tolerance_mm, name);
     (void)snprintf(name, sizeof(name), "%s: centre offset", p_name);
@@ -342,8 +344,8 @@ run_box (world_t * p_world, double tolerance_mm, const char * p_name)
     (void)snprintf(name, sizeof(name), "%s: distance", p_name);
     check_near(s5_point_range(scan.centre),
                p_world->depth_mm - S5_SENSOR_OFFSET_MM, 5.0, name);
-    check(scan.coarse_count == (unsigned)S5_COARSE_POINTS, p_name);
-    check(scan.fine_count[S5_LEFT] > 0U && scan.fine_count[S5_RIGHT] > 0U,
+    check((unsigned)S5_COARSE_POINTS == scan.coarse_count, p_name);
+    check((scan.fine_count[S5_LEFT] > 0U) && (scan.fine_count[S5_RIGHT] > 0U),
           p_name);
     printf("ok    %-34s width %6.1f mm (true %6.1f), %3u pings\n", p_name,
            scan.width_mm, width, p_world->pings);
@@ -375,9 +377,9 @@ test_scans (void)
     run_box(&world, 20.0, "wide 640 mm flat face");
 
     world = box(400.0, 2000.0, -2000.0, 0.0);
-    check(s5_scan_run(&scan, world_measure, &world) && scan.b_valid,
+    check((s5_scan_run(&scan, world_measure, &world)) && (scan.b_valid),
           "wall: scanned");
-    check(!scan.edge[S5_LEFT].b_found && !scan.edge[S5_RIGHT].b_found,
+    check((!scan.edge[S5_LEFT].b_found) && (!scan.edge[S5_RIGHT].b_found),
           "wall: edges beyond the sweep");
     check_near(
         scan.width_mm,
@@ -386,7 +388,7 @@ test_scans (void)
         2.0, "wall: width is the sweep lower bound");
 
     world = box(400.0, -100.0, -300.0, 0.0);
-    check(s5_scan_run(&scan, world_measure, &world) && !scan.b_valid,
+    check((s5_scan_run(&scan, world_measure, &world)) && (!scan.b_valid),
           "nothing ahead: no width");
 
     world             = box(400.0, 150.0, -150.0, 0.0);
@@ -398,15 +400,15 @@ test_scans (void)
      * exists */
     world          = box(400.0, 150.0, -150.0, 0.0);
     world.cone_deg = 5.0;
-    check(s5_scan_run(&scan, world_measure, &world) && scan.b_valid,
+    check((s5_scan_run(&scan, world_measure, &world)) && (scan.b_valid),
           "cone: scanned");
     {
         double by_edges
             = scan.edge[S5_LEFT].lateral_mm - scan.edge[S5_RIGHT].lateral_mm;
 
-        check(by_edges > 300.0 + 20.0
-                  && by_edges
-                         < 300.0 + 2.0 * 400.0 * tan(5.0 * DEG_TO_RAD) + 15.0,
+        check((by_edges > (300.0 + 20.0))
+                  && (by_edges
+                      < (300.0 + (2.0 * 400.0 * tan(5.0 * DEG_TO_RAD)) + 15.0)),
               "cone: edge angles overestimate by about the beam");
         /* the corners' ranges do not care how wide the beam is */
         check(scan.face.b_valid, "cone: face fitted");
@@ -423,7 +425,8 @@ run_placement (world_t * p_world, s5_position_t expected, bool b_bounded,
 {
     static s5_scan_t scan;
 
-    check(s5_scan_run(&scan, world_measure, p_world) && scan.b_valid, p_name);
+    check((s5_scan_run(&scan, world_measure, p_world)) && (scan.b_valid),
+          p_name);
     check(scan.placement.position == expected, p_name);
     check(scan.placement.b_bounded == b_bounded, p_name);
     printf("ok    %-34s left %4.1f deg, right %4.1f deg, difference %+5.1f\n",
@@ -492,12 +495,12 @@ test_placement (void)
     scan.edge[S5_RIGHT].b_found   = false;
     scan.edge[S5_RIGHT].angle_deg = 110.0; /* at least 20 deg right */
     s5_placement(&scan, &scan.placement);
-    check(scan.placement.position == S5_POSITION_UNKNOWN,
+    check(S5_POSITION_UNKNOWN == scan.placement.position,
           "placement: no LEFT from a minimum right edge");
 
     scan.b_valid = false;
     s5_placement(&scan, &scan.placement);
-    check(scan.placement.position == S5_POSITION_UNKNOWN,
+    check(S5_POSITION_UNKNOWN == scan.placement.position,
           "placement: no obstacle");
 }
 
@@ -515,7 +518,7 @@ test_backlash (void)
     run_box(&world, 15.0, "3 deg backlash, centred box");
     world              = box(400.0, 150.0, -150.0, 0.0);
     world.backlash_deg = 3.0;
-    check(s5_scan_run(&scan, world_measure, &world) && scan.b_valid,
+    check((s5_scan_run(&scan, world_measure, &world)) && (scan.b_valid),
           "backlash: scanned");
 
     for (side = S5_LEFT; side <= S5_RIGHT; side++)
@@ -528,7 +531,7 @@ test_backlash (void)
             "backlash: the two walks differ by twice the lag");
     }
 
-    check(scan.placement.position == S5_POSITION_CENTRE,
+    check(S5_POSITION_CENTRE == scan.placement.position,
           "backlash: centred box still centre");
 }
 
@@ -537,14 +540,15 @@ run_avoid (world_t * p_world, s5_avoid_side_t expected, const char * p_name)
 {
     static s5_scan_t scan;
 
-    check(s5_scan_run(&scan, world_measure, p_world) && scan.b_valid, p_name);
+    check((s5_scan_run(&scan, world_measure, p_world)) && (scan.b_valid),
+          p_name);
     check(scan.avoid.side == expected, p_name);
     printf("ok    %-34s pass %-5s shift L %5.0f R %5.0f mm, beside L %6.0f R "
            "%6.0f mm\n",
            p_name,
-           (scan.avoid.side == S5_AVOID_LEFT)
+           (S5_AVOID_LEFT == scan.avoid.side)
                ? "left"
-               : ((scan.avoid.side == S5_AVOID_RIGHT) ? "right" : "none"),
+               : ((S5_AVOID_RIGHT == scan.avoid.side) ? "right" : "none"),
            scan.avoid.shift_mm[S5_LEFT], scan.avoid.shift_mm[S5_RIGHT],
            scan.avoid.clear_mm[S5_LEFT], scan.avoid.clear_mm[S5_RIGHT]);
 }
@@ -599,7 +603,7 @@ test_avoidance (void)
 
     scan.b_valid = false;
     s5_avoidance(&scan, &scan.avoid);
-    check(scan.avoid.side == S5_AVOID_NONE, "avoid: nothing ahead");
+    check(S5_AVOID_NONE == scan.avoid.side, "avoid: nothing ahead");
 }
 
 static void check_plan_geometry(const s5_detour_plan_t * p_plan,
@@ -615,17 +619,18 @@ test_face (void)
     s5_detour_plan_t    plan;
     unsigned            i;
 
-    for (i = 0U; i < sizeof(yaws) / sizeof(yaws[0]); i++)
+    for (i = 0U; i < (sizeof(yaws) / sizeof(yaws[0])); i++)
     {
         yawed_t yawed = {yaws[i], 100.0, 0.0};
         double  face  = 180.0 * cos(yaws[i] * DEG_TO_RAD);
         /* the robot's, square to the face */
         double heading = yaws[i] * DEG_TO_RAD;
 
-        double start_y, servo_y;
+        double start_y;
+        double servo_y;
         double end_y;
 
-        check(s5_scan_run(&scan, yawed_measure, &yawed) && scan.b_valid,
+        check((s5_scan_run(&scan, yawed_measure, &yawed)) && (scan.b_valid),
               "face: scanned");
         check(scan.face.b_valid, "face: fitted");
         check_near(scan.face.tilt_deg, -yaws[i], 4.0, "face: tilt");
@@ -633,9 +638,9 @@ test_face (void)
         check_near(scan.face.width_mm, 200.0, 12.0, "face: width");
         check_near(scan.width_mm, scan.face.width_mm, 1e-9,
                    "face: reported width");
-        check(scan.face.b_corner_left && scan.face.b_corner_right,
+        check((scan.face.b_corner_left) && (scan.face.b_corner_right),
               "face: both corners placed");
-        check(scan.placement.position == S5_POSITION_CENTRE, "face: centred");
+        check(S5_POSITION_CENTRE == scan.placement.position, "face: centred");
         /* Centred: the closer side, or the default when it is square */
         check(scan.avoid.side
                   == ((yaws[i] > 0.0)   ? S5_AVOID_RIGHT
@@ -650,34 +655,36 @@ test_face (void)
         start_y = -S5_IR_AHEAD_MM * sin(heading);
         check_near(plan.start_y_mm, start_y, 6.0,
                    "face: sensors start on the line");
-        servo_y = start_y + S5_SERVO_AHEAD_MM * sin(heading);
-        end_y   = servo_y + ((plan.side == S5_AVOID_LEFT) ? 100.0 : -100.0);
+        servo_y = start_y + (S5_SERVO_AHEAD_MM * sin(heading));
+        end_y   = servo_y + ((S5_AVOID_LEFT == plan.side) ? 100.0 : -100.0);
         check_near(plan.edge_mm, end_y, 12.0, "face: the end being passed");
         check_near(fabs(plan.shift_mm - plan.edge_mm),
                    S5_ROBOT_HALF_WIDTH_MM + S5_PASS_MARGIN_MM, 1e-9,
                    "face: passes it by half the robot and the margin");
-        check_near(plan.face_mm, face + S5_SERVO_AHEAD_MM * cos(heading), 3.0,
+        check_near(plan.face_mm, face + (S5_SERVO_AHEAD_MM * cos(heading)), 3.0,
                    "face: where the face is");
         /* The moves reach that y, and stay short of the face */
         check_plan_geometry(&plan, "face: plan geometry");
         printf("ok    %-34s tilt %+5.1f deg, width %5.1f mm, pass %s, turn "
                "%+5.1f, back %3.0f\n",
                "face: tilted box", scan.face.tilt_deg, scan.face.width_mm,
-               (plan.side == S5_AVOID_LEFT) ? "left" : "right", plan.turn_deg,
+               (S5_AVOID_LEFT == plan.side) ? "left" : "right", plan.turn_deg,
                plan.backup_mm);
     }
 
     /* The angle alone: coarse readings only, no fine scan and no decision */
-    for (i = 0U; i < sizeof(yaws) / sizeof(yaws[0]); i++)
+    for (i = 0U; i < (sizeof(yaws) / sizeof(yaws[0])); i++)
     {
         yawed_t yawed = {yaws[i], 100.0, 0.0};
 
-        check(s5_tilt_scan(&scan, yawed_measure, &yawed) && scan.face.b_valid,
+        check((s5_tilt_scan(&scan, yawed_measure, &yawed))
+                  && (scan.face.b_valid),
               "tilt scan: fitted");
         check_near(scan.face.tilt_deg, -yaws[i], 6.0, "tilt scan: tilt");
-        check(scan.fine_count[S5_LEFT] == 0U && scan.fine_count[S5_RIGHT] == 0U,
+        check((0U == scan.fine_count[S5_LEFT])
+                  && (0U == scan.fine_count[S5_RIGHT]),
               "tilt scan: no fine points");
-        check(scan.avoid.side == S5_AVOID_NONE, "tilt scan: decides nothing");
+        check(S5_AVOID_NONE == scan.avoid.side, "tilt scan: decides nothing");
     }
 
     /* Off centre, tilted or not: pass on the side it reaches less */
@@ -685,40 +692,45 @@ test_face (void)
     {
         yawed_t yawed = {yaws[i], 120.0, 60.0};
 
-        check(s5_scan_run(&scan, yawed_measure, &yawed) && scan.face.b_valid,
+        check((s5_scan_run(&scan, yawed_measure, &yawed))
+                  && (scan.face.b_valid),
               "face: reaching left");
-        check(scan.placement.position == S5_POSITION_LEFT,
+        check(S5_POSITION_LEFT == scan.placement.position,
               "face: it reaches left");
         check_near(scan.face.offset_mm, 60.0, 15.0, "face: by how much");
-        check(scan.avoid.side == S5_AVOID_RIGHT, "face: pass right");
+        check(S5_AVOID_RIGHT == scan.avoid.side, "face: pass right");
         yawed.centre_mm = -60.0;
-        check(s5_scan_run(&scan, yawed_measure, &yawed) && scan.face.b_valid,
+        check((s5_scan_run(&scan, yawed_measure, &yawed))
+                  && (scan.face.b_valid),
               "face: reaching right");
-        check(scan.placement.position == S5_POSITION_RIGHT,
+        check(S5_POSITION_RIGHT == scan.placement.position,
               "face: it reaches right");
-        check(scan.avoid.side == S5_AVOID_LEFT, "face: pass left");
+        check(S5_AVOID_LEFT == scan.avoid.side, "face: pass left");
     }
 
     /* A wall has no corners to place: no way round, as ever */
     {
         world_t world = box(180.0, 2000.0, -2000.0, 0.0);
 
-        check(s5_scan_run(&scan, world_measure, &world) && scan.face.b_valid,
+        check((s5_scan_run(&scan, world_measure, &world))
+                  && (scan.face.b_valid),
               "face: wall");
-        check(!scan.face.b_corner_left && !scan.face.b_corner_right,
+        check((!scan.face.b_corner_left) && (!scan.face.b_corner_right),
               "face: wall has no corners");
-        check(scan.avoid.side == S5_AVOID_NONE, "face: no way round a wall");
+        check(S5_AVOID_NONE == scan.avoid.side, "face: no way round a wall");
     }
 
     /* Too little rise to tell: the edge angles decide */
     {
         world_t world = box(400.0, 250.0, -50.0, 0.0);
 
-        check(s5_scan_run(&scan, world_measure, &world) && !scan.face.b_valid,
+        check((s5_scan_run(&scan, world_measure, &world))
+                  && (!scan.face.b_valid),
               "face: no fit");
-        check(scan.avoid.side == S5_AVOID_RIGHT, "face: edge angles decide");
+        check(S5_AVOID_RIGHT == scan.avoid.side, "face: edge angles decide");
         world = box(400.0, 30.0, -30.0, 0.0);
-        check(s5_scan_run(&scan, world_measure, &world) && !scan.face.b_valid,
+        check((s5_scan_run(&scan, world_measure, &world))
+                  && (!scan.face.b_valid),
               "face: no fit on a thin post");
     }
 
@@ -729,7 +741,7 @@ test_face (void)
         world.other_depth_mm = 60.0;
         world.other_left_mm  = 400.0;
         world.other_right_mm = 150.0;
-        check(s5_scan_run(&scan, world_measure, &world) && scan.b_valid,
+        check((s5_scan_run(&scan, world_measure, &world)) && (scan.b_valid),
               "face: neighbour");
 
         if (scan.face.b_valid)
@@ -796,7 +808,9 @@ test_point_pack (void)
         int    angle_deg;
         double range_mm;
 
-        unsigned support, valid, total;
+        unsigned support;
+        unsigned valid;
+        unsigned total;
         bool     b_object;
     } rows[] = {
         {20, 0.0, 0U, 0U, 5U, false},      {160, 4000.0, 10U, 10U, 10U, true},
@@ -804,12 +818,15 @@ test_point_pack (void)
         {20, 4000.0, 3U, 10U, 10U, false}, {160, 20.06, 2U, 3U, 5U, true},
         {45, 399.9, 1U, 6U, 10U, false},   {135, 0.13, 5U, 5U, 10U, true},
     };
-    unsigned i, support, valid, total;
+    unsigned i;
+    unsigned support;
+    unsigned valid;
+    unsigned total;
     unsigned votes = 0U;
 
-    check(sizeof(s5_point_t) == 4U, "point: 32 bits");
+    check(4U == sizeof(s5_point_t), "point: 32 bits");
 
-    for (i = 0U; i < sizeof(rows) / sizeof(rows[0]); i++)
+    for (i = 0U; i < (sizeof(rows) / sizeof(rows[0])); i++)
     {
         s5_estimate_t e = {S5_ECHO_OK,
                            rows[i].range_mm,
@@ -829,7 +846,7 @@ test_point_pack (void)
         check_near(s5_point_range(p), rows[i].range_mm, 0.125,
                    "point: range to 0.25 mm");
         s5_point_set_object(&p);
-        check(s5_point_object(p) && (s5_point_angle(p) == rows[i].angle_deg)
+        check((s5_point_object(p)) && (s5_point_angle(p) == rows[i].angle_deg)
                   && (s5_point_support(p) == rows[i].support)
                   && (s5_point_valid(p) == rows[i].valid)
                   && (s5_point_total(p) == rows[i].total)
@@ -842,13 +859,13 @@ test_point_pack (void)
         s5_estimate_t e = {S5_ECHO_OK, 9000.0, 40U, 40U, 10U, 0.0, 0.0};
         s5_point_t    p = s5_point_pack(300, &e, false);
 
-        check((s5_point_angle(p) == 160) && (s5_point_range(p) == 4000.0)
-                  && (s5_point_support(p) == 15U) && (s5_point_valid(p) == 15U)
-                  && !s5_point_object(p),
+        check((160 == s5_point_angle(p)) && (4000.0 == s5_point_range(p))
+                  && (15U == s5_point_support(p)) && (15U == s5_point_valid(p))
+                  && (!s5_point_object(p)),
               "point: clamped high");
         e.range_mm = -5.0;
         p          = s5_point_pack(-40, &e, false);
-        check((s5_point_angle(p) == 20) && (s5_point_range(p) == 0.0),
+        check((20 == s5_point_angle(p)) && (0.0 == s5_point_range(p)),
               "point: clamped low");
     }
 
@@ -869,7 +886,7 @@ test_point_pack (void)
                 for (i = 0U; i < valid; i++)
                 {
                     range[i]
-                        = (i < support) ? 200.0 : 300.0 + 100.0 * (double)i;
+                        = (i < support) ? 200.0 : 300.0 + (100.0 * (double)i);
                 }
 
                 s5_estimate(range, (uint16_t)((1U << valid) - 1U), total, &e);
@@ -882,7 +899,7 @@ test_point_pack (void)
         }
     }
 
-    check(votes == 16U + 56U, "point: every vote tried");
+    check((16U + 56U) == votes, "point: every vote tried");
 }
 
 /* Paths and headings are kept modulo 2^16: crossing the wrap changes nothing */
@@ -904,7 +921,7 @@ test_curve_wrap (void)
     check(!s5_curve_recent(&curve), "curve wrap: forgotten");
 
     /* ... and stays forgotten when the path comes round to the same 16 bits */
-    for (; path < 65536.0 * 2.0 + 1000.0; path += 6.0)
+    for (; path < ((65536.0 * 2.0) + 1000.0); path += 6.0)
     {
         s5_curve_note(&curve, path, heading);
 
@@ -929,7 +946,7 @@ test_face_logged (void)
     unsigned         i;
     char             name[64];
 
-    for (i = 0U; i < sizeof(face_scans) / sizeof(face_scans[0]); i++)
+    for (i = 0U; i < (sizeof(face_scans) / sizeof(face_scans[0])); i++)
     {
         const face_scan_t * p_logged = &face_scans[i];
 
@@ -1061,7 +1078,7 @@ test_curve (void)
     }
 
     check(s5_curve_recent(&curve), "curve: still recent after standing still");
-    check((double)curve.swing_ddeg / 10.0 >= S5_CURVE_MIN_DEG,
+    check(((double)curve.swing_ddeg / 10.0) >= S5_CURVE_MIN_DEG,
           "curve: standing still keeps the samples");
 
     /* Marked after a rejoin: however straight the odometry looks */
@@ -1097,9 +1114,10 @@ replay_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
     double     range[5];
     bool       echo[5] = {true, true, true, true, true};
 
-    unsigned i, row = 0U;
+    unsigned i;
+    unsigned row = 0U;
 
-    for (i = 0U; i < sizeof(replay_scan) / sizeof(replay_scan[0]); i++)
+    for (i = 0U; i < (sizeof(replay_scan) / sizeof(replay_scan[0])); i++)
     {
         if (replay_scan[i].angle_deg <= angle_deg)
         {
@@ -1110,7 +1128,7 @@ replay_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
     /* The reading straight ahead, taken first, was 172 mm */
     for (i = 0U; i < 5U; i++)
     {
-        range[i] = ((*p_calls == 0U) && (angle_deg == 90))
+        range[i] = ((0U == *p_calls) && (90 == angle_deg))
                        ? 172.0
                        : replay_scan[row].range_mm;
     }
@@ -1128,14 +1146,14 @@ test_sloping_surface (void)
     unsigned         calls = 0U;
     unsigned         i;
 
-    check(s5_scan_run(&scan, replay_measure, &calls) && scan.b_valid,
+    check((s5_scan_run(&scan, replay_measure, &calls)) && (scan.b_valid),
           "slope: scanned");
     check(scan.edge[S5_LEFT].b_found, "slope: left end of the face found");
     check_near(scan.edge[S5_LEFT].outward_deg, 84.5, 1.0,
                "slope: left end at 84.5 deg");
     check(!scan.edge[S5_RIGHT].b_found,
           "slope: right end heard past the sweep");
-    check(scan.edge[S5_RIGHT].last_object_deg == S5_ANGLE_RIGHT_DEG,
+    check(S5_ANGLE_RIGHT_DEG == scan.edge[S5_RIGHT].last_object_deg,
           "slope: followed to the sweep limit");
 
     /* every point on the way there is the obstacle */
@@ -1151,9 +1169,9 @@ test_sloping_surface (void)
                "slope: about its true 200 mm wide");
     check(scan.face.b_corner_right,
           "slope: right corner placed though past the sweep");
-    check(scan.placement.position == S5_POSITION_LEFT,
+    check(S5_POSITION_LEFT == scan.placement.position,
           "slope: it reaches left");
-    check(scan.avoid.side == S5_AVOID_RIGHT,
+    check(S5_AVOID_RIGHT == scan.avoid.side,
           "slope: pass on the side it reaches less");
     check(s5_detour_plan(&scan, &plan), "slope: plan");
     /* From 32 deg left of square, this is much more than the 51 deg it turned
@@ -1164,7 +1182,7 @@ test_sloping_surface (void)
            "deg from where it stood\n",
            "slope: replayed hardware scan", scan.face.tilt_deg,
            scan.face.width_mm,
-           (scan.avoid.side == S5_AVOID_LEFT) ? "left" : "right",
+           (S5_AVOID_LEFT == scan.avoid.side) ? "left" : "right",
            plan.turn_deg + plan.tilt_deg);
 }
 
@@ -1184,11 +1202,12 @@ bend_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
     double range[5];
     bool   echo[5] = {true, true, true, true, true};
 
-    unsigned i, row = 0U;
+    unsigned i;
+    unsigned row = 0U;
 
     (void)p_context;
 
-    for (i = 0U; i < sizeof(bend_scan) / sizeof(bend_scan[0]); i++)
+    for (i = 0U; i < (sizeof(bend_scan) / sizeof(bend_scan[0])); i++)
     {
         if (bend_scan[i].angle_deg <= angle_deg)
         {
@@ -1198,7 +1217,7 @@ bend_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
 
     for (i = 0U; i < 5U; i++)
     {
-        range[i] = (angle_deg == 128) ? bend_128_mm : bend_scan[row].range_mm;
+        range[i] = (128 == angle_deg) ? bend_128_mm : bend_scan[row].range_mm;
     }
 
     estimate(range, echo, 5U, p_estimate);
@@ -1211,25 +1230,25 @@ test_bend_scan (void)
     static s5_scan_t scan;
 
     bend_128_mm = 571.0;
-    check(s5_scan_run(&scan, bend_measure, NULL) && scan.face.b_valid,
+    check((s5_scan_run(&scan, bend_measure, NULL)) && (scan.face.b_valid),
           "bend: scanned");
-    check(scan.placement.position == S5_POSITION_CENTRE, "bend: centred");
+    check(S5_POSITION_CENTRE == scan.placement.position, "bend: centred");
     check(scan.avoid.b_room[S5_RIGHT],
           "bend: the lone corner echo leaves room on the right");
     scan.squared_deg = -23.6;
     s5_avoidance(&scan, &scan.avoid);
-    check(scan.avoid.side == S5_AVOID_RIGHT,
+    check(S5_AVOID_RIGHT == scan.avoid.side,
           "bend: passes on the side that was closer");
 
     /* The next reading agrees: something is really there */
     bend_128_mm = 390.0;
-    check(s5_scan_run(&scan, bend_measure, NULL) && scan.face.b_valid,
+    check((s5_scan_run(&scan, bend_measure, NULL)) && (scan.face.b_valid),
           "bend: real object scanned");
     check(!scan.avoid.b_room[S5_RIGHT],
           "bend: a real object still blocks the right");
     scan.squared_deg = -23.6;
     s5_avoidance(&scan, &scan.avoid);
-    check(scan.avoid.side == S5_AVOID_LEFT, "bend: so it goes the other way");
+    check(S5_AVOID_LEFT == scan.avoid.side, "bend: so it goes the other way");
 }
 
 /* A box in front of a wall at about its own range still ends where the range
@@ -1240,9 +1259,9 @@ test_edge_still_ends (void)
     static s5_scan_t scan;
     world_t          world = box(180.0, 100.0, -100.0, 400.0);
 
-    check(s5_scan_run(&scan, world_measure, &world) && scan.b_valid,
+    check((s5_scan_run(&scan, world_measure, &world)) && (scan.b_valid),
           "edge: box before a wall, scanned");
-    check(scan.edge[S5_LEFT].b_found && scan.edge[S5_RIGHT].b_found,
+    check((scan.edge[S5_LEFT].b_found) && (scan.edge[S5_RIGHT].b_found),
           "edge: both ends found");
     check_near(scan.width_mm, 200.0, 12.0,
                "edge: width unchanged by the surface rule");
@@ -1257,21 +1276,21 @@ check_plan_geometry (const s5_detour_plan_t * p_plan, const char * p_name)
     /* the robot's at the start */
     double heading = -p_plan->tilt_deg * DEG_TO_RAD;
 
-    check(fabs(p_plan->turn_deg) >= S5_OUT_MIN_DEG - 1e-9
-              && fabs(p_plan->turn_deg) <= S5_OUT_MAX_DEG + 1e-9,
+    check((fabs(p_plan->turn_deg) >= (S5_OUT_MIN_DEG - 1e-9))
+              && (fabs(p_plan->turn_deg) <= (S5_OUT_MAX_DEG + 1e-9)),
           p_name);
-    check((p_plan->turn_deg > 0.0) == (p_plan->side == S5_AVOID_LEFT), p_name);
-    check((p_plan->shift_mm > 0.0) == (p_plan->side == S5_AVOID_LEFT), p_name);
+    check((p_plan->turn_deg > 0.0) == (S5_AVOID_LEFT == p_plan->side), p_name);
+    check((p_plan->shift_mm > 0.0) == (S5_AVOID_LEFT == p_plan->side), p_name);
     /* the diagonal ends shift_mm out, at out_x_mm ... */
-    check_near(p_plan->start_y_mm - p_plan->backup_mm * sin(heading)
-                   + p_plan->diagonal_mm * sin(p_plan->turn_deg * DEG_TO_RAD),
+    check_near(p_plan->start_y_mm - (p_plan->backup_mm * sin(heading))
+                   + (p_plan->diagonal_mm * sin(p_plan->turn_deg * DEG_TO_RAD)),
                p_plan->shift_mm, 0.01, p_name);
-    check_near(p_plan->diagonal_mm * cos(p_plan->turn_deg * DEG_TO_RAD)
-                   - p_plan->backup_mm * cos(heading),
+    check_near((p_plan->diagonal_mm * cos(p_plan->turn_deg * DEG_TO_RAD))
+                   - (p_plan->backup_mm * cos(heading)),
                p_plan->out_x_mm, 0.01, p_name);
     /* ... and the front corners never come within the margin of the face */
-    check(p_plan->out_x_mm + front_reach + S5_TURN_MARGIN_MM
-              <= p_plan->face_mm + 0.01,
+    check((p_plan->out_x_mm + front_reach + S5_TURN_MARGIN_MM)
+              <= (p_plan->face_mm + 0.01),
           p_name);
 }
 
@@ -1286,8 +1305,8 @@ test_detour_plan (void)
     /* Obstacle reaching right, at the 150 mm stop: out to the left */
     world = box(180.0, 50.0, -150.0, 0.0);
     (void)s5_scan_run(&scan, world_measure, &world);
-    check(s5_detour_plan(&scan, &plan) && plan.b_ok, "plan: pass left");
-    check(plan.side == S5_AVOID_LEFT, "plan: pass left side");
+    check((s5_detour_plan(&scan, &plan)) && (plan.b_ok), "plan: pass left");
+    check(S5_AVOID_LEFT == plan.side, "plan: pass left side");
     check_near(plan.shift_mm, 50.0 + margin, 10.0,
                "plan: left shift clears the edge");
     check_near(plan.face_mm, 180.0 + S5_SERVO_AHEAD_MM, 5.0,
@@ -1301,7 +1320,7 @@ test_detour_plan (void)
 
     world = box(180.0, 150.0, -50.0, 0.0);
     (void)s5_scan_run(&scan, world_measure, &world);
-    check(s5_detour_plan(&scan, &plan) && (plan.side == S5_AVOID_RIGHT),
+    check((s5_detour_plan(&scan, &plan)) && (S5_AVOID_RIGHT == plan.side),
           "plan: pass right");
     check_near(plan.shift_mm, -(50.0 + margin), 10.0,
                "plan: right shift clears the edge");
@@ -1323,7 +1342,7 @@ test_detour_plan (void)
     /* More reversing than allowed, no room, no side: stay stopped */
     scan.centre_forward_mm        = 180.0;
     scan.avoid.shift_mm[S5_RIGHT] = 1000.0;
-    check(!s5_detour_plan(&scan, &plan) && !plan.b_ok,
+    check((!s5_detour_plan(&scan, &plan)) && (!plan.b_ok),
           "plan: too much reversing refused");
     scan.avoid.shift_mm[S5_RIGHT] = 165.0;
     scan.avoid.b_room[S5_RIGHT]   = false;
@@ -1349,20 +1368,20 @@ simulate_pass (const s5_detour_plan_t * p_plan, double depth_mm,
 
     s5_pass_init(p_pass, p_plan);
 
-    for (count = 1U; x <= p_plan->out_x_mm + S5_PASS_MAX_MM; count++)
+    for (count = 1U; x <= (p_plan->out_x_mm + S5_PASS_MAX_MM); count++)
     {
-        double crossing = x + S5_SERVO_AHEAD_MM + gap / tan(look);
+        double crossing = x + S5_SERVO_AHEAD_MM + (gap / tan(look));
         bool   b_box    = (crossing >= p_plan->face_mm)
-                          && (crossing <= p_plan->face_mm + depth_mm);
+                          && (crossing <= (p_plan->face_mm + depth_mm));
         bool   b_echo
-            = b_box && ((miss_every == 0U) || (count % miss_every != 0U));
+            = b_box && ((0U == miss_every) || (0U != (count % miss_every)));
         /* Driver ranges start at the transducer, not the servo axis. */
-        double range = gap / sin(look) - S5_SENSOR_OFFSET_MM;
+        double range = (gap / sin(look)) - S5_SENSOR_OFFSET_MM;
 
-        if (!b_echo && (far_mm > 0.0))
+        if ((!b_echo) && (far_mm > 0.0))
         {
             b_echo = true;
-            range  = (gap + far_mm) / sin(look) - S5_SENSOR_OFFSET_MM;
+            range  = ((gap + far_mm) / sin(look)) - S5_SENSOR_OFFSET_MM;
         }
 
         if (s5_pass_observe(p_pass, p_plan, x, y, b_echo, range))
@@ -1392,21 +1411,22 @@ check_pass (const s5_detour_plan_t * p_plan, double depth_mm,
     /* the end is never estimated short of the true end ... */
     turn_in = s5_pass_clear_x(&pass) + S5_PASS_TRIM_MM - rear_reach
               - S5_PASS_MARGIN_MM;
-    check(turn_in >= end - 1e-9, p_name);
+    check(turn_in >= (end - 1e-9), p_name);
     /* ... nor more than a step further than needed */
-    check(turn_in <= end + S5_PASS_STEP_MM + 1e-9, p_name);
+    check(turn_in <= (end + S5_PASS_STEP_MM + 1e-9), p_name);
     /* Worst case, the diagonal got no further out than planned.  With the
        forward trim, what keeps the obstacle's rear corner off the robot is
        the sideways gap: the rear corners turning in place ... */
     past = s5_pass_clear_x(&pass) - end;
     check(hypot(past, gap) >= rear_reach, p_name);
     /* ... and the body driving back in along the return heading. */
-    check(past * sin(back) + gap * cos(back) >= S5_ROBOT_HALF_WIDTH_MM, p_name);
+    check(((past * sin(back)) + (gap * cos(back))) >= S5_ROBOT_HALF_WIDTH_MM,
+          p_name);
     printf("ok    %-34s end %4.0f mm, estimate %4.0f mm, %u echoes, turn in at "
            "x %4.0f, return clears by %3.0f mm\n",
            p_name, end, fmax(pass.rear_mm, pass.end_mm), pass.seen,
            s5_pass_clear_x(&pass),
-           past * sin(back) + gap * cos(back) - S5_ROBOT_HALF_WIDTH_MM);
+           (past * sin(back)) + (gap * cos(back)) - S5_ROBOT_HALF_WIDTH_MM);
 }
 
 static void
@@ -1432,12 +1452,12 @@ test_detour_pass (void)
     (void)s5_pass_observe(&pass, &plan, 300.0, plan.shift_mm, true, 100.0);
     check_near(pass.rear_mm,
                300.0 + S5_SERVO_AHEAD_MM
-                   + (100.0 + S5_SENSOR_OFFSET_MM)
-                         * cos(S5_SIDE_LOOK_DEG * DEG_TO_RAD),
+                   + ((100.0 + S5_SENSOR_OFFSET_MM)
+                      * cos(S5_SIDE_LOOK_DEG * DEG_TO_RAD)),
                1e-9, "pass: side hit includes sensor offset");
 
     check_near(s5_return_length(165.0),
-               165.0 / sin(S5_RETURN_DEG * DEG_TO_RAD) + S5_RETURN_EXTRA_MM,
+               (165.0 / sin(S5_RETURN_DEG * DEG_TO_RAD)) + S5_RETURN_EXTRA_MM,
                1e-9, "return: length");
     check_near(s5_return_length(-165.0), s5_return_length(165.0), 1e-9,
                "return: either side");
@@ -1468,27 +1488,27 @@ test_detour_retry (void)
     double           needed;
     int              look;
 
-    check(s5_scan_run(&scan, yawed_measure, &yawed) && scan.b_valid,
+    check((s5_scan_run(&scan, yawed_measure, &yawed)) && (scan.b_valid),
           "retry: scanned");
     side = scan.avoid.side;
     check(s5_detour_plan(&scan, &steep), "retry: normal plan");
-    check(s5_detour_plan_side(&scan, side, S5_OUT_MAX_DEG, &other)
+    check((s5_detour_plan_side(&scan, side, S5_OUT_MAX_DEG, &other))
               && (other.turn_deg == steep.turn_deg)
               && (other.backup_mm == steep.backup_mm)
               && (other.diagonal_mm == steep.diagonal_mm),
           "retry: the normal plan is the side planner at S5_OUT_MAX_DEG");
     /* Stopped this close, the normal plan turns out nearly sideways (70..75
      * deg) */
-    check(fabs(steep.turn_deg) >= S5_RETRY_OUT_MAX_DEG + 10.0,
+    check(fabs(steep.turn_deg) >= (S5_RETRY_OUT_MAX_DEG + 10.0),
           "retry: steep at the stop distance");
 
     /* Shallower: reverses further first, still reaches the same y, short of the
      * face */
     check(s5_detour_plan_side(&scan, side, S5_RETRY_OUT_MAX_DEG, &shallow),
           "retry: shallower plan");
-    check(fabs(shallow.turn_deg) <= S5_RETRY_OUT_MAX_DEG + 1e-9,
+    check(fabs(shallow.turn_deg) <= (S5_RETRY_OUT_MAX_DEG + 1e-9),
           "retry: shallower turn");
-    check(shallow.backup_mm > steep.backup_mm + 50.0,
+    check(shallow.backup_mm > (steep.backup_mm + 50.0),
           "retry: reverses further for it");
     check(shallow.backup_mm <= S5_BACKUP_MAX_MM,
           "retry: within the reversing limit");
@@ -1498,10 +1518,10 @@ test_detour_retry (void)
 
     /* The other side: the mirror image, when the scan found room there */
     check(s5_detour_plan_side(
-              &scan, (side == S5_AVOID_LEFT) ? S5_AVOID_RIGHT : S5_AVOID_LEFT,
+              &scan, (S5_AVOID_LEFT == side) ? S5_AVOID_RIGHT : S5_AVOID_LEFT,
               S5_OUT_MAX_DEG, &other),
           "retry: other side plan");
-    check(other.turn_deg * steep.turn_deg < 0.0,
+    check((other.turn_deg * steep.turn_deg) < 0.0,
           "retry: other side turns the other way");
     check_plan_geometry(&other, "retry: other side plan geometry");
     check(!s5_detour_plan_side(&scan, side, S5_OUT_MIN_DEG - 1.0, &other),
@@ -1516,7 +1536,7 @@ test_detour_retry (void)
        abandoned run). */
     x    = -steep.backup_mm;
     look = S5_ANGLE_CENTRE_DEG
-           + ((side == S5_AVOID_LEFT) ? S5_GUARD_SWEEP_DEG
+           + ((S5_AVOID_LEFT == side) ? S5_GUARD_SWEEP_DEG
                                       : -S5_GUARD_SWEEP_DEG);
     expected
         = s5_obstacle_range(&steep, x, steep.start_y_mm, steep.turn_deg, look);
@@ -1524,13 +1544,13 @@ test_detour_retry (void)
     echo   = expected - S5_SENSOR_OFFSET_MM;
     needed = steep.diagonal_mm + S5_DIAGONAL_EXTRA_MM + S5_FRONT_MM
              - S5_SERVO_AHEAD_MM + S5_PASS_MARGIN_MM;
-    check((expected
-               * cos((S5_GUARD_SWEEP_DEG + S5_GUARD_BEAM_HALF_DEG) * DEG_TO_RAD)
+    check(((expected
+            * cos((S5_GUARD_SWEEP_DEG + S5_GUARD_BEAM_HALF_DEG) * DEG_TO_RAD))
            <= needed)
-              && (expected
-                      * sin((S5_GUARD_SWEEP_DEG - S5_GUARD_BEAM_HALF_DEG)
-                            * DEG_TO_RAD)
-                  <= S5_ROBOT_HALF_WIDTH_MM + S5_PASS_MARGIN_MM),
+              && ((expected
+                   * sin((S5_GUARD_SWEEP_DEG - S5_GUARD_BEAM_HALF_DEG)
+                         * DEG_TO_RAD))
+                  <= (S5_ROBOT_HALF_WIDTH_MM + S5_PASS_MARGIN_MM)),
           "retry: the guard alone would block on it");
     check(s5_echo_on_obstacle(&steep, x, steep.start_y_mm, steep.turn_deg, look,
                               echo),
@@ -1595,7 +1615,7 @@ main (void)
     test_detour_pass();
     test_detour_retry();
     printf("%u/%u checks passed\n", checks - failures, checks);
-    return (failures == 0U) ? 0 : 1;
+    return (0U == failures) ? 0 : 1;
 }
 
 /*** end of file ***/

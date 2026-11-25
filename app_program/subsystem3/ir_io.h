@@ -38,7 +38,7 @@ ir_reg_wait (uint32_t reg, uint32_t mask)
 {
     for (uint32_t i = 0U; i < IR_ADC_SPINS; ++i)
     {
-        if ((in_w(reg) & mask) != 0U)
+        if (0U != (in_w(reg) & mask))
         {
             return true;
         }
@@ -71,7 +71,9 @@ ir_adc_init (unsigned analog_pin)
 static inline unsigned
 ir_adc_read (unsigned pin, unsigned count)
 {
-    uint32_t sum = 0U, done = 0U, input = (uint32_t)(pin - 26U) << 12U;
+    uint32_t sum   = 0U;
+    uint32_t done  = 0U;
+    uint32_t input = (uint32_t)(pin - 26U) << 12U;
 
     for (unsigned i = 0U; i < count; ++i)
     {
@@ -86,7 +88,7 @@ ir_adc_read (unsigned pin, unsigned count)
         ++done;
     }
 
-    return (done == 0U) ? 0U : (unsigned)(sum / done);
+    return (0U == done) ? 0U : (unsigned)(sum / done);
 }
 #endif
 #endif

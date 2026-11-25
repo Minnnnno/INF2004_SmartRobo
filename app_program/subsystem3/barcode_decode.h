@@ -44,7 +44,8 @@ typedef struct
     uint32_t quiet_path[BARCODE_QUIET];
     uint16_t quiet_heading[BARCODE_QUIET];
 
-    unsigned head, filled;
+    unsigned head;
+    unsigned filled;
     /* Rise that leaves the quiet level, from the last idle lead-in. */
     uint32_t prominence;
     /* Quiet level, from the last sample taken while idle. */

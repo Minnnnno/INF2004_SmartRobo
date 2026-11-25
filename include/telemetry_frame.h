@@ -103,7 +103,7 @@ enum
 {
     TF_FRAME_BITS  = 0 TF_FIELDS(TF_SUM_),
     TF_FRAME_BYTES = (TF_FRAME_BITS + 7) / 8,
-    TF_SPARE_BITS  = TF_FRAME_BYTES * 8 - TF_FRAME_BITS
+    TF_SPARE_BITS  = (TF_FRAME_BYTES * 8) - TF_FRAME_BITS
 };
 #undef TF_SUM_
 
@@ -175,7 +175,9 @@ typedef enum
 
 typedef struct
 {
-    uint8_t opcode, session, seq;
+    uint8_t opcode;
+    uint8_t session;
+    uint8_t seq;
 } tf_command_t;
 
 bool tf_cmd_decode(const uint8_t * data, size_t len, tf_command_t * cmd);
@@ -260,7 +262,9 @@ typedef struct
 {
     uint8_t seq;
 
-    bool     reliable, trusted, fresh;
+    bool     reliable;
+    bool     trusted;
+    bool     fresh;
     uint8_t  cause; /* motion_feedback_cause_t */
     uint8_t  state; /* motion_state_t */
     uint8_t  fault; /* motion_fault_t */

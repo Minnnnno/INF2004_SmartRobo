@@ -60,7 +60,7 @@ shuttle_leg (uint32_t id, double metres)
             continue;
         }
 
-        if (status.motion.hold || status.motion.fault != F_NONE)
+        if (status.motion.hold || F_NONE != status.motion.fault)
         {
             return false;
         }

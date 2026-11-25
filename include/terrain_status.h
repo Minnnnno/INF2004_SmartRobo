@@ -38,7 +38,7 @@ terrain_published_state (subsystem_status_t const * p_terrain)
 {
     double word;
 
-    if ((NULL == p_terrain) || !p_terrain->available)
+    if ((NULL == p_terrain) || (!p_terrain->available))
     {
         return (uint8_t)TERRAIN_TS_UNKNOWN;
     }
@@ -46,7 +46,7 @@ terrain_published_state (subsystem_status_t const * p_terrain)
     word = p_terrain->values[3];
 
     /* Also rejects NaN; 10 bits are defined. */
-    if (!(word >= 0.0) || (word > 1023.0))
+    if ((!(word >= 0.0)) || (word > 1023.0))
     {
         return (uint8_t)TERRAIN_TS_UNKNOWN;
     }

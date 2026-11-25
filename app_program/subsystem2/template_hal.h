@@ -57,7 +57,7 @@ gpio_set_dir (unsigned pin, bool output)
 static inline bool
 gpio_get (unsigned pin)
 {
-    return (in_w(GPIO_IN) & (1UL << pin)) != 0U;
+    return 0U != (in_w(GPIO_IN) & (1UL << pin));
 }
 
 static inline void
@@ -84,7 +84,7 @@ gpio_set_function (unsigned pin, unsigned function)
 static inline UW
 irq_reg (unsigned pin, UW base)
 {
-    return IO_BANK0_BASE + base + (pin / 8U) * 4U;
+    return IO_BANK0_BASE + base + ((pin / 8U) * 4U);
 }
 
 static inline uint32_t
@@ -144,7 +144,7 @@ pwm_config_set_clkdiv (pwm_config * p, float divider)
 static inline void
 pwm_init (unsigned slice, const pwm_config * p, bool enable)
 {
-    UW base = PWM_BASE + slice * 0x14U;
+    UW base = PWM_BASE + (slice * 0x14U);
 
     clr_w(RESETS_RESET, RESETS_RESET_PWM);
     out_w(base, 0U);
@@ -158,19 +158,21 @@ pwm_init (unsigned slice, const pwm_config * p, bool enable)
 static inline void
 pwm_set_both_levels (unsigned slice, uint16_t a, uint16_t b)
 {
-    out_w(PWM_BASE + slice * 0x14U + 12U, ((UW)b << 16U) | a);
+    out_w(PWM_BASE + (slice * 0x14U) + 12U, ((UW)b << 16U) | a);
 }
 
 static inline void
 pwm_set_enabled (unsigned slice, bool enabled)
 {
-    out_w(PWM_BASE + slice * 0x14U, enabled ? 1U : 0U);
+    out_w(PWM_BASE + (slice * 0x14U), enabled ? 1U : 0U);
 }
 
 static inline uint64_t
 time_us_64 (void)
 {
-    UW high, low, after;
+    UW high;
+    UW low;
+    UW after;
 
     do
     {

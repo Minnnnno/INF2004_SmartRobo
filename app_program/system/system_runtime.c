@@ -88,7 +88,7 @@ freeze_catcher_start (void)
     /* The kernel leaves SYSCFG, which holds the NMI routing, in reset. */
     clr_w(RESETS_RESET, RESETS_RESET_SYSCFG);
 
-    while ((in_w(RESETS_RESET_DONE) & RESETS_RESET_SYSCFG) == 0U)
+    while (0U == (in_w(RESETS_RESET_DONE) & RESETS_RESET_SYSCFG))
     {
     }
 
@@ -129,13 +129,13 @@ system_report_previous_crash (void)
 
     const UW * data = previous_crash.data;
 
-    if (previous_crash.magic == CRASH_MAGIC_FAULT)
+    if (CRASH_MAGIC_FAULT == previous_crash.magic)
     {
         tm_printf(
             (const UB *)"LAST CRASH: hard fault task=%u pc=%08x lr=%08x\n",
             (unsigned)data[2], (unsigned)data[0], (unsigned)data[1]);
     }
-    else if (previous_crash.magic == CRASH_MAGIC_FREEZE)
+    else if (CRASH_MAGIC_FREEZE == previous_crash.magic)
     {
         UW where = data[2];
 
@@ -196,12 +196,12 @@ report_task_stack (ID id, const char * name)
     stack_debug_t info;
     ER            result = knl_task_stack_debug(id, &info);
 
-    if (result == E_NOEXS)
+    if (E_NOEXS == result)
     {
         return true;
     }
 
-    if (result != E_OK)
+    if (E_OK != result)
     {
         tm_printf((const UB *)"[MEMORY] task=%u name=%s stack metadata invalid "
                               "error=%d\n",
@@ -213,7 +213,7 @@ report_task_stack (ID id, const char * name)
                           "guard_ok=%u saved_sp_ok=%u\n",
               (unsigned)id, name, (unsigned)info.used, (unsigned)info.capacity,
               (unsigned)info.guard_ok, (unsigned)info.saved_sp_ok);
-    return info.guard_ok && info.saved_sp_ok;
+    return (info.guard_ok) && (info.saved_sp_ok);
 }
 #endif
 
@@ -229,7 +229,7 @@ system_supervise (const app_task_spec_t * tasks, const ID * ids,
     (void)task_count;
     (void)report_motion_fault;
 #endif
-    bool memory_ok = knl_idle_stack_intact(0U) && knl_guards_intact();
+    bool memory_ok = (knl_idle_stack_intact(0U)) && (knl_guards_intact());
 
     if (!memory_ok)
     {
@@ -251,7 +251,7 @@ system_supervise (const app_task_spec_t * tasks, const ID * ids,
 
     for (ID id = 1; id <= CNF_MAX_TSKID; ++id)
     {
-        const char * name = id == tk_get_tid() ? "diagnostics" : "kernel";
+        const char * name = (id == tk_get_tid()) ? "diagnostics" : "kernel";
 
         for (i = 0U; i < task_count; ++i)
         {

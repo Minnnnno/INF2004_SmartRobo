@@ -42,12 +42,13 @@ angle_test_init (void)
     brake();
     angle_control_init(&control, &config);
 
-    if (!control.ready || !board_pins_valid() || !motion_hal_sample().reliable)
+    if ((!control.ready) || (!board_pins_valid())
+        || (!motion_hal_sample().reliable))
     {
         return false;
     }
 
-    if (tk_def_int(3U, &definition) != E_OK)
+    if (E_OK != tk_def_int(3U, &definition))
     {
         return false;
     }
@@ -68,9 +69,9 @@ angle_test_init (void)
 bool
 angle_test_start (int direction)
 {
-    if (!timer_ready
-        || !angle_control_start(&control, direction, motion_hal_sample(),
-                                motion_hal_time()))
+    if ((!timer_ready)
+        || (!angle_control_start(&control, direction, motion_hal_sample(),
+                                 motion_hal_time())))
     {
         return false;
     }
@@ -98,7 +99,7 @@ angle_test_poll (void)
 
     if (expired)
     {
-        if (control.state != ANGLE_TIMEOUT)
+        if (ANGLE_TIMEOUT != control.state)
         {
             control.quiet_since = motion_hal_time();
         }
@@ -108,11 +109,11 @@ angle_test_poll (void)
         control.output[1] = 0.0;
     }
 
-    if (control.state != ANGLE_TURNING)
+    if (ANGLE_TURNING != control.state)
     {
         brake();
 
-        if (control.state != ANGLE_BRAKING)
+        if (ANGLE_BRAKING != control.state)
         {
             out_w(TIMER_ARMED, 8U);
         }
@@ -124,8 +125,8 @@ angle_test_poll (void)
             double   output = control.output[w] * control.config.motor_sign[w];
             uint16_t duty   = (uint16_t)(fmin(0.25, fabs(output)) * 4000.0);
 
-            pwm_set_both_levels(4U + w, output > 0.0 ? duty : 0U,
-                                output < 0.0 ? duty : 0U);
+            pwm_set_both_levels(4U + w, (output > 0.0) ? duty : 0U,
+                                (output < 0.0) ? duty : 0U);
             gpio_set_function(motor_pins[w][0], GPIO_FUNC_PWM);
             gpio_set_function(motor_pins[w][1], GPIO_FUNC_PWM);
             pwm_set_enabled(4U + w, true);
@@ -159,7 +160,7 @@ angle_test_status (void)
 bool
 angle_test_active (void)
 {
-    return control.state == ANGLE_TURNING || control.state == ANGLE_BRAKING;
+    return (ANGLE_TURNING == control.state) || (ANGLE_BRAKING == control.state);
 }
 #endif
 

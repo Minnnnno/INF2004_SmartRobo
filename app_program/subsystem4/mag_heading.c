@@ -201,7 +201,7 @@ mag_cal_finish (mag_cal_acc_t const * p_acc, mag_cal_result_t * p_result)
     }
 
     p_result->fit_permille
-        = (uint16_t)(sqrtf(sum_sq / (float)MAG_BINS) * 1000.0F + 0.5F);
+        = (uint16_t)((sqrtf(sum_sq / (float)MAG_BINS) * 1000.0F) + 0.5F);
     p_result->cal.field = (uint16_t)(mean + 0.5F);
     /* Bins follow increasing encoder heading (left). If the raw angle fell,
      * the sensor's sense is opposite: flip so + = left like the encoders. */
@@ -235,7 +235,7 @@ mag_field (mag_cal_t const * p_cal, int16_t x, int16_t y)
     float cy        = (float)y;
     float magnitude = 0.0F;
 
-    if ((NULL != p_cal) && p_cal->calibrated)
+    if ((NULL != p_cal) && (p_cal->calibrated))
     {
         mag_correct(p_cal, x, y, &cx, &cy);
     }
@@ -256,7 +256,7 @@ mag_heading_ddeg (mag_cal_t const * p_cal, int16_t x, int16_t y,
     int32_t reference = 0;
     int32_t ddeg      = 0;
 
-    if ((NULL == p_cal) || (NULL == p_heading_ddeg) || !p_cal->calibrated
+    if ((NULL == p_cal) || (NULL == p_heading_ddeg) || (!p_cal->calibrated)
         || (0U == p_cal->field))
     {
         return false;
@@ -265,8 +265,8 @@ mag_heading_ddeg (mag_cal_t const * p_cal, int16_t x, int16_t y,
     field     = (int32_t)mag_field(p_cal, x, y);
     reference = (int32_t)p_cal->field;
 
-    if (((field - reference) * 100 > reference * MAG_FIELD_TOL_PERCENT)
-        || ((reference - field) * 100 > reference * MAG_FIELD_TOL_PERCENT))
+    if ((((field - reference) * 100) > (reference * MAG_FIELD_TOL_PERCENT))
+        || (((reference - field) * 100) > (reference * MAG_FIELD_TOL_PERCENT)))
     {
         return false;
     }

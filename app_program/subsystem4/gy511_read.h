@@ -37,7 +37,7 @@ typedef struct
     uint8_t bytes[5];
 } gy511_magnetic_t;
 
-_Static_assert(sizeof(gy511_magnetic_t) == 5U,
+_Static_assert(5U == sizeof(gy511_magnetic_t),
                "Magnetic sample must occupy five bytes");
 
 /* Fresh magnetic sample only. E_BUSY: no new data (or locked set drained).

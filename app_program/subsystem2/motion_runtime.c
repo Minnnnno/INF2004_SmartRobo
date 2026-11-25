@@ -16,7 +16,7 @@ static void
 sync_encoder_fault_latch (void)
 {
     bool latched
-        = (motion.fault_flags & (1U << ((unsigned)F_FEEDBACK - 1U))) != 0U;
+        = 0U != (motion.fault_flags & (1U << ((unsigned)F_FEEDBACK - 1U)));
 
     crash_encoder_fault_update(latched, (UW)motion.status.feedback_cause);
 }
@@ -36,7 +36,7 @@ static motor_fault_snapshot_t motor_fault_snapshot;
 static void
 capture_motor_fault (void)
 {
-    if (motion.status.fault == F_NONE)
+    if (F_NONE == motion.status.fault)
     {
         motor_fault_snapshot.recorded = false;
         return;
@@ -64,9 +64,9 @@ get_motor_fault (const motion_status_t * s, motor_fault_snapshot_t * snapshot)
         return false;
     }
 
-    available = motor_fault_snapshot.recorded && s->debug.recorded
-                && motor_fault_snapshot.command_id == s->debug.id
-                && motor_fault_snapshot.fault_time_ms == s->debug.time_ms;
+    available = (motor_fault_snapshot.recorded) && (s->debug.recorded)
+                && (motor_fault_snapshot.command_id == s->debug.id)
+                && (motor_fault_snapshot.fault_time_ms == s->debug.time_ms);
 
     if (available)
     {
@@ -80,7 +80,7 @@ get_motor_fault (const motion_status_t * s, motor_fault_snapshot_t * snapshot)
 static motion_result_t
 magnitude (uint32_t id, motion_mode_t mode, double value, int sign)
 {
-    if (!isfinite(value) || (value < 0.0))
+    if ((!isfinite(value)) || (value < 0.0))
     {
         return R_INVALID;
     }
@@ -137,7 +137,7 @@ motion_runtime_init (void)
 
     motion_init(&motion, &config, motion_hal_sample(), now, setup);
 
-    if (setup && motion.status.state == INITIALISING
+    if (setup && (INITIALISING == motion.status.state)
         && ((now - start) > config.setup_timeout))
     {
         motion_raise_fault(&motion, F_SETUP_TIMEOUT, now);
@@ -239,8 +239,8 @@ motion_task (INT code, void * context)
          * runtime clock must still fault instead of repeating stale PWM. */
         crash_mark(CRASH_MARK_MOTION, CRASH_MOTION_STEP);
 
-        if (now != motion.last_time
-            || (!first_sample && motion.last_time == previous_time))
+        if ((now != motion.last_time)
+            || ((!first_sample) && (motion.last_time == previous_time)))
         {
             motion_step(&motion, sample, now);
         }
@@ -294,21 +294,21 @@ report_encoder_error (const motion_status_t * s)
 {
     const motion_fault_debug_t * d = &s->debug;
 
-    if (s->fault != F_FEEDBACK)
+    if (F_FEEDBACK != s->fault)
     {
         return;
     }
 
-    if (s->feedback_cause == FB_NO_PROGRESS && d->recorded)
+    if ((FB_NO_PROGRESS == s->feedback_cause) && (d->recorded))
     {
         for (unsigned w = 0U; w < 2U; ++w)
         {
-            if ((d->stalled_wheels & (1U << w)) == 0U)
+            if (0U == (d->stalled_wheels & (1U << w)))
             {
                 continue;
             }
 
-            const char * name = w == 0U ? "LEFT" : "RIGHT";
+            const char * name = (0U == w) ? "LEFT" : "RIGHT";
 
             tm_printf((const UB *)"[ERROR] %s ENCODER: wheel commanded to move "
                                   "but no encoder count change for %ld ms "
@@ -320,7 +320,7 @@ report_encoder_error (const motion_status_t * s)
                       name);
         }
     }
-    else if (s->feedback_cause == FB_INVALID_TRANSITION)
+    else if (FB_INVALID_TRANSITION == s->feedback_cause)
     {
         for (unsigned w = 0U; w < 2U; ++w)
         {
@@ -333,16 +333,16 @@ report_encoder_error (const motion_status_t * s)
             tm_printf((const UB *)"[ERROR] %s ENCODER: invalid A/B transition "
                                   "detected; check encoder wiring and signal "
                                   "quality.\n",
-                      w == 0U ? "LEFT" : "RIGHT");
+                      (0U == w) ? "LEFT" : "RIGHT");
         }
     }
-    else if (s->feedback_cause == FB_UNRELIABLE)
+    else if (FB_UNRELIABLE == s->feedback_cause)
     {
         tm_printf(
             (const UB *)"[ERROR] ENCODER FEEDBACK: readings unavailable or "
                         "unreliable; affected wheel cannot be identified.\n");
     }
-    else if (s->feedback_cause == FB_RESTART_LATCH)
+    else if (FB_RESTART_LATCH == s->feedback_cause)
     {
         tm_printf((const UB *)"[ERROR] ENCODER FAULT RETAINED: pre-restart "
                               "cause=%s(%u); manual checks and checked "
@@ -387,7 +387,7 @@ report_motor_fault (const motion_status_t * s)
 
     for (unsigned w = 0U; w < 2U; ++w)
     {
-        const char * name      = w == 0U ? "LEFT" : "RIGHT";
+        const char * name      = (0U == w) ? "LEFT" : "RIGHT";
         unsigned     reversing = (unsigned)((p->reversal_wait_mask >> w) & 1U);
 
         /* Targets/speeds/PID requests are already printed in the [FAULT] lines.
@@ -414,7 +414,7 @@ report_motor_fault (const motion_status_t * s)
                   (unsigned)e->sample.count[w], (unsigned)e->sample.invalid[w],
                   (unsigned)e->irq_events[w][0], (unsigned)e->irq_events[w][1]);
 
-        if ((p->mismatch_mask & (1U << w)) != 0U)
+        if (0U != (p->mismatch_mask & (1U << w)))
         {
             tm_printf(
                 (const UB *)"[ERROR] %s MOTOR PWM: register/pin configuration "
@@ -422,15 +422,15 @@ report_motor_fault (const motion_status_t * s)
                 name);
         }
 
-        if ((d->stalled_wheels & (1U << w)) != 0U)
+        if (0U != (d->stalled_wheels & (1U << w)))
         {
             tm_printf((const UB *)"[ERROR] %s MOTOR: commanded movement has no "
                                   "encoder progress; inspect motor/load/power "
                                   "and encoder.\n",
                       name);
 
-            if (!p->ready || p->inhibited || reversing
-                || p->applied_permille[w] == 0)
+            if ((!p->ready) || (p->inhibited) || reversing
+                || (0 == p->applied_permille[w]))
             {
                 tm_printf(
                     (const UB *)"[MOTOR CHECK] %s had zero/inhibited/reversing "
@@ -447,10 +447,10 @@ report_motor_fault (const motion_status_t * s)
             }
         }
 
-        if ((d->target_mm_s[w] > 5 && d->speed_mm_s[w] < -5
-             && d->speed_mm_s[w] != INT32_MIN)
-            || (d->target_mm_s[w] < -5 && d->target_mm_s[w] != INT32_MIN
-                && d->speed_mm_s[w] > 5))
+        if (((d->target_mm_s[w] > 5) && (d->speed_mm_s[w] < -5)
+             && (INT32_MIN != d->speed_mm_s[w]))
+            || ((d->target_mm_s[w] < -5) && (INT32_MIN != d->target_mm_s[w])
+                && (d->speed_mm_s[w] > 5)))
         {
             tm_printf(
                 (const UB *)"[MOTOR CHECK] %s encoder speed opposed its target "
@@ -458,16 +458,16 @@ report_motor_fault (const motion_status_t * s)
                 name);
         }
 
-        if (p->cap_permille > 0 && d->output_permille[w] != INT32_MIN
-            && ((int64_t)d->output_permille[w] >= p->cap_permille
-                || (int64_t)d->output_permille[w] <= -p->cap_permille))
+        if ((p->cap_permille > 0) && (INT32_MIN != d->output_permille[w])
+            && (((int64_t)d->output_permille[w] >= p->cap_permille)
+                || ((int64_t)d->output_permille[w] <= -p->cap_permille)))
         {
             tm_printf((const UB *)"[MOTOR CHECK] %s requested output reached "
                                   "the configured cap (%ld permille).\n",
                       name, (long)p->cap_permille);
         }
 
-        if (d->target_mm_s[w] == 0 && d->output_permille[w] == 0)
+        if ((0 == d->target_mm_s[w]) && (0 == d->output_permille[w]))
         {
             tm_printf((const UB *)"[MOTOR] %s was not commanded to move at the "
                                   "captured fault.\n",
@@ -484,14 +484,14 @@ report_motion_fault (const motion_status_t * s, const motion_config_t * config)
 {
     const motion_fault_debug_t * d = &s->debug;
 
-    if (s->fault == F_NONE)
+    if (F_NONE == s->fault)
     {
         return;
     }
 
     report_encoder_error(s);
 
-    if (s->state == FAULT)
+    if (FAULT == s->state)
     {
         tm_printf((const UB *)"[STATE] Buddy 2 ENTERED FAULT (state=5): "
                               "%s(%u). Motors stopped; movement held.\n",
@@ -616,7 +616,7 @@ report_motion_fault (const motion_status_t * s, const motion_config_t * config)
 
     for (unsigned w = 0U; w < 2U; ++w)
     {
-        const char * name = w == 0U ? "LEFT" : "RIGHT";
+        const char * name = (0U == w) ? "LEFT" : "RIGHT";
 
         tm_printf((const UB *)"[FAULT] %s stalled=%u target_mm_s=%ld "
                               "speed_mm_s=%ld request_permille=%ld\n",
@@ -630,7 +630,7 @@ report_motion_fault (const motion_status_t * s, const motion_config_t * config)
                   (unsigned)s->feedback_fault_sample.count[w],
                   (unsigned)s->feedback_fault_sample.invalid[w]);
 
-        if (s->fault == F_FEEDBACK)
+        if (F_FEEDBACK == s->fault)
         {
             tm_printf((const UB *)"[FEEDBACK] %s previous_count=%u "
                                   "fault_count=%u previous_invalid=%u "

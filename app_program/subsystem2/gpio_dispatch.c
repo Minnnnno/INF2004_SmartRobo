@@ -26,20 +26,20 @@ board_gpio_irq_register (uint32_t mask, void (*handler)(void))
     UINT     state;
     T_DINT   definition = {.intatr = TA_HLNG, .inthdr = (FP)dispatch};
 
-    if ((mask == 0U) || (handler == NULL) || owner_count == 4U)
+    if ((0U == mask) || (NULL == handler) || (4U == owner_count))
     {
         return false;
     }
 
     for (i = 0; i < owner_count; ++i)
     {
-        if ((owners[i].mask & mask) != 0U)
+        if (0U != (owners[i].mask & mask))
         {
             return false;
         }
     }
 
-    if ((owner_count == 0U) && (tk_def_int(13U, &definition) != E_OK))
+    if ((0U == owner_count) && (E_OK != tk_def_int(13U, &definition)))
     {
         return false;
     }

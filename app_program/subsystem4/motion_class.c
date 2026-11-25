@@ -69,7 +69,7 @@ motion_class_yaw_from_speeds (int16_t left_mm_s, int16_t right_mm_s,
 
     /* 64-bit product: |difference| x 57296 can exceed 2^31. Round half away
      * from 0. */
-    scaled = (int32_t)(((int64_t)difference * MC_MDEG_PER_RAD
+    scaled = (int32_t)((((int64_t)difference * MC_MDEG_PER_RAD)
                         + ((difference >= 0) ? (denominator / 2)
                                              : -(denominator / 2)))
                        / denominator);
@@ -189,7 +189,7 @@ mc_record_compass (motion_class_t *             p_context,
     p_context->turn_info &= (uint8_t)~MC_TI_LAST_COMPASS;
 
     if ((0U == (p_context->turn_info & MC_TI_COMPASS_OK))
-        || !p_input->compass_valid)
+        || (!p_input->compass_valid))
     {
         return;
     }
@@ -263,7 +263,7 @@ mc_track_turn (motion_class_t * p_context, motion_class_input_t const * p_input,
                  * start; usable only if the whole window was valid. */
                 uint8_t oldest
                     = (uint8_t)(p_context->ring & MC_RING_INDEX_MASK);
-                bool ok = window_full && p_input->compass_valid
+                bool ok = window_full && (p_input->compass_valid)
                           && (MC_COMPASS_ALL
                               == (p_context->compass_bits & MC_COMPASS_ALL));
 

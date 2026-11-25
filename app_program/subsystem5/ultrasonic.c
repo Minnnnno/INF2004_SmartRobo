@@ -38,7 +38,7 @@ static bool     us_ready;
 static UW
 us_reg (UW offset)
 {
-    return PWM_BASE + US_SLICE * 0x14U + offset; /* 0 CSR, 8 CTR */
+    return PWM_BASE + (US_SLICE * 0x14U) + offset; /* 0 CSR, 8 CTR */
 }
 
 static UW
@@ -112,7 +112,7 @@ s5_us_ping (double * p_range_mm, double * p_time_s)
     gpio_put(S5_US_TRIG_PIN, true);
     start = time_us_64();
 
-    while (time_us_64() - start < US_TRIGGER_US)
+    while ((time_us_64() - start) < US_TRIGGER_US)
     {
         ; /* 12 us, too short to sleep */
     }
@@ -131,14 +131,15 @@ s5_us_ping (double * p_range_mm, double * p_time_s)
         b_high = gpio_get(S5_US_ECHO_PIN);
         pulse  = us_counter();
 
-        if (!b_high && (pulse != 0U) && (pulse == before))
+        if ((!b_high) && (0U != pulse) && (pulse == before))
         {
             break;
         }
 
-        if (time_us_64() - start >= US_ECHO_TIMEOUT_US)
+        if ((time_us_64() - start) >= US_ECHO_TIMEOUT_US)
         {
-            return (pulse == 0U && !b_high) ? S5_US_NO_PULSE : S5_US_NO_ECHO;
+            return ((0U == pulse) && (!b_high)) ? S5_US_NO_PULSE
+                                                : S5_US_NO_ECHO;
         }
     }
 
@@ -147,7 +148,7 @@ s5_us_ping (double * p_range_mm, double * p_time_s)
         return S5_US_NO_ECHO;
     }
 
-    *p_range_mm = (double)pulse * US_SOUND_MM_PER_US / 2.0;
+    *p_range_mm = ((double)pulse * US_SOUND_MM_PER_US) / 2.0;
 
     if (*p_range_mm > S5_US_MAX_MM)
     {
@@ -156,7 +157,7 @@ s5_us_ping (double * p_range_mm, double * p_time_s)
 
     /* The burst leaves ~0.45 ms after the trigger; the reflection is mid-pulse
      */
-    *p_time_s = (double)(start + 450U + pulse / 2U) / 1000000.0;
+    *p_time_s = (double)(start + 450U + (pulse / 2U)) / 1000000.0;
     return S5_US_OK;
 }
 

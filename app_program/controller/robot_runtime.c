@@ -6,9 +6,9 @@
 #include "motion_hal.h"
 #include <math.h>
 
-_Static_assert((int)COMMS_CMD_START == (int)REMOTE_START
-                   && (int)COMMS_CMD_STOP == (int)REMOTE_STOP
-                   && (int)COMMS_CMD_ESTOP == (int)REMOTE_ESTOP,
+_Static_assert(((int)COMMS_CMD_START == (int)REMOTE_START)
+                   && ((int)COMMS_CMD_STOP == (int)REMOTE_STOP)
+                   && ((int)COMMS_CMD_ESTOP == (int)REMOTE_ESTOP),
                "Buddy 1 command mapping changed");
 
 static robot_bus_t             bus;
@@ -19,7 +19,7 @@ static const motion_config_t * runtime_config;
 static bool
 lock_bus (void)
 {
-    return (status_mutex > 0) && (tk_loc_mtx(status_mutex, TMO_POL) == E_OK);
+    return (status_mutex > 0) && (E_OK == tk_loc_mtx(status_mutex, TMO_POL));
 }
 
 static void
@@ -63,7 +63,7 @@ robot_runtime_lock (void)
 bool
 robot_runtime_wait (void)
 {
-    return tk_loc_mtx(status_mutex, TMO_FEVR) == E_OK;
+    return E_OK == tk_loc_mtx(status_mutex, TMO_FEVR);
 }
 
 void
@@ -88,9 +88,10 @@ robot_runtime_publish (motion_t * owner, double now)
 bool
 robot_runtime_stop_pending (void)
 {
-    return (bus.controls
-            & (CONTROL_STOP | CONTROL_FAULT | CONTROL_ESTOP | CONTROL_SHUTDOWN))
-           != 0U;
+    return 0U
+           != (bus.controls
+               & (CONTROL_STOP | CONTROL_FAULT | CONTROL_ESTOP
+                  | CONTROL_SHUTDOWN));
 }
 
 static motion_result_t
@@ -101,7 +102,7 @@ submit (request_source_t source, uint32_t id, motion_mode_t mode, double value,
     motion_result_t result;
     double          now = motion_hal_time();
 
-    if (!running || !lock_bus())
+    if ((!running) || (!lock_bus()))
     {
         return R_BUSY;
     }
@@ -116,7 +117,7 @@ submit (request_source_t source, uint32_t id, motion_mode_t mode, double value,
         .expires    = now + runtime_config->command_lifetime,
         .deadline
         = now
-          + ((mode == MANUAL_OUTPUT) ? runtime_config->manual_timeout
+          + ((MANUAL_OUTPUT == mode) ? runtime_config->manual_timeout
                                      : runtime_config->movement_timeout),
         .angle    = angle,
         .duration = duration};
@@ -144,7 +145,7 @@ control (robot_control_t request, bool checks, bool rest)
 {
     /* Priority inheritance, bounded short critical sections. Never enqueue
      * stop. */
-    if (running && (tk_loc_mtx(status_mutex, TMO_FEVR) == E_OK))
+    if (running && (E_OK == tk_loc_mtx(status_mutex, TMO_FEVR)))
     {
         robot_control(&bus, request, checks, rest);
         unlock_bus();
@@ -184,7 +185,7 @@ robot_system_fault (void)
 bool
 motion_get_status (robot_status_t * status)
 {
-    if ((status == NULL) || !running || !lock_bus())
+    if ((NULL == status) || (!running) || (!lock_bus()))
     {
         return false;
     }
@@ -201,7 +202,7 @@ robot_update_subsystem (request_source_t           source,
     subsystem_status_t * destination = NULL;
     unsigned             i;
 
-    if ((status == NULL) || !isfinite(status->timestamp))
+    if ((NULL == status) || (!isfinite(status->timestamp)))
     {
         return false;
     }
@@ -214,7 +215,7 @@ robot_update_subsystem (request_source_t           source,
         }
     }
 
-    if (!running || !lock_bus())
+    if ((!running) || (!lock_bus()))
     {
         return false;
     }
@@ -245,13 +246,13 @@ robot_update_subsystem (request_source_t           source,
         break;
     }
 
-    if (destination != NULL)
+    if (NULL != destination)
     {
         *destination = *status;
     }
 
     unlock_bus();
-    return destination != NULL;
+    return NULL != destination;
 }
 
 void
@@ -279,7 +280,7 @@ controller_task (INT code, void * context)
                 continue;
             }
 
-            if (tk_loc_mtx(status_mutex, TMO_FEVR) == E_OK)
+            if (E_OK == tk_loc_mtx(status_mutex, TMO_FEVR))
             {
                 (void)vehicle_controller_remote_command(
                     &bus, (robot_remote_command_t)command);

@@ -21,7 +21,7 @@ TF_FIELDS(TF_CHECK_)
    barcode character): 167 bits, 1 spare bit. */
 _Static_assert(TF_FRAME_BYTES == 21, "status frame must stay 21 bytes");
 _Static_assert(TF_SPARE_BITS == 1, "status frame spare bits changed");
-_Static_assert(sizeof(TF_BC_CHARS) - 1U == 44U, "BC_CHAR range is 0..44");
+_Static_assert(44U == (sizeof(TF_BC_CHARS) - 1U), "BC_CHAR range is 0..44");
 _Static_assert(TF_FIELD_COUNT <= 32, "clamp mask holds 32 fields");
 
 #define TF_ROW_(name, lo, hi, bits, owner, text) {#name, (lo), (hi), (bits)},
@@ -36,7 +36,7 @@ put_bits (uint8_t * buf, unsigned * pos, uint32_t code, unsigned bits)
     {
         bits--;
 
-        if (((code >> bits) & 1U) != 0U)
+        if (0U != ((code >> bits) & 1U))
         {
             buf[*pos >> 3] |= (uint8_t)(0x80U >> (*pos & 7U));
         }
@@ -102,7 +102,7 @@ tf_unpack (const uint8_t * frame, size_t len, int32_t values[TF_FIELD_COUNT])
     unsigned pos = 0U;
     unsigned i;
 
-    if ((frame == NULL) || (len != (size_t)TF_FRAME_BYTES))
+    if ((NULL == frame) || ((size_t)TF_FRAME_BYTES != len))
     {
         return false;
     }
@@ -120,12 +120,12 @@ tf_unpack (const uint8_t * frame, size_t len, int32_t values[TF_FIELD_COUNT])
         tmp[i] = (int32_t)code + f->min;
     }
 
-    if (get_bits(frame, &pos, (unsigned)TF_SPARE_BITS) != 0U)
+    if (0U != get_bits(frame, &pos, (unsigned)TF_SPARE_BITS))
     {
         return false;
     }
 
-    if (tmp[TF_F_VERSION] != (int32_t)TF_LAYOUT_VERSION)
+    if ((int32_t)TF_LAYOUT_VERSION != tmp[TF_F_VERSION])
     {
         return false;
     }
@@ -147,7 +147,7 @@ tf_cmd_decode (const uint8_t * data, size_t len, tf_command_t * cmd)
     cmd->session = 0U;
     cmd->seq     = 0U;
 
-    if ((data == NULL) || (len != (size_t)TF_CMD_BYTES))
+    if ((NULL == data) || ((size_t)TF_CMD_BYTES != len))
     {
         return false;
     }
@@ -238,10 +238,12 @@ tf_enc_pack (const tf_encoder_t * e, uint8_t out[TF_ENC_BYTES])
 bool
 tf_enc_unpack (const uint8_t * frame, size_t len, tf_encoder_t * e)
 {
-    unsigned cause, state, fault;
+    unsigned cause;
+    unsigned state;
+    unsigned fault;
 
-    if ((frame == NULL) || (len != (size_t)TF_ENC_BYTES)
-        || (frame[0] != (uint8_t)TF_ENC_VERSION) || ((frame[2] & 0xC0U) != 0U))
+    if ((NULL == frame) || ((size_t)TF_ENC_BYTES != len)
+        || ((uint8_t)TF_ENC_VERSION != frame[0]) || (0U != (frame[2] & 0xC0U)))
     {
         return false;
     }
@@ -257,9 +259,9 @@ tf_enc_unpack (const uint8_t * frame, size_t len, tf_encoder_t * e)
     }
 
     e->seq        = frame[1];
-    e->reliable   = (frame[2] & TF_EF_RELIABLE) != 0U;
-    e->trusted    = (frame[2] & TF_EF_TRUSTED) != 0U;
-    e->fresh      = (frame[2] & TF_EF_FRESH) != 0U;
+    e->reliable   = 0U != (frame[2] & TF_EF_RELIABLE);
+    e->trusted    = 0U != (frame[2] & TF_EF_TRUSTED);
+    e->fresh      = 0U != (frame[2] & TF_EF_FRESH);
     e->cause      = (uint8_t)cause;
     e->state      = (uint8_t)state;
     e->fault      = (uint8_t)fault;
@@ -278,14 +280,14 @@ tf_ack_decode (const uint8_t * data, size_t len, tf_ack_t * result,
 {
     uint32_t word;
 
-    if ((data == NULL) || (len != (size_t)TF_ACK_BYTES))
+    if ((NULL == data) || ((size_t)TF_ACK_BYTES != len))
     {
         return false;
     }
 
     word = ((uint32_t)data[0] << 8) | data[1];
 
-    if ((word & 0x7U) != 0U)
+    if (0U != (word & 0x7U))
     {
         return false;
     }

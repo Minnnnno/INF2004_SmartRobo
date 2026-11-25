@@ -18,8 +18,8 @@ board_pins_valid (void)
     const unsigned enc[] = {encoder_pins[0][0], encoder_pins[0][1],
                             encoder_pins[1][0], encoder_pins[1][1]};
 
-    if ((motor_pins[0][0] != 8U) || (motor_pins[0][1] != 9U)
-        || (motor_pins[1][0] != 10U) || (motor_pins[1][1] != 11U))
+    if ((8U != motor_pins[0][0]) || (9U != motor_pins[0][1])
+        || (10U != motor_pins[1][0]) || (11U != motor_pins[1][1]))
     {
         return false;
     }
@@ -36,7 +36,7 @@ board_pins_valid (void)
             return false;
         }
 
-        if ((enc[i] == BOARD_I2C_SDA) || (enc[i] == BOARD_I2C_SCL))
+        if ((BOARD_I2C_SDA == enc[i]) || (BOARD_I2C_SCL == enc[i]))
         {
             return false;
         }
@@ -149,9 +149,9 @@ motion_config_valid (const motion_config_t * c)
                                c->manual_limit,
                                c->manual_timeout};
 
-    for (wheel = 0; wheel < sizeof(positive) / sizeof(positive[0]); ++wheel)
+    for (wheel = 0; wheel < (sizeof(positive) / sizeof(positive[0])); ++wheel)
     {
-        if (!isfinite(positive[wheel]) || (positive[wheel] <= 0.0))
+        if ((!isfinite(positive[wheel])) || (positive[wheel] <= 0.0))
         {
             return false;
         }
@@ -161,28 +161,28 @@ motion_config_valid (const motion_config_t * c)
     {
         const pid_config_t * p = &c->pid[wheel];
 
-        if (!isfinite(c->counts_per_rev[wheel])
-            || (c->counts_per_rev[wheel] < 1.0) || !isfinite(c->diameter[wheel])
-            || (c->diameter[wheel] <= 0.0)
-            || ((c->motor_sign[wheel] != 1) && (c->motor_sign[wheel] != -1))
-            || ((c->encoder_sign[wheel] != 1) && (c->encoder_sign[wheel] != -1))
-            || !isfinite(c->breakaway[wheel]) || (c->breakaway[wheel] < 0.0)
-            || (c->breakaway[wheel] > c->max_output) || !isfinite(p->kp)
-            || !isfinite(p->ki) || !isfinite(p->kd)
-            || !isfinite(p->derivative_tau) || (p->kp < 0.0) || (p->ki < 0.0)
+        if ((!isfinite(c->counts_per_rev[wheel]))
+            || (c->counts_per_rev[wheel] < 1.0)
+            || (!isfinite(c->diameter[wheel])) || (c->diameter[wheel] <= 0.0)
+            || ((1 != c->motor_sign[wheel]) && (-1 != c->motor_sign[wheel]))
+            || ((1 != c->encoder_sign[wheel]) && (-1 != c->encoder_sign[wheel]))
+            || (!isfinite(c->breakaway[wheel])) || (c->breakaway[wheel] < 0.0)
+            || (c->breakaway[wheel] > c->max_output) || (!isfinite(p->kp))
+            || (!isfinite(p->ki)) || (!isfinite(p->kd))
+            || (!isfinite(p->derivative_tau)) || (p->kp < 0.0) || (p->ki < 0.0)
             || (p->kd < 0.0) || (p->derivative_tau < 0.0))
         {
             return false;
         }
     }
 
-    return c->hardware_confirmed && (c->max_output <= 1.0)
+    return (c->hardware_confirmed) && (c->max_output <= 1.0)
            && (c->manual_limit <= c->max_output)
            && (c->manual_timeout <= c->movement_timeout)
            && (c->period <= c->max_dt) && (c->settle_time < c->stop_timeout)
            && (c->stopped_speed < c->max_speed) && (c->pwm_hz >= 1000U)
-           && (c->pwm_hz <= 20000U) && isfinite(c->straight_gain)
-           && (c->straight_gain >= 0.0) && isfinite(c->min_goal_speed)
+           && (c->pwm_hz <= 20000U) && (isfinite(c->straight_gain))
+           && (c->straight_gain >= 0.0) && (isfinite(c->min_goal_speed))
            && (c->min_goal_speed >= 0.0) && (c->min_goal_speed < c->max_speed);
 }
 

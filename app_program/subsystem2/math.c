@@ -23,12 +23,12 @@ pid_step (pid_t * pid, const pid_config_t * config, double target,
     double candidate;
     double output;
 
-    pid->derivative
-        += dt / (config->derivative_tau + dt) * (derivative - pid->derivative);
+    pid->derivative += (dt / (config->derivative_tau + dt))
+                       * (derivative - pid->derivative);
     pid->previous = measured;
     pid->seeded   = true;
-    candidate     = pid->integral + config->ki * error * dt;
-    output = config->kp * error + candidate + config->kd * pid->derivative;
+    candidate     = pid->integral + (config->ki * error * dt);
+    output = (config->kp * error) + candidate + (config->kd * pid->derivative);
 
     /* Conditional integration: retain changes that unwind saturation. */
     if ((fabs(output) <= limit) || ((output > limit) && (error < 0.0))
@@ -37,8 +37,8 @@ pid_step (pid_t * pid, const pid_config_t * config, double target,
         pid->integral = clamp(candidate, limit);
     }
 
-    return clamp(config->kp * error + pid->integral
-                     + config->kd * pid->derivative,
+    return clamp((config->kp * error) + pid->integral
+                     + (config->kd * pid->derivative),
                  limit);
 }
 
@@ -61,8 +61,8 @@ encoder_quadrature (uint8_t before, uint8_t after, bool * invalid)
 
     before &= 3U;
     after &= 3U;
-    *invalid = ((before ^ after) == 3U);
-    return transitions[before * 4U + after];
+    *invalid = (3U == (before ^ after));
+    return transitions[(before * 4U) + after];
 }
 
 bool
@@ -72,23 +72,23 @@ odometry_step (odometry_t * odom, const motion_config_t * config,
     double   change[2];
     unsigned wheel;
 
-    if (!isfinite(dt) || (dt <= 0.0) || (dt > config->max_dt))
+    if ((!isfinite(dt)) || (dt <= 0.0) || (dt > config->max_dt))
     {
         return false;
     }
 
     for (wheel = 0; wheel < 2U; ++wheel)
     {
-        double quantum = 3.141592653589793 * config->diameter[wheel]
+        double quantum = (3.141592653589793 * config->diameter[wheel])
                          / config->counts_per_rev[wheel];
 
         change[wheel]
             = (double)encoder_delta(sample->count[wheel], odom->previous[wheel])
               * quantum;
 
-        if (!isfinite(change[wheel])
+        if ((!isfinite(change[wheel]))
             || (fabs(change[wheel])
-                > config->max_speed * dt * 3.0 + 2.0 * quantum))
+                > ((config->max_speed * dt * 3.0) + (2.0 * quantum))))
         {
             return false;
         }

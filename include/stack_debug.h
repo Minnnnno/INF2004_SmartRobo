@@ -4,8 +4,12 @@
 
 typedef struct
 {
-    UW   used, capacity, saved_sp, state;
-    BOOL guard_ok, saved_sp_ok;
+    UW   used;
+    UW   capacity;
+    UW   saved_sp;
+    UW   state;
+    BOOL guard_ok;
+    BOOL saved_sp_ok;
 } stack_debug_t;
 
 /* Diagnostic snapshot of a public task's painted stack (single-core port).
