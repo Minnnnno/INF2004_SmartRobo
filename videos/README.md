@@ -49,3 +49,8 @@ Newest at the bottom. Never delete a row.
 | 2026-11-24 | S2 | S2-H02 | Not supplied | <student ID> | <https://youtu.be/qB7hPMGxUTQ> | Independent signed encoders; one trial; user-reported PASS; submitted 2026-11-24. |
 | 2026-11-24 | S2 | S2-H03 | Not supplied | <student ID> | <https://youtu.be/8NpKcqakr0c> | Wheel-speed control; one trial; user-reported functional PASS; repeatability/accuracy not established; submitted 2026-11-24. |
 | 2026-11-24 | S2 | S2-H04 | Not supplied | <student ID> | <https://youtu.be/yS6CX1FzbrM> | STOP/hold/restart; one trial; user-reported functional PASS; repeatability/latency not established; submitted 2026-11-24. |
+| 2026-11-24 | S5 | S5-U01, S5-U02, S5-U03 | `fa36f67` + width scale (later `e4e5b3e`) | 2500344 | <https://youtu.be/I9SrSpBJh9Q> | Normal run with the dashboard: stops about 150 mm from the box, width estimate, goes round it and back to the line |
+| 2026-11-24 | S5 | S5-U04 | `fa36f67` (not confirmed) | 2500344 | <https://youtu.be/RCM5-oiSxDs> | More clearance on the left: passes on the left |
+| 2026-11-24 | S5 | S5-U05 | `fa36f67` (not confirmed) | 2500344 | <https://youtu.be/O0wmRNscU0k> | More clearance on the right: passes on the right |
+| 2026-11-24 | S5 | S5-U06 | `fa36f67` (not confirmed) | 2500344 | <https://youtu.be/5Ype3yBMZK4> | Sudden obstacle after a turn: stops and goes round it |
+| 2026-11-24 | S5 | S5-U07 | `fa36f67` + width scale (later `e4e5b3e`) | 2500344 | <https://youtu.be/FtWQj1oa1vA> | False halt: stops for a hand and scans; the clip ends before it drives on |
