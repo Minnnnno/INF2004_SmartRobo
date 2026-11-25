@@ -1,18 +1,22 @@
 # Videos
 
-Short videos of tests and demos running on the real hardware. A video shows
-what a log cannot: the LED blinking, the motor turning, the robot reaching
-the line. List **every** video in the table at the bottom of this page.
+The index of every video of a test or demo on the real robot. A video shows
+what a log cannot: the motor turning, the robot reaching the line, the
+dashboard changing as it happens. Videos are the evidence for the robot tests
+(`S1-..` to `S5-..`, `INT-..`, `SYS-..`) recorded in the test logs under
+[`testing/`](../testing/README.md). List **every** video in the index at the
+bottom of this page.
 
 ## What to record
 
-- **Short:** 15–60 seconds. One test or one feature per video.
-- **Say what it is.** Show or say the test ID (e.g. `S2-U03`, `INT-01`) or
-  the demo name at the start.
-- **Show the commit.** Before recording, run `git rev-parse --short HEAD` and
-  keep the terminal in shot for a moment, or put it in the table below.
-- **Show the result.** Keep both the hardware and, if it matters, the
-  console output in view.
+- **Say what it is.** Show or say the test ID (e.g. `S4-H11`, `INT-03`) or the
+  demo name at the start. One video may cover several tests if each test's start
+  is shown with its ID.
+- **Keep it short:** about 15–60 seconds per test.
+- **Show the result.** Keep the robot and the dashboard in view, and the serial
+  console too when the test's expected result is a console line.
+- **Record the commit.** Test committed code, and put the commit
+  (`git rev-parse --short HEAD`) in the index row and the test's result row.
 - **Landscape**, steady, good light. No music needed.
 
 ## How to share it: unlisted YouTube only
@@ -28,17 +32,28 @@ in the repo stays in the git history for good, even if deleted later, and
 slows every clone for the whole team. Video files are ignored by
 `.gitignore` for this reason.
 
-Then add a row to the table below. If the video is evidence for a test, also
-put its link in the *Log / evidence* column of that test's row in
-`testing/.../TEST_LOG.md`.
+Then add a row to the index below. If the video is evidence for a test, also
+put its link in the *Log / evidence* column of that test's result row in the
+matching test log:
+
+| Tests | Test log |
+|---|---|
+| `S1-..` | [`testing/subsystem1/TEST_LOG.md`](../testing/subsystem1/TEST_LOG.md) |
+| `S2-..` | [`testing/subsystem2/TEST_LOG.md`](../testing/subsystem2/TEST_LOG.md) |
+| `S3-..` | [`testing/subsystem3/TEST_LOG.md`](../testing/subsystem3/TEST_LOG.md) |
+| `S4-..` | [`testing/subsystem4/TEST_LOG.md`](../testing/subsystem4/TEST_LOG.md) |
+| `S5-..` | [`testing/subsystem5/TEST_LOG.md`](../testing/subsystem5/TEST_LOG.md) |
+| `INT-..` | [`testing/integration/TEST_LOG.md`](../testing/integration/TEST_LOG.md) |
+| `SYS-..` | [`testing/system/TEST_LOG.md`](../testing/system/TEST_LOG.md) |
 
 ## Video index
 
-Newest at the bottom. Never delete a row.
+Newest at the bottom. Never delete a row. One row per video: date, subsystem
+(`S1`..`S5`, `INT`, `SYS`), the test IDs it shows, the commit, your student ID,
+the link and one line on what it shows.
 
 | Date | Subsystem | Test ID / demo | Commit | Student ID | Link | Notes |
 |---|---|---|---|---|---|---|
-| YYYY-MM-DD | S1 | S1-U03 | `abc1234` | | <https://youtu.be/...> | LED blinks at 2 Hz |
 | 2026-11-19 | S4 | S4-H03, S4-H01 | main after `610725f` | 2500910 | <https://youtu.be/b0VxlQ2r320> | Overturn and lift while driving stop the motors |
 | 2026-11-19 | S4 | S4-H08, S4-H11, S4-H04, S4-H12 | main after `610725f` | 2500910 | <https://youtu.be/O-3cIuu86ew> | Full run: calibration after START, 10 mm hump, motion classes and turn rate |
 | 2026-11-19 | S4 | S4-H10 | main after `610725f` | 2500910 | <https://youtu.be/OaEkDdhVMTM> | Hand tilt: pitch, uphill/downhill state, hump states |
@@ -54,3 +69,4 @@ Newest at the bottom. Never delete a row.
 | 2026-11-24 | S5 | S5-U05 | `fa36f67` (not confirmed) | 2500344 | <https://youtu.be/O0wmRNscU0k> | More clearance on the right: passes on the right |
 | 2026-11-24 | S5 | S5-U06 | `fa36f67` (not confirmed) | 2500344 | <https://youtu.be/5Ype3yBMZK4> | Sudden obstacle after a turn: stops and goes round it |
 | 2026-11-24 | S5 | S5-U07 | `fa36f67` + width scale (later `e4e5b3e`) | 2500344 | <https://youtu.be/FtWQj1oa1vA> | False halt: stops for a hand and scans; the clip ends before it drives on |
+| 2026-11-24 | S4 | S4-H15, S4-H11, S4-H14, S4-H04 | `4033ff7` | 2500910 | <https://youtu.be/jCLuBsej2is> | Re-test after the turn-pause fix: no false humps on barcode turns, U-turns and pivots; 10 mm hump measured within ± 3 mm and kept; never LIFTED |
