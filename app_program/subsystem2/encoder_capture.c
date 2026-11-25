@@ -5,7 +5,6 @@
 #include "motion.h"
 
 #define ENCODER_WHEELS   2u
-#define ENCODER_CHANNELS 2u
 
 static uint8_t encoder_ab_read(const volatile encoder_capture_t * p_capture,
                                uint32_t wheel, uint32_t levels);

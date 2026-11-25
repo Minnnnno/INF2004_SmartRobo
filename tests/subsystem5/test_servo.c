@@ -10,7 +10,6 @@
 typedef uint32_t RELTIM;
 typedef struct { uint16_t wrap; float divider; } pwm_config_t;
 static struct { unsigned slice, pin; uint16_t a, b; uint32_t delay; bool enabled; } rig;
-static unsigned pwm_gpio_to_slice_num(unsigned pin) { return (pin >> 1U) & 7U; }
 static pwm_config_t pwm_get_default_config(void) { return (pwm_config_t){0U, 0.0f}; }
 static void pwm_config_set_wrap(pwm_config_t *p, uint16_t wrap) { p->wrap = wrap; }
 static void pwm_config_set_clkdiv(pwm_config_t *p, float divider) { p->divider = divider; }
