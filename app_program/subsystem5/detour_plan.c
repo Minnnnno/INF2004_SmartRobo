@@ -55,7 +55,7 @@ bool s5_detour_plan_side(const s5_scan_t *p_scan, s5_avoid_side_t side, double m
 	}
 	index = (side == S5_AVOID_LEFT) ? (unsigned)S5_LEFT : (unsigned)S5_RIGHT;
 	if (!p_scan->avoid.b_room[index] ||
-	    !(b_face ? p_scan->face.b_corner[index] : p_scan->edge[index].b_found)) {
+	    !(b_face ? s5_face_corner(&p_scan->face, index) : p_scan->edge[index].b_found)) {
 		return false;
 	}
 	sign = side_sign(side);
@@ -130,7 +130,9 @@ bool s5_pass_observe(s5_pass_t *p_pass, const s5_detour_plan_t *p_plan,
 	if (b_echo && (axis_range_mm * sin(look) <= p_pass->gap_mm + S5_SIDE_SEE_MM)) {
 		p_pass->rear_mm = fmax(p_pass->rear_mm, servo_x + axis_range_mm * cos(look));
 		p_pass->clear_run = 0U;
-		p_pass->seen++;
+		if (p_pass->seen < UINT8_MAX) {
+			p_pass->seen++;
+		}
 	} else {
 		crossing = servo_x + p_pass->gap_mm / tan(look);
 		if (crossing > p_pass->rear_mm) {

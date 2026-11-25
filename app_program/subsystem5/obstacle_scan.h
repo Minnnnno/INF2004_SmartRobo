@@ -17,6 +17,7 @@
 #define S5_OBSTACLE_SCAN_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 /* ---- sweep geometry ---- */
 #define S5_ANGLE_LEFT_DEG	20
@@ -50,7 +51,7 @@
 /* ---- per-angle measurement ---- */
 #define S5_SAMPLES_PER_POINT	5U	/* pings at every angle */
 #define S5_RETRY_SAMPLES	5U	/* extra pings when the first ones disagree */
-#define S5_MAX_SAMPLES		16U
+#define S5_MAX_SAMPLES		10U
 #define S5_CLUSTER_TOL_MM	10.0	/* pings this close are one echo (sensor ~3 mm) */
 #define S5_MIN_AGREE		3U	/* and at least this many must agree */
 
@@ -162,21 +163,42 @@ typedef struct {
 	double		farthest_mm;
 } s5_estimate_t;
 
+/* Stored ranges: 0.25 mm steps, 0..4000 mm in 14 bits */
+#define S5_RANGE_STEPS_PER_MM	4.0
+#define S5_RANGE_CODE_MAX	16000U
+uint16_t	s5_range_code(double range_mm);	/* rounded, clamped */
+double		s5_range_mm(unsigned code);
+
+/* A stored reading, 32 bits:
+     0..13 range code   14..21 angle - S5_ANGLE_LEFT_DEG   22..25 support
+     26..29 valid       30 total (0: S5_SAMPLES_PER_POINT, 1: with the retry)
+     31 the obstacle
+   The status follows from support, valid and total; nearest_mm and farthest_mm
+   are not kept.  Owner: obstacle_task only, so changing a bit needs no lock. */
 typedef struct {
-	int		angle_deg;
-	s5_estimate_t	estimate;
-	bool		b_object;
+	uint32_t	bits;
 } s5_point_t;
+
+s5_point_t	s5_point_pack(int angle_deg, const s5_estimate_t *p_estimate, bool b_object);
+int		s5_point_angle(s5_point_t point);
+double		s5_point_range(s5_point_t point);
+unsigned	s5_point_support(s5_point_t point);
+unsigned	s5_point_valid(s5_point_t point);
+unsigned	s5_point_total(s5_point_t point);
+s5_echo_t	s5_point_status(s5_point_t point);
+bool		s5_point_usable(s5_point_t point);	/* as s5_estimate_usable() */
+bool		s5_point_object(s5_point_t point);
+void		s5_point_set_object(s5_point_t *p_point);
 
 enum { S5_LEFT = 0, S5_RIGHT = 1 };
 
 typedef struct {
-	bool	b_found;		/* clear space seen beyond the edge */
-	int	last_object_deg;	/* outermost angle still on the obstacle */
-	int	first_clear_deg;	/* first clear angle past it (= last when not found) */
+	bool	b_found : 1;		/* clear space seen beyond the edge */
+	bool	b_inward : 1;		/* the inward walk found the obstacle again */
+	uint8_t	last_object_deg;	/* outermost angle still on the obstacle */
+	uint8_t	first_clear_deg;	/* first clear angle past it (= last when not found) */
 	double	outward_deg;		/* midpoint walking outward (last_object..first_clear) */
 	double	inward_deg;		/* midpoint walking back inward (= outward_deg if not done) */
-	bool	b_inward;		/* the inward walk found the obstacle again */
 	double	angle_deg;		/* edge estimate: mean of both walks, after beam correction */
 	double	range_mm;		/* obstacle range at last_object_deg */
 	double	lateral_mm;		/* edge position, + left */
@@ -198,7 +220,10 @@ typedef struct {
 } s5_placement_t;
 
 typedef struct {
-	bool		b_valid;	/* false: too little to go on, the edge angles decide */
+	bool		b_valid : 1;	/* false: too little to go on, the edge angles decide */
+	bool		b_corner_left : 1;	/* that corner has been placed: s5_face_corner() */
+	bool		b_corner_right : 1;
+	uint8_t		end_deg[2];	/* [S5_LEFT], [S5_RIGHT]: servo angle where the face was last heard */
 	double		tilt_deg;	/* bearing of the face's perpendicular from straight ahead, + left.
 					   Negative: the robot points left of square to the face */
 	double		distance_mm;	/* servo axis to the face, along the perpendicular */
@@ -206,10 +231,13 @@ typedef struct {
 	double		right_mm;	/* right corner, the same way */
 	double		width_mm;
 	double		offset_mm;	/* the face's middle from that foot, + left */
-	bool		b_corner[2];	/* [S5_LEFT], [S5_RIGHT]: that corner has been placed */
-	int		end_deg[2];	/* servo angle where the face was last heard */
 	double		far_mm;		/* longest range on the face */
 } s5_face_t;
+
+static inline bool s5_face_corner(const s5_face_t *p_face, unsigned side)
+{
+	return (side == (unsigned)S5_LEFT) ? p_face->b_corner_left : p_face->b_corner_right;
+}
 
 typedef enum {
 	S5_AVOID_NONE,		/* nothing ahead, or no side has room */
@@ -231,13 +259,13 @@ typedef struct {
 
 typedef struct {
 	bool		b_valid;	/* an obstacle echoed straight ahead */
+	uint8_t		coarse_count;
+	uint8_t		fine_count[2];
+	uint8_t		fine_outward[2];	/* fine[side][0..this) walked outward, the rest inward */
 	s5_point_t	centre;
-	double		centre_forward_mm;
 	s5_point_t	coarse[S5_COARSE_POINTS];
-	unsigned	coarse_count;
 	s5_point_t	fine[2][S5_FINE_MAX_POINTS + S5_INWARD_MAX_STEPS];
-	unsigned	fine_count[2];
-	unsigned	fine_outward[2];	/* fine[side][0..this) walked outward, the rest inward */
+	double		centre_forward_mm;
 	s5_edge_t	edge[2];	/* [S5_LEFT], [S5_RIGHT] */
 	double		width_mm;	/* lower bound unless both ends are known */
 	double		offset_mm;	/* obstacle centre, + left */
@@ -259,8 +287,8 @@ double	s5_lateral_mm(double range_mm, double angle_deg);
 
 /* Robust "mode with a tolerance": the largest group of pings that agree
    within S5_CLUSTER_TOL_MM wins and is averaged.  Missed pings count as
-   votes for "nothing there". */
-void	s5_estimate(const double range_mm[], const bool echo[], unsigned count,
+   votes for "nothing there".  echo: bit i set when ping i heard something. */
+void	s5_estimate(const double range_mm[], uint16_t echo, unsigned count,
 		    s5_estimate_t *p_out);
 /* TRUE when the estimate is a usable echo (an unstable one counts only if
    its group outvotes the silent pings). */
@@ -304,16 +332,17 @@ double	s5_start_tilt_deg(const s5_scan_t *p_scan);
    fills p_scan->face with this. */
 void	s5_face_fit(const s5_scan_t *p_scan, s5_face_t *p_out);
 
-/* Recent heading changes, from Motion Control's path and heading */
+/* Recent heading changes, from Motion Control's path and heading.  Path is
+   whole mm and heading 0.1 deg, both modulo 2^16: only differences are used. */
 typedef struct {
-	double		path_mm[S5_CURVE_SAMPLES];
-	double		heading_deg[S5_CURVE_SAMPLES];
-	unsigned	count;
-	unsigned	next;
-	double		now_mm;		/* path at the last note */
-	double		until_mm;	/* counts as just after a curve up to this path */
-	double		swing_deg;	/* largest heading change in the window, last note */
-	bool		b_marked;
+	uint16_t	path_mm[S5_CURVE_SAMPLES];
+	uint16_t	heading_ddeg[S5_CURVE_SAMPLES];
+	uint16_t	now_mm;		/* path at the last note */
+	uint16_t	until_mm;	/* counts as just after a curve up to this path */
+	uint16_t	swing_ddeg;	/* largest heading change in the window, last note */
+	uint16_t	count : 5;
+	uint16_t	next : 4;
+	uint16_t	marked : 1;	/* until_mm means something; cleared once passed */
 } s5_curve_t;
 
 void	s5_curve_reset(s5_curve_t *p_curve);

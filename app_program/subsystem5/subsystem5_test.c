@@ -48,6 +48,9 @@ typedef struct {
 	double		servo_deg;	/* where the horn really points */
 } world_t;
 
+static double curve_drive(s5_curve_t *p_curve, double path_mm, double *p_heading_deg, double mm,
+			  double deg_per_mm);
+
 static unsigned	failures;
 static unsigned	checks;
 
@@ -67,6 +70,20 @@ static void check_near(double actual, double expected, double tolerance, const c
 		failures++;
 		printf("FAIL  %s: got %.1f, expected %.1f +/- %.1f\n", p_name, actual, expected, tolerance);
 	}
+}
+
+/* s5_estimate() takes the echoes as a mask */
+static void estimate(const double range_mm[], const bool echo[], unsigned count, s5_estimate_t *p_out)
+{
+	uint16_t	mask = 0U;
+	unsigned	i;
+
+	for (i = 0U; i < count; i++) {
+		if (echo[i]) {
+			mask = (uint16_t)(mask | (1U << i));
+		}
+	}
+	s5_estimate(range_mm, mask, count, p_out);
 }
 
 static double world_random(world_t *p_world)	/* 0..1, deterministic */
@@ -175,7 +192,7 @@ static bool yawed_measure(void *p_context, int angle_deg, s5_estimate_t *p_estim
 			echo[i] = true;
 		}
 	}
-	s5_estimate(range, echo, 5U, p_estimate);
+	estimate(range, echo, 5U, p_estimate);
 	return true;
 }
 
@@ -202,28 +219,28 @@ static void test_estimate(void)
 	const bool	silent[5] = {false, true, false, true, false};
 	const bool	one_miss[5] = {true, true, true, true, false};
 
-	s5_estimate(agree, all, 5U, &e);
+	estimate(agree, all, 5U, &e);
 	check(e.status == S5_ECHO_OK && e.support == 5U, "estimate: five agreeing pings");
 	check_near(e.range_mm, 400.4, 0.01, "estimate: mean of the agreeing pings");
 
-	s5_estimate(stray, all, 5U, &e);
+	estimate(stray, all, 5U, &e);
 	check(e.status == S5_ECHO_OK && e.support == 3U, "estimate: two stray pings outvoted");
 	check_near(e.range_mm, 400.0, 0.01, "estimate: strays excluded from the mean");
 
-	s5_estimate(agree, silent, 5U, &e);
+	estimate(agree, silent, 5U, &e);
 	check(e.status == S5_ECHO_NONE && !s5_estimate_usable(&e), "estimate: mostly silent is no echo");
 
-	s5_estimate(agree, one_miss, 5U, &e);
+	estimate(agree, one_miss, 5U, &e);
 	check(e.status == S5_ECHO_OK && e.valid == 4U, "estimate: one miss tolerated");
 
-	s5_estimate(spread, all, 5U, &e);
+	estimate(spread, all, 5U, &e);
 	check(e.status == S5_ECHO_UNSTABLE && s5_estimate_usable(&e),
 	      "estimate: no agreement is unstable but beats silence");
 
-	s5_estimate(tie, all, 4U, &e);
+	estimate(tie, all, 4U, &e);
 	check_near(e.range_mm, 400.5, 0.01, "estimate: equal groups prefer the nearer echo");
 
-	s5_estimate(agree, silent, 0U, &e);
+	estimate(agree, silent, 0U, &e);
 	check(e.status == S5_ECHO_NONE && e.total == 0U, "estimate: no pings");
 }
 
@@ -253,7 +270,7 @@ static void run_box(world_t *p_world, double tolerance_mm, const char *p_name)
 	(void)snprintf(name, sizeof(name), "%s: centre offset", p_name);
 	check_near(scan.offset_mm, offset, tolerance_mm, name);
 	(void)snprintf(name, sizeof(name), "%s: distance", p_name);
-	check_near(scan.centre.estimate.range_mm, p_world->depth_mm - S5_SENSOR_OFFSET_MM, 5.0, name);
+	check_near(s5_point_range(scan.centre), p_world->depth_mm - S5_SENSOR_OFFSET_MM, 5.0, name);
 	check(scan.coarse_count == (unsigned)S5_COARSE_POINTS, p_name);
 	check(scan.fine_count[S5_LEFT] > 0U && scan.fine_count[S5_RIGHT] > 0U, p_name);
 	printf("ok    %-34s width %6.1f mm (true %6.1f), %3u pings\n",
@@ -490,7 +507,7 @@ static void test_face(void)
 		check_near(scan.face.distance_mm, face, 3.0, "face: distance");
 		check_near(scan.face.width_mm, 200.0, 12.0, "face: width");
 		check_near(scan.width_mm, scan.face.width_mm, 1e-9, "face: reported width");
-		check(scan.face.b_corner[S5_LEFT] && scan.face.b_corner[S5_RIGHT], "face: both corners placed");
+		check(scan.face.b_corner_left && scan.face.b_corner_right, "face: both corners placed");
 		check(scan.placement.position == S5_POSITION_CENTRE, "face: centred");
 		/* Centred: the closer side, or the default when it is square */
 		check(scan.avoid.side == ((yaws[i] > 0.0) ? S5_AVOID_RIGHT :
@@ -543,7 +560,7 @@ static void test_face(void)
 		world_t world = box(180.0, 2000.0, -2000.0, 0.0);
 
 		check(s5_scan_run(&scan, world_measure, &world) && scan.face.b_valid, "face: wall");
-		check(!scan.face.b_corner[S5_LEFT] && !scan.face.b_corner[S5_RIGHT], "face: wall has no corners");
+		check(!scan.face.b_corner_left && !scan.face.b_corner_right, "face: wall has no corners");
 		check(scan.avoid.side == S5_AVOID_NONE, "face: no way round a wall");
 	}
 
@@ -575,6 +592,18 @@ static void test_face(void)
 	check(!scan.face.b_valid, "face: nothing ahead");
 }
 
+static s5_point_t logged_point(int angle_deg, double range_mm)
+{
+	s5_estimate_t	e = {S5_ECHO_NONE, 0.0, 0U, 0U, S5_SAMPLES_PER_POINT, 0.0, 0.0};
+
+	if (range_mm >= 0.0) {
+		e.status = S5_ECHO_OK;
+		e.range_mm = range_mm;
+		e.support = e.valid = S5_SAMPLES_PER_POINT;
+	}
+	return s5_point_pack(angle_deg, &e, false);
+}
+
 /* Fill a scan's readings from a logged one */
 static void face_fill(s5_scan_t *p_scan, const face_scan_t *p_logged)
 {
@@ -583,23 +612,105 @@ static void face_fill(s5_scan_t *p_scan, const face_scan_t *p_logged)
 	memset(p_scan, 0, sizeof(*p_scan));
 	p_scan->b_valid = true;
 	for (i = 0U; i < p_logged->coarse_count; i++) {
-		s5_point_t *p_point = &p_scan->coarse[p_scan->coarse_count++];
-		bool b_echo = p_logged->p_coarse[i].range_mm >= 0.0;
-
-		p_point->angle_deg = p_logged->p_coarse[i].angle_deg;
-		p_point->estimate.status = b_echo ? S5_ECHO_OK : S5_ECHO_NONE;
-		p_point->estimate.range_mm = b_echo ? p_logged->p_coarse[i].range_mm : 0.0;
+		p_scan->coarse[p_scan->coarse_count++] = logged_point(p_logged->p_coarse[i].angle_deg,
+								      p_logged->p_coarse[i].range_mm);
 	}
 	for (i = 0U; i < p_logged->out_count; i++) {
 		unsigned side = (p_logged->p_out[i].angle_deg < S5_ANGLE_CENTRE_DEG) ? (unsigned)S5_LEFT : (unsigned)S5_RIGHT;
-		s5_point_t *p_point = &p_scan->fine[side][p_scan->fine_count[side]++];
-		bool b_echo = p_logged->p_out[i].range_mm >= 0.0;
 
-		p_point->angle_deg = p_logged->p_out[i].angle_deg;
-		p_point->estimate.status = b_echo ? S5_ECHO_OK : S5_ECHO_NONE;
-		p_point->estimate.range_mm = b_echo ? p_logged->p_out[i].range_mm : 0.0;
+		p_scan->fine[side][p_scan->fine_count[side]++] = logged_point(p_logged->p_out[i].angle_deg,
+									      p_logged->p_out[i].range_mm);
 		p_scan->fine_outward[side] = p_scan->fine_count[side];
 	}
+}
+
+/* Every field of a stored reading comes back, at both ends of its range */
+static void test_point_pack(void)
+{
+	static const struct { int angle_deg; double range_mm; unsigned support, valid, total; bool b_object; } rows[] = {
+		{20, 0.0, 0U, 0U, 5U, false}, {160, 4000.0, 10U, 10U, 10U, true}, {90, 150.0, 5U, 5U, 5U, true},
+		{91, 1234.56, 3U, 4U, 5U, false}, {20, 4000.0, 3U, 10U, 10U, false}, {160, 20.06, 2U, 3U, 5U, true},
+		{45, 399.9, 1U, 6U, 10U, false}, {135, 0.13, 5U, 5U, 10U, true},
+	};
+	unsigned	i, support, valid, total;
+	unsigned	votes = 0U;
+
+	check(sizeof(s5_point_t) == 4U, "point: 32 bits");
+	for (i = 0U; i < sizeof(rows) / sizeof(rows[0]); i++) {
+		s5_estimate_t	e = {S5_ECHO_OK, rows[i].range_mm, rows[i].support, rows[i].valid, rows[i].total, 0.0, 0.0};
+		s5_point_t	p = s5_point_pack(rows[i].angle_deg, &e, rows[i].b_object);
+
+		check((s5_point_angle(p) == rows[i].angle_deg) && (s5_point_support(p) == rows[i].support) &&
+		      (s5_point_valid(p) == rows[i].valid) && (s5_point_total(p) == rows[i].total) &&
+		      (s5_point_object(p) == rows[i].b_object), "point: fields come back");
+		check_near(s5_point_range(p), rows[i].range_mm, 0.125, "point: range to 0.25 mm");
+		s5_point_set_object(&p);
+		check(s5_point_object(p) && (s5_point_angle(p) == rows[i].angle_deg) &&
+		      (s5_point_support(p) == rows[i].support) && (s5_point_valid(p) == rows[i].valid) &&
+		      (s5_point_total(p) == rows[i].total) &&
+		      (fabs(s5_point_range(p) - rows[i].range_mm) <= 0.125), "point: marking it changes nothing else");
+	}
+	/* Out of range is clamped, never wrapped into another field */
+	{
+		s5_estimate_t	e = {S5_ECHO_OK, 9000.0, 40U, 40U, 10U, 0.0, 0.0};
+		s5_point_t	p = s5_point_pack(300, &e, false);
+
+		check((s5_point_angle(p) == 160) && (s5_point_range(p) == 4000.0) && (s5_point_support(p) == 15U) &&
+		      (s5_point_valid(p) == 15U) && !s5_point_object(p), "point: clamped high");
+		e.range_mm = -5.0;
+		p = s5_point_pack(-40, &e, false);
+		check((s5_point_angle(p) == 20) && (s5_point_range(p) == 0.0), "point: clamped low");
+	}
+	/* The derived status and "usable" agree with the estimate for every vote that can happen */
+	for (total = S5_SAMPLES_PER_POINT; total <= S5_MAX_SAMPLES; total += S5_RETRY_SAMPLES) {
+		for (valid = 0U; valid <= total; valid++) {
+			for (support = (valid > 0U) ? 1U : 0U; support <= valid; support++) {
+				double		range[S5_MAX_SAMPLES] = {0.0};
+				s5_estimate_t	e;
+				s5_point_t	p;
+
+				/* "support" agreeing pings, the rest of the echoes far apart */
+				for (i = 0U; i < valid; i++) {
+					range[i] = (i < support) ? 200.0 : 300.0 + 100.0 * (double)i;
+				}
+				s5_estimate(range, (uint16_t)((1U << valid) - 1U), total, &e);
+				p = s5_point_pack(90, &e, false);
+				check((e.support == support) && (s5_point_status(p) == e.status) &&
+				      (s5_point_usable(p) == s5_estimate_usable(&e)), "point: derived status");
+				votes++;
+			}
+		}
+	}
+	check(votes == 16U + 56U, "point: every vote tried");
+}
+
+/* Paths and headings are kept modulo 2^16: crossing the wrap changes nothing */
+static void test_curve_wrap(void)
+{
+	static s5_curve_t	curve;
+	double			path = 65536.0 - 150.0;
+	double			heading = 3276.0;	/* in 0.1 deg this passes 2^15 */
+
+	s5_curve_reset(&curve);
+	path = curve_drive(&curve, path, &heading, 100.0, 0.0);
+	check(!s5_curve_recent(&curve), "curve wrap: straight up to it");
+	path = curve_drive(&curve, path, &heading, 100.0, 0.5);
+	check(s5_curve_recent(&curve), "curve wrap: seen across it");
+	check_near((double)curve.swing_ddeg / 10.0, 51.0, 0.1, "curve wrap: true size");
+	path = curve_drive(&curve, path, &heading, 700.0, 0.0);
+	check(!s5_curve_recent(&curve), "curve wrap: forgotten");
+	/* ... and stays forgotten when the path comes round to the same 16 bits */
+	for (; path < 65536.0 * 2.0 + 1000.0; path += 6.0) {
+		s5_curve_note(&curve, path, heading);
+		if (s5_curve_recent(&curve)) {
+			break;
+		}
+	}
+	check(!s5_curve_recent(&curve), "curve wrap: not remembered again");
+	heading = -3270.0;
+	s5_curve_reset(&curve);
+	(void)curve_drive(&curve, path, &heading, 150.0, -0.6);
+	check(s5_curve_recent(&curve), "curve wrap: negative headings");
 }
 
 /* Scans from the robot, as logged: the fit on real echoes */
@@ -635,7 +746,7 @@ static void test_face_logged(void)
 			check_near(scan.face.width_mm, 200.0, 40.0, name);
 			/* Robots this tilted left can still be on the rise at 160 deg:
 			   that corner stays unplaced, and the right is not passed */
-			check(scan.face.b_corner[S5_LEFT], name);
+			check(scan.face.b_corner_left, name);
 		}
 		printf("ok    %-34s tilt %+6.1f deg, %3.0f mm away, reaches %3.0f left %3.0f right, width %3.0f mm\n",
 		       name, scan.face.tilt_deg, scan.face.distance_mm, scan.face.left_mm, scan.face.right_mm,
@@ -668,7 +779,7 @@ static void test_curve(void)
 	check(!s5_curve_recent(&curve), "curve: not at the start");
 	path = curve_drive(&curve, path, &heading, 1000.0, 0.0);
 	check(!s5_curve_recent(&curve), "curve: not on a straight");
-	check_near(curve.swing_deg, 0.0, 1e-9, "curve: a straight has no swing");
+	check_near((double)curve.swing_ddeg / 10.0, 0.0, 1e-9, "curve: a straight has no swing");
 
 	/* The follower's zigzag: +/- 8 deg every 100 mm */
 	for (i = 0U; i < 20U; i++) {
@@ -684,7 +795,7 @@ static void test_curve(void)
 	check(s5_curve_recent(&curve), "curve: remembered past the end of the curve");
 	path = curve_drive(&curve, path, &heading, (double)S5_CURVE_WINDOW_MM + S5_CURVE_HOLD_MM + 12.0, 0.0);
 	check(!s5_curve_recent(&curve), "curve: forgotten");
-	check_near(curve.swing_deg, 0.0, 1e-9, "curve: old samples dropped");
+	check_near((double)curve.swing_ddeg / 10.0, 0.0, 1e-9, "curve: old samples dropped");
 
 	/* Either direction */
 	path = curve_drive(&curve, path, &heading, 150.0, -0.6);
@@ -712,7 +823,7 @@ static void test_curve(void)
 		s5_curve_note(&curve, path, heading);
 	}
 	check(s5_curve_recent(&curve), "curve: still recent after standing still");
-	check(curve.swing_deg >= S5_CURVE_MIN_DEG, "curve: standing still keeps the samples");
+	check((double)curve.swing_ddeg / 10.0 >= S5_CURVE_MIN_DEG, "curve: standing still keeps the samples");
 
 	/* Marked after a rejoin: however straight the odometry looks */
 	s5_curve_reset(&curve);
@@ -757,7 +868,7 @@ static bool replay_measure(void *p_context, int angle_deg, s5_estimate_t *p_esti
 		range[i] = ((*p_calls == 0U) && (angle_deg == 90)) ? 172.0 : replay_scan[row].range_mm;
 	}
 	(*p_calls)++;
-	s5_estimate(range, echo, 5U, p_estimate);
+	estimate(range, echo, 5U, p_estimate);
 	return true;
 }
 
@@ -766,7 +877,6 @@ static void test_sloping_surface(void)
 	static s5_scan_t	scan;
 	s5_detour_plan_t	plan;
 	unsigned		calls = 0U;
-	const s5_point_t	*p_point;
 	unsigned		i;
 
 	check(s5_scan_run(&scan, replay_measure, &calls) && scan.b_valid, "slope: scanned");
@@ -776,13 +886,12 @@ static void test_sloping_surface(void)
 	check(scan.edge[S5_RIGHT].last_object_deg == S5_ANGLE_RIGHT_DEG, "slope: followed to the sweep limit");
 	/* every point on the way there is the obstacle */
 	for (i = 0U; i < scan.fine_outward[S5_RIGHT]; i++) {
-		p_point = &scan.fine[S5_RIGHT][i];
-		check(p_point->b_object, "slope: right walk stays on the face");
+		check(s5_point_object(scan.fine[S5_RIGHT][i]), "slope: right walk stays on the face");
 	}
 	check(scan.face.b_valid, "slope: face fitted");
 	check_near(scan.face.tilt_deg, -32.0, 3.0, "slope: tilted about 32 deg");
 	check_near(scan.face.width_mm, 181.0, 10.0, "slope: about its true 200 mm wide");
-	check(scan.face.b_corner[S5_RIGHT], "slope: right corner placed though past the sweep");
+	check(scan.face.b_corner_right, "slope: right corner placed though past the sweep");
 	check(scan.placement.position == S5_POSITION_LEFT, "slope: it reaches left");
 	check(scan.avoid.side == S5_AVOID_RIGHT, "slope: pass on the side it reaches less");
 	check(s5_detour_plan(&scan, &plan), "slope: plan");
@@ -818,7 +927,7 @@ static bool bend_measure(void *p_context, int angle_deg, s5_estimate_t *p_estima
 	for (i = 0U; i < 5U; i++) {
 		range[i] = (angle_deg == 128) ? bend_128_mm : bend_scan[row].range_mm;
 	}
-	s5_estimate(range, echo, 5U, p_estimate);
+	estimate(range, echo, 5U, p_estimate);
 	return true;
 }
 
@@ -1101,6 +1210,8 @@ int main(void)
 		return 1;
 	}
 	test_estimate();
+	test_point_pack();
+	test_curve_wrap();
 	test_geometry();
 	test_scans();
 	test_placement();

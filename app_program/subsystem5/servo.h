@@ -28,6 +28,6 @@ void	s5_servo_init(int angle_deg);
 void	s5_servo_move(int angle_deg);
 /* Start the same move without waiting; returns the ms to wait before a ping */
 unsigned s5_servo_aim(int angle_deg);
-int	s5_servo_angle(void);
+int	s5_servo_angle(void);	/* 0: not started */
 
 #endif /* S5_SERVO_H */

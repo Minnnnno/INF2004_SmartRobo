@@ -24,9 +24,6 @@
  *	             stopped from outside (STOP / lifted)
  *	  available  FALSE while the ultrasonic sensor is not answering
  *
- *	The full decision (side, sideways move needed for each side, room
- *	beside the obstacle): s5_get_avoidance().
- *
  *	Two bounded MQTT text diagnostics when online (robot/telemetry/obstacle):
  *	  "obstacle width_mm=<w> dist_mm=<d> offset_mm=<o> complete=<0|1>
  *	   position=<centre|left|right|unknown>"
@@ -68,11 +65,5 @@
 #define S5_STATE_AVOID_FAILED	6.0	/* gave up on the detour: stopped and held */
 #define S5_STATE_STOPPED	7.0	/* scan or detour stopped from outside (STOP,
 					   Buddy 4 lifted): held, nothing went wrong */
-
-/* The decision for the obstacle the robot is held at or driving round.
-   Returns false (and no decision) while line following, while scanning,
-   or once the obstacle is passed or the hold released by someone else.
-   Any task; copies under a short interrupt lock. */
-bool	s5_get_avoidance(s5_avoid_t *p_out);
 
 #endif /* SUBSYSTEM5_H */

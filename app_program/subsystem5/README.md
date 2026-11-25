@@ -125,11 +125,6 @@ A 5 V module would need a divider or a level shifter on ECHO.
 
 ### Reading the decision
 
-- `s5_get_avoidance(&avoid)` (subsystem5.h), from any task: true while the
-  robot is held at a scanned obstacle or driving round it. `avoid.side` is
-  `S5_AVOID_LEFT`, `S5_AVOID_RIGHT` or `S5_AVOID_NONE`;
-  `avoid.shift_mm[S5_LEFT/RIGHT]` the sideways move for each side;
-  `avoid.b_room[]` and `avoid.clear_mm[]` why.
 - Shared status (`motion_get_status()`, `.obstacle`): `values[1]` = obstacle
   centre (m, + left), `values[2]` = width (m), `values[3]` = `S5_STATE_*`:
   0 clear, 1 held/scanning, 2 pass left, 3 pass right, 4 no way around,
