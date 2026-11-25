@@ -1,0 +1,8 @@
+{
+    "firmware_id":  "b2-production-v1-20261022T123408Z",
+    "uf2_path":  "C:\\Y2 Tri 1\\Embedded Systems\\Assignment\\INF2004_SmartRobo\\build-buddy2-compact-after\\buddy2_production.uf2",
+    "sha256":  "93D084AA776A509594BE8505418BA3F31D486C4ADAC423AB31D8E5446207A77D",
+    "profile":  "production-compact",
+    "all_17_host_suites_passed":  true,
+    "hardware_validated":  false
+}

@@ -17,8 +17,9 @@
 #define SERVO_SETTLE_PER_DEG_MS	4U	/* SG90 ~1.7 ms/deg unloaded; loaded margin */
 #define SERVO_INIT_SETTLE_MS	600U	/* unknown start position: up to 180 deg */
 
-static unsigned	servo_slice;
-static int	servo_deg = -1;
+#define SERVO_SLICE		((S5_SERVO_PIN >> 1U) & 7U)	/* fixed by the pin */
+
+static uint8_t	servo_deg;	/* 0: not started */
 
 static void servo_write(int angle_deg)
 {
@@ -28,7 +29,7 @@ static void servo_write(int angle_deg)
 
 	/* Odd GPIOs use channel B; the alternate diagnostic pin uses channel A. */
 	uint16_t level = (uint16_t)(pulse + 0.5);
-	pwm_set_both_levels(servo_slice, (S5_SERVO_PIN & 1U) ? 0U : level,
+	pwm_set_both_levels(SERVO_SLICE, (S5_SERVO_PIN & 1U) ? 0U : level,
 			    (S5_SERVO_PIN & 1U) ? level : 0U);
 }
 
@@ -42,17 +43,16 @@ void s5_servo_init(int angle_deg)
 {
 	pwm_config	config = pwm_get_default_config();
 
-	servo_slice = pwm_gpio_to_slice_num(S5_SERVO_PIN);
 	pwm_config_set_wrap(&config, (uint16_t)(SERVO_PERIOD_US - 1U));
 	pwm_config_set_clkdiv(&config, (float)TMCLK_MHz);	/* 1 count per us */
-	pwm_init(servo_slice, &config, false);
+	pwm_init(SERVO_SLICE, &config, false);
 
-	servo_deg = servo_clamp(angle_deg);
+	servo_deg = (uint8_t)servo_clamp(angle_deg);
 	servo_write(servo_deg);					/* pulse set before output */
 #if !defined(S5_DIAG) || (S5_DIAG != 4)	/* diagnostic 4: slice runs, pin untouched */
 	gpio_set_function(S5_SERVO_PIN, GPIO_FUNC_PWM);
 #endif
-	pwm_set_enabled(servo_slice, true);
+	pwm_set_enabled(SERVO_SLICE, true);
 	(void)tk_dly_tsk(SERVO_INIT_SETTLE_MS);
 }
 
@@ -61,12 +61,12 @@ unsigned s5_servo_aim(int angle_deg)
 	int	target = servo_clamp(angle_deg);
 	int	travel = (target > servo_deg) ? (target - servo_deg) : (servo_deg - target);
 
-	if (servo_deg < 0) {
+	if (servo_deg == 0U) {
 		s5_servo_init(target);		/* waits for itself */
 		return 0U;
 	}
 	servo_write(target);
-	servo_deg = target;
+	servo_deg = (uint8_t)target;
 	return SERVO_SETTLE_BASE_MS + (unsigned)travel * SERVO_SETTLE_PER_DEG_MS;
 }
 

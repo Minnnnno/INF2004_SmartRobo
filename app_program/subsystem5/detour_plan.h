@@ -159,8 +159,8 @@ typedef struct {
 	double		end_mm;		/* x where the first of the latest clear looks crossed
 					   its side: the obstacle ends before this */
 	double		gap_mm;		/* centre line to the obstacle's side, last look */
-	unsigned	clear_run;	/* clear looks in a row past rear_mm */
-	unsigned	seen;		/* looks that heard the obstacle */
+	uint8_t		clear_run;	/* clear looks in a row past rear_mm */
+	uint8_t		seen;		/* looks that heard the obstacle; saturates */
 	bool		b_ended;
 } s5_pass_t;
 
