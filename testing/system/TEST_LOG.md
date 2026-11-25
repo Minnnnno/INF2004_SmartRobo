@@ -101,6 +101,31 @@ Preserve existing team results and append actual new runs with their tested
 commit, testers, result and evidence. Owner sign-off is not implied by adding
 this checklist.
 
+## Buddy 1 checklist
+
+What Buddy 1 brings to the system tests (details in
+`testing/subsystem1/TEST_LOG.md`):
+
+- **SYS-01 (lead):** show the dashboard before START (pill **robot online**,
+  **telemetry live**, Link card counts rising) and the START acknowledgement in
+  the log (`robot received START #n: queued for the controller`). Sign off the
+  2026-11-19 SYS-01 result, or record a new run.
+- **SYS-07 (lead):** keep the whole dashboard in the video; ask each buddy to
+  compare their card with the console. The Link card must show **Lost / bad**
+  not rising and Frame layout **v3**.
+- **SYS-08 (lead):** switch the hotspot off for 10 s **mid-run** (not while
+  parked). The robot keeps driving; the dashboard shows **telemetry stale**,
+  then reconnects by itself (`wifi: link up`, `mqtt: connected to ...`,
+  `status frames resumed`). S1-U19 is the same test on a stand.
+- **SYS-03 (support B3):** send the route from the dashboard and show
+  `robot route: ok ...` before START.
+- **SYS-09 (support B2):** STOP and START are sent from the dashboard; show
+  both acknowledgements in the log.
+- Already verified at subsystem level: S1-H01 to S1-H05 (laptop, 2026-11-24),
+  S1-U01 to S1-U04 (October), S1-U12 (17 Nov, image before the Start gate).
+  Robot tests on the current build (S1-U05 to S1-U21) and INT-12 to INT-14
+  still to run. S1-U21 (boots held until START) is the subsystem half of SYS-01.
+
 ## Buddy 4 checklist
 
 What Buddy 4 brings to the system tests (details in
@@ -140,3 +165,6 @@ Add a new row for every run. Never edit or delete old rows.
 | 2026-11-19 | SYS-06 | main after `610725f` | 2500910 | PASS | <https://www.youtube.com/watch?v=O-3cIuu86ew> | Motion classes and turn rate during the full run; same video as S4-H12 |
 | 2026-11-19 | SYS-10 | main after `610725f` | 2500910 | PASS | <https://www.youtube.com/watch?v=b0VxlQ2r320> | Lift and overturn stop the motors, Highest hump frozen; same video as S4-H01/H03/H07 |
 | 2026-11-19 | SYS-01 | main after `610725f` | 2500910 | PASS | <https://www.youtube.com/watch?v=O-3cIuu86ew> | Start of the full run: held and INIT until START, level reference captured (WAITING), then DRIVING; same video as S4-H08. B1 sign-off pending |
+| 2026-11-25 | SYS-01 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-5-LINK> @ m:ss | Buddy 1 lead run: online and held 30 s before START, START acknowledged, then DRIVING |
+| 2026-11-25 | SYS-07 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-5-LINK> @ m:ss | Whole dashboard during the full run; Link card lost/bad not rising, layout v3. Each buddy confirms their card |
+| 2026-11-25 | SYS-08 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-8-LINK> @ m:ss | Hotspot off 10 s mid-run: robot kept driving, dashboard reconnected by itself after ___ s |

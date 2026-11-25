@@ -1,0 +1,15 @@
+commit b51982f + tests/buddy1_frame/web_dashboard_check.py (new, uncommitted); tools/ unchanged
+dashboard demo on http://127.0.0.1:49303, frame layout v3
+PASS  broker connected, robot online
+PASS  status frames at 10 Hz (3 s: 27..33)
+PASS  encoder frames at 10 Hz (3 s: 27..33)
+PASS  no lost or bad frames
+PASS  telemetry fresh (frame < 0.5 s, heartbeat < 1.5 s)
+PASS  frame layout shown is v3
+PASS  START sent and acknowledged
+PASS  STOP acknowledged, new sequence number, robot held
+PASS  E-STOP acknowledged and shown as a latched fault START cannot clear
+PASS  unknown command refused, nothing sent
+PASS  route sent and acknowledged
+PASS  empty route refused, nothing sent
+PASS: web dashboard demo, 12 passed, 0 failed

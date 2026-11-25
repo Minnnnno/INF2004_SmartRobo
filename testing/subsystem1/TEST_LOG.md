@@ -1,36 +1,192 @@
 # Subsystem 1 — test log
 
-**Subsystem:** WiFi communication, command and telemetry  ·  **Student ID:** 2500842  ·  **Code:** `app_program/subsystem1/`
+**Subsystem:** WiFi communication, command and telemetry (Buddy 1: Wi-Fi, MQTT, web dashboard)  ·  **Student ID:** 2500842  ·  **Code:** `app_program/subsystem1/`, `lib/liblwip/sysdepend/pico_rp2040/mqtt_utk.c`, `tools/web_dashboard.py`, `tools/dashboard.py`
 
-See `testing/README.md` for how to run tests and record results.
+See `testing/README.md` for how to run tests and record results. The frame
+layout is in `include/telemetry_frame.h`; the topics and commands are in `docs/API.md`.
 
-## Test cases
+Buddy 1 moves data and commands; it does not create them. These tests check
+the **transport** in isolation: a value sent by another buddy arrives
+unchanged, on time, and the robot never waits on the network. Whether that
+value is *correct* (a hump height, a wheel speed) is the other buddy's test.
+The interfaces with each buddy are integration tests (`../integration/TEST_LOG.md`).
 
-Define a test here before running it. Test IDs never change.
+Two kinds of test (the IDs keep the letters they were given in October, so they
+differ from Buddy 4's):
 
-| ID | What is tested | Requirement / interface | Method | Steps / how | Expected result |
+- **Laptop tests (S1-H..)** run the Buddy 1 C code and the dashboard decoder on
+  the laptop. They prove the **logic** (every field, every command word,
+  every malformed frame). Evidence: the saved console output. No video.
+- **Robot tests (S1-U..)** run on the Pico W with the web dashboard. They
+  prove the **requirement is met on the real hardware**. Evidence: a video,
+  plus the dashboard and serial logs. S1-U01 to U04, U09 and U10 were
+  firmware self-tests (see the note under *Robot tests*).
+
+## Requirements
+
+Sources: **Briefing** = the Project Briefing (mission 5 REPORT: status and
+telemetry); **FR/NFR** = the team's Week 6 Design Review; **Tribunal 1** = the
+compact-representation review (21-byte frame instead of JSON); **B2 handoff** =
+`docs/BUDDY1_HANDOFF_README.md`; **B4 CR** = `docs/BUDDY4_FRAME_CHANGE_REQUEST.md`;
+**B3 bug** = barcode not updating on the dashboard (fixed in layout v3);
+**Start gate** = robot boots held until the dashboard START (18 Nov 2026).
+
+| Req | Requirement | Source | Laptop test | Robot test |
+|---|---|---|---|---|
+| R1-1 | Join Wi-Fi and the MQTT broker; announce online/offline (retained status, last will) and send a heartbeat every 1 s | Briefing mission 5; FR15 | — | S1-U05, S1-U08 |
+| R1-2 | Send every subsystem's status at 10 Hz in a compact binary frame the dashboard decodes | Briefing mission 5; FR16; Tribunal 1 | S1-H01, S1-H02, S1-H05 | S1-U05, S1-U15 |
+| R1-3 | Carry the fields other buddies asked for: B4 motion class and turn rate (v2), B3 barcode reads (v3), B2 encoder counts (encoder frame) | FR16; B4 CR; B3 bug; B2 handoff | S1-H01, S1-H03, S1-H04 | S1-U13, S1-U14, S1-U16 |
+| R1-4 | Remote START / STOP / E-STOP: only valid commands reach the Vehicle Controller queue, repeats of START are ignored, every command is acknowledged; the robot boots held until START | FR17; Start gate | S1-H01, S1-H05 | S1-U06, S1-U17, S1-U21 |
+| R1-5 | Send the barcode route from the dashboard to the robot and report whether it was accepted | FR17; Briefing mission 2 | S1-H05 | S1-U18 |
+| R1-6 | Recover by itself after the broker or the Wi-Fi is lost | FR18 | — | S1-U07, S1-U19 |
+| R1-7 | Never block or slow the motion task: bounded queues, a full queue drops and counts, oversized payloads refused, small copy time | NFR6, NFR8 | — | S1-U12, S1-U19 |
+| R1-8 | Dashboard shows events once and marks stale or offline data | FR15, FR16; B2 handoff item 5 | — | S1-U11, S1-U20 |
+
+*Check the FR/NFR numbers against the Design Review before hand-in: this table
+uses the numbers already in the logs (FR15 status, FR16 telemetry, FR17
+commands, FR18 reconnect, NFR6 timing, NFR8 bounded messages).*
+
+## Laptop tests (no robot)
+
+```sh
+cmake -S . -B build-host-cmake -G Ninja -DROBO_HOST_TESTS=ON
+cmake --build build-host-cmake --target buddy1_frame_checks
+./build-host-cmake/buddy1_frame_checks > testing/subsystem1/logs/<date>_host.txt
+python tools/dashboard.py selftest > testing/subsystem1/logs/<date>_dashboard_selftest.txt
+python tests/buddy1_frame/web_dashboard_check.py > testing/subsystem1/logs/<date>_web_dashboard_demo.txt
+```
+
+| ID | What is tested | Requirement | Expected result (in the log) |
+|---|---|---|---|
+| S1-H01 | Every field, clamp, malformed frame, all 65,536 command words, snapshot mapping, encoder frame (32-bit counts, wrap, freshness), JSON vs packed size | R1-2, R1-3, R1-4 | `PASS: <n> checks, 0 failed` (947 at layout v3) |
+| S1-H02 | Dashboard decoder agrees with the firmware codec (same golden status and encoder frames) | R1-2 | `PASS: dashboard selftest, 0 failures` |
+| S1-H03 | Layout v2 Buddy 4 fields: `M_CLASS`/`TURN_RATE` mapping from slot bit 9, every class code, `TURN_RATE` −256..255, `HUMP_MM` 127 + clamp, v1 frame rejected | R1-3 | `test_v2_extremes`, `test_terrain_v2_mapping` pass inside S1-H01 |
+| S1-H04 | Layout v3 barcode: every Code 39 character maps from B3's ASCII letter, `BC_READ` flips per read, the same letter read twice raises two barcode events, failed reads/junctions do not, v1/v2 frames rejected | R1-3 | `test_barcode_mapping`, `test_edges` pass inside S1-H01; `167 bits used, 1 spare` |
+| S1-H05 | Web dashboard against its simulated robot (`web_dashboard.py --demo`), driven through the same HTTP API as the browser buttons: status and encoder frames at 10 Hz with none lost, fresh heartbeat, layout v3; START, STOP, E-STOP sent with rising sequence numbers and acknowledged; E-STOP shown as a latched fault START cannot clear; unknown command and empty route refused; route acknowledged | R1-2, R1-4, R1-5 | 12 `PASS` lines, ending `PASS: web dashboard demo, 12 passed, 0 failed` |
+
+S1-H05 tests the dashboard, not the robot: the simulator always accepts a route
+and never goes silent, so a rejected route (S1-U18) and stale marking (S1-U20)
+still need the robot.
+
+The Start gate's controller side (`web_start_gate_tests` in `tests/test_motion.c`)
+belongs to Buddy 2's `motion_tests` suite; it is evidence for INT-09, not a Buddy 1 test.
+
+## Robot tests (robot + dashboard)
+
+**Isolation:** unless the step says otherwise, put the robot **on a stand with
+the wheels off the ground** and do not press START, so only Buddy 1's
+behaviour is observed. "Dashboard" = `tools/web_dashboard.py` in the browser:
+the **Link** card (Broker, Heartbeat, Status frames, Encoder frames,
+Lost / bad, Frame layout), the status pills at the top, the buttons, the route
+form and the log. The last column lists what the dashboard cannot show; read
+it from the serial console, kept in the same video frame.
+
+**Firmware self-tests (S1-U01 to U04, U09, U10):** these ran in the `TEST=ON`
+image (`subsystem1_test.c`). The integrated firmware rejects `TEST=ON`
+(`docs/BUILD.md`), so they can no longer be re-run on the robot. Their
+October results stand. The same logic is now covered by S1-H01 (U04 and U10)
+and observed on the robot by S1-U17 (U04, U06) and S1-U15 (U01, U02).
+
+| ID | What is tested | Requirement | Steps | Expected on the dashboard | Console only |
 |---|---|---|---|---|---|
-| S1-U01 | telemetry is queued while there is room | FR16, IF-06 | auto | `subsystem1_test.c` | `[TEST] S1-U01 PASS` |
-| S1-U02 | full queue drops the message without waiting, and counts it | NFR6, NFR8 | auto | `subsystem1_test.c` | `[TEST] S1-U02 PASS` |
-| S1-U03 | oversized payload is refused | NFR8 | auto | `subsystem1_test.c` | `[TEST] S1-U03 PASS` |
-| S1-U04 | valid binary command reaches `mbf_comms_cmd`; wrong length, truncated and reserved opcodes do not | FR17, IF-07 | auto | `subsystem1_test.c` | `[TEST] S1-U04 PASS` |
-| S1-U05 | status, heartbeat and 10 Hz frames reach the broker and decode | FR15, FR16 | manual | 1. Flash `NET=lwip MQTT=ON` image. 2. `python tools/dashboard.py listen --host <broker> --csv logs/<date>_frames.csv` | retained `robot/status online`, `robot/heartbeat` every 1 s, `robot/frame` decoded every 100 ms, `lost=0` |
-| S1-U06 | binary commands are acknowledged | FR17 | manual | `python tools/dashboard.py send stop --host <broker>` while `listen` runs | `ACK ok opcode=2` |
-| S1-U07 | reconnects after the broker is lost | FR18 | manual | 1. Stop the broker for 20 s. 2. Start it again. Watch the USB console. | retries at 1, 2, 4, 8, 10 s, then `robot/status online` again |
-| S1-U08 | broker reports the robot offline | FR15 | manual | Unplug the Pico while subscribed | `robot/status offline` after the keep-alive expires (up to ~90 s) |
-| S1-U09 | repeated or stale START is not forwarded; STOP always is | FR17, safety | auto | `subsystem1_test.c` | `[TEST] S1-U09 PASS` |
-| S1-U10 | 21-byte frame round trip keeps negatives, clamps out-of-range | Tribunal 1 decode test | auto | `subsystem1_test.c` | `[TEST] S1-U10 PASS` |
-| S1-U11 | latched events are published once and merged | Tribunal 1 events | manual | With `listen` running, trigger a motion fault or line loss twice quickly | one `EVENT` line per 100 ms period listing each event once |
-| S1-U12 | packed telemetry does not disturb motion timing (NFR6) | NFR6, A1 | manual | Run normal operation, then stop/start the broker; read the `comms:` console line every 10 s and Buddy 2's motion timing (`max_observed_dt`) | `skipped` stays near 0, `copy_us_max` small vs 10 ms, no motion timing fault |
-| S1-H01 | every field, clamp, malformed frame, all 65,536 command words, snapshot mapping, JSON vs packed size | Tribunal 1 decode test | auto (PC) | `cmake -S . -B build-host -DROBO_HOST_TESTS=ON`, build, `ctest -R buddy1` | `PASS: 317 checks, 0 failed` |
-| S1-H02 | dashboard decoder agrees with firmware codec | Tribunal 1 decode test | auto (PC) | `python tools/dashboard.py selftest` | `PASS: dashboard selftest, 0 failures` |
-| S1-H03 | layout v2 Buddy 4 fields: `M_CLASS`/`TURN_RATE` mapping from slot bit 9, every class code, `TURN_RATE` −256..255, `HUMP_MM` 127 + clamp, v1 frame rejected | Buddy 4 change request (FR9) | auto (PC) | `ctest -R buddy1` (`test_v2_extremes`, `test_terrain_v2_mapping`) | `PASS: 935 checks, 0 failed`, `163 bits used, 5 spare` |
-| S1-H04 | layout v3 barcode: every Code 39 character maps from B3's ASCII letter, `BC_READ` flips per read, the same letter read twice raises two barcode events, failed reads/junctions do not, v1/v2 frames rejected | Buddy 3 bug report (barcode not updating) | auto (PC) | `ctest -R buddy1` (`test_barcode_mapping`, `test_edges`); `python tools/dashboard.py selftest` | `PASS: 947 checks, 0 failed`, `167 bits used, 1 spare` |
-| S1-U14 | dashboard updates on every barcode read | Buddy 3 bug report | manual | 1. Flash a v3 Wi-Fi image. 2. Web dashboard open. 3. Drive over the same barcode twice | Line & barcode card shows the letter and its route action, read count rises by 1 each pass; log shows one `barcode read:` line per pass |
-| S1-U13 | dashboard shows Buddy 4 motion class and turn rate | Buddy 4 change request, acceptance 3 | manual | 1. Flash a v2 Wi-Fi image. 2. `python tools/dashboard.py listen --host <broker> --every 0.5`. 3. Drive straight, turn right, turn left, cross a hump, overturn by hand | `motion=` STATIONARY → MOVING → TURNING; `turn=` negative on right turns, positive on left; `hump=` rises after a hump; `motion=OVERTURNED` when overturned |
+| S1-U01 | Telemetry is queued while there is room | R1-2 | firmware self-test (`subsystem1_test.c`) | — | `[TEST] S1-U01 PASS` |
+| S1-U02 | A full queue drops the message without waiting, and counts it | R1-7 | firmware self-test | — | `[TEST] S1-U02 PASS` |
+| S1-U03 | An oversized payload is refused | R1-7 | firmware self-test | — | `[TEST] S1-U03 PASS` |
+| S1-U04 | A valid binary command reaches `mbf_comms_cmd`; wrong length, truncated and reserved opcodes do not | R1-4 | firmware self-test | — | `[TEST] S1-U04 PASS` |
+| S1-U05 | Status, heartbeat and 10 Hz frames reach the broker and decode | R1-1, R1-2 | 1. Flash the MQTT image. 2. `python tools/dashboard.py listen --host <broker> --csv logs/<date>_frames.csv` | — (terminal tool) | retained `robot/status online`, `robot/heartbeat` every 1 s, `robot/frame` decoded every 100 ms, `lost=0` |
+| S1-U06 | Binary commands are acknowledged | R1-4 | `python tools/dashboard.py send stop --host <broker>` while `listen` runs | — (terminal tool) | `ACK ok opcode=2` |
+| S1-U07 | Reconnects after the broker is lost | R1-6 | 1. Stop the broker for 20 s. 2. Start it again. Watch the USB console | Link card Broker goes down then **connected**; pill **robot online** again; log `status frames resumed` | `mqtt: retrying in 1000 ms`, 2000, 4000, 8000, 10000, then `mqtt: connected to ...` |
+| S1-U08 | Broker reports the robot offline | R1-1 | Unplug the Pico while subscribed | Pill **robot offline** after the keep-alive expires (up to ~90 s) | `robot/status offline` (in `listen`) |
+| S1-U09 | Repeated or stale START is not forwarded; STOP always is | R1-4 | firmware self-test | — | `[TEST] S1-U09 PASS` |
+| S1-U10 | 21-byte frame round trip keeps negatives, clamps out-of-range | R1-2 | firmware self-test | — | `[TEST] S1-U10 PASS` |
+| S1-U11 | Latched events are published once and merged | R1-8 | With the dashboard running, trigger a line loss (lift the IR sensor off the line) twice quickly | Log shows one `event: ...` line per 100 ms period, each event once | — |
+| S1-U12 | Packed telemetry does not disturb motion timing | R1-7 | Run normally for 1 min, stop the broker 20 s, start it again; read the `comms:` line every 10 s | Motion card never shows a FAULT | `comms:` line: `skipped` stays 0, `copy_us_max` well under 10000 (the 10 ms motion period); no motion timing fault |
+| S1-U13 | Dashboard shows Buddy 4 motion class and turn rate | R1-3 | Robot on the floor, START. Drive straight, turn right, turn left, cross a hump, overturn by hand | IMU & terrain card *Motion class* STATIONARY → MOVING → TURNING; *Turn rate* negative on right turns, positive on left; **Highest hump** rises after the hump; **OVERTURNED** when overturned | matching `[MOTION]` lines |
+| S1-U14 | Dashboard updates on every barcode read | R1-3 | Robot on the floor. Drive over the same barcode twice | Line & barcode card shows the letter and its route action; read count rises by 1 each pass | one `barcode read:` line per pass |
+| S1-U15 | Telemetry rate and loss over 60 s | R1-2 | Robot on a stand, dashboard open. Note **Status frames** and **Lost / bad** on the Link card; wait 60 s on a stopwatch; note them again | **Status frames** up by 600 ± 10; **Encoder frames** up by the same; **Lost** up by ≤ 6 (1 %), **bad** stays 0; Heartbeat **< 1.5 s ago**; Frame layout **v3**; pill **telemetry live** throughout | `comms:` line: `skipped=0`, `dropped` not rising |
+| S1-U16 | Encoder counts reach the dashboard | R1-3 | Robot on a stand, motors not driving. Turn the left wheel forward by hand, then backward; repeat with the right wheel | Encoders card: only the turned wheel's count changes, and it changes the other way when turned backward; **Sample age** ≤ 100 ms (not *unknown / old*) | — |
+| S1-U17 | Dashboard START / STOP / E-STOP reach the robot and are acknowledged | R1-4 | Robot on a stand. 1. Press START. 2. Press STOP. 3. Press E-STOP. 4. Press START again. 5. Power-cycle to clear the E-STOP | 1. Log `robot received START #n: queued for the controller`; Motion card leaves **STOPPED (held)**. 2. `received STOP #n: queued ...`; Motion **STOPPED (held)**. 3. `received ESTOP #n: queued ...`; Motion fault **ESTOP**; Troubleshooting shows *E-STOP is latched*. 4. START acknowledged but the robot stays stopped (START does not clear E-STOP) | `mqtt: RX [robot/cmd] ...` once per press |
+| S1-U18 | Barcode route is sent, acknowledged and kept across a reboot | R1-5 | 1. In the Line & barcode card's route boxes type Left **B**, Right **C**, Straight **D**, U-turn **A**; press *Send route*. 2. Type **B** in both Left and Right (letter used twice), D and A in the others; send. 3. Power-cycle the robot | 1. Log `sent route ...` then `robot route: ok L=B R=C S=D U=A`. 2. `robot route: rejected L=B R=B S=D U=A`; the route stays the step 1 route. 3. After reconnecting, `robot route: ok L=B R=C S=D U=A` again (retained) | `route: ok ...`, `route: rejected ...` |
+| S1-U19 | Recovers after the Wi-Fi is lost | R1-6, R1-7 | Robot on a stand, dashboard open. Switch the hotspot off for 15 s, then on. Wait up to 60 s | Pill **telemetry stale** during the outage; then **robot online**, **telemetry live**, log `status frames resumed`, without touching the robot; Motion card never shows a FAULT | `wifi: link status -> ...`, `wifi: link up, ip=...`, `mqtt: connected to ...` |
+| S1-U20 | Dashboard marks stale data | R1-8 | Dashboard running with live telemetry. Unplug the robot's USB/battery. After 10 s plug it back in | Within ~1 s: pill **telemetry stale**, Motion/Line/IMU/Obstacle cards greyed out, log `no status frames for 1.x s` and `no encoder frames ...`; after ~3 s `no heartbeat ...`. After power-up: `status frames resumed`, pill **telemetry live** | — |
+| S1-U21 | Robot boots held and moves only after the dashboard START (Start gate, `8ca46a0`) | R1-4 | Robot **on a stand**, current MQTT image, dashboard open. 1. Power up; wait 30 s, then press STOP and wait 10 s. 2. Press START. 3. Press STOP | 1. Wheels never turn; Motion **STOPPED (held)**, wheel speed **0 / 0** the whole time, STOP acknowledged. 2. Log `robot received START #n: queued for the controller`; Motion leaves **held** (no *START had no effect* warning). 3. STOP acknowledged; Motion back to **STOPPED (held)**, wheels stop | `mqtt: RX [robot/cmd] ...` per press |
 
-*Method:* **auto** = `TEST_CHECK` in code, result printed on the console;
-**manual** = a person observes the result (LED, scope, meter, phone app…).
+## Running the robot tests
+
+1. **Commit first.** Note `git rev-parse --short HEAD`; it goes in the video
+   and the results row.
+2. **Build the MQTT production image**: VS Code "Compile Project"
+   (`ROBO_NETWORK=AUTO`, `config/wifi_secrets.h` present) → `build/mtkernel_3.uf2`.
+   Hold BOOTSEL, plug in the Pico, copy the `.uf2` across. Flash with motor
+   power disconnected.
+3. **Start the broker and dashboard on the laptop:**
+   ```sh
+   mosquitto -c tools/mosquitto_robot.conf -v
+   python tools/web_dashboard.py --host 127.0.0.1 --log testing/subsystem1/logs/<date>_S1-Uxx_dashboard.log
+   ```
+   Open the address it prints (port 8080); check the Link card counts rising.
+4. **Start the serial log** (PuTTY *Session → Logging → All session output*,
+   `logs/<date>_S1-Uxx.txt`) for the console-only items.
+5. **Video:** say the test ID and commit, show the robot (on its stand), the
+   dashboard and the serial console in one frame, do the steps, end on the
+   value that proves the result and say PASS or FAIL. Unlisted YouTube link in
+   the results row (see `videos/README.md`). One video may cover several tests
+   if each start is shown with its ID; S1-U19 and S1-U20 fit in one clip, and
+   S1-U15 to U18 and U21 in another.
+6. **Keep the dashboard log.** Always start `web_dashboard.py` with `--log`;
+   without it the dashboard side is lost when the window closes (this is what
+   happened to the 17 November session).
+
+## Other logs in this folder
+
+- `logs/2026-11-17_console.txt`: serial capture of the 17 November dashboard
+  session, committed in `b7f0afb` as `2026-11-04_console.txt` and renamed on
+  24 November to its real date. Firmware stamp `20261114`: the image was built
+  before `8ca46a0` (Start gate, STOP hold, barcode fix), so it is **not** the
+  current build. No dashboard log or video was kept (start
+  `web_dashboard.py` with `--log` next time). Recorded below as S1-U12 PASS
+  and S1-U07 PARTIAL; nothing in it fits an integration or system test (no
+  dashboard side to compare, no mid-run Wi-Fi loss).
+- `logs/2026-11-04_frames.csv`: a `listen --csv` frame log from 4 November
+  (layout v1, robot idle). Not a test result; S1-U05 needs a fresh run.
+
+## Recording plan (2026-11-25)
+
+Record **4 Buddy 1 videos**, one test each: the most important function for
+each requirement. Then Buddy 1 is filmed in **4 team videos** (5 to 8) for the
+integration and system tests. Every row is already written in the *Results*
+table below, in the integration and system logs and in `videos/README.md`.
+
+| Video | Test | Requirement | Set-up | What to do |
+|---|---|---|---|---|
+| 1 Telemetry | S1-U15 | R1-2 (FR16): data sent 10 times a second | Stand | Show the Link card. Start a 60 s stopwatch. Show the Link card again |
+| 2 Buttons | S1-U17 | R1-4 (FR17): commands from the dashboard | Stand | Press START, STOP, E-STOP, then START again. Turn the robot off and on to clear the E-STOP |
+| 3 Route | S1-U18 | R1-5 (FR17): route from the dashboard | Stand | Send B C D A. Send B B D A (should be rejected). Turn the robot off and on |
+| 4 Wi-Fi loss | S1-U19 | R1-6 (FR18): reconnects by itself; R1-1 (FR15): online status | Stand | Turn the hotspot off for 15 s, then on. Don't touch the robot |
+| 5 Full run (team) | INT-04, INT-08, INT-12, INT-14, SYS-01, SYS-07 | | Full course | Keep the whole dashboard and the serial console in frame |
+| 6 Route run (with B3) | INT-13 | | Junction, code B | Send B C D A, robot turns left after B; send C B D A, turn off and on, robot turns right |
+| 7 STOP mid-run (with B2) | INT-09 | | Course | STOP while driving, wait 5 s, START |
+| 8 Wi-Fi loss mid-run | SYS-08 | | Course | Hotspot off 10 s while driving |
+
+Not recorded this round (still defined above, can be run later): S1-U05 to
+U08, U11 to U14, U16, U20, U21.
+
+**Before leaving home:**
+
+- [ ] Build and flash the MQTT image from this branch (VS Code "Compile Project"). Firmware = `b51982f`; if you flash anything newer, replace `b51982f` in the new rows.
+- [ ] Pack the stand, the laptop charger and the phone (DroidCam). OBS scene: browser + serial console + phone camera.
+
+**Every video:** start PuTTY logging (`logs/2026-11-25_Vn.txt`) and the
+dashboard with `--log testing/subsystem1/logs/2026-11-25_Vn_dashboard.log`.
+Start by saying *"S1-Uxx, &lt;name&gt;, commit b51982f"*. End on the value that
+proves it and say PASS or FAIL.
+
+**After uploading:** in VS Code press Ctrl+Shift+H (replace in files) and
+replace each `VIDEO-n-LINK` (n = 1 to 8) with that video's YouTube link, one
+video at a time: it fills in every file at once. Then, row by row, replace
+`m:ss` with the time the test starts in the video, fill in the `___` blanks,
+and replace **TO RECORD** with PASS or FAIL. A FAIL needs a note saying what
+happened. A test you did not get to: delete its row (it was never a result).
 
 ## Results
 
@@ -48,3 +204,14 @@ Add a new row for every run. Never edit or delete old rows.
 | 2026-11-14 | S1-H01 | not committed yet | Claude Code for 2500842 | PASS | console: `PASS: 935 checks, 0 failed`; `size: JSON 395 bytes, packed 21 bytes (163 bits used, 5 spare), 5.3% of JSON` | layout v2; MinGW gcc, -Wall -Wextra -Werror -Wconversion -Wshadow |
 | 2026-11-14 | S1-H02 | not committed yet | Claude Code for 2500842 | PASS | console: `PASS: dashboard selftest, 0 failures` | layout v2 golden `20730394…7b00` matches the C test |
 | 2026-11-14 | S1-H03 | not committed yet | Claude Code for 2500842 | PASS | same run as S1-H01 | |
+| 2026-11-24 | S1-H01 | `b51982f` | Claude Code for 2500842 | PASS | `logs/2026-11-24_host.txt` | `PASS: 947 checks, 0 failed`; layout v3, `167 bits used, 1 spare`, 5.3 % of JSON |
+| 2026-11-24 | S1-H02 | `b51982f` | Claude Code for 2500842 | PASS | `logs/2026-11-24_dashboard_selftest.txt` | `PASS: dashboard selftest, 0 failures` |
+| 2026-11-24 | S1-H03 | `b51982f` | Claude Code for 2500842 | PASS | `logs/2026-11-24_host.txt` | same run as S1-H01 |
+| 2026-11-24 | S1-H04 | `b51982f` | Claude Code for 2500842 | PASS | `logs/2026-11-24_host.txt` | same run as S1-H01 |
+| 2026-11-17 | S1-U12 | image built 2026-11-14 (before `8ca46a0`) | 2500842 | PASS | `logs/2026-11-17_console.txt` | Recorded 2026-11-24 from the saved capture. ~8 min of telemetry (frames 2200 → 7100): `skipped=0` throughout, `copy_us_max=675` µs (6.8 % of the 10 ms motion period), no motion fault. `dropped` 5 → 147, mostly the burst around the broker reconnect (`mqtt: 44 messages dropped in last 5 s`): drops instead of blocking, as designed. Not the current build: re-run |
+| 2026-11-17 | S1-U07 | image built 2026-11-14 (before `8ca46a0`) | 2500842 | PARTIAL | `logs/2026-11-17_console.txt` (lines 2724–2729) | Recorded 2026-11-24 from the saved capture. One unplanned broker drop (`mqtt: connection status 256`), `mqtt: retrying in 1000 ms`, then `mqtt: connected` and re-subscribed by itself. The full 1, 2, 4, 8, 10 s back-off after a 20 s broker stop was not shown. Re-run on the current build |
+| 2026-11-24 | S1-H05 | `b51982f` + new `tests/buddy1_frame/web_dashboard_check.py` (uncommitted; `tools/` unchanged) | Claude Code for 2500842 | PASS | `logs/2026-11-24_web_dashboard_demo.txt` | `PASS: web dashboard demo, 12 passed, 0 failed`; Python 3.14 |
+| 2026-11-25 | S1-U15 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-1-LINK> @ m:ss, `logs/2026-11-25_V1_dashboard.log` | Show: the Link card, then a 60 s stopwatch, then the Link card again. Write down: Status frames went up by ___ (should be about 600), Lost went up by ___ (6 or less), Bad went up by ___ (should be 0). |
+| 2026-11-25 | S1-U17 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-2-LINK> @ m:ss, `logs/2026-11-25_V2_dashboard.log` | Show: press START, STOP, E-STOP, then START again. Each press gets a "robot received ..." line in the log. After E-STOP, START does nothing (the robot stays stopped). Turn it off and on to clear. |
+| 2026-11-25 | S1-U18 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-3-LINK> @ m:ss, `logs/2026-11-25_V3.txt` | Show: send route B C D A, and the log says "robot route: ok". Send B B D A, and the log says "rejected". Turn the robot off and on, and the log says "robot route: ok" again by itself. |
+| 2026-11-25 | S1-U19 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-4-LINK> @ m:ss, `logs/2026-11-25_V4.txt` | Show: turn the hotspot off for 15 s, then back on. The dashboard says stale, then comes back to "robot online" by itself. Write down: it came back after ___ s. |
