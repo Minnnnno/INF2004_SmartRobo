@@ -1,69 +1,225 @@
-# INF2004 SmartRobo ? integrated project template
+# INF2004 SmartRobo
 
-This repository now uses the supplied CMake build and the
+Integrated robot firmware for the Raspberry Pi Pico W (RP2040) on the Robo Pico
+motor board, using micro T-Kernel 3.0. The application combines encoder/PID motion
+control, IR line following, Code 39 barcode navigation, IMU terrain and hump
+measurement, lift/overturn stops, ultrasonic obstacle avoidance, and a Wi-Fi/MQTT
+web dashboard.
+
+The CMake build is based on the
 [sirfonzie project template](https://github.com/sirfonzie/INF2004_ProjectTemplate)
-at commit c3b09544cb1fd6dac6ad4b8f523be0af59b44482.
+at commit `c3b09544cb1fd6dac6ad4b8f523be0af59b44482`. The kernel owns boot,
+vectors, scheduling and the USB console. Original demos and documentation are
+archived in [docs/template_original/](docs/template_original/) and excluded from
+the active application build.
 
-Buddy 2's motion control is integrated into the template's application structure.
-Open INF2004_SmartRobo.code-workspace in VS Code to use the Raspberry Pi Pico
-extension. Compile with its Compile button or Ctrl+Shift+B; firmware is generated
-at build/mtkernel_3.uf2.
-The template kernel owns boot, vectors, scheduling and USB console; the earlier
-Pico SDK startup adapter is archived and is not linked.
+## Build and flash
 
-| Owner | Active source |
-|---|---|
-| Startup / task creation | app_program/app_main.c |
-| Vehicle Controller | app_program/controller/vehicle_controller.c |
-| Command bus, submission APIs and controller task | app_program/controller/robot_runtime.c |
-| Buddy 1 WiFi/MQTT queues and hooks | app_program/subsystem1/comms.c |
-| Buddy 2 motion, PID, encoders, configuration | app_program/subsystem2/ |
-| Buddy 2 initialization, motion task and motor diagnostics | app_program/subsystem2/motion_runtime.c |
-| Watchdog, retained crash reports and system supervision | app_program/system/system_runtime.c |
-| Buddy 3 line and barcode | app_program/subsystem3/line_following.c, barcode.c |
-| Buddy 4 IMU/terrain | app_program/subsystem4/terrain_task.c |
-| Buddy 5 obstacle avoidance | app_program/subsystem5/subsystem5.c |
+1. Install VS Code and the Raspberry Pi Pico extension. This project selects
+   **Pico W**, **Pico SDK 2.3.0** and **Arm toolchain 15_2_Rel1**.
+2. Open [INF2004_SmartRobo.code-workspace](INF2004_SmartRobo.code-workspace).
+3. For dashboard control, copy
+   [config/wifi_secrets.example.h](config/wifi_secrets.example.h) to
+   `config/wifi_secrets.h`. Set `WIFI_SSID`, `WIFI_PASSWORD` and `MQTT_BROKER_IP`
+   for your network. Use a **2.4 GHz** Wi-Fi network. The broker address must be
+   the laptop's address reachable by the robot; replace the example
+   `192.168.1.10`. A Windows hotspot commonly uses `192.168.137.1`; check with
+   `ipconfig`. The secrets file is ignored by Git; keep credentials out of
+   tracked files.
+4. Press **Ctrl+Shift+B** and select **Compile Project**. The checked-in task
+   configures the integrated profile before building into `build/`.
+5. Check the configure output before flashing:
 
-Shared interfaces remain in include/robot.h and include/motion.h. Requests pass
-through the Vehicle Controller into Motion Control. Stop/fault/shutdown bypass
-ordinary requests and invalidate stale commands. Buddy 1's queues and status task
-are initialized alongside motion. Normal firmware also starts IR line following,
-Buddy 4 IMU/terrain monitoring and ultrasonic obstacle detection/servo scanning.
-The controller consumes Buddy 1 start/stop/estop messages. WiFi/MQTT radio setup
-still requires an explicit network build and local credentials.
+   | Output | Resulting behavior |
+   | --- | --- |
+   | `ROBO_NETWORK=AUTO: WIFI=cyw43 NET=lwip MQTT=ON` | Wi-Fi/MQTT enabled; the default web START gate holds the robot after boot. |
+   | Warning that `config/wifi_secrets.h` is missing | No Wi-Fi/MQTT; production line following starts automatically after startup qualification and the IMU wait. |
 
-`app_main.c` composes the application: it initializes components, creates/starts
-the existing task table and calls periodic supervision. Live motion state stays
-private to Buddy 2; the request bus and its mutex stay private to the controller.
-The production Buddy 2 entry points are declared in `motion_runtime.h`.
+   For dashboard operation, also confirm `Web Start gate ON` in the output.
+   **A build without MQTT does not wait for dashboard START.**
+6. Disconnect motor power. Hold **BOOTSEL** while connecting USB, then copy
+   **`build/mtkernel_3.uf2`** to the `RPI-RP2` drive. The Pico reboots after copying.
+   `build/smartrobo_integrated.uf2` contains the same bytes for this profile.
 
-The standard VS Code build explicitly enables `ROBO_LINE_STEERING`,
-`ROBO_SUBSYSTEM4` and `ROBO_SUBSYSTEM5`, with motion fault latching enabled.
-Use `build/smartrobo_integrated.uf2` (the same bytes as `build/mtkernel_3.uf2`).
-The startup banner reports `line_task_enabled=1 subsystem4_enabled=1 subsystem5_enabled=1`.
-See [integrated startup, pins and validation](docs/INTEGRATED_FIRMWARE.md).
+The normal VS Code profile explicitly enables `ROBO_LINE_STEERING`,
+`ROBO_SUBSYSTEM4` and `ROBO_SUBSYSTEM5`, enables motion fault latching, disables
+calibration/IR-monitor profiles, and selects `ROBO_NETWORK=AUTO` and `SMP=OFF`.
+Barcode acquisition runs alongside line following in this production profile.
+The startup banner should contain
+`line_task_enabled=1 subsystem4_enabled=1 subsystem5_enabled=1` and
+`[MOTION] faults_enabled=1`; the build ID starts `smartrobo-integrated-v1-`.
 
-**Production motion is enabled after the user's hardware confirmation.**
-Startup stays stopped, manual PWM remains disabled, and production output can
-use the full 100% PWM range. Calibration profiles retain inhibited production control.
-See [production firmware and subsystem integration](docs/PRODUCTION_INTEGRATION.md).
-Motion faults latch by default and print the captured error and wheel/driver
-evidence every two seconds; see [motion fault diagnostics](docs/MOTION_FAULT_DIAGNOSTICS.md).
-Measured encoder counts/revolution are 2542.4 left and 2543.4 right.
-For the separate one-second, 25% motor-test firmware and serial commands, see
-[safe motor testing](docs/SAFE_MOTOR_TEST.md).
-Current provisional effective wheel diameters are 67.5/67.9 mm and track width
-is 115 mm; validate them under load. For the separate
-encoder-based 90-degree firmware, commands and results, see
-[angle testing](docs/ANGLE_TEST.md).
-SMP is explicitly disabled for this motion integration. WiFi and networking are
-off by default; imported driver code is available for Buddy 1.
+For terminal builds, toolchain paths and separate build directories, see
+[build instructions](docs/BUILD.md). CMake is the supported build route;
+`SMP=ON` and template startup `TEST=ON` are rejected.
 
-See [build instructions](docs/BUILD.md), [API](docs/API.md),
-[calibration](docs/CALIBRATION.md) and [hardware assumptions](docs/HARDWARE.md).
-Buddy 2's test cases, recorded host results and hardware evidence belong in the
-[subsystem 2 test log](testing/subsystem2/TEST_LOG.md). Record measurements in its
-results table's Notes column; host results do not establish physical accuracy.
+## Run with the dashboard
 
-The original template demo and README are preserved in docs/template_original/.
-These reference files are excluded from the application source glob.
+Install Mosquitto on the laptop and the Python dependency once:
+
+```powershell
+python -m pip install paho-mqtt
+```
+
+At each session, turn on the hotspot/network used in the firmware, then run the
+broker from the repository root (adjust the executable path to your installation):
+
+```powershell
+& "C:\Program Files\mosquitto\mosquitto.exe" -c mosquitto.conf -v
+```
+
+Allow Mosquitto through Windows Firewall for the robot's network. The checked-in
+[mosquitto.conf](mosquitto.conf) listens on IPv4 port 1883 with anonymous access;
+use it on the team's local test network. In a second terminal, start the dashboard
+with the same broker address configured in the firmware:
+
+```powershell
+python tools/web_dashboard.py --host 192.168.137.1
+```
+
+Open **http://localhost:8080**. Power the robot and wait for **broker connected**,
+**robot online**, **telemetry live**, and Motion **STOPPED (held)**. The Link card
+should show frame layout **v3**, with approximately 10 status frames per second.
+Build the dashboard and firmware from the same checkout.
+
+Place the robot level on the course before pressing **START**, and keep it still
+for about **two seconds after START**. In MQTT production builds, the IMU captures
+its level reference after the first START; line following waits for that capture.
+The IMU wait is capped at ten seconds, so an unavailable IMU does not indefinitely
+block driving. Later STOP/START cycles keep the reference.
+
+| Control | Behavior |
+| --- | --- |
+| **START** | Releases an eligible stopped, stationary, fault-free robot with trusted encoder feedback. It does not clear a fault. |
+| **STOP** | Requests a controlled stop and holds the robot until another dashboard START; subsystem release requests cannot override this hold. |
+| **E-STOP** | Latches an emergency fault. START cannot clear it; power-cycle the robot with battery and USB disconnected. |
+
+A command acknowledgement means **queued**, not executed; check the subsequent
+motion status. Encoder faults require the checks and reset/release procedure in
+[motion fault diagnostics](docs/MOTION_FAULT_DIAGNOSTICS.md).
+
+For run evidence, add `--log logs/run.log --csv logs/frames.csv` and optionally
+`--encoder-csv logs/encoders.csv` to the dashboard command. To preview the dashboard
+without a robot or broker, run `python tools/web_dashboard.py --demo`.
+See [dashboard setup and troubleshooting](docs/DASHBOARD_SETUP.md) for full details.
+
+## Barcode route and sensor behavior
+
+In the dashboard's **Line & barcode** card, fill in **Left**, **Right**,
+**Straight** and **U-turn**, then select **Send route**. Supply four distinct
+letters; invalid messages leave the previous route intact. The MQTT route is
+retained by the broker and delivered again when the robot reconnects. Until a
+route arrives, [route.h](app_program/subsystem3/route.h) defines the fallback:
+**Z = left**, **A = U-turn**.
+
+Left, right and U-turn actions happen at the junction after the barcode; straight
+ignores the junction. Turns spin on the spot using both wheels. If a barcode
+cannot be decoded, the robot reports the failed read and continues following the
+line without acting on that read.
+
+Buddy 4 reports pitch, terrain state, motion class, turn rate and the highest
+completed hump peak in the run. Lift/overturn detection stops the motors. Hump
+recording pauses during turns on the spot and briefly afterward to avoid false
+humps from turn acceleration. See the
+[IMU/terrain guide](app_program/subsystem4/README.md) for mounting, calibration
+and validity rules.
+
+Buddy 5 stops for an obstacle, scans its width, chooses a detour and returns
+control to line following when the line is reacquired. While avoidance owns
+motion, line following continues publishing sensor status without replacing its
+commands. See the [obstacle guide](app_program/subsystem5/README.md).
+
+## Source layout and wiring
+
+| Owner | Active source / responsibility |
+| --- | --- |
+| Application startup | [app_program/app_main.c](app_program/app_main.c): initialization, task creation and supervision |
+| Vehicle Controller | [app_program/controller/](app_program/controller/): command bus, ownership, submission APIs and remote controls |
+| Buddy 1 | [app_program/subsystem1/](app_program/subsystem1/): Wi-Fi/MQTT, queues, telemetry and command handling |
+| Buddy 2 | [app_program/subsystem2/](app_program/subsystem2/): motor driver, encoders, odometry, PID and motion runtime |
+| Buddy 3 | [app_program/subsystem3/](app_program/subsystem3/): IR steering, barcode decoding and routes |
+| Buddy 4 | [app_program/subsystem4/](app_program/subsystem4/): IMU, terrain, hump measurement and lift/overturn stops |
+| Buddy 5 | [app_program/subsystem5/](app_program/subsystem5/): ultrasonic scanning and obstacle avoidance |
+| System | [app_program/system/](app_program/system/): watchdog, retained crash reports and supervision |
+
+Shared requests and status are defined in [include/robot.h](include/robot.h) and
+[include/motion.h](include/motion.h). Subsystems submit requests through the
+Vehicle Controller; motion owns the motor hardware. Stop/fault/shutdown controls
+bypass ordinary requests and invalidate stale commands. The binary MQTT formats
+are defined in [include/telemetry_frame.h](include/telemetry_frame.h): a 21-byte
+status frame (layout v3) and a separate 26-byte encoder frame, published at 10 Hz.
+
+| Signal | Pico GPIO |
+| --- | --- |
+| Left / right motors | GP8/GP9 / GP10/GP11 |
+| Left / right encoder A/B | GP2/GP3 / GP4/GP5 |
+| GY-511 SDA / SCL | GP6 / GP7, I2C1 |
+| Scanning servo | GP15 |
+| Ultrasonic TRIG / ECHO | GP16 / GP17 |
+| Right / centre IR | GP26 / GP27 |
+| Barcode ADC | GP28 |
+| Optional UART0 console TX / RX | GP0 / GP1 |
+
+GP23/GP24/GP25/GP29 are reserved for Pico W board/radio use. I2C0 stays disabled
+to avoid the motor pins. Wiring details and electrical assumptions are in
+[hardware documentation](docs/HARDWARE.md).
+
+Current [motion configuration](app_program/subsystem2/board_config.c) uses measured
+encoder counts/revolution of **2542.4 left / 2543.4 right**, provisional effective
+wheel diameters of **67.5 / 67.9 mm**, and **115 mm** track width. Normal production
+motion is enabled with up to 100% PWM; manual PWM is disabled. Validate provisional
+calibration under load using the [calibration guide](docs/CALIBRATION.md).
+
+## Host checks and hardware evidence
+
+With CMake, Ninja and a native C compiler available, run from the repository root:
+
+```powershell
+cmake -S . -B build-host-cmake -G Ninja -DROBO_HOST_TESTS=ON
+cmake --build build-host-cmake
+ctest --test-dir build-host-cmake --output-on-failure
+python tools/dashboard.py selftest
+```
+
+Buddy 4 has additional host suites:
+
+```powershell
+python tests/subsystem4/run_tests.py
+```
+
+See [Buddy 4 host verification](tests/subsystem4/README.md) for compiler selection.
+For the recorded GCC 15 float-conversion build issue and its workaround, see the
+[Buddy 3 script-test instructions](testing/subsystem3/TEST_LOG.md#script-tests-laptop-no-robot).
+Host checks exercise software with simulated inputs; physical accuracy, timing
+and complete mission performance require robot tests. Use the current CMake host
+commands above rather than the older template `make TEST=1` instructions retained
+in the testing guide.
+
+Record test IDs, tested commit, results, limitations and saved logs in the relevant
+[subsystem test log](testing/). Cross-subsystem checks belong in the
+[integration log](testing/integration/TEST_LOG.md), and whole-course checks in the
+[system log](testing/system/TEST_LOG.md). Share hardware videos as unlisted YouTube
+links and register them in the [video index](videos/README.md).
+
+The latest Buddy 2 hardware entries record single-trial functional passes for
+startup/START, independent encoders, wheel-speed control and STOP/hold/restart;
+they do not establish numerical speed accuracy, stop latency or repeatability.
+See the [Buddy 2 test log](testing/subsystem2/TEST_LOG.md) for those limits.
+The [Buddy 3 log](testing/subsystem3/TEST_LOG.md) records that the changed
+failed-barcode-read behavior still needs a fresh hardware run.
+
+## Further instructions
+
+- [Build options and toolchain](docs/BUILD.md), [integrated firmware](docs/INTEGRATED_FIRMWARE.md)
+  and [production motion integration](docs/PRODUCTION_INTEGRATION.md)
+- [Shared API](docs/API.md), [motion API for buddies](docs/BUDDY_MOTION_API.md)
+  and [team ownership](TEAM.md)
+- Separate calibration profiles: [safe motor test](docs/SAFE_MOTOR_TEST.md),
+  [encoder-based angle test](docs/ANGLE_TEST.md) and [steering](docs/STEERING.md)
+
+Keep calibration images in separate build directories. `ROBO_NETWORK=AUTO`
+disables networking for calibration/test profiles; `ON` requires credentials and
+forces networking, while `OFF` disables it. Terminal builds that leave
+`ROBO_NETWORK` empty use the explicit `WIFI`/`NET`/`MQTT` options (fresh defaults:
+`none`/`none`/`OFF`). MQTT production builds use `ROBO_REQUIRE_START=ON` by default;
+setting it `OFF` removes the web startup hold.
