@@ -24,7 +24,7 @@ would not reproduce the controlled representation comparison.
 
 The original measurements are recorded in
 [BUDDY2_MEMORY_RESULTS.json](BUDDY2_MEMORY_RESULTS.json) and
-[BUDDY2_COMPACT_REPRESENTATION.md](BUDDY2_COMPACT_REPRESENTATION.md).
+[BUDDY2_COMPACT_REPRESENTATION.md](../testing/subsystem2/BUDDY2_COMPACT_REPRESENTATION.md).
 The raw before/after records were preserved in commit
 [d74a93a](https://github.com/Minnnnno/INF2004_SmartRobo/commit/d74a93a13ff483d2639308b4e69b831744d9b06c):
 

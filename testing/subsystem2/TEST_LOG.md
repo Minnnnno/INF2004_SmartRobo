@@ -6,7 +6,7 @@
 
 **Code:** `app_program/subsystem2/`; interfaces in `include/motion.h`, `include/robot.h` and `include/steering.h`
 
-References: `docs/BUDDY_MOTION_API.md`, `docs/MOTION_FAULT_DIAGNOSTICS.md`, `docs/BUDDY2_COMPACT_REPRESENTATION.md` and `videos/README.md`.
+References: `docs/BUDDY_MOTION_API.md`, `docs/MOTION_FAULT_DIAGNOSTICS.md`, `testing/subsystem2/BUDDY2_COMPACT_REPRESENTATION.md` and `videos/README.md`.
 
 - **Laptop tests (S2-U..)** execute portable C logic with synthetic inputs/fake registers. Evidence is saved console output; these do not prove physical accuracy or RTOS timing.
 - **Hardware/video tests (S2-H..)** exercise the robot, with independent measurements for accuracy claims. Evidence is a video showing the robot, measurements and relevant dashboard/serial readings; separate physical-test logs are optional.

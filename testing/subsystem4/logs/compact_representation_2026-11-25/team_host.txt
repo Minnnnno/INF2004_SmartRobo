@@ -1,0 +1,54 @@
+﻿HEAD: 133289f Subsystem 4: update to main's latest (hump pause while turning, turn dropped on invalid heading, docs and test logs); compiler clang (C:/msys64/ucrt64/bin/clang.exe)
+Test project C:/Users/custa/Desktop/INF2004_SmartRobo/build-host-minbit
+      Start  1: motion_tests
+ 1/24 Test  #1: motion_tests ..........................   Passed    0.23 sec
+      Start  2: motion_faults_disabled_checks
+ 2/24 Test  #2: motion_faults_disabled_checks .........   Passed    0.12 sec
+      Start  3: motor_test_checks
+ 3/24 Test  #3: motor_test_checks .....................   Passed    0.08 sec
+      Start  4: line_test_checks
+ 4/24 Test  #4: line_test_checks ......................   Passed    0.07 sec
+      Start  5: buddy1_frame_checks
+ 5/24 Test  #5: buddy1_frame_checks ...................   Passed    0.27 sec
+      Start  6: steering_checks
+ 6/24 Test  #6: steering_checks .......................   Passed    0.06 sec
+      Start  7: line_pid_checks
+ 7/24 Test  #7: line_pid_checks .......................   Passed    0.06 sec
+      Start  8: line_imu_wait_checks
+ 8/24 Test  #8: line_imu_wait_checks ..................   Passed    0.06 sec
+      Start  9: line_imu_wait_start_gate_checks
+ 9/24 Test  #9: line_imu_wait_start_gate_checks .......   Passed    0.10 sec
+      Start 10: angle_control_checks
+10/24 Test #10: angle_control_checks ..................   Passed    0.05 sec
+      Start 11: angle_hal_checks
+11/24 Test #11: angle_hal_checks ......................   Passed    0.05 sec
+      Start 12: obstacle_geometry_checks
+12/24 Test #12: obstacle_geometry_checks ..............   Passed    0.06 sec
+      Start 13: obstacle_runtime_checks
+13/24 Test #13: obstacle_runtime_checks ...............   Passed    0.06 sec
+      Start 14: obstacle_servo_checks
+14/24 Test #14: obstacle_servo_checks .................   Passed    0.05 sec
+      Start 15: tmonitor_format_checks
+15/24 Test #15: tmonitor_format_checks ................   Passed    0.05 sec
+      Start 16: barcode_decode_checks
+16/24 Test #16: barcode_decode_checks .................   Passed    0.10 sec
+      Start 17: barcode_decode_letters_checks
+17/24 Test #17: barcode_decode_letters_checks .........   Passed    0.06 sec
+      Start 18: barcode_decode_reject_checks
+18/24 Test #18: barcode_decode_reject_checks ..........   Passed    0.06 sec
+      Start 19: barcode_decode_ladder_checks
+19/24 Test #19: barcode_decode_ladder_checks ..........   Passed    0.06 sec
+      Start 20: barcode_decode_ladder_reject_checks
+20/24 Test #20: barcode_decode_ladder_reject_checks ...   Passed    0.07 sec
+      Start 21: barcode_decode_route4_checks
+21/24 Test #21: barcode_decode_route4_checks ..........   Passed    0.06 sec
+      Start 22: route_checks
+22/24 Test #22: route_checks ..........................   Passed    0.05 sec
+      Start 23: crash_restart_checks
+23/24 Test #23: crash_restart_checks ..................   Passed    0.06 sec
+      Start 24: motor_driver_diagnostics_checks
+24/24 Test #24: motor_driver_diagnostics_checks .......   Passed    0.06 sec
+
+100% tests passed, 0 tests failed out of 24
+
+Total Test time (real) =   2.02 sec

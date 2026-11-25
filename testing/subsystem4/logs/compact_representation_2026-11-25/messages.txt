@@ -1,0 +1,23 @@
+BEFORE (b96a929): three MQTT JSON text messages every 0.25 s (4 Hz)
+Topic                         payload B  MQTT packet B
+robot/telemetry/imu_acc       19 ..   31     46 ..   58
+robot/telemetry/imu_mag       19 ..   31     46 ..   58
+robot/telemetry/terrain       49 ..   61     76 ..   88
+Per 0.25 s report             87 ..  123    168 ..  204
+Per second (x4)              348 ..  492    672 ..  816   = 2784..3936 payload bits/s
+
+AFTER: Buddy 4 fields inside the shared binary status frame (robot/frame, 21 bytes, 10 Hz)
+Field               range  bits   v1 (e564fd7)
+T_VALID              0..7     3   T_VALID 0..7 3 bits
+T_STATE              0..7     3   T_STATE 0..7 3 bits
+M_CLASS              0..7     3   (new in v2)
+PITCH             -90..90     8   PITCH -90..90 8 bits
+TURN_RATE       -256..255     9   T_HEADING 0..359 9 bits
+HUMP_MM            0..127     7   HUMP_MM 0..255 8 bits
+Buddy 4 bits per frame: v1 31, now 33 (= 4.125 bytes; v2 added M_CLASS, reused T_HEADING's bits as TURN_RATE and trimmed HUMP_MM 8 -> 7 bits; frame still 21 bytes)
+Buddy 4 payload per second: 33 x 10 = 330 bits/s
+Whole frame packet (all buddies): 36 bytes per 100 ms
+
+Comparison per second (payload only, Buddy 4's data):
+  before 2784..3936 bits/s at 4 Hz  ->  now 330 bits/s at 10 Hz (8.4x..11.9x less, while sending 2.5x as often)
+  one update: before 87..123 bytes of JSON in 3 messages  ->  now 33 bits (4.125 bytes) in the shared frame

@@ -54,3 +54,11 @@ Newest at the bottom. Never delete a row.
 | 2026-11-24 | S5 | S5-U05 | `fa36f67` (not confirmed) | 2500344 | <https://youtu.be/O0wmRNscU0k> | More clearance on the right: passes on the right |
 | 2026-11-24 | S5 | S5-U06 | `fa36f67` (not confirmed) | 2500344 | <https://youtu.be/5Ype3yBMZK4> | Sudden obstacle after a turn: stops and goes round it |
 | 2026-11-24 | S5 | S5-U07 | `fa36f67` + width scale (later `e4e5b3e`) | 2500344 | <https://youtu.be/FtWQj1oa1vA> | False halt: stops for a hand and scans; the clip ends before it drives on |
+| 2026-11-25 | S1 | S1-U15 | `b51982f` | 2500842 | <VIDEO-1-LINK> | Telemetry 10 times a second, 60 s on the Link card |
+| 2026-11-25 | S1 | S1-U17 | `b51982f` | 2500842 | <VIDEO-2-LINK> | START / STOP / E-STOP from the dashboard |
+| 2026-11-25 | S1 | S1-U18 | `b51982f` | 2500842 | <VIDEO-3-LINK> | Route sent, bad route rejected, route kept after restart |
+| 2026-11-25 | S1 | S1-U19 | `b51982f` | 2500842 | <VIDEO-4-LINK> | Wi-Fi off and on, reconnects by itself |
+| 2026-11-25 | INT/SYS | INT-04, INT-08, INT-12, INT-14, SYS-01, SYS-07 | `b51982f` | 2500842 | <VIDEO-5-LINK> | Integrated full run, dashboard and console in frame |
+| 2026-11-25 | INT | INT-13 | `b51982f` | 2500842 | <VIDEO-6-LINK> | Dashboard route changes the turn after barcode B |
+| 2026-11-25 | INT | INT-09 | `b51982f` | 2500842 | <VIDEO-7-LINK> | Dashboard STOP holds mid-run, START resumes |
+| 2026-11-25 | SYS | SYS-08 | `b51982f` | 2500842 | <VIDEO-8-LINK> | Wi-Fi loss mid-run, reconnect by itself |
