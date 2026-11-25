@@ -1,0 +1,85 @@
+# Excerpt of logs/dashboard-events.log, 2026-11-24 (the source log has times only). Dropped-message and DEBUG lines removed.
+20:56:45.365 INFO  you    sent START #226
+20:56:45.498 INFO  B1     robot received START #226: queued for the controller
+20:56:45.501 INFO  B2     motion STOPPED -> READY
+20:56:45.501 INFO  B2     movement released
+20:56:47.534 INFO  ctrl   motion owner: none -> line
+20:56:47.534 INFO  B3     line sensor status available
+20:56:47.534 INFO  B3     line found
+20:56:47.535 INFO  B4     terrain INIT -> WAITING
+20:56:47.634 INFO  B2     motion READY -> DRIVING
+20:56:49.516 WARN  B1     no status frames for 1.2 s (robot online)
+20:56:49.516 WARN  B1     no encoder frames for 1.3 s (robot online)
+20:56:50.016 INFO  B1     status frames resumed
+20:56:50.017 INFO  B1     encoder frames resumed
+20:56:51.518 WARN  B1     no status frames for 1.0 s (robot online)
+20:56:51.518 WARN  B1     no encoder frames for 1.0 s (robot online)
+20:56:52.019 INFO  B1     status frames resumed
+20:56:52.019 INFO  B1     encoder frames resumed
+20:56:55.544 INFO  B2     motion DRIVING -> STOPPING
+20:56:55.544 INFO  B2     movement HELD (stopped)
+20:56:55.544 INFO  ctrl   motion owner: line -> none
+20:56:55.840 INFO  B2     motion STOPPING -> STOPPED
+20:56:56.261 INFO  B5     obstacle: held / scanning
+20:56:58.025 WARN  B1     no status frames for 1.3 s (robot online)
+20:56:58.025 WARN  B1     no encoder frames for 1.3 s (robot online)
+20:56:59.026 INFO  B1     status frames resumed
+20:56:59.026 INFO  B1     encoder frames resumed
+20:57:00.528 WARN  B1     no status frames for 1.4 s (robot online)
+20:57:00.528 WARN  B1     no encoder frames for 1.4 s (robot online)
+20:57:02.029 WARN  B1     no heartbeat for 3.2 s (robot online)
+20:57:03.531 INFO  B1     status frames resumed
+20:57:03.531 INFO  B1     encoder frames resumed
+20:57:03.531 INFO  B1     heartbeat resumed
+20:57:06.033 WARN  B1     no status frames for 1.3 s (robot online)
+20:57:06.033 WARN  B1     no encoder frames for 1.3 s (robot online)
+20:57:07.034 WARN  B1     no heartbeat for 3.2 s (robot online)
+20:57:07.535 INFO  B1     status frames resumed
+20:57:07.535 INFO  B1     encoder frames resumed
+20:57:07.535 INFO  B1     heartbeat resumed
+20:57:11.539 WARN  B1     no status frames for 1.5 s (robot online)
+20:57:11.539 WARN  B1     no encoder frames for 1.5 s (robot online)
+20:57:13.041 WARN  B1     no heartbeat for 3.1 s (robot online)
+20:57:14.542 INFO  B1     status frames resumed
+20:57:14.542 INFO  B1     encoder frames resumed
+20:57:14.542 INFO  B1     heartbeat resumed
+20:57:16.544 WARN  B1     no status frames for 1.3 s (robot online)
+20:57:16.544 WARN  B1     no encoder frames for 1.3 s (robot online)
+20:57:18.045 WARN  B1     no heartbeat for 3.0 s (robot online)
+20:57:19.547 INFO  B1     status frames resumed
+20:57:19.547 INFO  B1     encoder frames resumed
+20:57:19.547 INFO  B1     heartbeat resumed
+20:57:24.552 WARN  B1     no status frames for 1.1 s (robot online)
+20:57:24.552 WARN  B1     no encoder frames for 1.1 s (robot online)
+20:57:26.055 INFO  B1     status frames resumed
+20:57:26.055 INFO  B1     encoder frames resumed
+20:57:31.992 INFO  B5     obstacle width_mm=831 dist_mm=905 offset_mm=519 complete=0 position=left
+20:57:31.993 INFO  B5     obstacle avoid=right shift_l_mm=1169 shift_r_mm=130
+20:57:32.103 INFO  B5     event: obstacle detected
+20:57:32.103 INFO  B5     event: obstacle scan finished
+20:57:33.563 WARN  B1     no status frames for 1.4 s (robot online)
+20:57:33.563 WARN  B1     no encoder frames for 1.5 s (robot online)
+20:57:34.564 WARN  B1     no heartbeat for 3.4 s (robot online)
+20:57:36.566 INFO  B1     status frames resumed
+20:57:36.567 INFO  B1     encoder frames resumed
+20:57:36.567 INFO  B1     heartbeat resumed
+20:57:36.600 INFO  B5     obstacle: pass right
+20:57:36.710 INFO  B5     obstacle abort=no_release a=0 b=0 x=0 y=0 tries=0 state=failed
+20:57:36.712 INFO  B2     motion STOPPED -> STOPPING
+20:57:36.712 WARN  B5     obstacle: detour abandoned
+20:57:38.069 WARN  B1     no status frames for 1.4 s (robot online)
+20:57:38.069 WARN  B1     no encoder frames for 1.4 s (robot online)
+20:57:40.071 WARN  B1     no heartbeat for 3.4 s (robot online)
+20:57:47.078 INFO  B2     motion STOPPING -> STOPPED
+20:57:47.079 INFO  B1     status frames resumed
+20:57:47.579 INFO  B1     encoder frames resumed
+20:57:47.580 INFO  B1     heartbeat resumed
+20:57:48.581 WARN  B1     no status frames for 1.0 s (robot online)
+20:57:48.581 WARN  B1     no encoder frames for 1.0 s (robot online)
+20:57:50.583 INFO  B1     status frames resumed
+20:57:50.583 INFO  B1     encoder frames resumed
+20:57:53.085 WARN  B1     no status frames for 1.3 s (robot online)
+20:57:53.086 WARN  B1     no encoder frames for 1.3 s (robot online)
+20:57:53.955 WARN  B4     robot LIFTED: Buddy 4 stopped the motors (end of run)
+20:57:54.087 INFO  B1     status frames resumed
+20:57:54.087 INFO  B1     encoder frames resumed

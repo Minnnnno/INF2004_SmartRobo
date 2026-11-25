@@ -1,0 +1,105 @@
+# Excerpt of logs/dashboard-events.log, 2026-11-24 (the source log has times only). Dropped-message and DEBUG lines removed.
+20:16:08.963 INFO  robot  robot is ONLINE
+20:16:09.064 WARN  robot  robot uptime went back to 5.9 s: the robot rebooted
+20:16:09.064 INFO  B2     motion FAULT -> STOPPED
+20:16:09.064 INFO  B2     fault cleared
+20:16:09.064 WARN  B3     line sensor status UNAVAILABLE
+20:16:09.064 INFO  B4     terrain WAITING -> INIT
+20:16:09.071 INFO  B2     encoder feedback trusted: yes
+20:16:09.548 INFO  B1     status frames resumed
+20:16:09.548 INFO  B1     encoder frames resumed
+20:16:10.549 INFO  B1     heartbeat resumed
+20:16:17.574 INFO  you    sent START #225
+20:16:17.740 INFO  B1     robot received START #225: queued for the controller
+20:16:17.747 INFO  B2     motion STOPPED -> READY
+20:16:17.747 INFO  B2     movement released
+20:16:19.791 INFO  B2     motion READY -> DRIVING
+20:16:19.792 INFO  ctrl   motion owner: none -> line
+20:16:19.792 INFO  B3     line sensor status available
+20:16:19.792 INFO  B3     line found
+20:16:19.792 INFO  B4     terrain INIT -> WAITING
+20:16:20.606 WARN  B3     event: line lost
+20:16:20.708 INFO  B3     line found
+20:16:21.328 WARN  B3     event: line lost
+20:16:21.422 INFO  B3     line found
+20:16:23.582 INFO  B2     motion DRIVING -> STOPPING
+20:16:23.582 INFO  B2     movement HELD (stopped)
+20:16:23.582 INFO  ctrl   motion owner: line -> none
+20:16:23.984 INFO  B2     motion STOPPING -> STOPPED
+20:16:24.396 INFO  B5     obstacle: held / scanning
+20:16:29.067 WARN  B1     no status frames for 1.2 s (robot online)
+20:16:29.067 WARN  B1     no encoder frames for 1.2 s (robot online)
+20:16:29.568 INFO  B1     status frames resumed
+20:16:29.568 INFO  B1     encoder frames resumed
+20:16:36.074 WARN  B1     no status frames for 1.1 s (robot online)
+20:16:36.075 WARN  B1     no encoder frames for 1.1 s (robot online)
+20:16:36.575 INFO  B1     status frames resumed
+20:16:36.575 INFO  B1     encoder frames resumed
+20:16:48.059 INFO  B5     event: obstacle detected
+20:16:48.059 INFO  B5     event: obstacle scan finished
+20:16:48.061 INFO  B5     obstacle width_mm=127 dist_mm=162 offset_mm=-8 complete=1 position=centre
+20:16:48.063 INFO  B5     obstacle avoid=right shift_l_mm=203 shift_r_mm=216
+20:16:48.064 INFO  B2     motion STOPPED -> READY
+20:16:48.064 INFO  B2     movement released
+20:16:48.064 INFO  B5     obstacle: driving round it
+20:16:48.155 INFO  B2     motion READY -> DRIVING
+20:16:48.155 INFO  ctrl   motion owner: none -> obstacle
+20:16:48.565 WARN  B3     event: line lost
+20:16:49.280 INFO  B2     motion DRIVING -> STOPPING
+20:16:49.801 INFO  B2     motion STOPPING -> READY
+20:16:49.801 INFO  ctrl   motion owner: obstacle -> none
+20:16:51.124 INFO  B2     motion READY -> DRIVING
+20:16:51.125 INFO  ctrl   motion owner: none -> obstacle
+20:16:54.398 INFO  B3     line found
+20:16:54.705 WARN  B3     event: line lost
+20:16:55.633 INFO  B2     motion DRIVING -> STOPPING
+20:16:56.242 INFO  B2     motion STOPPING -> DRIVING
+20:16:57.263 INFO  B2     motion DRIVING -> STOPPING
+20:16:57.676 INFO  B2     motion STOPPING -> READY
+20:16:57.676 INFO  ctrl   motion owner: obstacle -> none
+20:17:00.036 INFO  B2     motion READY -> DRIVING
+20:17:00.036 INFO  ctrl   motion owner: none -> obstacle
+20:17:01.463 INFO  B3     line found
+20:17:01.775 WARN  B3     event: line lost
+20:17:05.655 INFO  B2     motion DRIVING -> STOPPING
+20:17:05.655 INFO  B2     movement HELD (stopped)
+20:17:05.656 INFO  ctrl   motion owner: obstacle -> none
+20:17:05.656 INFO  B3     line found
+20:17:06.089 INFO  B2     motion STOPPING -> READY
+20:17:06.089 INFO  B2     movement released
+20:17:06.483 INFO  B2     motion READY -> DRIVING
+20:17:06.483 INFO  ctrl   motion owner: none -> obstacle
+20:17:07.291 WARN  B3     event: line lost
+20:17:07.328 INFO  B2     motion DRIVING -> STOPPING
+20:17:07.811 INFO  B2     motion STOPPING -> READY
+20:17:07.812 INFO  ctrl   motion owner: obstacle -> none
+20:17:08.177 INFO  B2     motion READY -> DRIVING
+20:17:08.177 INFO  ctrl   motion owner: none -> obstacle
+20:17:09.034 INFO  B3     line found
+20:17:09.550 WARN  B3     event: line lost
+20:17:14.158 INFO  B3     line found
+20:17:14.264 INFO  B2     movement HELD (stopped)
+20:17:14.264 INFO  ctrl   motion owner: obstacle -> none
+20:17:14.307 INFO  B2     motion DRIVING -> STOPPING
+20:17:14.681 INFO  B2     motion STOPPING -> STOPPED
+20:17:14.767 INFO  B2     motion STOPPED -> READY
+20:17:14.767 INFO  B2     movement released
+20:17:14.870 INFO  B2     motion READY -> DRIVING
+20:17:14.870 INFO  ctrl   motion owner: none -> line
+20:17:14.870 INFO  B5     obstacle: clear
+20:17:15.540 WARN  B3     event: line lost
+20:17:22.116 WARN  B1     no status frames for 1.1 s (robot online)
+20:17:22.117 WARN  B1     no encoder frames for 1.1 s (robot online)
+20:17:23.094 INFO  B3     line found
+20:17:23.100 WARN  B3     event: line lost
+20:17:23.118 INFO  B1     status frames resumed
+20:17:23.118 INFO  B1     encoder frames resumed
+20:17:23.482 INFO  B3     line found
+20:17:23.682 INFO  B4     terrain WAITING -> CLIMBING
+20:17:23.893 INFO  B4     terrain CLIMBING -> DESCENDING
+20:17:23.993 INFO  B4     terrain DESCENDING -> CLIMBING
+20:17:24.711 INFO  B4     terrain CLIMBING -> DESCENDING
+20:17:25.025 INFO  B4     terrain DESCENDING -> CLIMBING
+20:17:25.029 INFO  B4     terrain CLIMBING -> DESCENDING
+20:17:27.122 WARN  B1     no status frames for 1.4 s (robot online)
+20:17:27.123 WARN  B1     no encoder frames for 1.4 s (robot online)

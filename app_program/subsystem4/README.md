@@ -49,7 +49,11 @@ Forward is the sensor's +Y axis; positive pitch = front up.
 
 ## Startup contract
 
-**Power up with the robot level and still.** After configuration, INIT waits
+Which rule applies depends on the image: MQTT production images (the normal team
+image) capture the level reference at the dashboard START (see "With the web
+Start gate" below); images without MQTT capture it at boot.
+
+**Without MQTT: power up with the robot level and still.** After configuration, INIT waits
 1 s (`B4_POSITION_MS`), then needs 50 stable fresh samples within 10 s,
 otherwise SENSOR_FAULT. Capture normally finishes about 2 s after boot.
 In `ROBO_LINE_STEERING` builds the line task does not send its first motion
@@ -76,8 +80,9 @@ I2C errors or 500 ms without fresh data start automatic recovery: up to three
 reconfigure + fresh-read attempts, 3 s apart. Exhausted retries or a capture
 timeout latch SENSOR_FAULT (T_STATE 5, `terrain_imu_faulted()`). Sensor faults
 never stop the motors (lift detection is then unavailable). Buddy 4 never
-changes the robot's speed; its only motion command is `motion_stop()` when the
-robot is lifted or overturned.
+changes the robot's speed; outside the magnetometer calibration image (which
+pivots the robot, see "Calibration"), its only motion command is `motion_stop()`
+when the robot is lifted or overturned.
 
 **A new run is a power-up.** The statechart's NEW_RUN (clear the run maximum)
 and the reset of a latched SENSOR_FAULT both happen by rebooting, by design:
@@ -111,7 +116,7 @@ Peaks are stored as 7-bit millimetres (0..127) plus one flag bit each (CR1).
 
 Expected error: about +/-0.5 mm noise standing still; while driving, steering
 sway and vibration swing the reading by up to about 3.3 mm (measured on the
-robot), which is why entry is 5 mm; about 2 mm per degree of sideways floor slope at boot,
+robot), which is why entry is 5 mm; about 2 mm per degree of sideways floor slope where the level reference was captured,
 and some underestimate on humps whose top lasts under ~0.2 s (filter lag).
 **Measure `B4_TRACK_MM`** between the two wheels' ground-contact centres (1 mm
 error = 0.9% height error). A hump under both wheels at once cancels out.
@@ -175,7 +180,7 @@ own forward acceleration (`imu_fwd`, high-passed, mg) is printed next to it in
 
 Replaces impact detection (Change Requirement above). `lift.c` reads every
 fresh MONITORING sample (raw, unfiltered, mg) against the level reference
-captured at boot: the reference **up** axis and the **gravity size** measured
+captured at start-up (at the dashboard START in MQTT images): the reference **up** axis and the **gravity size** measured
 then (so sensor scale error cancels). It computes its own values because
 `tilt_update()` rejects exactly these poses (> 75 deg, upside down, outside
 700..1300 mg). "Upright" = sample component along up / sample size: 100 %
@@ -313,7 +318,7 @@ cmake --build build-mag-cal -j 8      # flash build-mag-cal/mtkernel_3.uf2
 3. It prints `[MAGCAL] PASS | offset_x=.. offset_y=.. scale_y=../4096 field=..
    sign=.. | coverage 36/36 bins, fit error x.x %` and six `#define` lines
    (repeated every 5 s). Paste them into `mag_cal.h` and flash the normal image.
-4. FAIL (not saved): `coverage` (did not face every direction), `fit` (not a
+4. FAIL (not saved): `too few samples`, `coverage` (did not face every direction), `fit` (not a
    clean circle, > 4 % error: steel nearby), `range`, `timeout` (40 s) or
    `robot not turning` (wheels rejected or slipping). Fix and power-cycle.
 
@@ -361,8 +366,8 @@ is v3, which changed only the barcode fields).
 Hump completion latches `TF_EV_HUMP_PEAK` through `comms_latch_event`, which
 is interrupt-safe. The dashboard's `HUMP_MM` shows the run maximum (completed humps only).
 Buddy 4 does not request a slower speed over humps (tested on the robot, the
-effect was small and not needed); its only motion command is the lift/overturn
-`motion_stop()`. Other subsystems decode the slot
+effect was small and not needed); outside the magnetometer calibration image its
+only motion command is the lift/overturn `motion_stop()`. Other subsystems decode the slot
 with `include/terrain_status.h` (header-only, safe with Buddy 4 disabled):
 `terrain_published_state()` (returns `TERRAIN_TS_UNKNOWN` = 0xFF when the slot
 is unusable, outside the 3-bit codes), `terrain_motion_class()` and
@@ -387,12 +392,15 @@ the air, `[LIFT] cleared: upright and still; motors stay stopped until START`,
 on an overturn `[TERRAIN] hump recording frozen (OVERTURNED): run max kept at 41 mm until START`
 and on START `[TERRAIN] hump recording resumed (START)`; on a STOP
 `[TERRAIN] hump recording paused (robot stopped): run max kept at 41 mm until START`
-and the same `resumed` line on START,
+and the same `resumed` line on START; around each turn on the spot
+`[TERRAIN] turning on the spot: hump recording paused (run max 41 mm)` and,
+0.5 s after it ends, `[TERRAIN] turn finished: hump recording resumed`;
 and each completed turn `[TURN] left 88.4 deg in 1.9 s (peak 50 deg/s) compass 87.9 deg`
 (or `compass n/a (reason)`). The calibration image prints `[MAGCAL]` lines.
 Every 500 ms: `[B4] INIT ...` capture progress, `[TILT] pitch=.. roll=.. |
 conditions | height=..mm R/L | terrain=.. run_max=..mm | class=.. yaw=.. | compass=..deg
-field=.. | lift=NONE` (or `compass n/a (reason) field=..`), while tilt is
+field=.. | lift=NONE` (or `compass n/a (reason) field=..`; `terrain=` shows the
+hump phase, or `FROZEN`, `PAUSED` or `TURNING` while hump recording is held), while tilt is
 unavailable (e.g. overturned) `[TILT] UNAVAILABLE ... | lift=OVERTURNED
 upright=-98% vertical=.. mg`, or the fault state. Suppressed in `ROBO_IR_MONITOR` builds.
 
@@ -411,5 +419,6 @@ calibration/heading/validity,
 the compass angle per turn, the calibration pivot sequence (`test_mag_cal_task.c`),
 lifecycle/recovery/STOP, the real
 `terrain_task` loop (snapshot encoding, T_STATE codes, hump event, level
-gating, 20 ms release grid, lift stop and re-stop when released in the air) and the I2C driver's multi-byte receive STOP.
+gating, 20 ms release grid, lift stop and re-stop when released in the air,
+hump freeze, hump pause while stopped and while turning on the spot) and the I2C driver's multi-byte receive STOP.
 These are host results; physical accuracy and timing need robot tests.
