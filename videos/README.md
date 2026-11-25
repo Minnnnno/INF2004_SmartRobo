@@ -55,11 +55,11 @@ the link and one line on what it shows.
 | Date | Subsystem | Test ID / demo | Commit | Student ID | Link | Notes |
 |---|---|---|---|---|---|---|
 | 2026-11-19 | S4 | S4-H03, S4-H01 | main after `610725f` | 2500910 | <https://youtu.be/b0VxlQ2r320> | Overturn and lift while driving stop the motors |
-| 2026-11-19 | S4 | S4-H08, S4-H11, S4-H04, S4-H12 | main after `610725f` | 2500910 | <https://youtu.be/O-3cIuu86ew> | Full run: calibration after START, 10 mm hump, motion classes and turn rate |
+| 2026-11-19 | S4 | S4-H08, S4-H11, S4-H04, S4-H12 | main after `610725f` | 2500910 | <https://youtu.be/O-3cIuu86ew> | Full run: calibration after START, 10 mm hump, motion classes and turn rate. Also evidence for SYS-01, SYS-02, SYS-03 (right and straight), SYS-05, SYS-06 and INT-04 |
 | 2026-11-19 | S4 | S4-H10 | main after `610725f` | 2500910 | <https://youtu.be/OaEkDdhVMTM> | Hand tilt: pitch, uphill/downhill state, hump states |
-| 2026-11-24 | S3 | S3-H01 | not recorded | 2500622 | <https://youtu.be/t8ZaVSFGggE> | Line following and line recovery |
-| 2026-11-24 | S3 | S3-H02 | not recorded | 2500622 | <https://www.youtube.com/shorts/dHfarWP__Gw> | Barcode shuttle, both directions |
-| 2026-11-24 | S3 | S3-H03, S3-H04 | not recorded | 2500622 | <https://youtu.be/GsEvuXFR86U> | Route from the dashboard: `*Z*` → left at the junction, `*A*` → U-turn |
+| 2026-11-24 | S3 | S3-H01 | `fd5955a` | 2500622 | <https://youtu.be/t8ZaVSFGggE> | Line following and line recovery |
+| 2026-11-24 | S3 | S3-H02 | `fd5955a` | 2500622 | <https://www.youtube.com/shorts/dHfarWP__Gw> | Barcode shuttle, both directions |
+| 2026-11-24 | S3 | S3-H03, S3-H04 | `fd5955a` | 2500622 | <https://youtu.be/GsEvuXFR86U> | Route from the dashboard: `*Z*` → left at the junction, `*A*` → U-turn |
 | 2026-11-24 | S2 | S2-H01 | Not supplied | <student ID> | <https://youtu.be/lzCOjuQXgig> | Startup and START; one trial; user-reported PASS; submitted 2026-11-24. |
 | 2026-11-24 | S2 | S2-H02 | Not supplied | <student ID> | <https://youtu.be/qB7hPMGxUTQ> | Independent signed encoders; one trial; user-reported PASS; submitted 2026-11-24. |
 | 2026-11-24 | S2 | S2-H03 | Not supplied | <student ID> | <https://youtu.be/8NpKcqakr0c> | Wheel-speed control; one trial; user-reported functional PASS; repeatability/accuracy not established; submitted 2026-11-24. |
@@ -70,11 +70,10 @@ the link and one line on what it shows.
 | 2026-11-24 | S5 | S5-U06 | `fa36f67` (not confirmed) | 2500344 | <https://youtu.be/5Ype3yBMZK4> | Sudden obstacle after a turn: stops and goes round it |
 | 2026-11-24 | S5 | S5-U07 | `fa36f67` + width scale (later `e4e5b3e`) | 2500344 | <https://youtu.be/FtWQj1oa1vA> | False halt: stops for a hand and scans; the clip ends before it drives on |
 | 2026-11-24 | S4 | S4-H15, S4-H11, S4-H14, S4-H04 | `4033ff7` | 2500910 | <https://youtu.be/jCLuBsej2is> | Re-test after the turn-pause fix: no false humps on barcode turns, U-turns and pivots; 10 mm hump measured within ± 3 mm and kept; never LIFTED |
-| 2026-11-25 | S1 | S1-U15 | `b51982f` | 2500842 | <VIDEO-1-LINK> | Telemetry 10 times a second, 60 s on the Link card |
-| 2026-11-25 | S1 | S1-U17 | `b51982f` | 2500842 | <VIDEO-2-LINK> | START / STOP / E-STOP from the dashboard |
-| 2026-11-25 | S1 | S1-U18 | `b51982f` | 2500842 | <VIDEO-3-LINK> | Route sent, bad route rejected, route kept after restart |
-| 2026-11-25 | S1 | S1-U19 | `b51982f` | 2500842 | <VIDEO-4-LINK> | Wi-Fi off and on, reconnects by itself |
-| 2026-11-25 | INT/SYS | INT-04, INT-08, INT-12, INT-14, SYS-01, SYS-07 | `b51982f` | 2500842 | <VIDEO-5-LINK> | Integrated full run, dashboard and console in frame |
-| 2026-11-25 | INT | INT-13 | `b51982f` | 2500842 | <VIDEO-6-LINK> | Dashboard route changes the turn after barcode B |
-| 2026-11-25 | INT | INT-09 | `b51982f` | 2500842 | <VIDEO-7-LINK> | Dashboard STOP holds mid-run, START resumes |
-| 2026-11-25 | SYS | SYS-08 | `b51982f` | 2500842 | <VIDEO-8-LINK> | Wi-Fi loss mid-run, reconnect by itself |
+| 2026-11-25 | S1 | S1-U17 | `b51982f` | 2500842 | <https://youtu.be/PYgbj6G5Cm4> | START / STOP / E-STOP from the dashboard on the line, with live telemetry on every card |
+| 2026-11-25 | S1 | S1-U22 | `b51982f` | 2500842 | <https://youtu.be/0tZDy3p91Oc> | Telemetry run: every card updates live over a barcode, a hump and an obstacle |
+| 2026-11-25 | S1 | S1-U22 | `b51982f` | 2500842 | <https://youtu.be/0tZDy3p91Oc> | Partial run: telemetry updating live on the dashboard |
+| 2026-11-25 | INT/SYS | INT-04, INT-08, INT-12, INT-14, SYS-01, SYS-07 | `b51982f` | 2500842 | <https://youtu.be/0tZDy3p91Oc> | Integrated partial run, dashboard in frame |
+| 2026-11-25 | INT | INT-13 | `b51982f` | 2500842 | <VIDEO-5-LINK> | Dashboard route changes the turn after barcode B |
+| 2026-11-25 | INT | INT-09 | `b51982f` | 2500842 | <https://youtu.be/PYgbj6G5Cm4> | Dashboard STOP holds mid-run, START resumes, E-STOP completely stops |
+| 2026-11-25 | S1/SYS | S1-U19, SYS-08 | `b51982f` | 2500842 | <https://youtu.be/TvSyGtZ1UQo> | Wi-Fi loss mid-run: hotspot off, robot keeps driving, dashboard goes stale, then back to robot online by itself |

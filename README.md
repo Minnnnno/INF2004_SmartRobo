@@ -158,6 +158,7 @@ status frame (layout v3) and a separate 26-byte encoder frame, published at 10 H
 | Ultrasonic TRIG / ECHO | GP16 / GP17 |
 | Right / centre IR | GP26 / GP27 |
 | Barcode ADC | GP28 |
+| Barcode calibration button (optional, active low) | GP21 |
 | Optional UART0 console TX / RX | GP0 / GP1 |
 
 GP23/GP24/GP25/GP29 are reserved for Pico W board/radio use. I2C0 stays disabled
@@ -188,12 +189,13 @@ python tests/subsystem4/run_tests.py
 ```
 
 See [Buddy 4 host verification](tests/subsystem4/README.md) for compiler selection.
-For the recorded GCC 15 float-conversion build issue and its workaround, see the
+On Windows with MSYS2, MinGW GCC (seen with 15 and 16) reports false
+float-conversion errors under the host tests' `-Werror` flags; configure with
+`-DCMAKE_C_COMPILER=clang` instead. Buddy 3's earlier workaround is in the
 [Buddy 3 script-test instructions](testing/subsystem3/TEST_LOG.md#script-tests-laptop-no-robot).
 Host checks exercise software with simulated inputs; physical accuracy, timing
-and complete mission performance require robot tests. Use the current CMake host
-commands above rather than the older template `make TEST=1` instructions retained
-in the testing guide.
+and complete mission performance require robot tests. The
+[testing guide](testing/README.md) explains how tests are run and recorded.
 
 Record test IDs, tested commit, results, limitations and saved logs in the relevant
 [subsystem test log](testing/). Cross-subsystem checks belong in the

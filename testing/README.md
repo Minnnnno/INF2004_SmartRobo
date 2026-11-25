@@ -19,9 +19,9 @@ testing/
 
 | Folder | Covers | Owner | Contents besides `TEST_LOG.md` and `logs/` |
 |---|---|---|---|
-| `subsystem1/` | Wi-Fi, MQTT, commands and telemetry frame | Buddy 1 (2500842) | — |
+| `subsystem1/` | Wi-Fi, MQTT, commands, telemetry frame and web dashboard | Buddy 1 (2500842) | `logs/2026-11-17_console.txt`: serial capture of the 17 November dashboard session (image before the Start gate) |
 | `subsystem2/` | Motion control: motors, encoders, wheel-speed PID, odometry | Buddy 2 | `BUDDY2_COMPACT_REPRESENTATION.md`: minimum-bit representation and measured memory |
-| `subsystem3/` | Line following and barcode navigation | Buddy 3 (2500622) | — |
+| `subsystem3/` | Line following and barcode navigation | Buddy 3 (2500622) | `BUDDY3_COMPACT_REPRESENTATION.md`: minimum-bit representation, measured RAM and message sizes; `logs/compact_representation_2026-11-25/`: its evidence |
 | `subsystem4/` | IMU tilt, hump height, motion class, lift/overturn stop | Buddy 4 (2500910) | `BUDDY4_COMPACT_REPRESENTATION.md`: minimum-bit representation, measured RAM and message sizes; `logs/compact_representation_2026-11-25/`: its evidence |
 | `subsystem5/` | Obstacle detection, width estimation and avoidance | Buddy 5 (2500344) | — |
 | `integration/` | Interfaces between two or more subsystems (`INT-..`) | the owners on both sides | — |
@@ -57,7 +57,8 @@ Test IDs never change and are never reused, even if a test is dropped.
      On Windows with MSYS2, add `-DCMAKE_C_COMPILER=clang`: MinGW `gcc` reports
      false float-conversion errors under the team's `-Werror` flags.
    - subsystem-specific suites, if your subsystem has one (e.g.
-     `python tests/subsystem4/run_tests.py`).
+     `python tests/subsystem4/run_tests.py`, or Buddy 1's dashboard check
+     `python tests/subsystem1/web_dashboard_check.py`).
 
    Each `TEST_LOG.md` lists the exact commands for its tests.
 3. **Otherwise it is a robot test.** A test that needs eyes or instruments (a

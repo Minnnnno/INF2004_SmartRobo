@@ -39,13 +39,13 @@ IDs are permanent. S2-U01/U02 are retired producer-template examples and must no
 |---|---|---|---|
 | S2-U01 | Retired: producer samples within 0..100 | Removed legacy producer demo | Not applicable |
 | S2-U02 | Retired: producer pool/free-slot bounds | Removed legacy producer demo | Not applicable |
-| S2-U03 | States, signed moves/turns, odometry, quadrature, rollover, PI/PID, low-speed/breakaway simulation | `motion_tests`; `tests/test_motion.c` | Exit 0 and `PASS: <n> checks` |
-| S2-U04 | Validation, ownership, cancellation, expiry, hold/reset, faults, shutdown and buffers | `motion_tests`; `tests/test_motion.c` | Relevant checks pass; exit 0 |
-| S2-U05 | Steering helpers, units, speed scaling and feedback adapters | `steering_checks`; `tests/test_steering.c` | CTest Passed |
-| S2-U06 | Compact signed round trips, rounding, limits, corrupt inputs, ARC/manual exceptions and precision | `buddy2_compact_checks`; `tests/buddy2_compact/test_compact.c` | `Buddy 2 compact: PASS (...)`; exit 0 |
-| S2-U07 | Driver with fake registers: PWM polarity, independent reversal, inhibition, coherent capture and emergency stop | `buddy2_driver_checks`; `tests/buddy2_compact/test_driver.c` | `Buddy 2 driver: PASS (...)`; exit 0 |
-| S2-U08 | Crash evidence, retained encoder fault and checked recovery | `crash_restart_checks`; `tests/test_crash_restart.c` | CTest Passed |
-| S2-U09 | Invalid/late intervals, startup qualification and timing faults | `motion_tests`; `tests/test_motion.c` | Timing cases pass; not proof of actual 10 ms execution |
+| S2-U03 | States, signed moves/turns, odometry, quadrature, rollover, PI/PID, low-speed/breakaway simulation | `motion_tests`; `tests/subsystem2/test_motion.c` | Exit 0 and `PASS: <n> checks` |
+| S2-U04 | Validation, ownership, cancellation, expiry, hold/reset, faults, shutdown and buffers | `motion_tests`; `tests/subsystem2/test_motion.c` | Relevant checks pass; exit 0 |
+| S2-U05 | Steering helpers, units, speed scaling and feedback adapters | `steering_checks`; `tests/subsystem2/test_steering.c` | CTest Passed |
+| S2-U06 | Compact signed round trips, rounding, limits, corrupt inputs, ARC/manual exceptions and precision | `buddy2_compact_checks`; `tests/subsystem2/compact/test_compact.c` | `Buddy 2 compact: PASS (...)`; exit 0 |
+| S2-U07 | Driver with fake registers: PWM polarity, independent reversal, inhibition, coherent capture and emergency stop | `buddy2_driver_checks`; `tests/subsystem2/compact/test_driver.c` | `Buddy 2 driver: PASS (...)`; exit 0 |
+| S2-U08 | Crash evidence, retained encoder fault and checked recovery | `crash_restart_checks`; `tests/shared/test_crash_restart.c` | CTest Passed |
+| S2-U09 | Invalid/late intervals, startup qualification and timing faults | `motion_tests`; `tests/subsystem2/test_motion.c` | Timing cases pass; not proof of actual 10 ms execution |
 | S2-U10 | Controller boot hold/START and line-task IMU wait with/without START gate | `motion_tests`, `line_imu_wait_checks`, `line_imu_wait_start_gate_checks` | All three tests pass |
 
 ### Commands and evidence
@@ -59,7 +59,7 @@ cmake -S . -B build-s2-host -G Ninja -DROBO_HOST_TESTS=ON
 cmake --build build-s2-host
 ctest --test-dir build-s2-host -R '^(motion_tests|steering_checks|crash_restart_checks|line_imu_wait_checks|line_imu_wait_start_gate_checks)$' -V > testing/subsystem2/logs/<date>_host.txt 2>&1
 
-cmake -S tests/buddy2_compact -B build-s2-compact -G Ninja
+cmake -S tests/subsystem2/compact -B build-s2-compact -G Ninja
 cmake --build build-s2-compact
 ctest --test-dir build-s2-compact -V > testing/subsystem2/logs/<date>_compact_driver.txt 2>&1
 ```

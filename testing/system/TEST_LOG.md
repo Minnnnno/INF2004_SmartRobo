@@ -31,7 +31,7 @@ who runs and records the test; everyone else checks their own subsystem's part.
 | ID | What is tested | Requirement | Lead | Steps | Expected result (dashboard / console) |
 |---|---|---|---|---|---|
 | SYS-01 | Safe start-up and remote START | FR15, FR17, NFR9 | B1 (B4 supports) | Power up on the course with the dashboard open; wait 30 s; press START; keep still ~2 s | Before START: robot shown online, Motion **STOPPED (held)**, wheels 0 / 0, IMU card **INIT**. After START: IMU card **WAITING** with Pitch ~0° (level reference captured), then Motion **DRIVING** |
-| SYS-02 | Line following over the full course | Mission 1; FR1, FR5 | B3 | START; follow the course from start to end, no barcodes or obstacles | Stays on the line to the end without help; no FAULT |
+| SYS-02 | Line following over the full course | Mission 1; FR1, FR5 | B3 | START; follow the course from start to end, no obstacles (barcodes may be on the course) | Stays on the line to the end without help; no FAULT |
 | SYS-03 | Barcode navigation from a dashboard route | Mission 2; FR2, FR3, FR17 | B3 | Send a route from the dashboard (e.g. `L=B R=C S=D U=A`); place the codes before the junctions; START | Route acknowledged (`robot/route/ack`); every code read as the right letter (never a wrong letter) and its action (left / right / straight / U-turn) done at the junction after it; barcode events on the dashboard |
 | SYS-04 | Obstacle detection, profiling and bypass | Mission 4; FR10–FR14, NFR5, NFR10, NFR11 | B5 | Box of measured width at a documented position on the line; START; 5 runs with different left/right offsets | Every run: stops before contact (sensor ~150 mm), reports width and side, bypasses and reacquires the line (or stays stopped if no safe path). Record per run: detected, width error (NFR11 ± 1 cm), side correct, line reacquired, bypass time. Briefing A-grade: 100 % detection, width error ≤ 10 %, 100 % direction, 100 % reacquisition, bypass < 3 s |
 | SYS-05 | Hump detection and highest hump peak | Mission 3; FR7, FR8 | **B4** | A hump of ruler-measured height beside the line under the **right** wheel; full line-following run | IMU card **WAITING → CLIMBING → DESCENDING → WAITING** on the hump; **Highest hump** = the ruler height ± 3 mm and kept for the rest of the run; never **LIFTED**; console `[TERRAIN] Hump completed: peak=X mm under RIGHT wheel` |
@@ -121,10 +121,12 @@ What Buddy 1 brings to the system tests (details in
   `robot route: ok ...` before START.
 - **SYS-09 (support B2):** STOP and START are sent from the dashboard; show
   both acknowledgements in the log.
-- Already verified at subsystem level: S1-H01 to S1-H05 (laptop, 2026-11-24),
-  S1-U01 to S1-U04 (October), S1-U12 (17 Nov, image before the Start gate).
-  Robot tests on the current build (S1-U05 to S1-U21) and INT-12 to INT-14
-  still to run. S1-U21 (boots held until START) is the subsystem half of SYS-01.
+- Already verified at subsystem level: S1-H01 to S1-H05 (laptop, 2026-11-24);
+  S1-U17 (START / STOP / E-STOP with live telemetry) and S1-U22 (every
+  telemetry card updating during a run) on the robot (2026-11-25, `b51982f`);
+  S1-U18 (route) from Buddy 3's video. S1-U22 is the Buddy 1 half of SYS-07.
+- Still to run: INT-12 to INT-14 and the Buddy 1 rows for SYS-01, SYS-07
+  and SYS-08 below.
 
 ## Buddy 4 checklist
 
@@ -153,8 +155,7 @@ What Buddy 4 brings to the system tests (details in
 What Buddy 3 brings to the system tests (details in
 `testing/subsystem3/TEST_LOG.md`):
 
-- **SYS-02 (lead):** one unbroken run over the **whole** course, no barcodes or
-  obstacles; keep the dashboard's *On the line* in the video. S3-H01 covers
+- **SYS-02 (lead):** one unbroken run over the **whole** course, no obstacles; keep the dashboard's *On the line* in the video. S3-H01 covers
   straights, curves and finding a lost line; Buddy 4's full-run video shows the
   whole course.
 - **SYS-03 (lead):** send the route from the dashboard boxes and wait for
@@ -170,6 +171,23 @@ What Buddy 3 brings to the system tests (details in
   any other code is reported as a failed read and the robot carries on.
 - Already verified at subsystem level: S3-U01 to U03, S3-H01 to H04.
 
+## Buddy 5 checklist
+
+What Buddy 5 brings to the system tests (details in
+`testing/subsystem5/TEST_LOG.md`):
+
+- **SYS-04 (lead):** five runs with different left/right offsets, dashboard in the
+  video, box width measured with a ruler on camera. Four runs are recorded below,
+  only one of them with the dashboard. Still needed: the fifth run, a width reading
+  for the other three, and a decision on the tolerance (S5-U02 uses ± 10 cm, NFR11
+  ± 1 cm). The recorded 27 s bypass is over the briefing's 3 s.
+- **SYS-07 (support B1):** obstacle card and events against the console. The
+  handover event is not sent by the firmware (INT-14).
+- **SYS-11:** one box on the course; the 51 s stop to handover counts towards the
+  run time.
+- Already verified at subsystem level: S5-U01 to S5-U06. S5-U07 (false halt) is to
+  be re-filmed: the clip ends before the robot drives on.
+
 ## Other logs in this folder
 
 The `com4_2026-11-0*.log` files are raw serial captures from Buddy 2's
@@ -183,6 +201,8 @@ Add a new row for every run. Never edit or delete old rows.
 
 Buddy 2 entries below reuse the 2026-11-24 results in [the subsystem log](../subsystem2/TEST_LOG.md); they are not additional test runs. **PASS (B2 portion)** records the reported subsystem behavior, with the remaining case coverage listed in Notes. Hardware entries are single-trial user-reported results; their links identify a code reference, with the exact flashed revision unconfirmed.
 
+Buddy 5 entries below (tester 2500344) reuse the runs in [the subsystem log](../subsystem5/TEST_LOG.md) and its saved logs; they are not additional test runs. **PASS (B5 portion)** covers what Buddy 5's evidence shows, with the rest of the case listed in Notes.
+
 | Date | Test ID | Commit / code reference | Tester | Result | Log / evidence | Notes |
 |---|---|---|---|---|---|---|
 | 2026-11-19 | SYS-05 | main after `610725f` | 2500910 | PASS | <https://www.youtube.com/watch?v=O-3cIuu86ew> | 10 mm hump (ruler), reported within ±3 mm; same full-run video as S4-H11/H14 |
@@ -193,8 +213,13 @@ Buddy 2 entries below reuse the 2026-11-24 results in [the subsystem log](../sub
 | 2026-11-24 | SYS-02 | [75d36d0 (code reference)](https://github.com/Minnnnno/INF2004_SmartRobo/tree/75d36d04a00cc8f68c0fb45ae5f6aa335cf00229/app_program/subsystem2) | Buddy 2 | PASS (B2 portion) | [S2-H03 wheel-speed control](https://youtu.be/8NpKcqakr0c) | Supporting one-trial functional motor/wheel-speed pass. This does not establish complete line-course traversal, curves or an uninterrupted fault-free run; B3 full-course result pending. |
 | 2026-11-24 | SYS-07 | [75d36d0 (code reference)](https://github.com/Minnnnno/INF2004_SmartRobo/tree/75d36d04a00cc8f68c0fb45ae5f6aa335cf00229/app_program/subsystem2) | Buddy 2 | PASS (B2 portion) | [S2-H02 encoders](https://youtu.be/qB7hPMGxUTQ), [S2-H03 wheel speeds](https://youtu.be/8NpKcqakr0c), [S2-H04 STOP/START](https://youtu.be/yS6CX1FzbrM) | Supporting signed-encoder, wheel-speed and stop-state subsystem passes. B1 comparison of serial feedback with dashboard counts, speeds, distance/heading and motion state remains unconfirmed; barcode, terrain and obstacle fields require their owners' results. |
 | 2026-11-24 | SYS-09 | [75d36d0 (code reference)](https://github.com/Minnnnno/INF2004_SmartRobo/tree/75d36d04a00cc8f68c0fb45ae5f6aa335cf00229/app_program/subsystem2) | Buddy 2 | PASS (B2 portion) | [S2-H04 STOP, hold and restart](https://youtu.be/yS6CX1FzbrM) | Reused one-trial functional STOP/hold/restart pass. Five-second hold duration, hump-recording pause/resume, retained Highest hump and the subsequent hump were not established by the submitted result description; B4 coverage pending. |
-| 2026-11-25 | SYS-01 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-5-LINK> @ m:ss | Buddy 1 lead run: online and held 30 s before START, START acknowledged, then DRIVING |
-| 2026-11-25 | SYS-07 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-5-LINK> @ m:ss | Whole dashboard during the full run; Link card lost/bad not rising, layout v3. Each buddy confirms their card |
-| 2026-11-25 | SYS-08 | `b51982f` | 2500842 | **TO RECORD** | <VIDEO-8-LINK> @ m:ss | Hotspot off 10 s mid-run: robot kept driving, dashboard reconnected by itself after ___ s |
 | 2026-11-24 | SYS-02 | `fd5955a` | 2500622 | PASS | <https://youtu.be/t8ZaVSFGggE>, <https://www.youtube.com/watch?v=O-3cIuu86ew> | Subsystem video S3-H01: straights, curves, line lost and found again, no FAULT. Supporting: Buddy 4's full-run video (main after `610725f`, same as SYS-01/05/06) follows the whole course without help |
 | 2026-11-24 | SYS-03 | `fd5955a` | 2500622 | PASS | <https://youtu.be/GsEvuXFR86U>, <https://www.youtube.com/watch?v=O-3cIuu86ew> | Subsystem video S3-H03/H04: route sent from the dashboard (`robot route: ok`), Z → left at the junction, A → U-turn. Supporting: Buddy 4's full-run video (main after `610725f`) shows the right and straight actions |
+| 2026-11-25 | SYS-01 | `b51982f` | 2500842 | **TO RECORD** | <https://youtu.be/0tZDy3p91Oc> | Buddy 1 lead run: online and held 30 s before START, START acknowledged, then DRIVING |
+| 2026-11-25 | SYS-07 | `b51982f` | 2500842 | **TO RECORD** | <https://youtu.be/0tZDy3p91Oc> | Whole dashboard during the full run; Link card lost/bad not rising, layout v3. Each buddy confirms their card |
+| 2026-11-25 | SYS-08 | `b51982f` | 2500842 | **TO RECORD** | <https://youtu.be/TvSyGtZ1UQo> | Hotspot off 10 s mid-run: robot kept driving, dashboard reconnected by itself after ___ s |
+| 2026-11-24 | SYS-04 | `fa36f67` + width scale (later `e4e5b3e`) | 2500344 | PARTIAL (run 1) | <https://youtu.be/I9SrSpBJh9Q>, [normal run dashboard log](../subsystem5/logs/2026-11-24_normal_run_dashboard.log) | Reused S5-U01/U02/U03. Detected: yes, stopped at 15 cm, no contact seen. Width: 127 mm for a 150 mm box (tester's figure), 23 mm (15 %) under: outside NFR11 ± 1 cm and the briefing's 10 %, inside S5-U02's ± 10 cm; tolerance to be settled. Side: right (203 mm left, 216 mm right, inside the centred default). Line reacquired: yes (lost 1 s after the handover, found again 8 s later). Bypass 27 s after the scan, 51 s from the stop: over 3 s |
+| 2026-11-24 | SYS-04 | `fa36f67` (not confirmed) | 2500344 | PARTIAL (run 2) | <https://youtu.be/RCM5-oiSxDs> | Reused S5-U04. Box to the right of the line: passed on the left, no contact seen, line reacquired. Width and bypass time not recorded (no dashboard in the video) |
+| 2026-11-24 | SYS-04 | `fa36f67` (not confirmed) | 2500344 | PARTIAL (run 3) | <https://youtu.be/O0wmRNscU0k> | Reused S5-U05. Box slightly to the left of the line: passed on the right, no contact seen, line reacquired. Width and bypass time not recorded (no dashboard in the video) |
+| 2026-11-24 | SYS-04 | `fa36f67` (not confirmed) | 2500344 | PARTIAL (run 4) | <https://youtu.be/5Ype3yBMZK4> | Reused S5-U06. Box just after a curve: stopped, passed on the right, back on the line at the junction. Width and bypass time not recorded (no dashboard in the video). Fifth run still to record |
+| 2026-11-24 | SYS-07 | `fa36f67` + width scale (later `e4e5b3e`) | 2500344 | PASS (B5 portion) | <https://youtu.be/I9SrSpBJh9Q>, [normal run dashboard log](../subsystem5/logs/2026-11-24_normal_run_dashboard.log); [serial log 20 Nov](../subsystem5/logs/2026-11-20_width_100mm.txt) with [full dashboard log](../subsystem5/logs/2026-11-24_dashboard_full.log) | Reused S5-U01 to U03: distance, width, side and obstacle state on the dashboard during the run. Compared with the console on 20 Nov only: three of four scans equal, the fourth did not reach the dashboard (messages dropped). See INT-14. B1 sign-off pending |

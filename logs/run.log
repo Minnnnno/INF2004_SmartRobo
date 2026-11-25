@@ -1,0 +1,2430 @@
+11:06:37.333 INFO  broker dashboard connected to MQTT broker 192.168.137.1:1883
+11:06:40.814 WARN  B1     no status frames for ever (robot unknown)
+11:06:40.814 WARN  B1     no encoder frames for ever (robot unknown)
+11:06:40.814 WARN  B1     no heartbeat for ever (robot unknown)
+11:06:50.999 INFO  robot  robot is ONLINE
+11:06:51.090 INFO  B2     first status frame: motion STOPPED, fault NONE
+11:06:51.327 INFO  B1     status frames resumed
+11:06:51.327 INFO  B1     encoder frames resumed
+11:06:52.328 WARN  B1     no status frames for 1.2 s (robot online)
+11:06:52.328 WARN  B1     no encoder frames for 1.2 s (robot online)
+11:06:53.329 INFO  B1     status frames resumed
+11:06:53.329 INFO  B1     encoder frames resumed
+11:06:53.330 INFO  B1     heartbeat resumed
+11:06:58.336 WARN  B1     no status frames for 1.2 s (robot online)
+11:06:58.336 WARN  B1     no encoder frames for 1.2 s (robot online)
+11:06:58.837 INFO  B1     status frames resumed
+11:06:58.837 INFO  B1     encoder frames resumed
+11:07:00.339 WARN  B1     no status frames for 1.4 s (robot online)
+11:07:00.339 WARN  B1     no encoder frames for 1.4 s (robot online)
+11:07:01.841 INFO  B1     status frames resumed
+11:07:01.841 INFO  B1     encoder frames resumed
+11:07:01.852 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:07:01.853 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:07:01.853 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:07:01.854 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:07:05.845 WARN  B1     no status frames for 1.0 s (robot online)
+11:07:05.846 WARN  B1     no encoder frames for 1.0 s (robot online)
+11:07:06.346 INFO  B1     status frames resumed
+11:07:06.346 INFO  B1     encoder frames resumed
+11:07:09.849 WARN  B1     no status frames for 1.2 s (robot online)
+11:07:09.849 WARN  B1     no encoder frames for 1.2 s (robot online)
+11:07:10.850 INFO  B1     status frames resumed
+11:07:10.850 INFO  B1     encoder frames resumed
+11:07:14.353 WARN  B1     no status frames for 1.2 s (robot online)
+11:07:14.353 WARN  B1     no encoder frames for 1.2 s (robot online)
+11:07:15.354 WARN  B1     no heartbeat for 3.2 s (robot online)
+11:07:15.854 INFO  B1     status frames resumed
+11:07:15.854 INFO  B1     encoder frames resumed
+11:07:15.854 INFO  B1     heartbeat resumed
+11:07:15.990 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:07:15.990 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:07:16.081 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:07:22.922 WARN  B1     no status frames for 1.1 s (robot online)
+11:07:22.922 WARN  B1     no encoder frames for 1.1 s (robot online)
+11:07:23.422 INFO  B1     status frames resumed
+11:07:23.422 INFO  B1     encoder frames resumed
+11:07:26.425 WARN  B1     no status frames for 1.3 s (robot online)
+11:07:26.425 WARN  B1     no encoder frames for 1.2 s (robot online)
+11:07:27.443 INFO  B1     status frames resumed
+11:07:27.443 INFO  B1     encoder frames resumed
+11:07:31.447 WARN  B1     no status frames for 1.2 s (robot online)
+11:07:31.447 WARN  B1     no encoder frames for 1.2 s (robot online)
+11:07:32.448 INFO  B1     status frames resumed
+11:07:32.448 INFO  B1     encoder frames resumed
+11:07:32.449 WARN  B1     no heartbeat for 3.1 s (robot online)
+11:07:32.950 INFO  B1     heartbeat resumed
+11:07:35.957 WARN  B1     no status frames for 1.0 s (robot online)
+11:07:35.957 WARN  B1     no encoder frames for 1.0 s (robot online)
+11:07:36.457 INFO  B1     status frames resumed
+11:07:36.458 INFO  B1     encoder frames resumed
+11:07:43.468 WARN  B1     no status frames for 1.4 s (robot online)
+11:07:43.468 WARN  B1     no encoder frames for 1.4 s (robot online)
+11:07:44.969 WARN  B1     no heartbeat for 3.4 s (robot online)
+11:07:52.501 INFO  B1     status frames resumed
+11:07:52.501 INFO  B1     encoder frames resumed
+11:07:52.501 INFO  B1     heartbeat resumed
+11:07:52.539 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:07:52.634 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:07:52.635 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:07:52.635 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:07:52.636 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:07:52.636 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:07:52.636 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:07:52.637 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:07:52.744 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:07:58.009 WARN  B1     no status frames for 1.2 s (robot online)
+11:07:58.010 WARN  B1     no encoder frames for 1.2 s (robot online)
+11:07:59.010 INFO  B1     status frames resumed
+11:07:59.011 INFO  B1     encoder frames resumed
+11:08:04.016 WARN  B1     no status frames for 1.0 s (robot online)
+11:08:04.016 WARN  B1     no encoder frames for 1.0 s (robot online)
+11:08:05.017 INFO  B1     status frames resumed
+11:08:05.017 INFO  B1     encoder frames resumed
+11:08:12.529 WARN  B1     no status frames for 1.4 s (robot online)
+11:08:12.530 WARN  B1     no encoder frames for 1.4 s (robot online)
+11:08:14.031 INFO  B1     status frames resumed
+11:08:14.031 INFO  B1     encoder frames resumed
+11:08:14.247 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:08:14.249 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:08:14.251 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:08:14.464 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:08:20.537 WARN  B1     no status frames for 1.2 s (robot online)
+11:08:20.537 WARN  B1     no encoder frames for 1.2 s (robot online)
+11:08:22.045 INFO  B1     status frames resumed
+11:08:22.045 INFO  B1     encoder frames resumed
+11:08:22.045 WARN  B1     no heartbeat for 3.1 s (robot online)
+11:08:22.339 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:08:22.341 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:08:22.342 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:08:22.346 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:08:22.435 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:08:22.547 INFO  B1     heartbeat resumed
+11:08:25.550 WARN  B1     no status frames for 1.5 s (robot online)
+11:08:25.550 WARN  B1     no encoder frames for 1.5 s (robot online)
+11:08:26.551 INFO  B1     status frames resumed
+11:08:26.551 INFO  B1     encoder frames resumed
+11:08:30.057 WARN  B1     no status frames for 1.0 s (robot online)
+11:08:30.057 WARN  B1     no encoder frames for 1.0 s (robot online)
+11:08:31.562 INFO  B1     status frames resumed
+11:08:31.563 INFO  B1     encoder frames resumed
+11:08:31.861 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:08:31.862 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:08:31.964 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:08:37.571 WARN  B1     no status frames for 1.4 s (robot online)
+11:08:37.571 WARN  B1     no encoder frames for 1.4 s (robot online)
+11:08:38.072 INFO  B1     status frames resumed
+11:08:38.072 INFO  B1     encoder frames resumed
+11:08:48.081 WARN  B1     no status frames for 1.4 s (robot online)
+11:08:48.081 WARN  B1     no encoder frames for 1.4 s (robot online)
+11:08:49.583 WARN  B1     no heartbeat for 3.3 s (robot online)
+11:08:52.952 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:08:52.953 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:08:52.953 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:08:52.955 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:08:52.955 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:08:52.955 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:08:52.956 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:08:52.956 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:08:53.055 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:08:53.088 INFO  B1     status frames resumed
+11:08:53.088 INFO  B1     encoder frames resumed
+11:08:53.088 INFO  B1     heartbeat resumed
+11:08:56.591 WARN  B1     no status frames for 1.1 s (robot online)
+11:08:56.591 WARN  B1     no encoder frames for 1.1 s (robot online)
+11:08:57.092 INFO  B1     status frames resumed
+11:08:57.092 INFO  B1     encoder frames resumed
+11:08:59.094 WARN  B1     no status frames for 1.0 s (robot online)
+11:08:59.094 WARN  B1     no encoder frames for 1.0 s (robot online)
+11:09:00.595 WARN  B1     no heartbeat for 3.1 s (robot online)
+11:09:01.096 INFO  B1     status frames resumed
+11:09:01.096 INFO  B1     encoder frames resumed
+11:09:02.097 WARN  B1     no status frames for 1.4 s (robot online)
+11:09:02.098 WARN  B1     no encoder frames for 1.4 s (robot online)
+11:09:03.100 INFO  B1     status frames resumed
+11:09:03.100 INFO  B1     encoder frames resumed
+11:09:03.100 INFO  B1     heartbeat resumed
+11:09:04.101 WARN  B1     no status frames for 1.3 s (robot online)
+11:09:04.101 WARN  B1     no encoder frames for 1.3 s (robot online)
+11:09:04.219 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:09:04.219 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:09:04.220 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:09:04.220 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:09:04.220 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:09:04.432 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:09:04.602 INFO  B1     status frames resumed
+11:09:04.602 INFO  B1     encoder frames resumed
+11:09:09.607 WARN  B1     no status frames for 1.3 s (robot online)
+11:09:09.607 WARN  B1     no encoder frames for 1.3 s (robot online)
+11:09:10.608 INFO  B1     status frames resumed
+11:09:10.608 INFO  B1     encoder frames resumed
+11:09:16.115 WARN  B1     no status frames for 1.4 s (robot online)
+11:09:16.115 WARN  B1     no encoder frames for 1.4 s (robot online)
+11:09:16.618 INFO  B1     status frames resumed
+11:09:16.618 INFO  B1     encoder frames resumed
+11:09:19.622 WARN  B1     no status frames for 1.4 s (robot online)
+11:09:19.622 WARN  B1     no encoder frames for 1.4 s (robot online)
+11:09:21.124 INFO  B1     status frames resumed
+11:09:21.124 INFO  B1     encoder frames resumed
+11:09:21.215 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:09:21.216 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:09:21.216 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:09:21.318 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:09:26.129 WARN  B1     no status frames for 1.2 s (robot online)
+11:09:26.130 WARN  B1     no encoder frames for 1.2 s (robot online)
+11:09:27.131 INFO  B1     status frames resumed
+11:09:27.132 INFO  B1     encoder frames resumed
+11:09:28.133 WARN  B1     no status frames for 1.1 s (robot online)
+11:09:28.133 WARN  B1     no encoder frames for 1.1 s (robot online)
+11:09:28.633 INFO  B1     status frames resumed
+11:09:28.633 INFO  B1     encoder frames resumed
+11:09:30.136 WARN  B1     no status frames for 1.0 s (robot online)
+11:09:30.137 WARN  B1     no encoder frames for 1.0 s (robot online)
+11:09:30.637 INFO  B1     status frames resumed
+11:09:30.637 INFO  B1     encoder frames resumed
+11:09:31.638 WARN  B1     no status frames for 1.2 s (robot online)
+11:09:31.638 WARN  B1     no encoder frames for 1.2 s (robot online)
+11:09:32.139 INFO  B1     status frames resumed
+11:09:32.139 INFO  B1     encoder frames resumed
+11:09:38.145 WARN  B1     no status frames for 1.3 s (robot online)
+11:09:38.145 WARN  B1     no encoder frames for 1.3 s (robot online)
+11:09:39.146 WARN  B1     no heartbeat for 3.3 s (robot online)
+11:09:39.647 INFO  B1     status frames resumed
+11:09:39.647 INFO  B1     encoder frames resumed
+11:09:39.647 INFO  B1     heartbeat resumed
+11:09:39.857 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:09:39.857 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+11:09:43.151 WARN  B1     no status frames for 1.0 s (robot online)
+11:09:43.151 WARN  B1     no encoder frames for 1.0 s (robot online)
+11:09:45.152 WARN  B1     no heartbeat for 3.2 s (robot online)
+11:09:57.796 ERROR robot  robot is OFFLINE (Wi-Fi dropped, or the Pico reset or lost power)
+11:12:18.365 INFO  you    sent route L=b R=b S=d U=a
+11:12:19.319 INFO  you    sent route L=b R=b S=d U=a
+11:15:05.073 ERROR broker dashboard lost the MQTT broker 192.168.137.1:1883
+13:23:05.619 INFO  broker dashboard connected to MQTT broker 192.168.137.1:1883
+13:23:05.620 INFO  robot  robot is ONLINE
+13:23:05.624 INFO  B2     first status frame: motion STOPPED, fault NONE
+13:23:13.102 WARN  B1     no status frames for 1.0 s (robot online)
+13:23:13.102 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:23:13.602 INFO  B1     status frames resumed
+13:23:13.602 INFO  B1     encoder frames resumed
+13:23:18.106 WARN  B1     no status frames for 1.4 s (robot online)
+13:23:18.106 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:23:19.608 WARN  B1     no heartbeat for 3.4 s (robot online)
+13:23:24.471 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:23:24.471 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:23:24.471 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:23:24.471 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:23:24.569 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:23:24.570 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:23:24.570 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:23:24.571 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:23:24.612 INFO  B1     status frames resumed
+13:23:24.613 INFO  B1     encoder frames resumed
+13:23:24.613 INFO  B1     heartbeat resumed
+13:23:24.660 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:23:27.115 WARN  B1     no status frames for 1.3 s (robot online)
+13:23:27.115 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:23:28.617 INFO  B1     status frames resumed
+13:23:28.617 INFO  B1     encoder frames resumed
+13:23:28.672 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:23:28.672 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:23:28.672 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:23:28.770 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:23:35.624 WARN  B1     no status frames for 1.1 s (robot online)
+13:23:35.624 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:23:36.625 INFO  B1     status frames resumed
+13:23:36.625 INFO  B1     encoder frames resumed
+13:23:40.630 WARN  B1     no status frames for 1.2 s (robot online)
+13:23:40.630 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:23:41.630 INFO  B1     status frames resumed
+13:23:41.631 INFO  B1     encoder frames resumed
+13:23:47.637 WARN  B1     no status frames for 1.1 s (robot online)
+13:23:47.637 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:23:48.137 INFO  B1     status frames resumed
+13:23:48.137 INFO  B1     encoder frames resumed
+13:23:55.645 WARN  B1     no status frames for 1.1 s (robot online)
+13:23:55.645 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:23:56.146 INFO  B1     status frames resumed
+13:23:56.146 INFO  B1     encoder frames resumed
+13:24:02.654 WARN  B1     no status frames for 1.2 s (robot online)
+13:24:02.654 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:24:03.655 WARN  B1     no heartbeat for 3.0 s (robot online)
+13:24:04.155 INFO  B1     status frames resumed
+13:24:04.156 INFO  B1     encoder frames resumed
+13:24:05.157 WARN  B1     no status frames for 1.2 s (robot online)
+13:24:05.157 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:24:06.128 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:24:06.128 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:24:06.129 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:24:06.129 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:24:06.129 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:24:06.158 INFO  B1     status frames resumed
+13:24:06.158 INFO  B1     encoder frames resumed
+13:24:06.158 INFO  B1     heartbeat resumed
+13:24:10.162 WARN  B1     no status frames for 1.1 s (robot online)
+13:24:10.162 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:24:11.164 INFO  B1     status frames resumed
+13:24:11.164 INFO  B1     encoder frames resumed
+13:24:13.666 WARN  B1     no status frames for 1.2 s (robot online)
+13:24:13.666 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:24:15.167 INFO  B1     status frames resumed
+13:24:15.167 INFO  B1     encoder frames resumed
+13:24:15.360 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:24:15.360 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:24:15.360 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:24:15.451 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:24:19.672 WARN  B1     no status frames for 1.0 s (robot online)
+13:24:19.672 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:24:21.174 WARN  B1     no heartbeat for 3.3 s (robot online)
+13:24:24.677 INFO  B1     status frames resumed
+13:24:24.678 INFO  B1     encoder frames resumed
+13:24:24.875 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:24:24.875 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:24:24.875 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:24:24.876 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:24:24.982 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:24:24.982 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:24:24.982 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:24:24.982 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:24:25.178 INFO  B1     heartbeat resumed
+13:24:26.179 WARN  B1     no status frames for 1.2 s (robot online)
+13:24:26.179 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:24:26.206 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:24:26.680 INFO  B1     status frames resumed
+13:24:26.680 INFO  B1     encoder frames resumed
+13:24:28.682 WARN  B1     no status frames for 1.1 s (robot online)
+13:24:29.182 INFO  B1     status frames resumed
+13:24:41.191 WARN  B1     no status frames for 1.0 s (robot online)
+13:24:41.191 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:24:43.016 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:24:43.016 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:24:43.016 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:24:43.112 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:24:43.193 INFO  B1     status frames resumed
+13:24:43.193 INFO  B1     encoder frames resumed
+13:24:54.701 WARN  B1     no status frames for 1.5 s (robot online)
+13:24:54.701 WARN  B1     no encoder frames for 1.5 s (robot online)
+13:24:56.115 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:24:56.115 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:24:56.202 INFO  B1     status frames resumed
+13:24:56.202 INFO  B1     encoder frames resumed
+13:24:56.220 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:24:59.204 WARN  B1     no status frames for 1.3 s (robot online)
+13:24:59.204 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:25:00.705 WARN  B1     no heartbeat for 3.3 s (robot online)
+13:25:04.105 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:25:04.105 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:25:04.105 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:25:04.105 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:25:04.207 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:25:04.207 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:25:04.207 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:25:04.207 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:25:04.208 INFO  B1     status frames resumed
+13:25:04.208 INFO  B1     encoder frames resumed
+13:25:04.208 INFO  B1     heartbeat resumed
+13:25:04.310 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:25:07.209 WARN  B1     no status frames for 1.2 s (robot online)
+13:25:07.210 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:25:07.710 INFO  B1     status frames resumed
+13:25:07.710 INFO  B1     encoder frames resumed
+13:25:10.212 WARN  B1     no status frames for 1.3 s (robot online)
+13:25:10.213 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:25:11.213 INFO  B1     status frames resumed
+13:25:11.213 INFO  B1     encoder frames resumed
+13:25:14.717 WARN  B1     no status frames for 1.4 s (robot online)
+13:25:14.717 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:25:15.718 WARN  B1     no heartbeat for 3.2 s (robot online)
+13:25:16.218 INFO  B1     status frames resumed
+13:25:16.218 INFO  B1     encoder frames resumed
+13:25:16.218 INFO  B1     heartbeat resumed
+13:25:16.286 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:25:16.286 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:25:16.286 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:25:16.286 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:25:16.389 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:25:17.720 WARN  B1     no status frames for 1.3 s (robot online)
+13:25:17.720 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:25:19.222 INFO  B1     status frames resumed
+13:25:19.222 INFO  B1     encoder frames resumed
+13:25:19.254 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:25:19.254 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:25:19.254 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:25:19.356 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:25:25.227 WARN  B1     no status frames for 1.2 s (robot online)
+13:25:25.227 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:25:26.228 INFO  B1     status frames resumed
+13:25:26.228 INFO  B1     encoder frames resumed
+13:25:33.232 WARN  B1     no status frames for 1.2 s (robot online)
+13:25:33.232 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:25:34.233 INFO  B1     status frames resumed
+13:25:34.233 INFO  B1     encoder frames resumed
+13:26:08.257 WARN  B1     no status frames for 1.1 s (robot online)
+13:26:08.257 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:26:09.759 INFO  B1     status frames resumed
+13:26:09.759 INFO  B1     encoder frames resumed
+13:26:10.055 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:26:10.055 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:26:10.141 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:26:30.774 WARN  B1     no status frames for 1.4 s (robot online)
+13:26:30.774 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:26:31.776 INFO  B1     status frames resumed
+13:26:31.776 INFO  B1     encoder frames resumed
+13:26:35.280 WARN  B1     no status frames for 1.5 s (robot online)
+13:26:35.280 WARN  B1     no encoder frames for 1.5 s (robot online)
+13:26:36.598 ERROR robot  robot is OFFLINE (Wi-Fi dropped, or the Pico reset or lost power)
+13:26:36.619 ERROR broker dashboard lost the MQTT broker 192.168.137.1:1883
+13:27:03.656 INFO  broker dashboard connected to MQTT broker 192.168.137.1:1883
+13:27:06.807 WARN  B1     no heartbeat for 33.5 s (robot offline)
+13:27:22.642 ERROR broker dashboard lost the MQTT broker 192.168.137.1:1883
+13:27:30.677 INFO  broker dashboard connected to MQTT broker 192.168.137.1:1883
+13:27:42.903 ERROR broker dashboard lost the MQTT broker 192.168.137.1:1883
+13:27:50.939 INFO  broker dashboard connected to MQTT broker 192.168.137.1:1883
+13:28:08.048 INFO  robot  robot is ONLINE
+13:28:08.150 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:28:08.221 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:28:08.221 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:28:08.222 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:28:08.335 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:28:08.335 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:28:08.335 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:28:08.335 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:28:08.361 INFO  B1     status frames resumed
+13:28:08.404 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:28:08.861 INFO  B1     encoder frames resumed
+13:28:08.861 INFO  B1     heartbeat resumed
+13:28:15.366 WARN  B1     no status frames for 1.2 s (robot online)
+13:28:15.366 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:28:16.368 INFO  B1     status frames resumed
+13:28:16.368 INFO  B1     encoder frames resumed
+13:28:44.864 ERROR robot  robot is OFFLINE (Wi-Fi dropped, or the Pico reset or lost power)
+13:28:44.875 ERROR broker dashboard lost the MQTT broker 192.168.137.1:1883
+13:29:11.920 INFO  broker dashboard connected to MQTT broker 192.168.137.1:1883
+13:29:14.927 WARN  B1     no status frames for 30.4 s (robot offline)
+13:29:14.927 WARN  B1     no encoder frames for 30.4 s (robot offline)
+13:29:14.927 WARN  B1     no heartbeat for 30.9 s (robot offline)
+13:30:01.088 INFO  robot  robot is ONLINE
+13:30:01.291 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:30:01.368 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:30:01.368 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:30:01.369 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:30:01.369 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:30:01.370 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:30:01.370 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:30:01.370 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:30:01.470 INFO  B1     status frames resumed
+13:30:01.493 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:30:01.970 INFO  B1     encoder frames resumed
+13:30:01.970 INFO  B1     heartbeat resumed
+13:30:16.484 WARN  B1     no status frames for 1.1 s (robot online)
+13:30:16.484 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:30:17.985 INFO  B1     status frames resumed
+13:30:17.985 INFO  B1     encoder frames resumed
+13:30:18.259 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:30:18.260 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:30:18.260 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:30:19.486 WARN  B1     no status frames for 1.2 s (robot online)
+13:30:19.486 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:30:19.490 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:30:19.986 INFO  B1     status frames resumed
+13:30:19.986 INFO  B1     encoder frames resumed
+13:30:22.988 WARN  B1     no status frames for 1.4 s (robot online)
+13:30:22.988 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:30:23.989 INFO  B1     status frames resumed
+13:30:23.990 INFO  B1     encoder frames resumed
+13:30:25.991 WARN  B1     no status frames for 1.4 s (robot online)
+13:30:25.991 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:30:26.492 INFO  B1     status frames resumed
+13:30:26.492 INFO  B1     encoder frames resumed
+13:30:29.494 WARN  B1     no status frames for 1.2 s (robot online)
+13:30:29.494 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:30:29.995 INFO  B1     status frames resumed
+13:30:29.995 INFO  B1     encoder frames resumed
+13:30:32.997 WARN  B1     no status frames for 1.0 s (robot online)
+13:30:32.997 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:30:34.954 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:30:34.954 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:30:34.954 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:30:34.954 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:30:34.998 INFO  B1     status frames resumed
+13:30:34.998 INFO  B1     encoder frames resumed
+13:30:35.078 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:30:37.500 WARN  B1     no status frames for 1.2 s (robot online)
+13:30:37.500 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:30:38.000 INFO  B1     status frames resumed
+13:30:38.000 INFO  B1     encoder frames resumed
+13:30:43.505 WARN  B1     no status frames for 1.1 s (robot online)
+13:30:43.505 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:30:44.006 INFO  B1     status frames resumed
+13:30:44.006 INFO  B1     encoder frames resumed
+13:30:50.011 WARN  B1     no status frames for 1.1 s (robot online)
+13:30:50.011 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:30:50.511 INFO  B1     status frames resumed
+13:30:50.511 INFO  B1     encoder frames resumed
+13:30:52.514 WARN  B1     no status frames for 1.4 s (robot online)
+13:30:52.514 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:30:54.015 INFO  B1     status frames resumed
+13:30:54.015 INFO  B1     encoder frames resumed
+13:30:54.106 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:30:54.107 WARN  B1     robot dropped 2 outgoing message(s): Wi-Fi or broker too slow
+13:30:54.108 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:30:59.521 WARN  B1     no status frames for 1.0 s (robot online)
+13:30:59.521 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:31:00.021 INFO  B1     status frames resumed
+13:31:00.021 INFO  B1     encoder frames resumed
+13:31:01.523 WARN  B1     no status frames for 1.4 s (robot online)
+13:31:01.523 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:31:03.025 INFO  B1     status frames resumed
+13:31:03.025 INFO  B1     encoder frames resumed
+13:31:03.525 WARN  B1     no heartbeat for 3.5 s (robot online)
+13:31:04.026 WARN  B1     no status frames for 1.3 s (robot online)
+13:31:04.026 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:31:04.857 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:31:04.857 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:31:04.857 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:31:04.858 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:31:04.858 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:31:05.027 INFO  B1     status frames resumed
+13:31:05.027 INFO  B1     encoder frames resumed
+13:31:05.027 INFO  B1     heartbeat resumed
+13:31:05.085 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:31:10.533 WARN  B1     no status frames for 1.2 s (robot online)
+13:31:10.533 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:31:11.034 INFO  B1     status frames resumed
+13:31:11.034 INFO  B1     encoder frames resumed
+13:31:13.536 WARN  B1     no status frames for 1.3 s (robot online)
+13:31:13.536 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:31:15.038 INFO  B1     status frames resumed
+13:31:15.038 INFO  B1     encoder frames resumed
+13:31:15.197 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:31:15.197 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:31:15.198 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:31:15.300 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:31:21.045 WARN  B1     no status frames for 1.0 s (robot online)
+13:31:21.045 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:31:21.546 INFO  B1     status frames resumed
+13:31:21.546 INFO  B1     encoder frames resumed
+13:31:24.549 WARN  B1     no status frames for 1.2 s (robot online)
+13:31:24.549 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:31:26.051 INFO  B1     status frames resumed
+13:31:26.051 INFO  B1     encoder frames resumed
+13:31:26.182 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:31:26.182 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:31:26.258 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:31:29.554 WARN  B1     no status frames for 1.0 s (robot online)
+13:31:29.555 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:31:30.055 INFO  B1     status frames resumed
+13:31:30.055 INFO  B1     encoder frames resumed
+13:31:32.557 WARN  B1     no status frames for 1.2 s (robot online)
+13:31:32.557 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:31:33.559 INFO  B1     status frames resumed
+13:31:33.559 INFO  B1     encoder frames resumed
+13:31:40.065 WARN  B1     no status frames for 1.0 s (robot online)
+13:31:40.065 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:31:40.566 INFO  B1     status frames resumed
+13:31:40.566 INFO  B1     encoder frames resumed
+13:31:41.567 WARN  B1     no status frames for 1.1 s (robot online)
+13:31:41.567 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:31:41.567 WARN  B1     no heartbeat for 3.1 s (robot online)
+13:31:42.067 INFO  B1     status frames resumed
+13:31:42.068 INFO  B1     encoder frames resumed
+13:31:42.068 INFO  B1     heartbeat resumed
+13:31:43.068 WARN  B1     no status frames for 1.0 s (robot online)
+13:31:43.068 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:31:43.569 INFO  B1     status frames resumed
+13:31:43.569 INFO  B1     encoder frames resumed
+13:31:46.572 WARN  B1     no status frames for 1.2 s (robot online)
+13:31:46.573 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:31:48.074 INFO  B1     status frames resumed
+13:31:48.074 INFO  B1     encoder frames resumed
+13:31:48.276 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:31:48.276 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:31:48.277 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:31:48.277 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:31:48.400 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:31:51.078 WARN  B1     no status frames for 1.1 s (robot online)
+13:31:51.078 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:31:53.080 WARN  B1     no heartbeat for 3.5 s (robot online)
+13:32:05.804 ERROR robot  robot is OFFLINE (Wi-Fi dropped, or the Pico reset or lost power)
+13:32:12.162 INFO  robot  robot is ONLINE
+13:32:12.262 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:12.262 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:12.262 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:12.263 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:12.264 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:12.264 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:12.264 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:12.264 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:12.265 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:12.537 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:12.537 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:12.538 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:12.538 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:12.538 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:12.539 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:12.598 INFO  B1     status frames resumed
+13:32:12.598 INFO  B1     encoder frames resumed
+13:32:12.598 INFO  B1     heartbeat resumed
+13:32:12.643 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:17.101 WARN  B1     no status frames for 1.1 s (robot online)
+13:32:17.102 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:32:17.602 INFO  B1     status frames resumed
+13:32:17.602 INFO  B1     encoder frames resumed
+13:32:19.605 WARN  B1     no status frames for 1.2 s (robot online)
+13:32:19.605 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:32:20.106 INFO  B1     status frames resumed
+13:32:20.106 INFO  B1     encoder frames resumed
+13:32:22.608 WARN  B1     no status frames for 1.5 s (robot online)
+13:32:22.608 WARN  B1     no encoder frames for 1.5 s (robot online)
+13:32:24.109 INFO  B1     status frames resumed
+13:32:24.109 INFO  B1     encoder frames resumed
+13:32:24.113 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:24.114 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:24.114 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:24.208 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:26.612 WARN  B1     no status frames for 1.4 s (robot online)
+13:32:26.612 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:32:27.613 INFO  B1     status frames resumed
+13:32:27.613 INFO  B1     encoder frames resumed
+13:32:28.614 WARN  B1     no status frames for 1.2 s (robot online)
+13:32:28.614 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:32:30.616 WARN  B1     no heartbeat for 3.2 s (robot online)
+13:32:31.993 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:31.993 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:31.993 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:31.993 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:32.094 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:32.095 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:32.095 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:32.095 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:32.118 INFO  B1     status frames resumed
+13:32:32.118 INFO  B1     encoder frames resumed
+13:32:32.118 INFO  B1     heartbeat resumed
+13:32:32.201 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:35.621 WARN  B1     no status frames for 1.4 s (robot online)
+13:32:35.621 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:32:37.123 INFO  B1     status frames resumed
+13:32:37.123 INFO  B1     encoder frames resumed
+13:32:38.123 WARN  B1     no status frames for 1.1 s (robot online)
+13:32:38.124 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:32:38.376 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:38.376 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:38.439 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:32:38.624 INFO  B1     status frames resumed
+13:32:38.625 INFO  B1     encoder frames resumed
+13:32:41.127 WARN  B1     no status frames for 1.1 s (robot online)
+13:32:41.127 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:32:41.628 INFO  B1     status frames resumed
+13:32:41.628 INFO  B1     encoder frames resumed
+13:32:46.633 WARN  B1     no status frames for 1.1 s (robot online)
+13:32:46.633 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:32:47.133 INFO  B1     status frames resumed
+13:32:47.134 INFO  B1     encoder frames resumed
+13:32:48.135 WARN  B1     no status frames for 1.1 s (robot online)
+13:32:48.135 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:32:48.635 INFO  B1     status frames resumed
+13:32:48.635 INFO  B1     encoder frames resumed
+13:32:57.144 WARN  B1     no status frames for 1.1 s (robot online)
+13:32:57.144 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:32:57.645 INFO  B1     status frames resumed
+13:32:57.645 INFO  B1     encoder frames resumed
+13:33:07.153 WARN  B1     no status frames for 1.3 s (robot online)
+13:33:07.153 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:33:08.654 INFO  B1     status frames resumed
+13:33:08.654 INFO  B1     encoder frames resumed
+13:33:08.759 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:08.759 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:08.760 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:08.860 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:12.157 WARN  B1     no status frames for 1.2 s (robot online)
+13:33:12.157 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:33:13.659 INFO  B1     status frames resumed
+13:33:13.659 INFO  B1     encoder frames resumed
+13:33:13.659 WARN  B1     no heartbeat for 3.1 s (robot online)
+13:33:14.159 INFO  B1     heartbeat resumed
+13:33:15.160 WARN  B1     no status frames for 1.2 s (robot online)
+13:33:15.160 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:33:16.544 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:16.544 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:16.662 INFO  B1     status frames resumed
+13:33:16.662 INFO  B1     encoder frames resumed
+13:33:16.746 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:16.746 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:16.746 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:16.746 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:16.746 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:18.072 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:19.164 WARN  B1     no status frames for 1.1 s (robot online)
+13:33:19.164 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:33:19.616 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:19.616 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:19.616 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:19.616 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:19.617 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:19.664 INFO  B1     status frames resumed
+13:33:19.665 INFO  B1     encoder frames resumed
+13:33:22.167 WARN  B1     no status frames for 1.4 s (robot online)
+13:33:22.167 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:33:24.168 WARN  B1     no heartbeat for 3.4 s (robot online)
+13:33:25.169 INFO  B1     status frames resumed
+13:33:25.169 INFO  B1     encoder frames resumed
+13:33:25.450 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:25.450 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:25.450 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:25.450 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:25.451 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:25.451 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:25.451 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:25.451 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:25.550 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:25.669 INFO  B1     heartbeat resumed
+13:33:28.171 WARN  B1     no status frames for 1.3 s (robot online)
+13:33:28.171 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:33:28.672 INFO  B1     status frames resumed
+13:33:28.672 INFO  B1     encoder frames resumed
+13:33:29.672 WARN  B1     no status frames for 1.1 s (robot online)
+13:33:29.673 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:33:31.498 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:31.499 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:31.499 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:31.499 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:31.593 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:31.674 INFO  B1     status frames resumed
+13:33:31.674 INFO  B1     encoder frames resumed
+13:33:32.675 WARN  B1     no status frames for 1.1 s (robot online)
+13:33:32.675 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:33:34.177 INFO  B1     status frames resumed
+13:33:34.177 INFO  B1     encoder frames resumed
+13:33:34.677 WARN  B1     no heartbeat for 3.4 s (robot online)
+13:33:35.177 WARN  B1     no status frames for 1.0 s (robot online)
+13:33:35.177 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:33:36.304 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:36.305 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:36.305 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:36.305 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:36.678 INFO  B1     status frames resumed
+13:33:36.678 INFO  B1     encoder frames resumed
+13:33:36.678 INFO  B1     heartbeat resumed
+13:33:36.715 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:39.180 WARN  B1     no status frames for 1.4 s (robot online)
+13:33:39.180 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:33:40.181 INFO  B1     status frames resumed
+13:33:40.181 INFO  B1     encoder frames resumed
+13:33:43.684 WARN  B1     no status frames for 1.1 s (robot online)
+13:33:43.684 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:33:44.184 INFO  B1     status frames resumed
+13:33:44.185 INFO  B1     encoder frames resumed
+13:33:45.185 WARN  B1     no status frames for 1.1 s (robot online)
+13:33:45.186 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:33:45.686 INFO  B1     status frames resumed
+13:33:45.686 INFO  B1     encoder frames resumed
+13:33:46.687 WARN  B1     no status frames for 1.5 s (robot online)
+13:33:46.687 WARN  B1     no encoder frames for 1.5 s (robot online)
+13:33:47.187 INFO  B1     status frames resumed
+13:33:47.187 INFO  B1     encoder frames resumed
+13:33:48.188 WARN  B1     no status frames for 1.4 s (robot online)
+13:33:48.188 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:33:48.688 INFO  B1     status frames resumed
+13:33:48.688 INFO  B1     encoder frames resumed
+13:33:49.689 WARN  B1     no status frames for 1.3 s (robot online)
+13:33:49.689 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:33:51.691 WARN  B1     no heartbeat for 3.3 s (robot online)
+13:33:59.041 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:59.042 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:59.042 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:59.042 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:59.140 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:59.140 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:59.140 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:59.141 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:33:59.198 INFO  B1     status frames resumed
+13:33:59.198 INFO  B1     encoder frames resumed
+13:33:59.198 INFO  B1     heartbeat resumed
+13:33:59.243 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:01.200 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:34:01.701 WARN  B1     no status frames for 1.4 s (robot online)
+13:34:02.702 WARN  B1     no heartbeat for 3.3 s (robot online)
+13:34:08.056 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:08.057 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:08.057 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:08.057 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:08.149 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:08.149 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:08.149 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:08.149 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:08.207 INFO  B1     status frames resumed
+13:34:08.207 INFO  B1     encoder frames resumed
+13:34:08.207 INFO  B1     heartbeat resumed
+13:34:08.258 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:10.709 WARN  B1     no status frames for 1.3 s (robot online)
+13:34:10.709 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:34:11.710 WARN  B1     no heartbeat for 3.1 s (robot online)
+13:34:12.211 INFO  B1     status frames resumed
+13:34:12.211 INFO  B1     encoder frames resumed
+13:34:12.211 INFO  B1     heartbeat resumed
+13:34:12.361 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:12.362 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:12.362 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:12.362 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:13.712 WARN  B1     no status frames for 1.3 s (robot online)
+13:34:13.712 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:34:15.213 WARN  B1     no heartbeat for 3.1 s (robot online)
+13:34:20.217 INFO  B1     status frames resumed
+13:34:20.217 INFO  B1     encoder frames resumed
+13:34:20.337 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:20.439 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:20.439 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:20.439 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:20.439 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:20.439 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:20.439 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:20.440 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:20.542 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:20.717 INFO  B1     heartbeat resumed
+13:34:27.723 WARN  B1     no status frames for 1.2 s (robot online)
+13:34:27.723 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:34:29.224 INFO  B1     status frames resumed
+13:34:29.224 INFO  B1     encoder frames resumed
+13:34:29.249 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:29.343 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:29.343 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:29.343 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:29.343 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:34:29.444 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:00.245 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:35:00.746 INFO  B1     encoder frames resumed
+13:35:18.758 WARN  B1     no status frames for 1.2 s (robot online)
+13:35:18.758 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:35:19.259 INFO  B1     status frames resumed
+13:35:19.259 INFO  B1     encoder frames resumed
+13:35:20.260 WARN  B1     no status frames for 1.0 s (robot online)
+13:35:20.260 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:35:22.262 INFO  B1     status frames resumed
+13:35:22.262 INFO  B1     encoder frames resumed
+13:35:23.263 WARN  B1     no status frames for 1.3 s (robot online)
+13:35:23.263 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:35:23.322 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:23.322 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:23.417 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:23.763 INFO  B1     status frames resumed
+13:35:23.763 INFO  B1     encoder frames resumed
+13:35:24.764 WARN  B1     no status frames for 1.0 s (robot online)
+13:35:24.764 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:35:26.766 INFO  B1     status frames resumed
+13:35:26.766 INFO  B1     encoder frames resumed
+13:35:27.767 WARN  B1     no status frames for 1.2 s (robot online)
+13:35:27.767 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:35:29.768 WARN  B1     no heartbeat for 3.3 s (robot online)
+13:35:30.886 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:30.886 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:30.886 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:30.886 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:30.886 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:31.106 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:31.106 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:31.106 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:31.106 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:31.106 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:31.106 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:31.106 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:31.106 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:31.203 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:31.269 INFO  B1     status frames resumed
+13:35:31.269 INFO  B1     encoder frames resumed
+13:35:31.269 INFO  B1     heartbeat resumed
+13:35:32.770 WARN  B1     no status frames for 1.5 s (robot online)
+13:35:32.771 WARN  B1     no encoder frames for 1.5 s (robot online)
+13:35:34.165 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:34.165 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:34.165 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:34.272 INFO  B1     status frames resumed
+13:35:34.272 INFO  B1     encoder frames resumed
+13:35:34.288 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:38.274 WARN  B1     no status frames for 1.1 s (robot online)
+13:35:38.275 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:35:38.775 INFO  B1     status frames resumed
+13:35:38.775 INFO  B1     encoder frames resumed
+13:35:41.276 WARN  B1     no status frames for 1.4 s (robot online)
+13:35:41.276 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:35:41.777 INFO  B1     status frames resumed
+13:35:41.777 INFO  B1     encoder frames resumed
+13:35:43.778 WARN  B1     no status frames for 1.4 s (robot online)
+13:35:43.779 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:35:44.780 WARN  B1     no heartbeat for 3.2 s (robot online)
+13:35:45.228 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:45.280 INFO  B1     status frames resumed
+13:35:45.280 INFO  B1     encoder frames resumed
+13:35:45.280 INFO  B1     heartbeat resumed
+13:35:45.330 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:45.331 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:45.331 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:45.331 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:45.537 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:50.785 WARN  B1     no status frames for 1.0 s (robot online)
+13:35:50.785 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:35:52.786 WARN  B1     no heartbeat for 3.0 s (robot online)
+13:35:54.288 INFO  B1     status frames resumed
+13:35:54.288 INFO  B1     encoder frames resumed
+13:35:54.288 INFO  B1     heartbeat resumed
+13:35:55.289 WARN  B1     no status frames for 1.2 s (robot online)
+13:35:55.289 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:35:55.571 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:55.571 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:55.572 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:55.572 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:55.674 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:55.674 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:55.674 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:55.674 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:55.675 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:35:55.790 INFO  B1     status frames resumed
+13:35:55.790 INFO  B1     encoder frames resumed
+13:35:57.291 WARN  B1     no status frames for 1.1 s (robot online)
+13:35:57.291 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:35:57.791 INFO  B1     status frames resumed
+13:35:57.792 INFO  B1     encoder frames resumed
+13:35:58.792 WARN  B1     no status frames for 1.3 s (robot online)
+13:35:58.792 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:35:58.792 WARN  B1     no heartbeat for 3.0 s (robot online)
+13:35:59.293 INFO  B1     status frames resumed
+13:35:59.293 INFO  B1     encoder frames resumed
+13:35:59.293 INFO  B1     heartbeat resumed
+13:36:00.294 WARN  B1     no status frames for 1.1 s (robot online)
+13:36:00.294 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:36:00.794 INFO  B1     status frames resumed
+13:36:00.795 INFO  B1     encoder frames resumed
+13:36:01.796 WARN  B1     no status frames for 1.2 s (robot online)
+13:36:01.801 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:36:02.301 INFO  B1     status frames resumed
+13:36:02.302 INFO  B1     encoder frames resumed
+13:36:05.304 WARN  B1     no status frames for 1.1 s (robot online)
+13:36:05.304 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:36:05.804 INFO  B1     status frames resumed
+13:36:05.804 INFO  B1     encoder frames resumed
+13:36:10.808 WARN  B1     no status frames for 1.4 s (robot online)
+13:36:10.808 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:36:12.309 WARN  B1     no heartbeat for 3.3 s (robot online)
+13:36:19.815 INFO  B1     status frames resumed
+13:36:19.815 INFO  B1     encoder frames resumed
+13:36:20.315 INFO  B1     heartbeat resumed
+13:36:21.176 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:21.176 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:21.177 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:21.177 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:21.273 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:21.274 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:21.274 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:21.274 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:21.274 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:23.317 WARN  B1     no status frames for 1.0 s (robot online)
+13:36:23.318 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:36:23.818 INFO  B1     status frames resumed
+13:36:23.818 INFO  B1     encoder frames resumed
+13:36:26.320 WARN  B1     no status frames for 1.3 s (robot online)
+13:36:26.320 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:36:27.821 INFO  B1     status frames resumed
+13:36:27.821 INFO  B1     encoder frames resumed
+13:36:27.821 WARN  B1     no heartbeat for 3.5 s (robot online)
+13:36:27.928 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:27.928 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:28.029 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:28.029 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:28.029 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:28.029 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:28.144 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:28.321 INFO  B1     heartbeat resumed
+13:36:33.325 WARN  B1     no status frames for 1.2 s (robot online)
+13:36:33.325 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:36:34.327 WARN  B1     no heartbeat for 3.0 s (robot online)
+13:36:34.827 INFO  B1     status frames resumed
+13:36:34.827 INFO  B1     encoder frames resumed
+13:36:35.096 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:35.096 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:35.097 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:35.097 WARN  B1     robot dropped 2 outgoing message(s): Wi-Fi or broker too slow
+13:36:35.198 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:35.327 INFO  B1     heartbeat resumed
+13:36:40.330 WARN  B1     no status frames for 1.2 s (robot online)
+13:36:40.330 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:36:42.332 WARN  B1     no heartbeat for 3.4 s (robot online)
+13:36:47.074 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:47.180 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:47.180 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:47.180 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:47.182 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:47.182 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:47.183 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:47.183 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:47.335 INFO  B1     status frames resumed
+13:36:47.335 INFO  B1     encoder frames resumed
+13:36:47.335 INFO  B1     heartbeat resumed
+13:36:48.336 WARN  B1     no status frames for 1.2 s (robot online)
+13:36:48.336 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:36:48.419 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:36:48.837 INFO  B1     status frames resumed
+13:36:48.837 INFO  B1     encoder frames resumed
+13:36:57.844 WARN  B1     no status frames for 1.3 s (robot online)
+13:36:57.844 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:36:58.344 INFO  B1     status frames resumed
+13:36:58.345 INFO  B1     encoder frames resumed
+13:37:05.349 WARN  B1     no status frames for 1.4 s (robot online)
+13:37:05.349 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:37:06.350 INFO  B1     status frames resumed
+13:37:06.350 INFO  B1     encoder frames resumed
+13:37:06.850 WARN  B1     no heartbeat for 3.2 s (robot online)
+13:37:07.351 WARN  B1     no status frames for 1.4 s (robot online)
+13:37:07.351 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:37:07.851 INFO  B1     status frames resumed
+13:37:07.851 INFO  B1     encoder frames resumed
+13:37:07.851 INFO  B1     heartbeat resumed
+13:37:10.853 WARN  B1     no status frames for 1.4 s (robot online)
+13:37:10.853 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:37:11.854 INFO  B1     status frames resumed
+13:37:11.854 INFO  B1     encoder frames resumed
+13:37:16.358 WARN  B1     no status frames for 1.0 s (robot online)
+13:37:16.358 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:37:16.858 INFO  B1     status frames resumed
+13:37:16.858 INFO  B1     encoder frames resumed
+13:37:19.861 WARN  B1     no status frames for 1.1 s (robot online)
+13:37:19.861 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:37:20.361 INFO  B1     status frames resumed
+13:37:20.361 INFO  B1     encoder frames resumed
+13:37:21.362 WARN  B1     no status frames for 1.2 s (robot online)
+13:37:21.362 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:37:21.862 INFO  B1     status frames resumed
+13:37:21.863 INFO  B1     encoder frames resumed
+13:37:30.369 WARN  B1     no status frames for 1.2 s (robot online)
+13:37:30.369 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:37:30.869 INFO  B1     status frames resumed
+13:37:30.869 INFO  B1     encoder frames resumed
+13:37:33.371 WARN  B1     no status frames for 1.3 s (robot online)
+13:37:33.371 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:37:34.872 INFO  B1     status frames resumed
+13:37:34.872 INFO  B1     encoder frames resumed
+13:37:34.914 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:37:34.914 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:37:35.000 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:37:38.374 WARN  B1     no status frames for 1.2 s (robot online)
+13:37:38.374 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:37:39.375 INFO  B1     status frames resumed
+13:37:39.375 INFO  B1     encoder frames resumed
+13:37:41.377 WARN  B1     no status frames for 1.1 s (robot online)
+13:37:41.377 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:37:41.877 INFO  B1     status frames resumed
+13:37:41.878 INFO  B1     encoder frames resumed
+13:37:46.881 WARN  B1     no status frames for 1.1 s (robot online)
+13:37:46.881 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:37:47.882 INFO  B1     status frames resumed
+13:37:47.882 INFO  B1     encoder frames resumed
+13:37:50.384 WARN  B1     no status frames for 1.1 s (robot online)
+13:37:50.384 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:37:51.385 INFO  B1     status frames resumed
+13:37:51.385 INFO  B1     encoder frames resumed
+13:37:54.888 WARN  B1     no status frames for 1.0 s (robot online)
+13:37:54.888 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:37:55.389 INFO  B1     status frames resumed
+13:37:55.389 INFO  B1     encoder frames resumed
+13:37:58.391 WARN  B1     no status frames for 1.1 s (robot online)
+13:37:58.391 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:37:58.892 INFO  B1     status frames resumed
+13:37:58.892 INFO  B1     encoder frames resumed
+13:38:00.393 WARN  B1     no status frames for 1.1 s (robot online)
+13:38:00.393 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:38:02.395 WARN  B1     no heartbeat for 3.1 s (robot online)
+13:38:05.397 INFO  B1     status frames resumed
+13:38:05.397 INFO  B1     encoder frames resumed
+13:38:05.512 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:05.619 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:05.619 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:05.619 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:05.619 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:05.619 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:05.620 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:05.620 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:05.898 INFO  B1     heartbeat resumed
+13:38:06.842 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:08.400 WARN  B1     no status frames for 1.3 s (robot online)
+13:38:08.400 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:38:10.401 WARN  B1     no heartbeat for 3.5 s (robot online)
+13:38:11.403 INFO  B1     status frames resumed
+13:38:11.403 INFO  B1     encoder frames resumed
+13:38:12.403 WARN  B1     no status frames for 1.1 s (robot online)
+13:38:12.403 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:38:15.906 INFO  B1     status frames resumed
+13:38:15.906 INFO  B1     encoder frames resumed
+13:38:15.906 INFO  B1     heartbeat resumed
+13:38:16.906 WARN  B1     no status frames for 1.0 s (robot online)
+13:38:16.906 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:38:17.401 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:17.402 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:17.402 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:17.402 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:17.403 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:17.403 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:17.403 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:17.403 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:17.404 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:17.407 INFO  B1     status frames resumed
+13:38:17.407 INFO  B1     encoder frames resumed
+13:38:17.495 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:17.495 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:17.495 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:17.495 WARN  B1     robot dropped 2 outgoing message(s): Wi-Fi or broker too slow
+13:38:17.496 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:17.496 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:17.496 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:17.496 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:17.496 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:25.913 WARN  B1     no status frames for 1.0 s (robot online)
+13:38:25.914 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:38:27.736 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:27.737 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:27.842 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:27.915 INFO  B1     status frames resumed
+13:38:27.915 INFO  B1     encoder frames resumed
+13:38:31.417 WARN  B1     no status frames for 1.3 s (robot online)
+13:38:31.417 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:38:32.918 WARN  B1     no heartbeat for 3.2 s (robot online)
+13:38:34.701 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:34.701 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:34.701 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:34.701 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:34.822 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:34.822 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:34.823 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:34.823 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:34.905 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:34.920 INFO  B1     status frames resumed
+13:38:34.920 INFO  B1     encoder frames resumed
+13:38:34.920 INFO  B1     heartbeat resumed
+13:38:36.422 WARN  B1     no status frames for 1.2 s (robot online)
+13:38:36.422 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:38:37.923 WARN  B1     no heartbeat for 3.1 s (robot online)
+13:38:45.928 INFO  B1     status frames resumed
+13:38:45.928 INFO  B1     encoder frames resumed
+13:38:45.928 INFO  B1     heartbeat resumed
+13:38:46.929 WARN  B1     no status frames for 1.3 s (robot online)
+13:38:46.929 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:38:47.086 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:47.086 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:47.086 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:47.086 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:47.191 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:47.191 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:47.191 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:47.191 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:47.191 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:47.429 INFO  B1     status frames resumed
+13:38:47.429 INFO  B1     encoder frames resumed
+13:38:49.431 WARN  B1     no status frames for 1.4 s (robot online)
+13:38:49.431 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:38:50.879 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:50.880 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:50.880 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:50.880 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:50.933 INFO  B1     status frames resumed
+13:38:50.933 INFO  B1     encoder frames resumed
+13:38:51.082 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:38:52.434 WARN  B1     no status frames for 1.1 s (robot online)
+13:38:52.434 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:38:52.934 INFO  B1     status frames resumed
+13:38:52.934 INFO  B1     encoder frames resumed
+13:38:53.935 WARN  B1     no status frames for 1.1 s (robot online)
+13:38:53.935 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:38:54.435 INFO  B1     status frames resumed
+13:38:54.435 INFO  B1     encoder frames resumed
+13:38:55.436 WARN  B1     no status frames for 1.2 s (robot online)
+13:38:55.436 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:38:55.936 INFO  B1     status frames resumed
+13:38:55.936 INFO  B1     encoder frames resumed
+13:38:57.438 WARN  B1     no status frames for 1.2 s (robot online)
+13:38:57.438 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:38:58.439 INFO  B1     status frames resumed
+13:38:58.439 INFO  B1     encoder frames resumed
+13:38:59.440 WARN  B1     no status frames for 1.3 s (robot online)
+13:38:59.440 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:38:59.440 WARN  B1     no heartbeat for 3.2 s (robot online)
+13:38:59.940 INFO  B1     status frames resumed
+13:38:59.940 INFO  B1     encoder frames resumed
+13:38:59.940 INFO  B1     heartbeat resumed
+13:39:00.941 WARN  B1     no status frames for 1.3 s (robot online)
+13:39:00.941 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:39:01.442 INFO  B1     status frames resumed
+13:39:01.442 INFO  B1     encoder frames resumed
+13:39:03.944 WARN  B1     no status frames for 1.2 s (robot online)
+13:39:03.944 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:39:04.444 INFO  B1     status frames resumed
+13:39:04.445 INFO  B1     encoder frames resumed
+13:39:05.946 WARN  B1     no status frames for 1.1 s (robot online)
+13:39:05.946 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:39:06.446 INFO  B1     status frames resumed
+13:39:06.446 INFO  B1     encoder frames resumed
+13:39:07.447 WARN  B1     no status frames for 1.0 s (robot online)
+13:39:07.447 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:39:07.947 INFO  B1     status frames resumed
+13:39:07.947 INFO  B1     encoder frames resumed
+13:39:09.449 WARN  B1     no status frames for 1.1 s (robot online)
+13:39:09.449 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:39:09.949 INFO  B1     status frames resumed
+13:39:09.949 INFO  B1     encoder frames resumed
+13:39:12.951 WARN  B1     no status frames for 1.2 s (robot online)
+13:39:12.951 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:39:13.952 INFO  B1     status frames resumed
+13:39:13.952 INFO  B1     encoder frames resumed
+13:39:16.454 WARN  B1     no status frames for 1.2 s (robot online)
+13:39:16.454 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:39:17.455 INFO  B1     status frames resumed
+13:39:17.455 INFO  B1     encoder frames resumed
+13:39:18.956 WARN  B1     no status frames for 1.2 s (robot online)
+13:39:18.956 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:39:20.458 INFO  B1     status frames resumed
+13:39:20.458 INFO  B1     encoder frames resumed
+13:39:20.575 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:39:20.575 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:39:20.575 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:39:20.679 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:39:37.970 WARN  B1     no status frames for 1.3 s (robot online)
+13:39:37.970 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:39:39.472 INFO  B1     status frames resumed
+13:39:39.472 INFO  B1     encoder frames resumed
+13:39:39.732 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:39:39.732 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:39:39.732 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:39:39.733 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:39:50.981 WARN  B1     no status frames for 1.2 s (robot online)
+13:39:50.981 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:39:51.481 INFO  B1     status frames resumed
+13:39:51.982 INFO  B1     encoder frames resumed
+13:40:03.991 WARN  B1     no status frames for 1.0 s (robot online)
+13:40:03.991 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:40:05.993 WARN  B1     no heartbeat for 3.0 s (robot online)
+13:40:10.773 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:40:10.851 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:40:10.851 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:40:10.851 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:40:10.954 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:40:10.954 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:40:10.954 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:40:10.954 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:40:10.996 INFO  B1     status frames resumed
+13:40:10.996 INFO  B1     encoder frames resumed
+13:40:10.996 INFO  B1     heartbeat resumed
+13:40:11.059 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:40:40.516 WARN  B1     no status frames for 1.1 s (robot online)
+13:40:40.517 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:40:41.017 INFO  B1     status frames resumed
+13:40:41.017 INFO  B1     encoder frames resumed
+13:41:02.033 WARN  B1     no status frames for 1.4 s (robot online)
+13:41:02.033 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:41:03.534 INFO  B1     status frames resumed
+13:41:03.535 INFO  B1     encoder frames resumed
+13:41:03.593 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:41:03.593 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:41:03.593 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:41:03.693 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:41:09.539 WARN  B1     no status frames for 1.2 s (robot online)
+13:41:09.539 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:41:10.540 INFO  B1     status frames resumed
+13:41:10.540 INFO  B1     encoder frames resumed
+13:41:12.541 WARN  B1     no status frames for 1.3 s (robot online)
+13:41:12.541 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:41:13.542 WARN  B1     no heartbeat for 3.1 s (robot online)
+13:41:14.043 INFO  B1     status frames resumed
+13:41:14.043 INFO  B1     encoder frames resumed
+13:41:14.043 INFO  B1     heartbeat resumed
+13:41:14.149 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:41:14.149 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:41:14.149 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:41:14.243 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:41:41.562 WARN  B1     no status frames for 1.2 s (robot online)
+13:41:41.562 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:41:43.063 WARN  B1     no heartbeat for 3.4 s (robot online)
+13:41:43.322 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:41:43.322 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:41:43.424 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:41:43.424 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:41:43.424 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:41:43.424 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:41:43.527 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:41:43.564 INFO  B1     status frames resumed
+13:41:43.564 INFO  B1     encoder frames resumed
+13:41:43.564 INFO  B1     heartbeat resumed
+13:42:10.584 WARN  B1     no status frames for 1.4 s (robot online)
+13:42:10.585 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:42:12.086 INFO  B1     status frames resumed
+13:42:12.086 INFO  B1     encoder frames resumed
+13:42:13.087 WARN  B1     no status frames for 1.3 s (robot online)
+13:42:13.087 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:42:15.088 WARN  B1     no heartbeat for 3.4 s (robot online)
+13:42:16.188 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:42:16.301 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:42:16.397 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:42:16.397 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:42:16.397 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:42:16.398 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:42:16.499 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:42:16.499 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:42:16.499 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:42:16.499 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:42:16.589 INFO  B1     status frames resumed
+13:42:16.589 INFO  B1     encoder frames resumed
+13:42:16.589 INFO  B1     heartbeat resumed
+13:42:16.916 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:42:41.606 WARN  B1     no status frames for 1.0 s (robot online)
+13:42:41.606 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:42:43.607 WARN  B1     no heartbeat for 3.5 s (robot online)
+13:42:45.071 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:42:45.071 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:42:45.071 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:42:45.071 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:42:45.071 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:42:45.071 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:42:45.071 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:42:45.071 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:42:45.109 INFO  B1     status frames resumed
+13:42:45.109 INFO  B1     encoder frames resumed
+13:42:45.109 INFO  B1     heartbeat resumed
+13:42:45.175 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:42:51.615 WARN  B1     no status frames for 1.0 s (robot online)
+13:42:51.615 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:42:52.115 INFO  B1     status frames resumed
+13:42:52.116 INFO  B1     encoder frames resumed
+13:42:54.617 WARN  B1     no status frames for 1.0 s (robot online)
+13:42:54.617 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:42:55.118 INFO  B1     status frames resumed
+13:42:55.118 INFO  B1     encoder frames resumed
+13:43:04.124 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:43:04.624 INFO  B1     encoder frames resumed
+13:43:07.626 WARN  B1     no status frames for 1.1 s (robot online)
+13:43:07.626 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:43:08.127 INFO  B1     status frames resumed
+13:43:08.127 INFO  B1     encoder frames resumed
+13:43:09.628 WARN  B1     no status frames for 1.3 s (robot online)
+13:43:09.629 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:43:11.130 INFO  B1     status frames resumed
+13:43:11.130 INFO  B1     encoder frames resumed
+13:43:11.285 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:43:11.285 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:43:11.285 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:43:11.389 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:43:21.138 WARN  B1     no status frames for 1.3 s (robot online)
+13:43:21.138 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:43:22.638 INFO  B1     status frames resumed
+13:43:22.639 INFO  B1     encoder frames resumed
+13:43:22.639 WARN  B1     no heartbeat for 3.1 s (robot online)
+13:43:22.855 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:43:22.855 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:43:22.855 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:43:22.958 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:43:23.139 INFO  B1     heartbeat resumed
+13:43:27.142 WARN  B1     no status frames for 1.1 s (robot online)
+13:43:27.142 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:43:28.142 INFO  B1     status frames resumed
+13:43:28.143 INFO  B1     encoder frames resumed
+13:43:38.650 WARN  B1     no status frames for 1.2 s (robot online)
+13:43:38.650 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:43:40.151 INFO  B1     status frames resumed
+13:43:40.151 INFO  B1     encoder frames resumed
+13:43:40.151 WARN  B1     no heartbeat for 3.5 s (robot online)
+13:43:40.366 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:43:40.366 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:43:40.366 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:43:40.469 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:43:40.651 INFO  B1     heartbeat resumed
+13:43:49.159 WARN  B1     no status frames for 1.0 s (robot online)
+13:43:49.159 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:43:50.159 INFO  B1     status frames resumed
+13:43:50.660 INFO  B1     encoder frames resumed
+13:43:56.163 WARN  B1     no status frames for 1.5 s (robot online)
+13:43:56.163 WARN  B1     no encoder frames for 1.5 s (robot online)
+13:43:56.663 INFO  B1     status frames resumed
+13:43:57.163 INFO  B1     encoder frames resumed
+13:44:05.171 WARN  B1     no status frames for 1.5 s (robot online)
+13:44:05.171 WARN  B1     no encoder frames for 1.5 s (robot online)
+13:44:06.172 INFO  B1     status frames resumed
+13:44:06.172 INFO  B1     encoder frames resumed
+13:44:14.179 WARN  B1     no status frames for 1.1 s (robot online)
+13:44:14.179 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:44:14.679 INFO  B1     status frames resumed
+13:44:14.679 INFO  B1     encoder frames resumed
+13:44:23.686 WARN  B1     no status frames for 1.1 s (robot online)
+13:44:23.686 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:44:24.186 INFO  B1     status frames resumed
+13:44:24.186 INFO  B1     encoder frames resumed
+13:44:32.692 WARN  B1     no status frames for 1.1 s (robot online)
+13:44:32.692 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:44:33.193 INFO  B1     status frames resumed
+13:44:33.193 INFO  B1     encoder frames resumed
+13:44:36.195 WARN  B1     no status frames for 1.5 s (robot online)
+13:44:36.196 WARN  B1     no encoder frames for 1.5 s (robot online)
+13:44:37.707 INFO  B1     status frames resumed
+13:44:37.707 INFO  B1     encoder frames resumed
+13:44:37.718 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:44:37.720 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:44:37.720 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:44:37.721 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:44:37.817 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:44:57.726 WARN  B1     no status frames for 1.4 s (robot online)
+13:44:57.727 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:44:59.224 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:44:59.228 INFO  B1     status frames resumed
+13:44:59.228 INFO  B1     encoder frames resumed
+13:44:59.317 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:44:59.318 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:44:59.318 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:44:59.319 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:44:59.422 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:45:01.730 WARN  B1     no status frames for 1.1 s (robot online)
+13:45:01.730 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:45:02.230 INFO  B1     status frames resumed
+13:45:02.230 INFO  B1     encoder frames resumed
+13:45:04.232 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:45:04.733 WARN  B1     no status frames for 1.4 s (robot online)
+13:45:05.734 WARN  B1     no heartbeat for 3.2 s (robot online)
+13:45:06.234 INFO  B1     status frames resumed
+13:45:06.234 INFO  B1     encoder frames resumed
+13:45:06.235 INFO  B1     heartbeat resumed
+13:45:06.384 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:45:06.384 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:45:06.384 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:45:06.491 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:45:12.255 WARN  B1     no status frames for 1.1 s (robot online)
+13:45:12.255 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:45:12.755 INFO  B1     status frames resumed
+13:45:12.755 INFO  B1     encoder frames resumed
+13:45:14.756 WARN  B1     no status frames for 1.2 s (robot online)
+13:45:14.757 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:45:15.757 INFO  B1     status frames resumed
+13:45:15.757 INFO  B1     encoder frames resumed
+13:45:18.260 WARN  B1     no status frames for 1.0 s (robot online)
+13:45:18.260 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:45:18.761 INFO  B1     status frames resumed
+13:45:18.762 INFO  B1     encoder frames resumed
+13:45:22.766 WARN  B1     no status frames for 1.2 s (robot online)
+13:45:22.766 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:45:24.268 WARN  B1     no heartbeat for 3.0 s (robot online)
+13:45:36.854 ERROR robot  robot is OFFLINE (Wi-Fi dropped, or the Pico reset or lost power)
+13:45:40.913 INFO  robot  robot is ONLINE
+13:45:41.014 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:45:41.096 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:45:41.096 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:45:41.097 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:45:41.289 INFO  B1     status frames resumed
+13:45:41.289 INFO  B1     heartbeat resumed
+13:45:41.306 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:45:41.306 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:45:41.306 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:45:41.307 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:45:41.407 WARN  B1     robot dropped 2 outgoing message(s): Wi-Fi or broker too slow
+13:45:41.790 INFO  B1     encoder frames resumed
+13:45:57.826 WARN  B1     no status frames for 1.5 s (robot online)
+13:45:57.826 WARN  B1     no encoder frames for 1.5 s (robot online)
+13:45:58.827 INFO  B1     status frames resumed
+13:45:58.827 INFO  B1     encoder frames resumed
+13:46:03.331 WARN  B1     no status frames for 1.2 s (robot online)
+13:46:03.331 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:46:03.832 INFO  B1     status frames resumed
+13:46:03.833 INFO  B1     encoder frames resumed
+13:46:06.336 WARN  B1     no status frames for 1.1 s (robot online)
+13:46:06.336 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:46:08.338 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:46:08.338 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:46:08.338 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:46:08.339 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:46:08.339 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:46:08.339 INFO  B1     status frames resumed
+13:46:08.339 INFO  B1     encoder frames resumed
+13:46:12.344 WARN  B1     no status frames for 1.3 s (robot online)
+13:46:12.344 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:46:12.845 INFO  B1     status frames resumed
+13:46:12.845 INFO  B1     encoder frames resumed
+13:46:14.348 WARN  B1     no status frames for 1.2 s (robot online)
+13:46:14.349 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:46:14.850 INFO  B1     status frames resumed
+13:46:14.850 INFO  B1     encoder frames resumed
+13:46:21.859 WARN  B1     no status frames for 1.3 s (robot online)
+13:46:21.859 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:46:22.860 INFO  B1     status frames resumed
+13:46:22.861 INFO  B1     encoder frames resumed
+13:46:26.365 WARN  B1     no status frames for 1.3 s (robot online)
+13:46:26.365 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:46:27.366 INFO  B1     status frames resumed
+13:46:27.366 INFO  B1     encoder frames resumed
+13:46:28.367 WARN  B1     no status frames for 1.2 s (robot online)
+13:46:28.368 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:46:28.868 INFO  B1     status frames resumed
+13:46:28.868 INFO  B1     encoder frames resumed
+13:46:31.372 WARN  B1     no status frames for 1.1 s (robot online)
+13:46:31.372 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:46:31.873 INFO  B1     status frames resumed
+13:46:31.873 INFO  B1     encoder frames resumed
+13:46:33.888 WARN  B1     no status frames for 1.4 s (robot online)
+13:46:33.888 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:46:34.889 INFO  B1     status frames resumed
+13:46:34.889 INFO  B1     encoder frames resumed
+13:46:52.471 WARN  B1     no status frames for 1.2 s (robot online)
+13:46:52.471 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:46:52.972 INFO  B1     status frames resumed
+13:46:52.972 INFO  B1     encoder frames resumed
+13:46:58.978 WARN  B1     no status frames for 1.4 s (robot online)
+13:46:58.978 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:46:59.978 WARN  B1     no heartbeat for 3.2 s (robot online)
+13:47:00.458 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:47:00.459 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:47:00.459 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:47:00.479 INFO  B1     status frames resumed
+13:47:00.479 INFO  B1     encoder frames resumed
+13:47:00.479 INFO  B1     heartbeat resumed
+13:47:00.568 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:47:03.983 WARN  B1     no status frames for 1.1 s (robot online)
+13:47:03.983 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:47:04.483 INFO  B1     status frames resumed
+13:47:04.483 INFO  B1     encoder frames resumed
+13:47:05.484 WARN  B1     no status frames for 1.1 s (robot online)
+13:47:05.485 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:47:05.985 INFO  B1     status frames resumed
+13:47:05.986 INFO  B1     encoder frames resumed
+13:47:15.998 WARN  B1     no status frames for 1.2 s (robot online)
+13:47:15.998 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:47:16.999 INFO  B1     status frames resumed
+13:47:16.999 INFO  B1     encoder frames resumed
+13:47:23.024 WARN  B1     no status frames for 1.1 s (robot online)
+13:47:23.024 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:47:23.525 INFO  B1     status frames resumed
+13:47:23.525 INFO  B1     encoder frames resumed
+13:47:28.031 WARN  B1     no status frames for 1.3 s (robot online)
+13:47:28.031 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:47:29.033 WARN  B1     no heartbeat for 3.1 s (robot online)
+13:47:29.533 INFO  B1     status frames resumed
+13:47:29.534 INFO  B1     encoder frames resumed
+13:47:29.534 INFO  B1     heartbeat resumed
+13:47:29.643 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:47:29.643 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:47:29.644 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:47:29.749 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:47:43.549 WARN  B1     no status frames for 1.3 s (robot online)
+13:47:43.549 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:47:45.073 INFO  B1     status frames resumed
+13:47:45.073 INFO  B1     encoder frames resumed
+13:47:45.213 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:47:45.214 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:47:45.306 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:47:49.077 WARN  B1     no status frames for 1.0 s (robot online)
+13:47:49.077 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:47:50.108 INFO  B1     status frames resumed
+13:47:50.108 INFO  B1     encoder frames resumed
+13:47:53.613 WARN  B1     no status frames for 1.1 s (robot online)
+13:47:53.613 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:47:54.613 INFO  B1     status frames resumed
+13:47:54.614 INFO  B1     encoder frames resumed
+13:47:59.120 WARN  B1     no status frames for 1.2 s (robot online)
+13:47:59.120 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:48:00.622 INFO  B1     status frames resumed
+13:48:00.622 INFO  B1     encoder frames resumed
+13:48:00.771 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:48:00.772 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:48:00.772 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:48:00.874 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:48:03.125 WARN  B1     no status frames for 1.1 s (robot online)
+13:48:03.126 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:48:04.126 INFO  B1     status frames resumed
+13:48:04.126 INFO  B1     encoder frames resumed
+13:48:11.142 WARN  B1     no status frames for 1.1 s (robot online)
+13:48:11.143 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:48:11.643 INFO  B1     status frames resumed
+13:48:11.643 INFO  B1     encoder frames resumed
+13:48:12.650 WARN  B1     no status frames for 1.0 s (robot online)
+13:48:12.650 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:48:13.151 INFO  B1     status frames resumed
+13:48:13.151 INFO  B1     encoder frames resumed
+13:48:24.162 WARN  B1     no status frames for 1.2 s (robot online)
+13:48:24.162 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:48:24.663 INFO  B1     status frames resumed
+13:48:25.163 INFO  B1     encoder frames resumed
+13:48:29.669 WARN  B1     no status frames for 1.3 s (robot online)
+13:48:29.669 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:48:31.170 WARN  B1     no heartbeat for 3.5 s (robot online)
+13:48:39.066 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:48:39.066 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:48:39.067 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:48:39.067 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:48:39.067 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:48:39.067 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:48:39.067 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:48:39.068 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:48:39.168 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:48:39.222 INFO  B1     status frames resumed
+13:48:39.222 INFO  B1     encoder frames resumed
+13:48:39.222 INFO  B1     heartbeat resumed
+13:48:43.226 WARN  B1     no status frames for 1.4 s (robot online)
+13:48:43.226 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:48:43.727 INFO  B1     status frames resumed
+13:48:43.727 INFO  B1     encoder frames resumed
+13:48:45.228 WARN  B1     no status frames for 1.3 s (robot online)
+13:48:45.229 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:48:45.729 INFO  B1     status frames resumed
+13:48:45.729 INFO  B1     encoder frames resumed
+13:48:48.739 WARN  B1     no status frames for 1.3 s (robot online)
+13:48:48.739 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:48:49.240 INFO  B1     status frames resumed
+13:48:49.240 INFO  B1     encoder frames resumed
+13:48:51.242 WARN  B1     no status frames for 1.3 s (robot online)
+13:48:51.242 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:48:51.773 INFO  B1     status frames resumed
+13:48:51.774 INFO  B1     encoder frames resumed
+13:48:53.776 WARN  B1     no status frames for 1.3 s (robot online)
+13:48:53.776 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:48:54.279 INFO  B1     status frames resumed
+13:48:54.279 INFO  B1     encoder frames resumed
+13:48:55.281 WARN  B1     no status frames for 1.5 s (robot online)
+13:48:55.281 WARN  B1     no encoder frames for 1.5 s (robot online)
+13:48:55.281 WARN  B1     no heartbeat for 3.2 s (robot online)
+13:48:55.781 INFO  B1     status frames resumed
+13:48:55.781 INFO  B1     encoder frames resumed
+13:48:55.781 INFO  B1     heartbeat resumed
+13:48:56.782 WARN  B1     no status frames for 1.0 s (robot online)
+13:48:56.782 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:48:58.629 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:48:58.631 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:48:58.631 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:48:58.632 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:48:58.736 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:48:58.784 INFO  B1     status frames resumed
+13:48:58.784 INFO  B1     encoder frames resumed
+13:49:01.287 WARN  B1     no status frames for 1.0 s (robot online)
+13:49:01.287 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:49:03.288 WARN  B1     no heartbeat for 3.1 s (robot online)
+13:49:08.292 INFO  B1     status frames resumed
+13:49:08.292 INFO  B1     encoder frames resumed
+13:49:09.293 WARN  B1     no status frames for 1.4 s (robot online)
+13:49:09.293 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:49:13.995 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:13.997 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:13.998 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:13.998 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:13.998 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:13.998 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:13.999 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:13.999 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:14.001 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:14.088 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:14.199 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:14.200 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:14.200 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:14.294 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:14.294 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:14.295 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:14.295 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:14.298 INFO  B1     status frames resumed
+13:49:14.298 INFO  B1     encoder frames resumed
+13:49:14.298 INFO  B1     heartbeat resumed
+13:49:14.398 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:19.338 WARN  B1     no status frames for 1.0 s (robot online)
+13:49:19.338 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:49:19.839 INFO  B1     status frames resumed
+13:49:19.839 INFO  B1     encoder frames resumed
+13:49:27.350 WARN  B1     no status frames for 1.5 s (robot online)
+13:49:27.350 WARN  B1     no encoder frames for 1.5 s (robot online)
+13:49:28.838 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:28.838 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:28.839 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:28.852 INFO  B1     status frames resumed
+13:49:28.857 INFO  B1     encoder frames resumed
+13:49:28.944 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:30.359 WARN  B1     no status frames for 1.1 s (robot online)
+13:49:30.359 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:49:31.860 WARN  B1     no heartbeat for 3.2 s (robot online)
+13:49:44.889 ERROR robot  robot is OFFLINE (Wi-Fi dropped, or the Pico reset or lost power)
+13:49:46.041 INFO  robot  robot is ONLINE
+13:49:46.150 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:46.246 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:46.246 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:46.247 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:46.345 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:46.345 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:46.346 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:46.346 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:46.377 INFO  B1     status frames resumed
+13:49:46.450 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:46.878 INFO  B1     encoder frames resumed
+13:49:47.378 INFO  B1     heartbeat resumed
+13:49:52.885 WARN  B1     no status frames for 1.2 s (robot online)
+13:49:52.885 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:49:54.386 INFO  B1     status frames resumed
+13:49:54.386 INFO  B1     encoder frames resumed
+13:49:54.386 WARN  B1     no heartbeat for 3.2 s (robot online)
+13:49:55.387 WARN  B1     no status frames for 1.2 s (robot online)
+13:49:55.387 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:49:56.380 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:56.380 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:56.381 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:56.381 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:56.381 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:56.455 INFO  B1     status frames resumed
+13:49:56.456 INFO  B1     encoder frames resumed
+13:49:56.456 INFO  B1     heartbeat resumed
+13:49:56.690 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:49:57.957 WARN  B1     no status frames for 1.2 s (robot online)
+13:49:57.957 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:49:58.958 INFO  B1     status frames resumed
+13:49:58.958 INFO  B1     encoder frames resumed
+13:50:02.963 WARN  B1     no status frames for 1.2 s (robot online)
+13:50:02.963 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:50:03.964 INFO  B1     status frames resumed
+13:50:03.964 INFO  B1     encoder frames resumed
+13:50:08.469 WARN  B1     no status frames for 1.2 s (robot online)
+13:50:08.469 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:50:09.470 WARN  B1     no heartbeat for 3.1 s (robot online)
+13:50:14.976 INFO  B1     status frames resumed
+13:50:14.976 INFO  B1     encoder frames resumed
+13:50:14.977 INFO  B1     heartbeat resumed
+13:50:15.024 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:15.024 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:15.024 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:15.025 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:15.121 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:15.122 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:15.122 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:15.122 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:15.226 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:16.978 WARN  B1     no status frames for 1.2 s (robot online)
+13:50:16.978 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:50:18.480 INFO  B1     status frames resumed
+13:50:18.480 INFO  B1     encoder frames resumed
+13:50:18.480 WARN  B1     no heartbeat for 3.0 s (robot online)
+13:50:18.706 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:18.706 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:18.706 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:18.915 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:18.980 INFO  B1     heartbeat resumed
+13:50:20.982 WARN  B1     no status frames for 1.0 s (robot online)
+13:50:20.982 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:50:22.983 WARN  B1     no heartbeat for 3.5 s (robot online)
+13:50:25.998 INFO  B1     status frames resumed
+13:50:25.998 INFO  B1     encoder frames resumed
+13:50:26.499 INFO  B1     heartbeat resumed
+13:50:27.405 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:27.405 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:27.406 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:27.407 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:27.502 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:50:28.503 WARN  B1     no status frames for 1.1 s (robot online)
+13:50:28.947 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:28.947 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:28.948 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:28.948 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:28.948 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:29.004 INFO  B1     status frames resumed
+13:50:29.004 INFO  B1     encoder frames resumed
+13:50:32.010 WARN  B1     no status frames for 1.4 s (robot online)
+13:50:32.010 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:50:34.013 WARN  B1     no heartbeat for 3.4 s (robot online)
+13:50:35.014 INFO  B1     status frames resumed
+13:50:35.015 INFO  B1     encoder frames resumed
+13:50:35.015 INFO  B1     heartbeat resumed
+13:50:36.015 WARN  B1     no status frames for 1.0 s (robot online)
+13:50:36.015 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:50:37.016 INFO  B1     status frames resumed
+13:50:37.016 INFO  B1     encoder frames resumed
+13:50:38.017 WARN  B1     no status frames for 1.5 s (robot online)
+13:50:38.017 WARN  B1     no encoder frames for 1.5 s (robot online)
+13:50:40.019 WARN  B1     no heartbeat for 3.5 s (robot online)
+13:50:41.026 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:41.026 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:41.026 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:41.026 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:41.027 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:41.027 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:41.027 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:41.027 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:41.027 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:41.234 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:41.235 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:41.235 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:41.235 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:41.339 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:41.340 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:41.340 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:41.340 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:41.440 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:41.521 INFO  B1     status frames resumed
+13:50:41.521 INFO  B1     encoder frames resumed
+13:50:41.521 INFO  B1     heartbeat resumed
+13:50:43.525 WARN  B1     no status frames for 1.3 s (robot online)
+13:50:43.525 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:50:45.026 WARN  B1     no heartbeat for 3.1 s (robot online)
+13:50:47.035 INFO  B1     status frames resumed
+13:50:47.035 INFO  B1     encoder frames resumed
+13:50:48.147 INFO  B1     heartbeat resumed
+13:50:48.198 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:48.198 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:48.199 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:48.199 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:48.200 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:48.200 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:48.201 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:48.201 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:48.201 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:55.656 WARN  B1     no status frames for 1.2 s (robot online)
+13:50:55.656 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:50:57.158 WARN  B1     no heartbeat for 3.0 s (robot online)
+13:50:58.660 INFO  B1     status frames resumed
+13:50:58.661 INFO  B1     encoder frames resumed
+13:50:58.846 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:58.846 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:58.846 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:58.847 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:58.945 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:58.946 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:58.946 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:58.946 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:59.058 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:50:59.161 INFO  B1     heartbeat resumed
+13:51:00.164 WARN  B1     no status frames for 1.0 s (robot online)
+13:51:00.164 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:51:01.665 INFO  B1     status frames resumed
+13:51:01.665 INFO  B1     encoder frames resumed
+13:51:04.167 WARN  B1     no status frames for 1.3 s (robot online)
+13:51:04.167 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:51:04.667 INFO  B1     status frames resumed
+13:51:04.668 INFO  B1     encoder frames resumed
+13:51:06.673 WARN  B1     no status frames for 1.3 s (robot online)
+13:51:06.673 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:51:07.174 INFO  B1     status frames resumed
+13:51:07.174 INFO  B1     encoder frames resumed
+13:51:13.681 WARN  B1     no status frames for 1.4 s (robot online)
+13:51:13.681 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:51:14.682 INFO  B1     status frames resumed
+13:51:14.682 INFO  B1     encoder frames resumed
+13:51:17.686 WARN  B1     no status frames for 1.3 s (robot online)
+13:51:17.686 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:51:18.187 INFO  B1     status frames resumed
+13:51:18.187 INFO  B1     encoder frames resumed
+13:51:20.189 WARN  B1     no status frames for 1.2 s (robot online)
+13:51:20.189 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:51:20.689 INFO  B1     status frames resumed
+13:51:20.691 INFO  B1     encoder frames resumed
+13:51:22.193 WARN  B1     no status frames for 1.2 s (robot online)
+13:51:22.193 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:51:22.693 INFO  B1     status frames resumed
+13:51:22.693 INFO  B1     encoder frames resumed
+13:51:24.196 WARN  B1     no status frames for 1.4 s (robot online)
+13:51:24.196 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:51:25.697 WARN  B1     no heartbeat for 3.3 s (robot online)
+13:51:29.056 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:51:29.057 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:51:29.057 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:51:29.057 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:51:29.156 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:51:29.156 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:51:29.156 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:51:29.156 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:51:29.200 INFO  B1     status frames resumed
+13:51:29.200 INFO  B1     encoder frames resumed
+13:51:29.201 INFO  B1     heartbeat resumed
+13:51:29.256 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:51:31.203 WARN  B1     no status frames for 1.4 s (robot online)
+13:51:31.203 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:51:32.704 INFO  B1     status frames resumed
+13:51:32.705 INFO  B1     encoder frames resumed
+13:51:32.705 WARN  B1     no heartbeat for 3.1 s (robot online)
+13:51:33.706 WARN  B1     no status frames for 1.4 s (robot online)
+13:51:33.706 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:51:34.481 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:51:34.481 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:51:34.482 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:51:34.482 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:51:34.483 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:51:34.686 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:51:34.707 INFO  B1     status frames resumed
+13:51:34.707 INFO  B1     encoder frames resumed
+13:51:34.707 INFO  B1     heartbeat resumed
+13:51:34.796 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:51:36.208 WARN  B1     no status frames for 1.2 s (robot online)
+13:51:36.209 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:51:36.709 INFO  B1     status frames resumed
+13:51:36.709 INFO  B1     encoder frames resumed
+13:51:38.712 WARN  B1     no status frames for 1.0 s (robot online)
+13:51:38.712 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:51:39.212 INFO  B1     status frames resumed
+13:51:39.213 INFO  B1     encoder frames resumed
+13:51:45.731 WARN  B1     no status frames for 1.1 s (robot online)
+13:51:45.731 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:51:46.231 INFO  B1     status frames resumed
+13:51:46.232 INFO  B1     encoder frames resumed
+13:51:48.234 WARN  B1     no status frames for 1.1 s (robot online)
+13:51:48.235 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:51:48.735 INFO  B1     status frames resumed
+13:51:48.735 INFO  B1     encoder frames resumed
+13:51:53.268 WARN  B1     no status frames for 1.1 s (robot online)
+13:51:53.268 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:51:53.769 INFO  B1     status frames resumed
+13:51:53.769 INFO  B1     encoder frames resumed
+13:51:54.770 WARN  B1     no status frames for 1.2 s (robot online)
+13:51:54.777 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:51:55.278 INFO  B1     status frames resumed
+13:51:55.278 INFO  B1     encoder frames resumed
+13:51:58.780 WARN  B1     no status frames for 1.4 s (robot online)
+13:51:58.781 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:52:00.284 INFO  B1     status frames resumed
+13:52:00.284 INFO  B1     encoder frames resumed
+13:52:00.295 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:00.295 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:00.296 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:00.393 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:03.286 WARN  B1     no status frames for 1.3 s (robot online)
+13:52:03.286 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:52:05.288 WARN  B1     no heartbeat for 3.3 s (robot online)
+13:52:06.739 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:06.739 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:06.739 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:06.740 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:06.789 INFO  B1     status frames resumed
+13:52:06.790 INFO  B1     encoder frames resumed
+13:52:06.790 INFO  B1     heartbeat resumed
+13:52:06.840 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:06.841 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:06.841 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:06.841 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:06.950 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:08.791 WARN  B1     no status frames for 1.2 s (robot online)
+13:52:08.792 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:52:09.793 INFO  B1     status frames resumed
+13:52:09.793 INFO  B1     encoder frames resumed
+13:52:10.793 WARN  B1     no status frames for 1.1 s (robot online)
+13:52:10.794 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:52:11.294 INFO  B1     status frames resumed
+13:52:11.294 INFO  B1     encoder frames resumed
+13:52:12.295 WARN  B1     no status frames for 1.2 s (robot online)
+13:52:12.295 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:52:12.796 INFO  B1     status frames resumed
+13:52:12.796 INFO  B1     encoder frames resumed
+13:52:14.799 WARN  B1     no status frames for 1.2 s (robot online)
+13:52:14.799 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:52:15.800 INFO  B1     status frames resumed
+13:52:15.800 INFO  B1     encoder frames resumed
+13:52:17.803 WARN  B1     no status frames for 1.4 s (robot online)
+13:52:17.803 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:52:19.305 WARN  B1     no heartbeat for 3.1 s (robot online)
+13:52:20.806 INFO  B1     status frames resumed
+13:52:20.806 INFO  B1     encoder frames resumed
+13:52:20.806 INFO  B1     heartbeat resumed
+13:52:21.807 WARN  B1     no status frames for 1.0 s (robot online)
+13:52:21.807 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:52:22.105 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:22.105 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:22.105 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:22.105 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:22.200 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:22.201 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:22.201 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:22.201 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:22.202 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:22.307 INFO  B1     status frames resumed
+13:52:22.307 INFO  B1     encoder frames resumed
+13:52:31.838 WARN  B1     no status frames for 1.0 s (robot online)
+13:52:31.838 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:52:32.339 INFO  B1     status frames resumed
+13:52:32.339 INFO  B1     encoder frames resumed
+13:52:35.343 WARN  B1     no status frames for 1.3 s (robot online)
+13:52:35.343 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:52:36.844 WARN  B1     no heartbeat for 3.5 s (robot online)
+13:52:41.850 INFO  B1     status frames resumed
+13:52:41.850 INFO  B1     encoder frames resumed
+13:52:42.351 INFO  B1     heartbeat resumed
+13:52:43.293 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:43.294 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:43.294 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:43.294 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:43.352 WARN  B1     no encoder frames for 1.5 s (robot online)
+13:52:43.397 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:43.397 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:43.398 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:43.398 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:43.398 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:43.853 INFO  B1     encoder frames resumed
+13:52:44.854 WARN  B1     no status frames for 1.1 s (robot online)
+13:52:44.854 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:52:46.855 WARN  B1     no heartbeat for 3.2 s (robot online)
+13:52:51.591 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:51.706 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:51.706 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:51.707 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:51.707 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:51.708 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:51.708 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:51.708 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:51.794 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:52:51.860 INFO  B1     status frames resumed
+13:52:51.860 INFO  B1     encoder frames resumed
+13:52:51.860 INFO  B1     heartbeat resumed
+13:52:53.361 WARN  B1     no status frames for 1.4 s (robot online)
+13:52:53.362 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:52:53.862 INFO  B1     status frames resumed
+13:52:53.862 INFO  B1     encoder frames resumed
+13:53:00.369 WARN  B1     no status frames for 1.2 s (robot online)
+13:53:00.369 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:53:00.869 INFO  B1     status frames resumed
+13:53:00.870 INFO  B1     encoder frames resumed
+13:53:09.377 WARN  B1     no status frames for 1.3 s (robot online)
+13:53:09.377 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:53:09.878 INFO  B1     status frames resumed
+13:53:09.878 INFO  B1     encoder frames resumed
+13:53:17.393 WARN  B1     no status frames for 1.2 s (robot online)
+13:53:17.393 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:53:17.894 INFO  B1     status frames resumed
+13:53:17.894 INFO  B1     encoder frames resumed
+13:53:19.395 WARN  B1     no status frames for 1.5 s (robot online)
+13:53:19.395 WARN  B1     no encoder frames for 1.5 s (robot online)
+13:53:20.782 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:53:20.782 WARN  B1     robot dropped 2 outgoing message(s): Wi-Fi or broker too slow
+13:53:20.897 INFO  B1     status frames resumed
+13:53:20.897 INFO  B1     encoder frames resumed
+13:53:24.901 WARN  B1     no status frames for 1.3 s (robot online)
+13:53:24.901 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:53:25.401 INFO  B1     status frames resumed
+13:53:25.402 INFO  B1     encoder frames resumed
+13:53:29.906 WARN  B1     no status frames for 1.1 s (robot online)
+13:53:29.906 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:53:30.407 INFO  B1     status frames resumed
+13:53:30.407 INFO  B1     encoder frames resumed
+13:53:32.910 WARN  B1     no status frames for 1.3 s (robot online)
+13:53:32.910 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:53:33.411 INFO  B1     status frames resumed
+13:53:33.411 INFO  B1     encoder frames resumed
+13:53:35.413 WARN  B1     no status frames for 1.2 s (robot online)
+13:53:35.413 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:53:35.913 INFO  B1     status frames resumed
+13:53:35.913 INFO  B1     encoder frames resumed
+13:53:55.437 WARN  B1     no status frames for 1.4 s (robot online)
+13:53:55.438 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:53:56.439 WARN  B1     no heartbeat for 3.2 s (robot online)
+13:53:56.940 INFO  B1     status frames resumed
+13:53:56.940 INFO  B1     encoder frames resumed
+13:53:56.940 INFO  B1     heartbeat resumed
+13:53:57.026 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:53:57.027 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:53:57.027 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:53:57.126 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:53:59.943 WARN  B1     no status frames for 1.1 s (robot online)
+13:53:59.943 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:54:00.444 INFO  B1     status frames resumed
+13:54:00.444 INFO  B1     encoder frames resumed
+13:54:02.446 WARN  B1     no status frames for 1.3 s (robot online)
+13:54:02.446 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:54:03.447 WARN  B1     no heartbeat for 3.1 s (robot online)
+13:54:03.948 INFO  B1     status frames resumed
+13:54:03.948 INFO  B1     encoder frames resumed
+13:54:03.948 INFO  B1     heartbeat resumed
+13:54:03.994 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:54:03.995 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:54:03.995 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:54:04.093 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:54:08.471 WARN  B1     no status frames for 1.3 s (robot online)
+13:54:08.471 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:54:09.474 WARN  B1     no heartbeat for 3.1 s (robot online)
+13:54:09.974 INFO  B1     status frames resumed
+13:54:09.974 INFO  B1     encoder frames resumed
+13:54:09.974 INFO  B1     heartbeat resumed
+13:54:10.034 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:54:10.034 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:54:10.034 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:54:10.136 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:54:12.477 WARN  B1     no status frames for 1.2 s (robot online)
+13:54:12.477 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:54:13.477 INFO  B1     status frames resumed
+13:54:13.477 INFO  B1     encoder frames resumed
+13:54:13.478 WARN  B1     no heartbeat for 3.0 s (robot online)
+13:54:14.479 WARN  B1     no status frames for 1.2 s (robot online)
+13:54:14.479 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:54:14.979 INFO  B1     status frames resumed
+13:54:14.979 INFO  B1     encoder frames resumed
+13:54:14.979 INFO  B1     heartbeat resumed
+13:54:15.980 WARN  B1     no status frames for 1.0 s (robot online)
+13:54:15.980 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:54:16.481 INFO  B1     status frames resumed
+13:54:16.481 INFO  B1     encoder frames resumed
+13:54:19.484 WARN  B1     no status frames for 1.2 s (robot online)
+13:54:19.484 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:54:20.985 INFO  B1     status frames resumed
+13:54:20.985 INFO  B1     encoder frames resumed
+13:54:20.995 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:54:21.088 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:54:21.088 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:54:21.089 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:54:21.089 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:54:21.195 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:54:23.488 WARN  B1     no status frames for 1.2 s (robot online)
+13:54:23.488 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:54:24.489 INFO  B1     status frames resumed
+13:54:24.489 INFO  B1     encoder frames resumed
+13:54:28.494 WARN  B1     no status frames for 1.5 s (robot online)
+13:54:28.494 WARN  B1     no encoder frames for 1.5 s (robot online)
+13:54:29.995 WARN  B1     no heartbeat for 3.4 s (robot online)
+13:54:42.875 ERROR robot  robot is OFFLINE (Wi-Fi dropped, or the Pico reset or lost power)
+13:54:44.147 INFO  robot  robot is ONLINE
+13:54:44.240 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:54:44.333 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:54:44.333 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:54:44.333 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:54:44.439 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:54:44.440 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:54:44.441 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:54:44.442 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:54:44.532 INFO  B1     status frames resumed
+13:54:44.538 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:54:45.033 INFO  B1     encoder frames resumed
+13:54:45.534 INFO  B1     heartbeat resumed
+13:54:47.036 WARN  B1     no status frames for 1.2 s (robot online)
+13:54:47.036 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:54:48.037 INFO  B1     status frames resumed
+13:54:48.037 INFO  B1     encoder frames resumed
+13:54:58.105 WARN  B1     no status frames for 1.1 s (robot online)
+13:54:58.105 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:54:59.106 INFO  B1     status frames resumed
+13:54:59.106 INFO  B1     encoder frames resumed
+13:55:01.109 WARN  B1     no status frames for 1.0 s (robot online)
+13:55:01.109 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:55:02.110 INFO  B1     status frames resumed
+13:55:02.110 INFO  B1     encoder frames resumed
+13:55:05.113 WARN  B1     no status frames for 1.3 s (robot online)
+13:55:05.113 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:55:05.614 INFO  B1     status frames resumed
+13:55:05.618 INFO  B1     encoder frames resumed
+13:55:10.624 WARN  B1     no status frames for 1.2 s (robot online)
+13:55:10.624 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:55:11.625 WARN  B1     no heartbeat for 3.1 s (robot online)
+13:55:12.493 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:55:12.493 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:55:12.494 WARN  B1     robot dropped 2 outgoing message(s): Wi-Fi or broker too slow
+13:55:12.685 INFO  B1     status frames resumed
+13:55:12.685 INFO  B1     encoder frames resumed
+13:55:12.685 INFO  B1     heartbeat resumed
+13:55:18.192 WARN  B1     no status frames for 1.3 s (robot online)
+13:55:18.192 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:55:18.692 INFO  B1     status frames resumed
+13:55:18.692 INFO  B1     encoder frames resumed
+13:55:43.287 WARN  B1     no status frames for 1.2 s (robot online)
+13:55:43.287 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:55:43.788 INFO  B1     status frames resumed
+13:55:43.788 INFO  B1     encoder frames resumed
+13:55:52.297 WARN  B1     no status frames for 1.5 s (robot online)
+13:55:52.297 WARN  B1     no encoder frames for 1.5 s (robot online)
+13:55:53.298 INFO  B1     status frames resumed
+13:55:53.298 INFO  B1     encoder frames resumed
+13:55:57.304 WARN  B1     no status frames for 1.5 s (robot online)
+13:55:57.304 WARN  B1     no encoder frames for 1.5 s (robot online)
+13:55:59.306 WARN  B1     no heartbeat for 3.5 s (robot online)
+13:56:02.082 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:02.083 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:02.084 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:02.084 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:02.162 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:02.162 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:02.163 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:02.163 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:02.264 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:02.311 INFO  B1     status frames resumed
+13:56:02.311 INFO  B1     encoder frames resumed
+13:56:02.311 INFO  B1     heartbeat resumed
+13:56:03.312 WARN  B1     no status frames for 1.0 s (robot online)
+13:56:03.312 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:56:05.314 WARN  B1     no heartbeat for 3.2 s (robot online)
+13:56:06.669 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:06.670 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:06.670 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:06.671 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:06.772 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:06.773 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:06.773 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:06.775 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:06.816 INFO  B1     status frames resumed
+13:56:06.817 INFO  B1     encoder frames resumed
+13:56:06.817 INFO  B1     heartbeat resumed
+13:56:06.870 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:20.888 WARN  B1     no status frames for 1.2 s (robot online)
+13:56:20.888 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:56:21.389 INFO  B1     status frames resumed
+13:56:21.389 INFO  B1     encoder frames resumed
+13:56:25.893 WARN  B1     no status frames for 1.2 s (robot online)
+13:56:25.893 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:56:26.393 INFO  B1     status frames resumed
+13:56:26.393 INFO  B1     encoder frames resumed
+13:56:27.395 WARN  B1     no status frames for 1.3 s (robot online)
+13:56:27.395 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:56:27.896 INFO  B1     status frames resumed
+13:56:27.896 INFO  B1     encoder frames resumed
+13:56:28.897 WARN  B1     no status frames for 1.1 s (robot online)
+13:56:28.897 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:56:30.901 WARN  B1     no heartbeat for 3.2 s (robot online)
+13:56:32.274 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:32.274 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:32.275 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:32.275 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:32.365 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:32.365 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:32.366 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:32.366 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:32.402 INFO  B1     status frames resumed
+13:56:32.402 INFO  B1     encoder frames resumed
+13:56:32.402 INFO  B1     heartbeat resumed
+13:56:33.403 WARN  B1     no status frames for 1.0 s (robot online)
+13:56:33.403 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:56:33.600 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:33.903 INFO  B1     status frames resumed
+13:56:33.903 INFO  B1     encoder frames resumed
+13:56:36.406 WARN  B1     no status frames for 1.1 s (robot online)
+13:56:36.406 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:56:36.907 INFO  B1     status frames resumed
+13:56:36.907 INFO  B1     encoder frames resumed
+13:56:37.908 WARN  B1     no status frames for 1.2 s (robot online)
+13:56:37.908 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:56:38.409 INFO  B1     status frames resumed
+13:56:38.409 INFO  B1     encoder frames resumed
+13:56:39.410 WARN  B1     no status frames for 1.3 s (robot online)
+13:56:39.410 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:56:39.911 INFO  B1     status frames resumed
+13:56:39.911 INFO  B1     encoder frames resumed
+13:56:46.466 WARN  B1     no status frames for 1.2 s (robot online)
+13:56:46.466 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:56:46.967 INFO  B1     status frames resumed
+13:56:46.967 INFO  B1     encoder frames resumed
+13:56:49.096 INFO  you    sent route L=b R=c S=d U=a
+13:56:49.266 INFO  B1     robot route: ok L=b R=c S=d U=a
+13:56:51.836 INFO  you    sent route L=b R=c S=d U=a
+13:56:52.583 INFO  you    sent route L=b R=c S=d U=a
+13:56:52.733 INFO  you    sent route L=b R=c S=d U=a
+13:56:52.897 INFO  you    sent route L=b R=c S=d U=a
+13:56:52.974 WARN  B1     no status frames for 1.1 s (robot online)
+13:56:52.974 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:56:53.158 INFO  B1     robot route: ok L=b R=c S=d U=a
+13:56:53.166 INFO  B1     robot route: ok L=b R=c S=d U=a
+13:56:53.170 INFO  B1     robot route: ok L=b R=c S=d U=a
+13:56:53.252 INFO  B1     robot route: ok L=b R=c S=d U=a
+13:56:53.475 INFO  B1     status frames resumed
+13:56:53.475 INFO  B1     encoder frames resumed
+13:56:55.980 WARN  B1     no status frames for 1.1 s (robot online)
+13:56:55.980 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:56:57.982 WARN  B1     no heartbeat for 3.5 s (robot online)
+13:56:59.411 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:59.412 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:59.412 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:59.412 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:59.485 INFO  B1     status frames resumed
+13:56:59.485 INFO  B1     encoder frames resumed
+13:56:59.485 INFO  B1     heartbeat resumed
+13:56:59.509 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:59.510 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:59.510 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:59.511 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:56:59.611 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:57:17.005 WARN  B1     no status frames for 1.3 s (robot online)
+13:57:17.005 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:57:18.507 INFO  B1     status frames resumed
+13:57:18.507 INFO  B1     encoder frames resumed
+13:57:18.658 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:57:18.753 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:57:18.753 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:57:18.753 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:57:18.753 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:57:18.857 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:57:23.514 WARN  B1     no status frames for 1.1 s (robot online)
+13:57:23.514 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:57:24.014 INFO  B1     status frames resumed
+13:57:24.014 INFO  B1     encoder frames resumed
+13:57:27.018 WARN  B1     no status frames for 1.2 s (robot online)
+13:57:27.019 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:57:28.589 INFO  B1     status frames resumed
+13:57:28.589 INFO  B1     encoder frames resumed
+13:57:28.693 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:57:28.693 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:57:28.790 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:57:37.097 WARN  B1     no status frames for 1.0 s (robot online)
+13:57:37.097 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:57:37.598 INFO  B1     status frames resumed
+13:57:37.598 INFO  B1     encoder frames resumed
+13:57:42.103 WARN  B1     no status frames for 1.1 s (robot online)
+13:57:42.103 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:57:43.104 INFO  B1     status frames resumed
+13:57:43.104 INFO  B1     encoder frames resumed
+13:57:46.609 WARN  B1     no status frames for 1.1 s (robot online)
+13:57:46.609 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:57:47.610 INFO  B1     status frames resumed
+13:57:47.610 INFO  B1     encoder frames resumed
+13:57:52.114 WARN  B1     no status frames for 1.1 s (robot online)
+13:57:52.114 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:57:53.115 INFO  B1     status frames resumed
+13:57:53.115 INFO  B1     encoder frames resumed
+13:57:54.616 WARN  B1     no status frames for 1.0 s (robot online)
+13:57:54.616 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:57:55.617 INFO  B1     status frames resumed
+13:57:55.617 INFO  B1     encoder frames resumed
+13:58:14.245 WARN  B1     no status frames for 1.0 s (robot online)
+13:58:14.245 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:58:15.757 WARN  B1     no heartbeat for 3.4 s (robot online)
+13:58:17.759 INFO  B1     status frames resumed
+13:58:17.759 INFO  B1     encoder frames resumed
+13:58:17.759 INFO  B1     heartbeat resumed
+13:58:17.839 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:58:17.839 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:58:17.839 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:58:17.840 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:58:17.942 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:58:17.943 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:58:17.943 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:58:17.944 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:58:18.046 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:58:24.766 WARN  B1     no status frames for 1.2 s (robot online)
+13:58:24.766 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:58:26.268 INFO  B1     status frames resumed
+13:58:26.268 INFO  B1     encoder frames resumed
+13:58:26.769 WARN  B1     no heartbeat for 3.3 s (robot online)
+13:58:27.270 WARN  B1     no status frames for 1.0 s (robot online)
+13:58:27.270 WARN  B1     no encoder frames for 1.0 s (robot online)
+13:58:28.270 INFO  B1     status frames resumed
+13:58:28.271 INFO  B1     encoder frames resumed
+13:58:28.271 INFO  B1     heartbeat resumed
+13:58:28.281 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:58:28.282 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:58:28.282 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:58:28.496 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:58:32.276 WARN  B1     no status frames for 1.3 s (robot online)
+13:58:32.276 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:58:32.776 INFO  B1     status frames resumed
+13:58:32.776 INFO  B1     encoder frames resumed
+13:58:55.308 WARN  B1     no status frames for 1.1 s (robot online)
+13:58:55.308 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:58:55.808 INFO  B1     status frames resumed
+13:58:55.808 INFO  B1     encoder frames resumed
+13:59:08.320 WARN  B1     no status frames for 1.3 s (robot online)
+13:59:08.320 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:59:09.321 INFO  B1     status frames resumed
+13:59:09.321 INFO  B1     encoder frames resumed
+13:59:21.887 WARN  B1     no status frames for 1.1 s (robot online)
+13:59:21.887 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:59:22.387 INFO  B1     status frames resumed
+13:59:22.387 INFO  B1     encoder frames resumed
+13:59:25.891 WARN  B1     no status frames for 1.3 s (robot online)
+13:59:25.891 WARN  B1     no encoder frames for 1.3 s (robot online)
+13:59:26.392 INFO  B1     status frames resumed
+13:59:26.392 INFO  B1     encoder frames resumed
+13:59:33.932 WARN  B1     no status frames for 1.4 s (robot online)
+13:59:33.933 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:59:35.356 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:59:35.356 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:59:35.357 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:59:35.357 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:59:35.434 INFO  B1     status frames resumed
+13:59:35.434 INFO  B1     encoder frames resumed
+13:59:35.457 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:59:39.440 WARN  B1     no status frames for 1.2 s (robot online)
+13:59:39.440 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:59:39.940 INFO  B1     status frames resumed
+13:59:39.940 INFO  B1     encoder frames resumed
+13:59:44.948 WARN  B1     no status frames for 1.1 s (robot online)
+13:59:44.948 WARN  B1     no encoder frames for 1.1 s (robot online)
+13:59:46.450 WARN  B1     no heartbeat for 3.3 s (robot online)
+13:59:48.453 INFO  B1     status frames resumed
+13:59:48.453 INFO  B1     encoder frames resumed
+13:59:48.453 INFO  B1     heartbeat resumed
+13:59:48.483 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:59:48.484 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:59:48.484 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:59:48.485 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:59:48.486 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:59:48.486 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:59:48.487 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:59:48.487 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:59:48.586 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+13:59:50.455 WARN  B1     no status frames for 1.2 s (robot online)
+13:59:50.455 WARN  B1     no encoder frames for 1.2 s (robot online)
+13:59:50.955 INFO  B1     status frames resumed
+13:59:50.956 INFO  B1     encoder frames resumed
+13:59:57.963 WARN  B1     no status frames for 1.4 s (robot online)
+13:59:57.963 WARN  B1     no encoder frames for 1.4 s (robot online)
+13:59:59.464 INFO  B1     status frames resumed
+13:59:59.464 INFO  B1     encoder frames resumed
+14:00:00.465 WARN  B1     no status frames for 1.0 s (robot online)
+14:00:00.466 WARN  B1     no encoder frames for 1.0 s (robot online)
+14:00:02.468 WARN  B1     no heartbeat for 3.0 s (robot online)
+14:00:03.723 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:03.724 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:03.724 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:03.829 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:03.926 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:03.926 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:03.926 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:03.926 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:03.970 INFO  B1     status frames resumed
+14:00:03.970 INFO  B1     encoder frames resumed
+14:00:03.970 INFO  B1     heartbeat resumed
+14:00:04.150 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:04.151 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:04.151 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:04.151 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:04.151 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:17.984 WARN  B1     no status frames for 1.4 s (robot online)
+14:00:17.984 WARN  B1     no encoder frames for 1.4 s (robot online)
+14:00:19.985 WARN  B1     no heartbeat for 3.5 s (robot online)
+14:00:20.987 INFO  B1     status frames resumed
+14:00:20.987 INFO  B1     encoder frames resumed
+14:00:20.987 INFO  B1     heartbeat resumed
+14:00:21.027 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:21.028 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:21.028 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:21.029 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:21.129 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:21.129 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:21.130 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:21.130 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:21.237 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:23.994 WARN  B1     no encoder frames for 1.0 s (robot online)
+14:00:24.496 INFO  B1     encoder frames resumed
+14:00:31.505 WARN  B1     no encoder frames for 1.0 s (robot online)
+14:00:32.005 INFO  B1     encoder frames resumed
+14:00:49.059 WARN  B1     no status frames for 1.2 s (robot online)
+14:00:49.059 WARN  B1     no encoder frames for 1.4 s (robot online)
+14:00:50.060 WARN  B1     no heartbeat for 3.0 s (robot online)
+14:00:50.561 INFO  B1     status frames resumed
+14:00:50.561 INFO  B1     encoder frames resumed
+14:00:50.561 INFO  B1     heartbeat resumed
+14:00:50.823 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:50.824 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:50.824 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:50.935 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:56.567 WARN  B1     no status frames for 1.1 s (robot online)
+14:00:56.567 WARN  B1     no encoder frames for 1.1 s (robot online)
+14:00:58.068 INFO  B1     status frames resumed
+14:00:58.069 INFO  B1     encoder frames resumed
+14:00:58.303 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:58.303 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:58.304 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:00:58.405 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:01:01.573 WARN  B1     no status frames for 1.0 s (robot online)
+14:01:01.573 WARN  B1     no encoder frames for 1.0 s (robot online)
+14:01:03.075 INFO  B1     status frames resumed
+14:01:03.075 INFO  B1     encoder frames resumed
+14:01:06.579 WARN  B1     no status frames for 1.1 s (robot online)
+14:01:06.579 WARN  B1     no encoder frames for 1.1 s (robot online)
+14:01:08.581 WARN  B1     no heartbeat for 3.4 s (robot online)
+14:01:13.353 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:01:13.354 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:01:13.354 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:01:13.354 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:01:13.456 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:01:13.456 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:01:13.456 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:01:13.457 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:01:13.560 WARN  B1     robot dropped 1 outgoing message(s): Wi-Fi or broker too slow
+14:01:13.586 INFO  B1     status frames resumed
+14:01:13.586 INFO  B1     encoder frames resumed
+14:01:13.586 INFO  B1     heartbeat resumed
+14:01:16.088 WARN  B1     no status frames for 1.2 s (robot online)
+14:01:16.088 WARN  B1     no encoder frames for 1.2 s (robot online)
+14:01:16.589 INFO  B1     status frames resumed
+14:01:16.589 INFO  B1     encoder frames resumed
+14:01:20.592 WARN  B1     no status frames for 1.4 s (robot online)
+14:01:20.592 WARN  B1     no encoder frames for 1.4 s (robot online)
+14:01:21.593 INFO  B1     status frames resumed
+14:01:21.593 INFO  B1     encoder frames resumed

@@ -90,7 +90,7 @@ the Vehicle Controller ignores `CONTROL_RELEASE` from any other source (for
 example Buddy 5's detour release), so only START restarts the robot. A
 subsystem's own `motion_stop()` (Buddy 4 lift, Buddy 5 scan) is not a remote
 hold and keeps its existing release behaviour. Images without MQTT keep the
-autonomous startup. Host test: `web_start_gate_tests` in `tests/test_motion.c`.
+autonomous startup. Host test: `web_start_gate_tests` in `tests/subsystem2/test_motion.c`.
 
 Route web Start/Stop/ESTOP through the existing communications command queue and
 vehicle-controller interface. Do not write motor PWM from Wi-Fi code.

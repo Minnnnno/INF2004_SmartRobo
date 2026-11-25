@@ -346,7 +346,7 @@ static void barcode_finish(const uint16_t *samples, const uint32_t *path, const 
 /* Analysis build: prints every reading, 10 per line (0.1 s), with the time in ms, the line IR
  * state of each sample ('0' + centre + 2 * right) and the distance the car has driven at each
  * sample (0.1 mm units), to see how the car's wiggle and speed line up with the sensor.
- * tests/test_barcode_decode.c replays exactly this format. */
+ * tests/subsystem3/test_barcode_decode.c replays exactly this format. */
 static void barcode_stream(uint16_t s, uint32_t path)
 {
     static uint16_t v[10];

@@ -1,5 +1,5 @@
 /* Barcode decoding: pure computation, no hardware or kernel, so the host replay test
- * (tests/test_barcode_decode.c) runs exactly the code the robot runs. barcode.c samples the
+ * (tests/subsystem3/test_barcode_decode.c) runs exactly the code the robot runs. barcode.c samples the
  * sensor, feeds each sample to the segmenter and decodes every stretch it hands back.
  *
  * Readings: higher = darker (the TCRT5000 AO rises over black). Path: distance driven, in 0.1 mm,
@@ -59,7 +59,7 @@ barcode_seg_event_t barcode_seg_feed(barcode_seg_t *g, uint16_t s, uint32_t path
 
 /* Sensitivity ladder, for a pass that does not decode at the calibrated setting: barcode_ladder_div(first, 0)
  * is 'first' (non-zero), then 1, 2, ... give the other settings of BARCODE_LADDER in order, and 0 after the
- * last. The extra settings never decoded a wrong letter in the replay fixtures (tests/barcode/replay.txt). */
+ * last. The extra settings never decoded a wrong letter in the replay fixtures (tests/subsystem3/barcode/replay.txt). */
 #define BARCODE_LADDER {32U, 64U, 16U, 128U}
 unsigned barcode_ladder_div(unsigned first, unsigned i);
 

@@ -24,7 +24,7 @@ if(ROBO_HOST_TESTS)
     enable_testing()
     add_executable(motion_tests app_program/subsystem2/math.c app_program/subsystem2/motion.c
         app_program/subsystem2/board_config.c app_program/subsystem2/encoder_capture.c
-        app_program/controller/vehicle_controller.c tests/test_motion.c)
+        app_program/controller/vehicle_controller.c tests/subsystem2/test_motion.c)
     target_include_directories(motion_tests PRIVATE include)
     if(NOT MSVC)
         target_compile_options(motion_tests PRIVATE -Wall -Wextra -Werror -Wconversion -Wshadow)
@@ -33,7 +33,7 @@ if(ROBO_HOST_TESTS)
     add_test(NAME motion_tests COMMAND motion_tests)
     add_executable(motion_faults_disabled_checks app_program/subsystem2/math.c app_program/subsystem2/motion.c
         app_program/subsystem2/board_config.c app_program/subsystem2/encoder_capture.c
-        app_program/controller/vehicle_controller.c tests/test_motion_faults_disabled.c)
+        app_program/controller/vehicle_controller.c tests/subsystem2/test_motion_faults_disabled.c)
     target_include_directories(motion_faults_disabled_checks PRIVATE include)
     target_compile_definitions(motion_faults_disabled_checks PRIVATE ROBO_MOTION_FAULTS_DISABLED=1)
     if(NOT MSVC)
@@ -42,23 +42,23 @@ if(ROBO_HOST_TESTS)
     endif()
     add_test(NAME motion_faults_disabled_checks COMMAND motion_faults_disabled_checks)
     add_executable(motor_test_checks app_program/subsystem2/motor_test.c
-        app_program/subsystem2/board_config.c tests/test_motor_test.c)
-    target_include_directories(motor_test_checks PRIVATE include tests)
+        app_program/subsystem2/board_config.c tests/subsystem2/test_motor_test.c)
+    target_include_directories(motor_test_checks PRIVATE include tests/subsystem2)
     target_compile_definitions(motor_test_checks PRIVATE ROBO_SAFE_MOTOR_TEST=1 ROBO_MOTOR_TEST_HOST=1)
     if(NOT MSVC)
         target_compile_options(motor_test_checks PRIVATE -Wall -Wextra -Werror -Wconversion -Wshadow)
         target_link_libraries(motor_test_checks m)
     endif()
     add_test(NAME motor_test_checks COMMAND motor_test_checks)
-    add_executable(line_test_checks app_program/subsystem3/line_following.c tests/test_line_sensor.c)
-    target_include_directories(line_test_checks PRIVATE include tests)
+    add_executable(line_test_checks app_program/subsystem3/line_following.c tests/subsystem3/test_line_sensor.c)
+    target_include_directories(line_test_checks PRIVATE include tests/subsystem3)
     target_compile_definitions(line_test_checks PRIVATE ROBO_SAFE_MOTOR_TEST=1 ROBO_LINE_TEST_HOST=1)
     if(NOT MSVC)
         target_compile_options(line_test_checks PRIVATE -Wall -Wextra -Werror -Wconversion -Wshadow)
     endif()
     add_test(NAME line_test_checks COMMAND line_test_checks)
     # Buddy 1: binary status frame, commands and snapshot mapping.
-    add_executable(buddy1_frame_checks tests/buddy1_frame/test_frame.c
+    add_executable(buddy1_frame_checks tests/subsystem1/test_frame.c
         app_program/subsystem1/telemetry_frame.c app_program/subsystem1/telemetry_map.c)
     target_include_directories(buddy1_frame_checks PRIVATE include app_program/subsystem1)
     if(NOT MSVC)
@@ -67,7 +67,7 @@ if(ROBO_HOST_TESTS)
     endif()
     add_test(NAME buddy1_frame_checks COMMAND buddy1_frame_checks)
     add_executable(steering_checks app_program/subsystem2/steering.c
-        app_program/subsystem2/board_config.c tests/test_steering.c)
+        app_program/subsystem2/board_config.c tests/subsystem2/test_steering.c)
     target_include_directories(steering_checks PRIVATE include)
     if(NOT MSVC)
         target_compile_options(steering_checks PRIVATE -Wall -Wextra -Werror -Wconversion -Wshadow)
@@ -75,8 +75,8 @@ if(ROBO_HOST_TESTS)
     endif()
     add_test(NAME steering_checks COMMAND steering_checks)
     add_executable(line_pid_checks app_program/subsystem3/line_following.c
-        app_program/subsystem2/steering.c app_program/subsystem2/board_config.c tests/test_line_pid.c)
-    target_include_directories(line_pid_checks PRIVATE include tests)
+        app_program/subsystem2/steering.c app_program/subsystem2/board_config.c tests/subsystem3/test_line_pid.c)
+    target_include_directories(line_pid_checks PRIVATE include tests/subsystem3)
     target_compile_definitions(line_pid_checks PRIVATE ROBO_LINE_STEERING=1 ROBO_LINE_TEST_HOST=1)
     if(NOT MSVC)
         target_compile_options(line_pid_checks PRIVATE -Wall -Wextra -Werror -Wconversion -Wshadow)
@@ -85,8 +85,8 @@ if(ROBO_HOST_TESTS)
     add_test(NAME line_pid_checks COMMAND line_pid_checks)
     # Same line task with Buddy 4 enabled: start-up wait for the IMU tilt reference.
     add_executable(line_imu_wait_checks
-        app_program/subsystem2/steering.c app_program/subsystem2/board_config.c tests/test_line_imu_wait.c)
-    target_include_directories(line_imu_wait_checks PRIVATE include tests)
+        app_program/subsystem2/steering.c app_program/subsystem2/board_config.c tests/integration/test_line_imu_wait.c)
+    target_include_directories(line_imu_wait_checks PRIVATE include tests/subsystem3)
     target_compile_definitions(line_imu_wait_checks PRIVATE
         ROBO_LINE_STEERING=1 ROBO_LINE_TEST_HOST=1 ROBO_SUBSYSTEM4=1)
     if(NOT MSVC)
@@ -96,8 +96,8 @@ if(ROBO_HOST_TESTS)
     add_test(NAME line_imu_wait_checks COMMAND line_imu_wait_checks)
     # Same wait in the MQTT production image (web Start gate): it starts at START.
     add_executable(line_imu_wait_start_gate_checks
-        app_program/subsystem2/steering.c app_program/subsystem2/board_config.c tests/test_line_imu_wait.c)
-    target_include_directories(line_imu_wait_start_gate_checks PRIVATE include tests)
+        app_program/subsystem2/steering.c app_program/subsystem2/board_config.c tests/integration/test_line_imu_wait.c)
+    target_include_directories(line_imu_wait_start_gate_checks PRIVATE include tests/subsystem3)
     target_compile_definitions(line_imu_wait_start_gate_checks PRIVATE
         ROBO_LINE_STEERING=1 ROBO_LINE_TEST_HOST=1 ROBO_SUBSYSTEM4=1 ROBO_REQUIRE_START=1)
     if(NOT MSVC)
@@ -106,14 +106,14 @@ if(ROBO_HOST_TESTS)
     endif()
     add_test(NAME line_imu_wait_start_gate_checks COMMAND line_imu_wait_start_gate_checks)
     add_executable(angle_control_checks app_program/subsystem2/angle_control.c
-        app_program/subsystem2/math.c app_program/subsystem2/board_config.c tests/test_angle_control.c)
+        app_program/subsystem2/math.c app_program/subsystem2/board_config.c tests/subsystem2/test_angle_control.c)
     target_compile_definitions(angle_control_checks PRIVATE ROBO_ANGLE_TEST=1)
     add_executable(angle_hal_checks app_program/subsystem2/angle_test.c
         app_program/subsystem2/angle_control.c app_program/subsystem2/math.c
-        app_program/subsystem2/board_config.c tests/test_angle_hal.c)
+        app_program/subsystem2/board_config.c tests/subsystem2/test_angle_hal.c)
     target_compile_definitions(angle_hal_checks PRIVATE ROBO_ANGLE_TEST=1 ROBO_MOTOR_TEST_HOST=1)
     foreach(angle_check angle_control_checks angle_hal_checks)
-        target_include_directories(${angle_check} PRIVATE include tests)
+        target_include_directories(${angle_check} PRIVATE include tests/subsystem2)
         if(NOT MSVC)
             target_compile_options(${angle_check} PRIVATE -Wall -Wextra -Werror -Wconversion -Wshadow)
             target_link_libraries(${angle_check} m)
@@ -136,59 +136,59 @@ if(ROBO_HOST_TESTS)
         endif()
         add_test(NAME ${obstacle_check} COMMAND ${obstacle_check})
     endforeach()
-    add_executable(tmonitor_format_checks lib/libtm/libtm_printf.c tests/tmonitor/test_format.c)
-    target_include_directories(tmonitor_format_checks PRIVATE tests/tmonitor include)
+    add_executable(tmonitor_format_checks lib/libtm/libtm_printf.c tests/shared/tmonitor/test_format.c)
+    target_include_directories(tmonitor_format_checks PRIVATE tests/shared/tmonitor include)
     add_test(NAME tmonitor_format_checks COMMAND tmonitor_format_checks)
     # Barcode decoder: synthetic passes at 0.05/0.10 m/s plus recorded shuttle runs replayed through it.
-    add_executable(barcode_decode_checks app_program/subsystem3/barcode_decode.c tests/test_barcode_decode.c)
+    add_executable(barcode_decode_checks app_program/subsystem3/barcode_decode.c tests/subsystem3/test_barcode_decode.c)
     target_include_directories(barcode_decode_checks PRIVATE app_program/subsystem3)
     if(NOT MSVC)
         target_compile_options(barcode_decode_checks PRIVATE -Wall -Wextra -Werror -Wconversion -Wshadow)
         target_link_libraries(barcode_decode_checks m)
     endif()
     add_test(NAME barcode_decode_checks
-        COMMAND barcode_decode_checks ${CMAKE_CURRENT_SOURCE_DIR}/tests/barcode/replay.txt)
+        COMMAND barcode_decode_checks ${CMAKE_CURRENT_SOURCE_DIR}/tests/subsystem3/barcode/replay.txt)
     # The firmware's route letters: best fit may add reads but never a wrong letter.
     add_test(NAME barcode_decode_letters_checks
-        COMMAND barcode_decode_checks --letters AZ ${CMAKE_CURRENT_SOURCE_DIR}/tests/barcode/replay.txt)
+        COMMAND barcode_decode_checks --letters AZ ${CMAKE_CURRENT_SOURCE_DIR}/tests/subsystem3/barcode/replay.txt)
     # Only 'A' allowed: every Z pass must be rejected, not best-fitted to A.
     add_test(NAME barcode_decode_reject_checks
-        COMMAND barcode_decode_checks --letters A ${CMAKE_CURRENT_SOURCE_DIR}/tests/barcode/replay.txt)
+        COMMAND barcode_decode_checks --letters A ${CMAKE_CURRENT_SOURCE_DIR}/tests/subsystem3/barcode/replay.txt)
     # The robot's sensitivity ladder: no wrong letter, and Z passes still rejected when only A is allowed.
     add_test(NAME barcode_decode_ladder_checks
-        COMMAND barcode_decode_checks --letters AZ --ladder ${CMAKE_CURRENT_SOURCE_DIR}/tests/barcode/replay.txt)
+        COMMAND barcode_decode_checks --letters AZ --ladder ${CMAKE_CURRENT_SOURCE_DIR}/tests/subsystem3/barcode/replay.txt)
     add_test(NAME barcode_decode_ladder_reject_checks
-        COMMAND barcode_decode_checks --letters A --ladder ${CMAKE_CURRENT_SOURCE_DIR}/tests/barcode/replay.txt)
+        COMMAND barcode_decode_checks --letters A --ladder ${CMAKE_CURRENT_SOURCE_DIR}/tests/subsystem3/barcode/replay.txt)
     # A four-letter MQTT route: best fit among more letters must still never give a wrong letter.
     add_test(NAME barcode_decode_route4_checks
-        COMMAND barcode_decode_checks --letters AZBC --ladder ${CMAKE_CURRENT_SOURCE_DIR}/tests/barcode/replay.txt)
+        COMMAND barcode_decode_checks --letters AZBC --ladder ${CMAKE_CURRENT_SOURCE_DIR}/tests/subsystem3/barcode/replay.txt)
     # Barcode route supplied over MQTT (subsystem3/route.c).
-    add_executable(route_checks app_program/subsystem3/route.c tests/test_route.c)
+    add_executable(route_checks app_program/subsystem3/route.c tests/subsystem3/test_route.c)
     target_include_directories(route_checks PRIVATE app_program/subsystem3)
     if(NOT MSVC)
         target_compile_options(route_checks PRIVATE -Wall -Wextra -Werror -Wconversion -Wshadow)
     endif()
     add_test(NAME route_checks COMMAND route_checks)
-    add_executable(crash_restart_checks tests/test_crash_restart.c
+    add_executable(crash_restart_checks tests/shared/test_crash_restart.c
         app_program/subsystem2/motion.c app_program/subsystem2/math.c
         app_program/subsystem2/board_config.c app_program/subsystem2/encoder_capture.c
         app_program/controller/vehicle_controller.c)
-    target_include_directories(crash_restart_checks PRIVATE tests/tmonitor include)
+    target_include_directories(crash_restart_checks PRIVATE tests/shared/tmonitor include)
     if(NOT MSVC)
         target_compile_options(crash_restart_checks PRIVATE -Wall -Wextra -Werror -Wconversion -Wshadow)
         target_link_libraries(crash_restart_checks m)
     endif()
     add_test(NAME crash_restart_checks COMMAND crash_restart_checks)
-    add_executable(motor_driver_diagnostics_checks tests/buddy2_compact/test_driver.c
+    add_executable(motor_driver_diagnostics_checks tests/subsystem2/compact/test_driver.c
         app_program/subsystem2/drv_motion.c app_program/subsystem2/math.c
         app_program/subsystem2/board_config.c app_program/subsystem2/encoder_capture.c)
-    target_include_directories(motor_driver_diagnostics_checks PRIVATE include tests/buddy2_compact)
+    target_include_directories(motor_driver_diagnostics_checks PRIVATE include tests/subsystem2/compact)
     target_compile_definitions(motor_driver_diagnostics_checks PRIVATE ROBO_TEMPLATE_HAL_H=1 TM_CONSOLE_USB_CDC=1)
     if(MSVC)
-        target_compile_options(motor_driver_diagnostics_checks PRIVATE /FI${CMAKE_CURRENT_SOURCE_DIR}/tests/buddy2_compact/driver_fake.h)
+        target_compile_options(motor_driver_diagnostics_checks PRIVATE /FI${CMAKE_CURRENT_SOURCE_DIR}/tests/subsystem2/compact/driver_fake.h)
     else()
         target_compile_options(motor_driver_diagnostics_checks PRIVATE
-            -include ${CMAKE_CURRENT_SOURCE_DIR}/tests/buddy2_compact/driver_fake.h
+            -include ${CMAKE_CURRENT_SOURCE_DIR}/tests/subsystem2/compact/driver_fake.h
             -Wall -Wextra -Werror -Wconversion -Wshadow)
         target_link_libraries(motor_driver_diagnostics_checks m)
     endif()
