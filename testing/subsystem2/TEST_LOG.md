@@ -66,6 +66,13 @@ ctest --test-dir build-s2-compact -V > testing/subsystem2/logs/<date>_compact_dr
 
 Save verbose output including actual check counts. The laptop results below link to saved evidence for the identified tested commit. Append a new result row for each later run.
 
+## Code revision references
+
+- Current repository revision: [75d36d04a00cc8f68c0fb45ae5f6aa335cf00229](https://github.com/Minnnnno/INF2004_SmartRobo/commit/75d36d04a00cc8f68c0fb45ae5f6aa335cf00229). Browse the [Subsystem 2 code at this revision](https://github.com/Minnnnno/INF2004_SmartRobo/tree/75d36d04a00cc8f68c0fb45ae5f6aa335cf00229/app_program/subsystem2).
+- Recorded laptop-test revision: [27eda0c9439075e4bbcf3c60ea9e4f68a385b443](https://github.com/Minnnnno/INF2004_SmartRobo/commit/27eda0c9439075e4bbcf3c60ea9e4f68a385b443), identified in both saved host logs.
+
+The current repository revision is a source reference for code review. The exact firmware revision flashed for S2-H01 to S2-H04 remains unconfirmed; the source reference does not establish which revision was used in those videos.
+
 ## Results
 
 Hardware videos were submitted on 2026-11-24. Buddy 2 reports S2-H01 to S2-H04 passed, with ONE trial each. Test date: 2026-11-24, as supplied by Buddy 2. Flashed code commits were not supplied. Videos were not independently reviewed by the agent. Single trials do not establish repeatability or replace measured accuracy/timing evidence. Only these four hardware tests were performed; unperformed hardware cases have been removed.
@@ -78,14 +85,14 @@ For startup, encoder-direction and STOP/START demonstrations, record the observe
 
 | Date | Test ID / trial | Exact commit | Tester | Result | Log / video evidence | Notes / agreed criterion |
 | --- | --- | --- | --- | --- | --- | --- |
-| 2026-11-24 | S2-U03 | `27eda0c9439075e4bbcf3c60ea9e4f68a385b443` | Codex | PASS | [Host log](logs/2026-11-24_motion_steering_startup_recovery.txt) | `motion_tests`: 9633 synthetic checks; no hardware accuracy claim |
-| 2026-11-24 | S2-U04 | `27eda0c9439075e4bbcf3c60ea9e4f68a385b443` | Codex | PASS | [Host log](logs/2026-11-24_motion_steering_startup_recovery.txt) | Safety/command coverage in the same motion suite; not a separate execution |
-| 2026-11-24 | S2-U05 | `27eda0c9439075e4bbcf3c60ea9e4f68a385b443` | Codex | PASS | [Host log](logs/2026-11-24_motion_steering_startup_recovery.txt) | `steering_checks`: 126 checks |
-| 2026-11-24 | S2-U06 | `27eda0c9439075e4bbcf3c60ea9e4f68a385b443` | Codex | PASS | [Compact/driver log](logs/2026-11-24_compact_representation_motor_driver.txt) | 85465 compact checks; individual count precision retained |
-| 2026-11-24 | S2-U07 | `27eda0c9439075e4bbcf3c60ea9e4f68a385b443` | Codex | PASS | [Compact/driver log](logs/2026-11-24_compact_representation_motor_driver.txt) | Polarity, independent reversal, inhibition, coherent capture and emergency stop |
-| 2026-11-24 | S2-U08 | `27eda0c9439075e4bbcf3c60ea9e4f68a385b443` | Codex | PASS | [Host log](logs/2026-11-24_motion_steering_startup_recovery.txt) | `crash_restart_checks`: retained crash/encoder evidence and checked recovery |
-| 2026-11-24 | S2-U09 | `27eda0c9439075e4bbcf3c60ea9e4f68a385b443` | Codex | PASS | [Host log](logs/2026-11-24_motion_steering_startup_recovery.txt) | Timing cases in the same motion suite; actual 10 ms scheduling not measured |
-| 2026-11-24 | S2-U10 | `27eda0c9439075e4bbcf3c60ea9e4f68a385b443` | Codex | PASS | [Host log](logs/2026-11-24_motion_steering_startup_recovery.txt) | Motion plus IMU wait (2041 checks) and web START-gate IMU wait (3605 checks) |
+| 2026-11-24 | S2-U03 | [27eda0c9439075e4bbcf3c60ea9e4f68a385b443](https://github.com/Minnnnno/INF2004_SmartRobo/commit/27eda0c9439075e4bbcf3c60ea9e4f68a385b443) | Codex | PASS | [Host log](logs/2026-11-24_motion_steering_startup_recovery.txt) | `motion_tests`: 9633 synthetic checks; no hardware accuracy claim |
+| 2026-11-24 | S2-U04 | [27eda0c9439075e4bbcf3c60ea9e4f68a385b443](https://github.com/Minnnnno/INF2004_SmartRobo/commit/27eda0c9439075e4bbcf3c60ea9e4f68a385b443) | Codex | PASS | [Host log](logs/2026-11-24_motion_steering_startup_recovery.txt) | Safety/command coverage in the same motion suite; not a separate execution |
+| 2026-11-24 | S2-U05 | [27eda0c9439075e4bbcf3c60ea9e4f68a385b443](https://github.com/Minnnnno/INF2004_SmartRobo/commit/27eda0c9439075e4bbcf3c60ea9e4f68a385b443) | Codex | PASS | [Host log](logs/2026-11-24_motion_steering_startup_recovery.txt) | `steering_checks`: 126 checks |
+| 2026-11-24 | S2-U06 | [27eda0c9439075e4bbcf3c60ea9e4f68a385b443](https://github.com/Minnnnno/INF2004_SmartRobo/commit/27eda0c9439075e4bbcf3c60ea9e4f68a385b443) | Codex | PASS | [Compact/driver log](logs/2026-11-24_compact_representation_motor_driver.txt) | 85465 compact checks; individual count precision retained |
+| 2026-11-24 | S2-U07 | [27eda0c9439075e4bbcf3c60ea9e4f68a385b443](https://github.com/Minnnnno/INF2004_SmartRobo/commit/27eda0c9439075e4bbcf3c60ea9e4f68a385b443) | Codex | PASS | [Compact/driver log](logs/2026-11-24_compact_representation_motor_driver.txt) | Polarity, independent reversal, inhibition, coherent capture and emergency stop |
+| 2026-11-24 | S2-U08 | [27eda0c9439075e4bbcf3c60ea9e4f68a385b443](https://github.com/Minnnnno/INF2004_SmartRobo/commit/27eda0c9439075e4bbcf3c60ea9e4f68a385b443) | Codex | PASS | [Host log](logs/2026-11-24_motion_steering_startup_recovery.txt) | `crash_restart_checks`: retained crash/encoder evidence and checked recovery |
+| 2026-11-24 | S2-U09 | [27eda0c9439075e4bbcf3c60ea9e4f68a385b443](https://github.com/Minnnnno/INF2004_SmartRobo/commit/27eda0c9439075e4bbcf3c60ea9e4f68a385b443) | Codex | PASS | [Host log](logs/2026-11-24_motion_steering_startup_recovery.txt) | Timing cases in the same motion suite; actual 10 ms scheduling not measured |
+| 2026-11-24 | S2-U10 | [27eda0c9439075e4bbcf3c60ea9e4f68a385b443](https://github.com/Minnnnno/INF2004_SmartRobo/commit/27eda0c9439075e4bbcf3c60ea9e4f68a385b443) | Codex | PASS | [Host log](logs/2026-11-24_motion_steering_startup_recovery.txt) | Motion plus IMU wait (2041 checks) and web START-gate IMU wait (3605 checks) |
 | 2026-11-24 | S2-H01 / trial 1 | Not supplied | Buddy 2 | PASS | [Startup and START](https://youtu.be/lzCOjuQXgig) | User-reported pass; startup and START gate; one trial only. |
 | 2026-11-24 | S2-H02 / trial 1 | Not supplied | Buddy 2 | PASS | [Independent encoders](https://youtu.be/qB7hPMGxUTQ) | User-reported pass; independent signed encoder check; one trial only; does not establish rollover or maximum edge-rate performance. |
 | 2026-11-24 | S2-H03 / trial 1 | Not supplied | Buddy 2 | PASS | [Wheel-speed control](https://youtu.be/8NpKcqakr0c) | User-reported functional pass; one trial only; original three-run repeatability check not completed; no numerical speed-accuracy result supplied. |
