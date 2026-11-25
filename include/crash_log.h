@@ -193,6 +193,7 @@ crash_log_reboot (void)
 
     for (;;)
     {
+        /* Nothing to do. */
     }
 }
 #endif

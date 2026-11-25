@@ -362,12 +362,18 @@ motion_hal_encoder_diagnostics (encoder_diagnostics_t * p_diagnostics)
 static int32_t
 diagnostic_permille (float64_t value)
 {
+    int32_t result = 0;
+
     if (!isfinite(value))
     {
-        return INT32_MIN;
+        result = INT32_MIN;
+    }
+    else
+    {
+        result = (int32_t)(fmax(-1.0, fmin(1.0, value)) * 1000.0);
     }
 
-    return (int32_t)(fmax(-1.0, fmin(1.0, value)) * 1000.0);
+    return result;
 }
 
 void

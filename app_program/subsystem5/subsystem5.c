@@ -270,15 +270,21 @@ scan_ping (void * p_context, float64_t * p_range_mm)
     bool *         p_failed = p_context;
     s5_us_status_t result;
 
+    bool b_result = false;
+
     if (*p_failed)
     {
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        result = s5_us_ping(p_range_mm, &time_s);
+        note_sensor(result);
+        *p_failed = !g_s5_task.sensor_ok;
+        b_result  = S5_US_OK == result;
     }
 
-    result = s5_us_ping(p_range_mm, &time_s);
-    note_sensor(result);
-    *p_failed = !g_s5_task.sensor_ok;
-    return S5_US_OK == result;
+    return b_result;
 }
 
 /* The scan needs the robot still.  If something released the motors
@@ -290,21 +296,27 @@ hold_still (void)
 
     bool b_status = s5_status(&status);
 
+    bool b_result = false;
+
     if (b_status && (status.motion.hold) && (!s5_still_moved(&status))
         && (STOPPED == status.motion.state) && (F_NONE == status.motion.fault))
     {
-        return true;
+        b_result = true;
+    }
+    else
+    {
+        motion_stop();
+        tm_printf((const UB *)"[OBSTACLE] hold/still confirmation lost; scan "
+                              "aborted\n");
+        g_s5_scan_why
+            = (uint8_t)(!b_status                         ? S5_WHY_NO_STATUS
+                        : (F_NONE != status.motion.fault) ? S5_WHY_MOTION_FAULT
+                        : !status.motion.hold ? S5_WHY_RELEASED_WHILE_SCANNING
+                                              : S5_WHY_MOVED_WHILE_SCANNING);
+        b_result = false;
     }
 
-    motion_stop();
-    tm_printf(
-        (const UB *)"[OBSTACLE] hold/still confirmation lost; scan aborted\n");
-    g_s5_scan_why
-        = (uint8_t)(!b_status                         ? S5_WHY_NO_STATUS
-                    : (F_NONE != status.motion.fault) ? S5_WHY_MOTION_FAULT
-                    : !status.motion.hold ? S5_WHY_RELEASED_WHILE_SCANNING
-                                          : S5_WHY_MOVED_WHILE_SCANNING);
-    return false;
+    return b_result;
 }
 
 static bool
@@ -485,17 +497,28 @@ print_avoid (const s5_scan_t * p_scan)
 static const char *
 position_name (s5_position_t position)
 {
+    const char * p_result = NULL;
+
     switch (position)
     {
         case S5_POSITION_CENTRE:
-            return "centre";
+            p_result = "centre";
+        break;
+
         case S5_POSITION_LEFT:
-            return "left";
+            p_result = "left";
+        break;
+
         case S5_POSITION_RIGHT:
-            return "right";
+            p_result = "right";
+        break;
+
         default:
-            return "unknown";
+            p_result = "unknown";
+        break;
     }
+
+    return p_result;
 }
 
 /* Degrees as "<whole>.<tenth>" of the magnitude; the sign is in the words */
@@ -721,14 +744,21 @@ robot_lifted (void)
     robot_status_t status;
     uint8_t        motion_class;
 
+    bool b_result = false;
+
     if (!s5_status(&status))
     {
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        b_result
+            = (TERRAIN_TS_LIFTED == terrain_published_state(&status.terrain))
+              || ((terrain_motion_class(&status.terrain, &motion_class))
+                  && (TERRAIN_MC_OVERTURNED == motion_class));
     }
 
-    return (TERRAIN_TS_LIFTED == terrain_published_state(&status.terrain))
-           || ((terrain_motion_class(&status.terrain, &motion_class))
-               && (TERRAIN_MC_OVERTURNED == motion_class));
+    return b_result;
 }
 
 /* The robot stays held: say why, on the console and over MQTT.  A stop from
@@ -871,21 +901,26 @@ square_wanted (const s5_scan_t * p_scan)
 {
     const s5_face_t * p_face = &p_scan->face;
 
+    bool b_result = true;
+
     if ((!p_face->b_valid) || (fabs(p_face->tilt_deg) < S5_SQUARE_MIN_DEG))
     {
-        return false;
+        b_result = false;
     }
-
-    if ((p_face->distance_mm
-         + (S5_SERVO_AHEAD_MM * cos(p_face->tilt_deg / S5_RAD_TO_DEG)))
-        < (hypot(S5_FRONT_MM, S5_ROBOT_HALF_WIDTH_MM) + S5_TURN_MARGIN_MM))
+    else if ((p_face->distance_mm
+              + (S5_SERVO_AHEAD_MM * cos(p_face->tilt_deg / S5_RAD_TO_DEG)))
+             < (hypot(S5_FRONT_MM, S5_ROBOT_HALF_WIDTH_MM) + S5_TURN_MARGIN_MM))
     {
         tm_printf((const UB *)"[OBSTACLE] too close to turn square; using the "
                               "measured tilt\n");
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        /* Nothing to do in any other case. */
     }
 
-    return true;
+    return b_result;
 }
 
 /* True: turned (*p_turned_deg added to) and held still, ready to look again. */
@@ -894,6 +929,8 @@ square_up (float64_t tilt_deg, float64_t * p_turned_deg)
 {
     float64_t turned = 0.0;
     bool      b_ok;
+
+    bool b_result = false;
 
     tm_printf((const UB *)"[OBSTACLE] turning %d deg to face it square\n",
               s5_round(tilt_deg));
@@ -905,22 +942,26 @@ square_up (float64_t tilt_deg, float64_t * p_turned_deg)
         g_s5_task.phase = S5_PHASE_IDLE;
         tm_printf((const UB *)"[OBSTACLE] could not tell the line follower to "
                               "keep off; holding\n");
-        return false;
+        b_result = false;
     }
-
-    b_ok = s5_square_up(tilt_deg, &turned);
-
-    if (!b_ok)
+    else
     {
-        motion_stop();
-        tm_printf(
-            (const UB *)"[OBSTACLE] could not turn to face it; holding\n");
+        b_ok = s5_square_up(tilt_deg, &turned);
+
+        if (!b_ok)
+        {
+            motion_stop();
+            tm_printf(
+                (const UB *)"[OBSTACLE] could not turn to face it; holding\n");
+        }
+
+        g_s5_task.phase = S5_PHASE_IDLE;
+        (void)publish_verified();
+        *p_turned_deg += turned;
+        b_result = b_ok;
     }
 
-    g_s5_task.phase = S5_PHASE_IDLE;
-    (void)publish_verified();
-    *p_turned_deg += turned;
-    return b_ok;
+    return b_result;
 }
 
 /* Face the obstacle using coarse sweeps only: the fine scan is for the width,
@@ -1190,14 +1231,20 @@ corridor_clear (float64_t reach_mm)
 static bool
 spurious_stop (const s5_scan_t * p_scan)
 {
+    bool b_result = false;
+
     if ((p_scan->b_valid)
         && (s5_point_range(p_scan->centre)
             <= (S5_STOP_MM + S5_SPURIOUS_MARGIN_MM)))
     {
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        b_result = corridor_clear(S5_STOP_MM + S5_SPURIOUS_MARGIN_MM);
     }
 
-    return corridor_clear(S5_STOP_MM + S5_SPURIOUS_MARGIN_MM);
+    return b_result;
 }
 
 /* Hand the wheels back to the line follower after a spurious stop, unless the
@@ -1213,6 +1260,8 @@ resume_line (const s5_scan_t * p_scan)
                    && ((fabs(path_m - g_s5_spurious_path_m) * 1000.0)
                        < S5_SPURIOUS_TRAVEL_MM);
     bool b_resume;
+
+    bool b_result = true;
 
     if (!b_again)
     {
@@ -1254,24 +1303,26 @@ resume_line (const s5_scan_t * p_scan)
         report_abort(S5_WHY_REPEATED_SPURIOUS, ahead,
                      (int)g_s5_task.spurious_count, 0U, false);
         (void)publish_verified();
-        return false;
+        b_result = false;
     }
-
-    g_s5_task.decided = false;
-    g_s5_task.phase   = S5_PHASE_IDLE;
-    g_s5_task.blocked = false;
-    (void)publish_verified(); /* CLEAR before the wheels are free */
-
-    if (!s5_release())
+    else
     {
-        motion_stop();
-        g_s5_task.blocked = true;
-        report_abort(S5_WHY_NO_RELEASE, 0, 0, 0U, false);
-        (void)publish_verified();
-        return false;
+        g_s5_task.decided = false;
+        g_s5_task.phase   = S5_PHASE_IDLE;
+        g_s5_task.blocked = false;
+        (void)publish_verified(); /* CLEAR before the wheels are free */
+
+        if (!s5_release())
+        {
+            motion_stop();
+            g_s5_task.blocked = true;
+            report_abort(S5_WHY_NO_RELEASE, 0, 0, 0U, false);
+            (void)publish_verified();
+            b_result = false;
+        }
     }
 
-    return true;
+    return b_result;
 }
 #endif
 
@@ -1313,6 +1364,7 @@ obstacle_task (INT code, void * p_context)
 
     for (;;)
     {
+        /* Nothing to do. */
     }
 #endif
 #if S5_DIAG != 3

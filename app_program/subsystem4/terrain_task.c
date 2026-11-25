@@ -308,14 +308,14 @@ static uint8_t
 terrain_inputs (uint8_t state, s4_motion_t const * p_motion, bool b_wait_start,
                 bool b_turning)
 {
-    uint8_t start = b_wait_start ? B4_WAIT_START : 0U;
+    uint8_t start  = b_wait_start ? B4_WAIT_START : 0U;
+    uint8_t result = 0U;
 
     if ((p_motion->available) && (SHUTDOWN == p_motion->state))
     {
-        return B4_CMD_STOP;
+        result = B4_CMD_STOP;
     }
-
-    if (B4_INIT != state)
+    else if (B4_INIT != state)
     {
         /* Controller hold (dashboard STOP or any controlled stop): no humps.
          * Turning on the spot: no humps either (sideways jolt reads as tilt).
@@ -323,21 +323,24 @@ terrain_inputs (uint8_t state, s4_motion_t const * p_motion, bool b_wait_start,
         uint8_t pause
             = ((p_motion->available) && (p_motion->hold)) ? B4_HUMP_PAUSE : 0U;
 
-        return (uint8_t)(pause | (b_turning ? B4_TURN_PAUSE : 0U));
+        result = (uint8_t)(pause | (b_turning ? B4_TURN_PAUSE : 0U));
     }
-
-    if (!p_motion->available)
+    else if (!p_motion->available)
     {
-        return (uint8_t)(B4_LEVEL_ALLOWED | start);
+        result = (uint8_t)(B4_LEVEL_ALLOWED | start);
     }
-
-    if (p_motion->stationary)
+    else if (p_motion->stationary)
     {
-        return (uint8_t)(B4_LEVEL_ALLOWED | B4_MOTORS_STOPPED | start);
+        result = (uint8_t)(B4_LEVEL_ALLOWED | B4_MOTORS_STOPPED | start);
+    }
+    else
+    {
+        result = (uint8_t)(((INITIALISING == p_motion->state) ? B4_LEVEL_ALLOWED
+                                                              : 0U)
+                           | start);
     }
 
-    return (uint8_t)(((INITIALISING == p_motion->state) ? B4_LEVEL_ALLOWED : 0U)
-                     | start);
+    return result;
 }
 
 /* Web Start gate (ROBO_REQUIRE_START: MQTT production images boot held until
@@ -614,22 +617,26 @@ terrain_turning (buddy4_t const * p_context, s4_motion_t const * p_motion,
 static char const *
 terrain_hump_label (buddy4_t const * p_context, uint8_t terrain)
 {
+    const char * p_result = NULL;
+
     if (buddy4_hump_frozen(p_context))
     {
-        return "FROZEN";
+        p_result = "FROZEN";
     }
-
-    if (gb_s_hump_paused)
+    else if (gb_s_hump_paused)
     {
-        return "PAUSED";
+        p_result = "PAUSED";
     }
-
-    if (gb_s_turn_paused)
+    else if (gb_s_turn_paused)
     {
-        return "TURNING";
+        p_result = "TURNING";
+    }
+    else
+    {
+        p_result = terrain_phase_name(terrain);
     }
 
-    return terrain_phase_name(terrain);
+    return p_result;
 }
 
 /* Hump pause while stopped: same rule as the B4_HUMP_PAUSE input (MONITORING
@@ -969,6 +976,8 @@ terrain_compass (buddy4_t const * p_context, uint8_t phase, uint32_t now_ms,
     bool    b_sample = buddy4_magnetic(p_context, now_ms, S4_MAG_MAX_AGE_MS,
                                        &axis_x, &axis_y);
 
+    bool b_result = false;
+
     if (b_sample)
     {
         g_s_compass.field = mag_field(&g_mag_cal, axis_x, axis_y);
@@ -1004,16 +1013,20 @@ terrain_compass (buddy4_t const * p_context, uint8_t phase, uint32_t now_ms,
             g_s_compass.turn_reason = reason;
         }
 
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        g_s_compass.unwrapped = g_s_compass.have
+                                    ? mag_unwrap(g_s_compass.unwrapped, heading)
+                                    : (int32_t)heading;
+        g_s_compass.have      = true;
+        g_s_compass.heading   = heading;
+        *p_ddeg               = g_s_compass.unwrapped;
+        b_result              = true;
     }
 
-    g_s_compass.unwrapped = g_s_compass.have
-                                ? mag_unwrap(g_s_compass.unwrapped, heading)
-                                : (int32_t)heading;
-    g_s_compass.have      = true;
-    g_s_compass.heading   = heading;
-    *p_ddeg               = g_s_compass.unwrapped;
-    return true;
+    return b_result;
 }
 
 #if defined(ROBO_MAG_CAL)

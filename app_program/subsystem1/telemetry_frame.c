@@ -147,21 +147,27 @@ tf_cmd_decode (const uint8_t * p_data, size_t len, tf_command_t * p_cmd)
 {
     uint32_t word;
 
+    bool b_result = false;
+
     p_cmd->opcode  = 0U;
     p_cmd->session = 0U;
     p_cmd->seq     = 0U;
 
     if ((NULL == p_data) || ((size_t)TF_CMD_BYTES != len))
     {
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        word           = ((uint32_t)p_data[0] << 8) | p_data[1];
+        p_cmd->opcode  = (uint8_t)((word >> 13) & 0x7U);
+        p_cmd->session = (uint8_t)((word >> 8) & 0x1FU);
+        p_cmd->seq     = (uint8_t)(word & 0xFFU);
+        b_result       = (p_cmd->opcode >= (uint8_t)TF_OP_START)
+                         && (p_cmd->opcode <= (uint8_t)TF_OP_ESTOP);
     }
 
-    word           = ((uint32_t)p_data[0] << 8) | p_data[1];
-    p_cmd->opcode  = (uint8_t)((word >> 13) & 0x7U);
-    p_cmd->session = (uint8_t)((word >> 8) & 0x1FU);
-    p_cmd->seq     = (uint8_t)(word & 0xFFU);
-    return (p_cmd->opcode >= (uint8_t)TF_OP_START)
-           && (p_cmd->opcode <= (uint8_t)TF_OP_ESTOP);
+    return b_result;
 }
 
 void
@@ -205,13 +211,19 @@ get_u32 (const uint8_t * p_bytes)
 static uint8_t
 clamp_u8 (uint8_t value, unsigned max, bool * p_clamped)
 {
+    uint8_t result = 0U;
+
     if (value > max)
     {
         *p_clamped = true;
-        return (uint8_t)max;
+        result     = (uint8_t)max;
+    }
+    else
+    {
+        result = value;
     }
 
-    return value;
+    return result;
 }
 
 bool
@@ -246,37 +258,46 @@ tf_enc_unpack (const uint8_t * p_frame, size_t len, tf_encoder_t * p_encoder)
     unsigned state;
     unsigned fault;
 
+    bool b_result = false;
+
     if ((NULL == p_frame) || ((size_t)TF_ENC_BYTES != len)
         || ((uint8_t)TF_ENC_VERSION != p_frame[0])
         || (0U != (p_frame[2] & 0xC0U)))
     {
-        return false;
+        b_result = false;
     }
-
-    cause = ((unsigned)p_frame[2] >> TF_EF_CAUSE_SHIFT) & 0x7U;
-    state = (unsigned)p_frame[3] >> 4;
-    fault = (unsigned)p_frame[3] & 0xFU;
-
-    if ((cause > TF_EF_CAUSE_MAX) || (state > TF_ENC_STATE_MAX)
-        || (fault > TF_ENC_FAULT_MAX))
+    else
     {
-        return false;
+        cause = ((unsigned)p_frame[2] >> TF_EF_CAUSE_SHIFT) & 0x7U;
+        state = (unsigned)p_frame[3] >> 4;
+        fault = (unsigned)p_frame[3] & 0xFU;
+
+        if ((cause > TF_EF_CAUSE_MAX) || (state > TF_ENC_STATE_MAX)
+            || (fault > TF_ENC_FAULT_MAX))
+        {
+            b_result = false;
+        }
+        else
+        {
+            p_encoder->seq       = p_frame[1];
+            p_encoder->reliable  = 0U != (p_frame[2] & TF_EF_RELIABLE);
+            p_encoder->trusted   = 0U != (p_frame[2] & TF_EF_TRUSTED);
+            p_encoder->fresh     = 0U != (p_frame[2] & TF_EF_FRESH);
+            p_encoder->cause     = (uint8_t)cause;
+            p_encoder->state     = (uint8_t)state;
+            p_encoder->fault     = (uint8_t)fault;
+            p_encoder->sample_ms = get_u32(&p_frame[4]);
+            p_encoder->age_ms
+                = (uint16_t)(((unsigned)p_frame[8] << 8) | p_frame[9]);
+            p_encoder->count[0]   = get_u32(&p_frame[10]);
+            p_encoder->count[1]   = get_u32(&p_frame[14]);
+            p_encoder->invalid[0] = get_u32(&p_frame[18]);
+            p_encoder->invalid[1] = get_u32(&p_frame[22]);
+            b_result              = true;
+        }
     }
 
-    p_encoder->seq       = p_frame[1];
-    p_encoder->reliable  = 0U != (p_frame[2] & TF_EF_RELIABLE);
-    p_encoder->trusted   = 0U != (p_frame[2] & TF_EF_TRUSTED);
-    p_encoder->fresh     = 0U != (p_frame[2] & TF_EF_FRESH);
-    p_encoder->cause     = (uint8_t)cause;
-    p_encoder->state     = (uint8_t)state;
-    p_encoder->fault     = (uint8_t)fault;
-    p_encoder->sample_ms = get_u32(&p_frame[4]);
-    p_encoder->age_ms    = (uint16_t)(((unsigned)p_frame[8] << 8) | p_frame[9]);
-    p_encoder->count[0]  = get_u32(&p_frame[10]);
-    p_encoder->count[1]  = get_u32(&p_frame[14]);
-    p_encoder->invalid[0] = get_u32(&p_frame[18]);
-    p_encoder->invalid[1] = get_u32(&p_frame[22]);
-    return true;
+    return b_result;
 }
 
 bool
@@ -285,23 +306,31 @@ tf_ack_decode (const uint8_t * p_data, size_t len, tf_ack_t * p_result,
 {
     uint32_t word;
 
+    bool b_result = false;
+
     if ((NULL == p_data) || ((size_t)TF_ACK_BYTES != len))
     {
-        return false;
+        b_result = false;
     }
-
-    word = ((uint32_t)p_data[0] << 8) | p_data[1];
-
-    if (0U != (word & 0x7U))
+    else
     {
-        return false;
+        word = ((uint32_t)p_data[0] << 8) | p_data[1];
+
+        if (0U != (word & 0x7U))
+        {
+            b_result = false;
+        }
+        else
+        {
+            *p_result      = (tf_ack_t)((word >> 14) & 0x3U);
+            p_cmd->opcode  = (uint8_t)((word >> 11) & 0x7U);
+            p_cmd->session = 0U;
+            p_cmd->seq     = (uint8_t)((word >> 3) & 0xFFU);
+            b_result       = true;
+        }
     }
 
-    *p_result      = (tf_ack_t)((word >> 14) & 0x3U);
-    p_cmd->opcode  = (uint8_t)((word >> 11) & 0x7U);
-    p_cmd->session = 0U;
-    p_cmd->seq     = (uint8_t)((word >> 3) & 0xFFU);
-    return true;
+    return b_result;
 }
 
 /*** end of file ***/

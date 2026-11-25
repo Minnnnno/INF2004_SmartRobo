@@ -52,17 +52,23 @@ ir_reg_wait (uint32_t reg, uint32_t mask)
 static inline bool
 ir_adc_init (unsigned analog_pin)
 {
+    bool b_result = false;
+
     clr_w(RESETS_RESET, RESETS_RESET_ADC);
 
     if (!ir_reg_wait(RESETS_RESET_DONE, RESETS_RESET_ADC))
     {
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        out_w(GPIO_CTRL(analog_pin), GPIO_CTRL_FUNCSEL_NULL);
+        out_w(GPIO(analog_pin), GPIO_OD);
+        out_w(IR_ADC_CS, IR_ADC_EN);
+        b_result = ir_reg_wait(IR_ADC_CS, IR_ADC_READY);
     }
 
-    out_w(GPIO_CTRL(analog_pin), GPIO_CTRL_FUNCSEL_NULL);
-    out_w(GPIO(analog_pin), GPIO_OD);
-    out_w(IR_ADC_CS, IR_ADC_EN);
-    return ir_reg_wait(IR_ADC_CS, IR_ADC_READY);
+    return b_result;
 }
 
 /* Average of 'count' conversions (about 2 us each) on 'pin', 0..4095; a

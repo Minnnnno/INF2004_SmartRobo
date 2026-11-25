@@ -38,21 +38,28 @@ static inline uint8_t
 terrain_published_state (subsystem_status_t const * p_terrain)
 {
     float64_t word;
+    uint8_t   result = 0U;
 
     if ((NULL == p_terrain) || (!p_terrain->available))
     {
-        return (uint8_t)TERRAIN_TS_UNKNOWN;
+        result = (uint8_t)TERRAIN_TS_UNKNOWN;
     }
-
-    word = p_terrain->values[3];
-
-    /* Also rejects NaN; 10 bits are defined. */
-    if ((!(word >= 0.0)) || (word > 1023.0))
+    else
     {
-        return (uint8_t)TERRAIN_TS_UNKNOWN;
+        word = p_terrain->values[3];
+
+        /* Also rejects NaN; 10 bits are defined. */
+        if ((!(word >= 0.0)) || (word > 1023.0))
+        {
+            result = (uint8_t)TERRAIN_TS_UNKNOWN;
+        }
+        else
+        {
+            result = (uint8_t)(((unsigned)word >> 3U) & 7U);
+        }
     }
 
-    return (uint8_t)(((unsigned)word >> 3U) & 7U);
+    return result;
 }
 
 /* Motion class (bits 6..8 of values[3]) and its validity (bit 9). The turn
@@ -76,21 +83,29 @@ terrain_motion_class (subsystem_status_t const * p_terrain, uint8_t * p_class)
 {
     unsigned bits;
 
+    bool b_result = false;
+
     if ((NULL == p_class)
         || (TERRAIN_TS_UNKNOWN == terrain_published_state(p_terrain)))
     {
-        return false;
+        b_result = false;
     }
-
-    bits = (unsigned)p_terrain->values[3];
-
-    if (0U == (bits & TERRAIN_MOTION_VALID))
+    else
     {
-        return false;
+        bits = (unsigned)p_terrain->values[3];
+
+        if (0U == (bits & TERRAIN_MOTION_VALID))
+        {
+            b_result = false;
+        }
+        else
+        {
+            *p_class = (uint8_t)((bits >> TERRAIN_MC_SHIFT) & 7U);
+            b_result = true;
+        }
     }
 
-    *p_class = (uint8_t)((bits >> TERRAIN_MC_SHIFT) & 7U);
-    return true;
+    return b_result;
 }
 
 /* IMU fault indicator (CR1): Buddy 4 latched SENSOR_FAULT, published as

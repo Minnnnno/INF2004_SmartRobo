@@ -41,19 +41,19 @@ capture_motor_fault (void)
     if (F_NONE == g_motion.status.fault)
     {
         g_motor_fault_snapshot.recorded = false;
-        return;
     }
-
-    if (g_motor_fault_snapshot.recorded)
+    else if (g_motor_fault_snapshot.recorded)
     {
-        return;
+        /* Nothing to do. */
     }
-
-    motion_hal_motor_diagnostics(&g_motor_fault_snapshot.motors);
-    motion_hal_encoder_diagnostics(&g_motor_fault_snapshot.encoders);
-    g_motor_fault_snapshot.command_id    = g_motion.status.debug.id;
-    g_motor_fault_snapshot.fault_time_ms = g_motion.status.debug.time_ms;
-    g_motor_fault_snapshot.recorded      = true;
+    else
+    {
+        motion_hal_motor_diagnostics(&g_motor_fault_snapshot.motors);
+        motion_hal_encoder_diagnostics(&g_motor_fault_snapshot.encoders);
+        g_motor_fault_snapshot.command_id    = g_motion.status.debug.id;
+        g_motor_fault_snapshot.fault_time_ms = g_motion.status.debug.time_ms;
+        g_motor_fault_snapshot.recorded      = true;
+    }
 }
 
 static bool
@@ -62,35 +62,48 @@ get_motor_fault (const motion_status_t *  p_status,
 {
     bool b_available;
 
+    bool b_result = false;
+
     if (!robot_runtime_lock())
     {
-        return false;
+        b_result = false;
     }
-
-    b_available
-        = (g_motor_fault_snapshot.recorded) && (p_status->debug.recorded)
-          && (g_motor_fault_snapshot.command_id == p_status->debug.id)
-          && (g_motor_fault_snapshot.fault_time_ms == p_status->debug.time_ms);
-
-    if (b_available)
+    else
     {
-        *p_snapshot = g_motor_fault_snapshot;
+        b_available
+            = (g_motor_fault_snapshot.recorded) && (p_status->debug.recorded)
+              && (g_motor_fault_snapshot.command_id == p_status->debug.id)
+              && (g_motor_fault_snapshot.fault_time_ms
+                  == p_status->debug.time_ms);
+
+        if (b_available)
+        {
+            *p_snapshot = g_motor_fault_snapshot;
+        }
+
+        robot_runtime_unlock();
+        b_result = b_available;
     }
 
-    robot_runtime_unlock();
-    return b_available;
+    return b_result;
 }
 
 static motion_result_t
 magnitude (uint32_t command_id, motion_mode_t mode, float64_t value, int sign)
 {
+    motion_result_t result = R_INVALID;
+
     if ((!isfinite(value)) || (value < 0.0))
     {
-        return R_INVALID;
+        result = R_INVALID;
+    }
+    else
+    {
+        result = robot_submit(SOURCE_MANUAL, command_id, mode, value * sign,
+                              0.0, 0.0);
     }
 
-    return robot_submit(SOURCE_MANUAL, command_id, mode, value * sign, 0.0,
-                        0.0);
+    return result;
 }
 
 motion_result_t
@@ -512,171 +525,189 @@ report_motion_fault (const motion_status_t * p_status,
 
     if (F_NONE == p_status->fault)
     {
-        return;
+        /* Nothing to do. */
     }
-
-    report_encoder_error(p_status);
-
-    if (FAULT == p_status->state)
+    else
     {
-        tm_printf((const UB *)"[STATE] Buddy 2 ENTERED FAULT (state=5): "
-                              "%s(%u). Motors stopped; movement held.\n",
-                  motion_fault_name(p_status->fault),
-                  (unsigned)p_status->fault);
-    }
+        report_encoder_error(p_status);
 
-    switch (p_status->fault)
-    {
-        case F_CONFIG:
-            tm_printf((const UB *)"[ERROR] MOTION CONFIG: invalid "
-                                  "configuration or initial timestamp; "
-                                  "hardware_confirmed=%u pins_valid=%u.\n",
-                      (unsigned)p_config->hardware_confirmed,
-                      (unsigned)board_pins_valid());
-        break;
-
-        case F_SETUP:
-            tm_printf((const UB *)"[ERROR] MOTION HARDWARE INIT: "
-                                  "motion_hal_init failed; inspect "
-                                  "motor/PWM/encoder/GPIO initialization.\n");
-        break;
-
-        case F_SETUP_TIMEOUT:
-            tm_printf(
-                (const UB *)"[ERROR] MOTION SETUP TIMEOUT: initialization or "
-                            "startup qualification exceeded %lu ms.\n",
-                (uint32_t)(p_config->setup_timeout * 1000.0));
-            tm_printf((const UB *)"[SETUP] startup_gaps=%u max_gap_us=%lu "
-                                  "stationary=%u feedback_trusted=%u\n",
-                      (unsigned)p_status->startup_gaps,
-                      (uint32_t)(p_status->max_startup_gap * 1000000.0),
-                      (unsigned)p_status->stationary,
-                      (unsigned)p_status->feedback_trusted);
-        break;
-
-        case F_TIMING:
-            tm_printf(
-                (const UB *)"[ERROR] MOTOR CONTROL TIMING: interval must be "
-                            "finite, positive and <= %lu us; nominal=%lu us.\n",
-                (uint32_t)(p_config->max_dt * 1000000.0),
-                (uint32_t)(p_config->period * 1000000.0));
-        break;
-
-        case F_FEEDBACK:
-            /* report_encoder_error above identifies the observed encoder
-             * failure. */
-        break;
-
-        case F_DEADLINE:
-            tm_printf(
-                (const UB *)"[ERROR] MOTOR MOVEMENT: command deadline reached "
-                            "before completion; movement_timeout_ms=%lu.\n",
-                (uint32_t)(p_config->movement_timeout * 1000.0));
-        break;
-
-        case F_EXPIRED:
-            tm_printf(
-                (const UB *)"[ERROR] STEERING EXPIRED: wheel-speed command was "
-                            "not refreshed before expiry; lifetime_ms=%lu.\n",
-                (uint32_t)(p_config->command_lifetime * 1000.0));
-        break;
-
-        case F_STOP_TIMEOUT:
-            tm_printf(
-                (const UB *)"[ERROR] MOTOR STOP: stationary confirmation did "
-                            "not arrive within %lu ms; both speed magnitudes "
-                            "must be <= %lu mm/s for %lu ms.\n",
-                (uint32_t)(p_config->stop_timeout * 1000.0),
-                (uint32_t)(p_config->stopped_speed * 1000.0),
-                (uint32_t)(p_config->settle_time * 1000.0));
-        break;
-
-        case F_FINAL_GOAL:
-            tm_printf(
-                (const UB *)"[ERROR] MOTOR MOVEMENT: final distance/heading "
-                            "check failed; distance_tolerance_um=%lu "
-                            "angle_tolerance_mrad=%lu.\n",
-                (uint32_t)(p_config->distance_tolerance * 1000000.0),
-                (uint32_t)(p_config->angle_tolerance * 1000.0));
-        break;
-
-        case F_EVENT_OVERFLOW:
-            tm_printf((const UB *)"[ERROR] MOTION EVENTS: event buffer full "
-                                  "(capacity=%u); notifications were not "
-                                  "drained in time.\n",
-                      (unsigned)MOTION_EVENT_CAPACITY);
-        break;
-
-        case F_SYSTEM:
-            tm_printf((const UB *)"[ERROR] SYSTEM FAULT: internal "
-                                  "robot_system_fault, motion synchronization "
-                                  "or command decoding failure.\n");
-        break;
-
-        case F_ESTOP:
-            tm_printf((const UB *)"[ERROR] EMERGENCY STOP: remote ESTOP "
-                                  "command received; movement held until "
-                                  "checked reset/release.\n");
-        break;
-
-        default:
-            tm_printf(
-                (const UB *)"[ERROR] MOTION: unrecognized fault code %u.\n",
-                (unsigned)p_status->fault);
-        break;
-    }
-
-    tm_printf((const UB *)"[FAULT] %s(%u) feedback=%s(%u) id=%u held=%u; "
-                          "firmware running\n",
-              motion_fault_name(p_status->fault), (unsigned)p_status->fault,
-              motion_feedback_name(p_status->feedback_cause),
-              (unsigned)p_status->feedback_cause, (unsigned)p_status->id,
-              (unsigned)p_status->hold);
-
-    if (!p_debug->recorded)
-    {
-        return;
-    }
-
-    tm_printf((const UB *)"[FAULT] captured_ms=%ld mode=%s previous_state=%u "
-                          "dt_us=%ld finite_goal=%u (INT32_MIN=invalid)\n",
-              (int32_t)p_debug->time_ms, motion_mode_name(p_debug->mode),
-              (unsigned)p_debug->state, (int32_t)p_debug->dt_us,
-              (unsigned)p_debug->finite_goal);
-
-    for (unsigned wheel = 0U; wheel < 2U; ++wheel)
-    {
-        const char * p_name = (0U == wheel) ? "LEFT" : "RIGHT";
-
-        tm_printf((const UB *)"[FAULT] %s stalled=%u target_mm_s=%ld "
-                              "speed_mm_s=%ld request_permille=%ld\n",
-                  p_name, (unsigned)((p_debug->stalled_wheels >> wheel) & 1U),
-                  (int32_t)p_debug->target_mm_s[wheel],
-                  (int32_t)p_debug->speed_mm_s[wheel],
-                  (int32_t)p_debug->output_permille[wheel]);
-        tm_printf((const UB *)"[FAULT] %s remaining_um=%ld no_progress_ms=%ld "
-                              "limit_ms=%ld count=%u invalid=%u\n",
-                  p_name, (int32_t)p_debug->remaining_um[wheel],
-                  (int32_t)p_debug->no_progress_ms[wheel],
-                  (int32_t)p_debug->feedback_limit_ms[wheel],
-                  (unsigned)p_status->feedback_fault_sample.count[wheel],
-                  (unsigned)p_status->feedback_fault_sample.invalid[wheel]);
-
-        if (F_FEEDBACK == p_status->fault)
+        if (FAULT == p_status->state)
         {
-            tm_printf((const UB *)"[FEEDBACK] %s previous_count=%u "
-                                  "fault_count=%u previous_invalid=%u "
-                                  "fault_invalid=%u reliable=%u\n",
-                      p_name,
-                      (unsigned)p_status->feedback_previous_count[wheel],
-                      (unsigned)p_status->feedback_fault_sample.count[wheel],
-                      (unsigned)p_status->feedback_previous_invalid[wheel],
-                      (unsigned)p_status->feedback_fault_sample.invalid[wheel],
-                      (unsigned)p_status->feedback_fault_sample.reliable);
+            tm_printf((const UB *)"[STATE] Buddy 2 ENTERED FAULT (state=5): "
+                                  "%s(%u). Motors stopped; movement held.\n",
+                      motion_fault_name(p_status->fault),
+                      (unsigned)p_status->fault);
+        }
+
+        switch (p_status->fault)
+        {
+            case F_CONFIG:
+                tm_printf((const UB *)"[ERROR] MOTION CONFIG: invalid "
+                                      "configuration or initial timestamp; "
+                                      "hardware_confirmed=%u pins_valid=%u.\n",
+                          (unsigned)p_config->hardware_confirmed,
+                          (unsigned)board_pins_valid());
+            break;
+
+            case F_SETUP:
+                tm_printf(
+                    (const UB *)"[ERROR] MOTION HARDWARE INIT: "
+                                "motion_hal_init failed; inspect "
+                                "motor/PWM/encoder/GPIO initialization.\n");
+            break;
+
+            case F_SETUP_TIMEOUT:
+                tm_printf(
+                    (const UB *)"[ERROR] MOTION SETUP TIMEOUT: initialization "
+                                "or "
+                                "startup qualification exceeded %lu ms.\n",
+                    (uint32_t)(p_config->setup_timeout * 1000.0));
+                tm_printf((const UB *)"[SETUP] startup_gaps=%u max_gap_us=%lu "
+                                      "stationary=%u feedback_trusted=%u\n",
+                          (unsigned)p_status->startup_gaps,
+                          (uint32_t)(p_status->max_startup_gap * 1000000.0),
+                          (unsigned)p_status->stationary,
+                          (unsigned)p_status->feedback_trusted);
+            break;
+
+            case F_TIMING:
+                tm_printf((const UB *)"[ERROR] MOTOR CONTROL TIMING: interval "
+                                      "must be "
+                                      "finite, positive and <= %lu us; "
+                                      "nominal=%lu us.\n",
+                          (uint32_t)(p_config->max_dt * 1000000.0),
+                          (uint32_t)(p_config->period * 1000000.0));
+            break;
+
+            case F_FEEDBACK:
+                /* report_encoder_error above identifies the observed encoder
+                 * failure. */
+            break;
+
+            case F_DEADLINE:
+                tm_printf(
+                    (const UB *)"[ERROR] MOTOR MOVEMENT: command deadline "
+                                "reached "
+                                "before completion; movement_timeout_ms=%lu.\n",
+                    (uint32_t)(p_config->movement_timeout * 1000.0));
+            break;
+
+            case F_EXPIRED:
+                tm_printf((const UB *)"[ERROR] STEERING EXPIRED: wheel-speed "
+                                      "command was "
+                                      "not refreshed before expiry; "
+                                      "lifetime_ms=%lu.\n",
+                          (uint32_t)(p_config->command_lifetime * 1000.0));
+            break;
+
+            case F_STOP_TIMEOUT:
+                tm_printf((const UB *)"[ERROR] MOTOR STOP: stationary "
+                                      "confirmation did "
+                                      "not arrive within %lu ms; both speed "
+                                      "magnitudes "
+                                      "must be <= %lu mm/s for %lu ms.\n",
+                          (uint32_t)(p_config->stop_timeout * 1000.0),
+                          (uint32_t)(p_config->stopped_speed * 1000.0),
+                          (uint32_t)(p_config->settle_time * 1000.0));
+            break;
+
+            case F_FINAL_GOAL:
+                tm_printf((const UB *)"[ERROR] MOTOR MOVEMENT: final "
+                                      "distance/heading "
+                                      "check failed; distance_tolerance_um=%lu "
+                                      "angle_tolerance_mrad=%lu.\n",
+                          (uint32_t)(p_config->distance_tolerance * 1000000.0),
+                          (uint32_t)(p_config->angle_tolerance * 1000.0));
+            break;
+
+            case F_EVENT_OVERFLOW:
+                tm_printf(
+                    (const UB *)"[ERROR] MOTION EVENTS: event buffer full "
+                                "(capacity=%u); notifications were not "
+                                "drained in time.\n",
+                    (unsigned)MOTION_EVENT_CAPACITY);
+            break;
+
+            case F_SYSTEM:
+                tm_printf(
+                    (const UB *)"[ERROR] SYSTEM FAULT: internal "
+                                "robot_system_fault, motion synchronization "
+                                "or command decoding failure.\n");
+            break;
+
+            case F_ESTOP:
+                tm_printf((const UB *)"[ERROR] EMERGENCY STOP: remote ESTOP "
+                                      "command received; movement held until "
+                                      "checked reset/release.\n");
+            break;
+
+            default:
+                tm_printf(
+                    (const UB *)"[ERROR] MOTION: unrecognized fault code %u.\n",
+                    (unsigned)p_status->fault);
+            break;
+        }
+
+        tm_printf((const UB *)"[FAULT] %s(%u) feedback=%s(%u) id=%u held=%u; "
+                              "firmware running\n",
+                  motion_fault_name(p_status->fault), (unsigned)p_status->fault,
+                  motion_feedback_name(p_status->feedback_cause),
+                  (unsigned)p_status->feedback_cause, (unsigned)p_status->id,
+                  (unsigned)p_status->hold);
+
+        if (!p_debug->recorded)
+        {
+            /* Nothing to do. */
+        }
+        else
+        {
+            tm_printf(
+                (const UB *)"[FAULT] captured_ms=%ld mode=%s previous_state=%u "
+                            "dt_us=%ld finite_goal=%u (INT32_MIN=invalid)\n",
+                (int32_t)p_debug->time_ms, motion_mode_name(p_debug->mode),
+                (unsigned)p_debug->state, (int32_t)p_debug->dt_us,
+                (unsigned)p_debug->finite_goal);
+
+            for (unsigned wheel = 0U; wheel < 2U; ++wheel)
+            {
+                const char * p_name = (0U == wheel) ? "LEFT" : "RIGHT";
+
+                tm_printf((const UB *)"[FAULT] %s stalled=%u target_mm_s=%ld "
+                                      "speed_mm_s=%ld request_permille=%ld\n",
+                          p_name,
+                          (unsigned)((p_debug->stalled_wheels >> wheel) & 1U),
+                          (int32_t)p_debug->target_mm_s[wheel],
+                          (int32_t)p_debug->speed_mm_s[wheel],
+                          (int32_t)p_debug->output_permille[wheel]);
+                tm_printf(
+                    (const UB *)"[FAULT] %s remaining_um=%ld "
+                                "no_progress_ms=%ld "
+                                "limit_ms=%ld count=%u invalid=%u\n",
+                    p_name, (int32_t)p_debug->remaining_um[wheel],
+                    (int32_t)p_debug->no_progress_ms[wheel],
+                    (int32_t)p_debug->feedback_limit_ms[wheel],
+                    (unsigned)p_status->feedback_fault_sample.count[wheel],
+                    (unsigned)p_status->feedback_fault_sample.invalid[wheel]);
+
+                if (F_FEEDBACK == p_status->fault)
+                {
+                    tm_printf(
+                        (const UB *)"[FEEDBACK] %s previous_count=%u "
+                                    "fault_count=%u previous_invalid=%u "
+                                    "fault_invalid=%u reliable=%u\n",
+                        p_name,
+                        (unsigned)p_status->feedback_previous_count[wheel],
+                        (unsigned)p_status->feedback_fault_sample.count[wheel],
+                        (unsigned)p_status->feedback_previous_invalid[wheel],
+                        (unsigned)
+                            p_status->feedback_fault_sample.invalid[wheel],
+                        (unsigned)p_status->feedback_fault_sample.reliable);
+                }
+            }
+
+            report_motor_fault(p_status);
         }
     }
-
-    report_motor_fault(p_status);
 }
 
 #endif

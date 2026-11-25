@@ -43,6 +43,8 @@ bool
 angle_control_start (angle_control_t * p_control, int direction,
                      encoder_sample_t sample, float64_t now)
 {
+    bool b_result = false;
+
     if ((!p_control->ready) || (!sample.reliable) || (!isfinite(now))
         || ((1 != direction) && (-1 != direction))
         || (ANGLE_TURNING == p_control->state)
@@ -50,23 +52,27 @@ angle_control_start (angle_control_t * p_control, int direction,
         || ((ANGLE_IDLE != p_control->state)
             && (now < (p_control->quiet_since + 0.3))))
     {
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        p_control->baseline       = sample;
+        p_control->previous       = sample;
+        p_control->delta[0]       = 0U;
+        p_control->delta[1]       = 0U;
+        p_control->angle          = 0.0;
+        p_control->direction      = direction;
+        p_control->deadline       = now + 8.0;
+        p_control->last_change[0] = now;
+        p_control->last_change[1] = now;
+        p_control->quiet_since    = now;
+        p_control->state          = ANGLE_TURNING;
+        p_control->output[0]      = -0.25 * direction;
+        p_control->output[1]      = 0.25 * direction;
+        b_result                  = true;
     }
 
-    p_control->baseline       = sample;
-    p_control->previous       = sample;
-    p_control->delta[0]       = 0U;
-    p_control->delta[1]       = 0U;
-    p_control->angle          = 0.0;
-    p_control->direction      = direction;
-    p_control->deadline       = now + 8.0;
-    p_control->last_change[0] = now;
-    p_control->last_change[1] = now;
-    p_control->quiet_since    = now;
-    p_control->state          = ANGLE_TURNING;
-    p_control->output[0]      = -0.25 * direction;
-    p_control->output[1]      = 0.25 * direction;
-    return true;
+    return b_result;
 }
 
 void

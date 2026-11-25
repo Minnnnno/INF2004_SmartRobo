@@ -297,45 +297,50 @@ static unsigned
 barcode_read (uint32_t * p_widths, unsigned count, char * p_out)
 {
     static uint32_t elements[BARCODE_MAX_ELEMENTS];
-    unsigned        chars = barcode_read_strict(p_widths, count, p_out);
+    unsigned        chars  = barcode_read_strict(p_widths, count, p_out);
+    unsigned int    result = 0U;
 
     if ((0U != chars) || (count < 27U) || ((count + 2U) > BARCODE_MAX_ELEMENTS))
     {
-        return chars;
+        result = chars;
     }
-
-    for (unsigned side = 0U; (side < 4U) && (0U == chars); ++side)
+    else
     {
-        bool b_reversed = side >= 2U;
-        bool b_at_start = 0U == (side % 2U);
-
-        for (unsigned index = 0U; index < count; ++index)
+        for (unsigned side = 0U; (side < 4U) && (0U == chars); ++side)
         {
-            elements[index]
-                = b_reversed ? p_widths[count - 1U - index] : p_widths[index];
-        }
+            bool b_reversed = side >= 2U;
+            bool b_at_start = 0U == (side % 2U);
 
-        if (b_at_start)
-        { /* e = [e[n-9], e[n-8]] + e: the stop's first bar and wide space. */
-
-            for (unsigned index = count; index > 0U; --index)
+            for (unsigned index = 0U; index < count; ++index)
             {
-                elements[index + 1U] = elements[index - 1U];
+                elements[index] = b_reversed ? p_widths[count - 1U - index]
+                                             : p_widths[index];
             }
 
-            elements[0] = elements[count - 7U];
-            elements[1] = elements[count - 6U];
-        }
-        else
-        { /* e = e + [e[7], e[8]]: the start's last space and bar. */
-            elements[count]      = elements[7];
-            elements[count + 1U] = elements[8];
+            if (b_at_start)
+            /* e = [e[n-9], e[n-8]] + e: the stop's first bar and wide space. */
+            {
+                for (unsigned index = count; index > 0U; --index)
+                {
+                    elements[index + 1U] = elements[index - 1U];
+                }
+
+                elements[0] = elements[count - 7U];
+                elements[1] = elements[count - 6U];
+            }
+            else
+            { /* e = e + [e[7], e[8]]: the start's last space and bar. */
+                elements[count]      = elements[7];
+                elements[count + 1U] = elements[8];
+            }
+
+            chars = barcode_read_strict(elements, count + 2U, p_out);
         }
 
-        chars = barcode_read_strict(elements, count + 2U, p_out);
+        result = chars;
     }
 
-    return chars;
+    return result;
 }
 #else
 #define barcode_read barcode_read_strict
@@ -716,9 +721,10 @@ static unsigned
 barcode_resample (const uint16_t * p_samples, const uint32_t * p_path,
                   unsigned count, uint16_t * p_out)
 {
-    unsigned sample_count = BARCODE_QUIET;
-    unsigned other        = BARCODE_QUIET;
-    uint32_t sample_time  = p_path[BARCODE_QUIET - 1U] + BARCODE_PATH_STEP;
+    unsigned     sample_count = BARCODE_QUIET;
+    unsigned     other        = BARCODE_QUIET;
+    uint32_t     sample_time  = p_path[BARCODE_QUIET - 1U] + BARCODE_PATH_STEP;
+    unsigned int result       = 0U;
 
     for (unsigned index = 0U; index < BARCODE_QUIET; ++index)
     {
@@ -732,33 +738,38 @@ barcode_resample (const uint16_t * p_samples, const uint32_t * p_path,
             p_out[index] = p_samples[index];
         }
 
-        return count;
+        result = count;
     }
-
-    while (sample_count < BARCODE_SAMPLES)
+    else
     {
-        while ((other < count) && (p_path[other] < sample_time))
+        while (sample_count < BARCODE_SAMPLES)
         {
-            ++other;
+            while ((other < count) && (p_path[other] < sample_time))
+            {
+                ++other;
+            }
+
+            if (other >= count)
+            {
+                break;
+            }
+
+            /* path[j - 1] < at <= path[j]: interpolate the reading at the
+             * distance 'at'. */
+            p_out[sample_count++]
+                = (uint16_t)((int32_t)p_samples[other - 1U]
+                             + ((((int32_t)p_samples[other]
+                                  - (int32_t)p_samples[other - 1U])
+                                 * (int32_t)(sample_time - p_path[other - 1U]))
+                                / (int32_t)(p_path[other]
+                                            - p_path[other - 1U])));
+            sample_time += BARCODE_PATH_STEP;
         }
 
-        if (other >= count)
-        {
-            break;
-        }
-
-        /* path[j - 1] < at <= path[j]: interpolate the reading at the distance
-         * 'at'. */
-        p_out[sample_count++]
-            = (uint16_t)((int32_t)p_samples[other - 1U]
-                         + ((((int32_t)p_samples[other]
-                              - (int32_t)p_samples[other - 1U])
-                             * (int32_t)(sample_time - p_path[other - 1U]))
-                            / (int32_t)(p_path[other] - p_path[other - 1U])));
-        sample_time += BARCODE_PATH_STEP;
+        result = sample_count;
     }
 
-    return sample_count;
+    return result;
 }
 
 /* ---- Best fit: the course only uses a few letters, so a pass with one
@@ -821,65 +832,71 @@ barcode_best_fit (uint32_t * p_widths, unsigned count, const char * p_letters)
     unsigned best   = 99U;
     unsigned second = 99U;
     char     found  = '\0';
+    char     result = 0;
 
     if ((NULL == p_letters) || (count < 29U)
         || (count > (29U + BARCODE_MAX_STRAY)))
     {
-        return '\0';
+        result = '\0';
     }
-
-    for (const char * p_letter = p_letters; '\0' != *p_letter; ++p_letter)
+    else
     {
-        uint16_t pattern = barcode_pattern_of(*p_letter);
-        unsigned fit     = 99U;
-
-        if (0U == pattern)
+        for (const char * p_letter = p_letters; '\0' != *p_letter; ++p_letter)
         {
-            continue;
-        }
+            uint16_t pattern = barcode_pattern_of(*p_letter);
+            unsigned fit     = 99U;
 
-        for (unsigned dir = 0U; dir < 2U; ++dir)
-        { /* Forward, then reversed (restored below). */
-
-            if (1U == dir)
+            if (0U == pattern)
             {
-                barcode_reverse(p_widths, count);
+                continue;
             }
 
-            for (unsigned start = 0U; (start + 29U) <= count; start += 2U)
-            { /* Every window starts on a bar. */
-                unsigned misses = barcode_mismatch(&p_widths[start], pattern);
+            for (unsigned dir = 0U; dir < 2U; ++dir)
+            { /* Forward, then reversed (restored below). */
 
-                if (misses < fit)
+                if (1U == dir)
                 {
-                    fit = misses;
+                    barcode_reverse(p_widths, count);
+                }
+
+                for (unsigned start = 0U; (start + 29U) <= count; start += 2U)
+                { /* Every window starts on a bar. */
+                    unsigned misses
+                        = barcode_mismatch(&p_widths[start], pattern);
+
+                    if (misses < fit)
+                    {
+                        fit = misses;
+                    }
+                }
+
+                if (1U == dir)
+                {
+                    barcode_reverse(p_widths, count);
                 }
             }
 
-            if (1U == dir)
+            if (fit < best)
             {
-                barcode_reverse(p_widths, count);
+                second = best;
+                best   = fit;
+                found  = *p_letter;
+            }
+            else if (fit < second)
+            {
+                second = fit;
+            }
+            else
+            {
+                /* Nothing to do in any other case. */
             }
         }
 
-        if (fit < best)
-        {
-            second = best;
-            best   = fit;
-            found  = *p_letter;
-        }
-        else if (fit < second)
-        {
-            second = fit;
-        }
-        else
-        {
-            /* Nothing to do in any other case. */
-        }
+        result = ((best <= BARCODE_FIT_MAX_MISMATCH) && (best < second)) ? found
+                                                                         : '\0';
     }
 
-    return ((best <= BARCODE_FIT_MAX_MISMATCH) && (best < second)) ? found
-                                                                   : '\0';
+    return result;
 }
 
 static bool

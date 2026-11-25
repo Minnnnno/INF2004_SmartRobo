@@ -91,6 +91,7 @@ freeze_catcher_start (void)
 
     while (0U == (in_w(RESETS_RESET_DONE) & RESETS_RESET_SYSCFG))
     {
+        /* Nothing to do. */
     }
 
     DI(state);
@@ -197,25 +198,30 @@ report_task_stack (ID task_id, const char * p_name)
     stack_debug_t info;
     ER            result = knl_task_stack_debug(task_id, &info);
 
+    bool b_result = false;
+
     if (E_NOEXS == result)
     {
-        return true;
+        b_result = true;
     }
-
-    if (E_OK != result)
+    else if (E_OK != result)
     {
         tm_printf((const UB *)"[MEMORY] task=%u name=%s stack metadata invalid "
                               "error=%d\n",
                   (unsigned)task_id, p_name, (int)result);
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        tm_printf((const UB *)"[STACK] task=%u name=%s used=%u capacity=%u "
+                              "guard_ok=%u saved_sp_ok=%u\n",
+                  (unsigned)task_id, p_name, (unsigned)info.used,
+                  (unsigned)info.capacity, (unsigned)info.guard_ok,
+                  (unsigned)info.saved_sp_ok);
+        b_result = (info.guard_ok) && (info.saved_sp_ok);
     }
 
-    tm_printf((const UB *)"[STACK] task=%u name=%s used=%u capacity=%u "
-                          "guard_ok=%u saved_sp_ok=%u\n",
-              (unsigned)task_id, p_name, (unsigned)info.used,
-              (unsigned)info.capacity, (unsigned)info.guard_ok,
-              (unsigned)info.saved_sp_ok);
-    return (info.guard_ok) && (info.saved_sp_ok);
+    return b_result;
 }
 #endif
 

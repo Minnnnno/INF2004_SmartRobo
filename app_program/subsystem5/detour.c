@@ -380,14 +380,21 @@ line_where_expected (float64_t x_mm, float64_t y_mm, float64_t heading_now_deg)
 {
     float64_t heading_rad = heading_now_deg * S5_DEG_TO_RAD;
 
+    bool b_result = false;
+
     if (g_s5_leg.line_goal)
     {
-        return hypot(x_mm + (S5_IR_AHEAD_MM * cos(heading_rad)) - g_s5_noted_x,
-                     y_mm + (S5_IR_AHEAD_MM * sin(heading_rad)) - g_s5_noted_y)
-               <= S5_LINE_WINDOW_MM;
+        b_result
+            = hypot(x_mm + (S5_IR_AHEAD_MM * cos(heading_rad)) - g_s5_noted_x,
+                    y_mm + (S5_IR_AHEAD_MM * sin(heading_rad)) - g_s5_noted_y)
+              <= S5_LINE_WINDOW_MM;
+    }
+    else
+    {
+        b_result = s5_line_expected(y_mm, heading_now_deg);
     }
 
-    return s5_line_expected(y_mm, heading_now_deg);
+    return b_result;
 }
 
 /* Both black, but not where the straight line is: remember it and carry on */
@@ -659,16 +666,23 @@ retry_busy (float64_t start, uint32_t generation)
 {
     robot_status_t status;
 
+    bool b_result = false;
+
     if ((motion_hal_time() - start) >= S5_ACCEPT_TIMEOUT_S)
     {
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        (void)tk_dly_tsk(S5_POLL_MS);
+        b_result = ((motion_hal_time() - start) < S5_ACCEPT_TIMEOUT_S)
+                   && (s5_status(&status)) && (!status.motion.hold)
+                   && (READY == status.motion.state)
+                   && (F_NONE == status.motion.fault)
+                   && (status.motion.generation == generation);
     }
 
-    (void)tk_dly_tsk(S5_POLL_MS);
-    return ((motion_hal_time() - start) < S5_ACCEPT_TIMEOUT_S)
-           && (s5_status(&status)) && (!status.motion.hold)
-           && (READY == status.motion.state) && (F_NONE == status.motion.fault)
-           && (status.motion.generation == generation);
+    return b_result;
 }
 
 /* Straight at S5_DRIVE_SPEED_MM_S (S5_LINE_SEARCH_SPEED_MM_S when watching
@@ -837,14 +851,20 @@ detour_ping (void * p_context, float64_t * p_range_mm)
     bool *         p_failed = p_context;
     s5_us_status_t result;
 
+    bool b_result = false;
+
     if (*p_failed)
     {
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        result    = s5_us_ping(p_range_mm, &time_s);
+        *p_failed = (S5_US_NO_PULSE == result) || (S5_US_BUSY == result);
+        b_result  = S5_US_OK == result;
     }
 
-    result    = s5_us_ping(p_range_mm, &time_s);
-    *p_failed = (S5_US_NO_PULSE == result) || (S5_US_BUSY == result);
-    return S5_US_OK == result;
+    return b_result;
 }
 
 typedef enum
@@ -988,15 +1008,16 @@ path_clear (float64_t distance_mm)
         = distance_mm + (S5_FRONT_MM - S5_SERVO_AHEAD_MM) + S5_PASS_MARGIN_MM;
     s5_look_t result = look(S5_ANGLE_CENTRE_DEG, &range_mm);
 
+    bool b_result = true;
+
     if (S5_LOOK_FAILED == result)
     {
         tm_printf(
             (const UB *)"[DETOUR] front measurement failed; not moving\n");
-        return false;
+        b_result = false;
     }
-
-    if ((S5_LOOK_ECHO == result)
-        && (s5_forward_mm(range_mm, S5_ANGLE_CENTRE_DEG) <= needed_mm))
+    else if ((S5_LOOK_ECHO == result)
+             && (s5_forward_mm(range_mm, S5_ANGLE_CENTRE_DEG) <= needed_mm))
     {
         tm_printf((const UB *)"[DETOUR] something %d mm ahead, need %d mm\n",
                   s5_mm(s5_forward_mm(range_mm, S5_ANGLE_CENTRE_DEG)),
@@ -1004,10 +1025,14 @@ path_clear (float64_t distance_mm)
         detour_why(S5_WHY_AHEAD_BLOCKED,
                    s5_mm(s5_forward_mm(range_mm, S5_ANGLE_CENTRE_DEG)),
                    s5_mm(needed_mm));
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        /* Nothing to do in any other case. */
     }
 
-    return true;
+    return b_result;
 }
 
 /* The five bearings cover a corridor, not just the centre ray. Widen it for
@@ -1374,40 +1399,45 @@ rejoin_after_stop (void)
     float64_t      overshoot_mm;
     float64_t      back_mm;
 
+    bool b_result = true;
+
     g_s5_leg.rejoin_armed = false;
 
     if ((!release_hold()) || (!s5_status(&status)))
     {
-        return false;
+        b_result = false;
     }
-
-    overshoot_mm = (status.motion.centre - g_s5_rejoin_centre_m) * 1000.0;
-    /* Back over the overshoot: reverse after a forward move, forward after
-     * reversing */
-    back_mm = -overshoot_mm;
-
-    if (fabs(back_mm) < S5_MIN_DIAGONAL_STEP_MM)
+    else
     {
-        back_mm = (overshoot_mm < 0.0) ? S5_MIN_DIAGONAL_STEP_MM
-                                       : -S5_MIN_DIAGONAL_STEP_MM;
+        overshoot_mm = (status.motion.centre - g_s5_rejoin_centre_m) * 1000.0;
+        /* Back over the overshoot: reverse after a forward move, forward after
+         * reversing */
+        back_mm = -overshoot_mm;
+
+        if (fabs(back_mm) < S5_MIN_DIAGONAL_STEP_MM)
+        {
+            back_mm = (overshoot_mm < 0.0) ? S5_MIN_DIAGONAL_STEP_MM
+                                           : -S5_MIN_DIAGONAL_STEP_MM;
+        }
+
+        tm_printf(
+            (const UB *)"[DETOUR] line at x %d y %d, heading %d deg, stopped "
+                        "%d mm on; interrupting the detour\n",
+            s5_mm(g_s5_x), s5_mm(g_s5_y), s5_mm(heading_deg(&status)),
+            s5_mm(overshoot_mm));
+
+        if ((!line_confirm())
+            && ((S5_MOVE_DONE != straight(back_mm, false, NULL))
+                || (!line_confirm())))
+        {
+            tm_printf((const UB *)"[DETOUR] line not under the sensors after "
+                                  "stopping; holding\n");
+            detour_why(S5_WHY_LINE_LOST_AT_STOP, s5_mm(g_s5_x), s5_mm(g_s5_y));
+            b_result = false;
+        }
     }
 
-    tm_printf((const UB *)"[DETOUR] line at x %d y %d, heading %d deg, stopped "
-                          "%d mm on; interrupting the detour\n",
-              s5_mm(g_s5_x), s5_mm(g_s5_y), s5_mm(heading_deg(&status)),
-              s5_mm(overshoot_mm));
-
-    if ((!line_confirm())
-        && ((S5_MOVE_DONE != straight(back_mm, false, NULL))
-            || (!line_confirm())))
-    {
-        tm_printf((const UB *)"[DETOUR] line not under the sensors after "
-                              "stopping; holding\n");
-        detour_why(S5_WHY_LINE_LOST_AT_STOP, s5_mm(g_s5_x), s5_mm(g_s5_y));
-        return false;
-    }
-
-    return true;
+    return b_result;
 }
 
 /* ---- the pass: one long move, measured while it runs ---- */
@@ -1446,42 +1476,52 @@ drive_start (s5_drive_t * p_drive, float64_t distance_mm)
     motion_result_t result;
     float64_t       submit_start;
 
+    bool b_result = false;
+
     if (!s5_status(&before))
     {
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        p_drive->id     = next_id();
+        submit_start    = motion_hal_time();
+        p_drive->counts = s5_log_encoders("move-before", p_drive->id);
+
+        do
+        {
+            result = motion_steer_distance(SOURCE_OBSTACLE, p_drive->id,
+                                           distance_mm / 1000.0, 0.0,
+                                           S5_DRIVE_SPEED_MM_S / 1000.0);
+        } while ((R_BUSY == result)
+                 && (retry_busy(submit_start, before.motion.generation)));
+
+        if (R_OK != result)
+        {
+            tm_printf((const UB *)"[DETOUR] drive %d mm refused (%u)\n",
+                      s5_mm(distance_mm), (unsigned)result);
+            log_encoder_after(p_drive->id, &p_drive->counts, S5_MOVE_FAILED);
+            b_result = false;
+        }
+        else
+        {
+            tm_printf((const UB *)"[DETOUR] move %u queued: pass, up to %d mm "
+                                  "at %d mm/s\n",
+                      (unsigned)p_drive->id, s5_mm(distance_mm),
+                      s5_mm(S5_DRIVE_SPEED_MM_S));
+            p_drive->start = motion_hal_time();
+            p_drive->timeout_s
+                = (distance_mm / S5_DRIVE_SPEED_MM_S) + S5_MOVE_SLACK_S;
+            p_drive->centre_m        = before.motion.centre;
+            p_drive->heading_deg     = heading_deg(&before);
+            p_drive->result          = S5_MOVE_RUNNING;
+            p_drive->b_sensor_failed = false;
+            g_s5_stall_since         = -1.0;
+            b_result                 = true;
+        }
     }
 
-    p_drive->id     = next_id();
-    submit_start    = motion_hal_time();
-    p_drive->counts = s5_log_encoders("move-before", p_drive->id);
-
-    do
-    {
-        result = motion_steer_distance(SOURCE_OBSTACLE, p_drive->id,
-                                       distance_mm / 1000.0, 0.0,
-                                       S5_DRIVE_SPEED_MM_S / 1000.0);
-    } while ((R_BUSY == result)
-             && (retry_busy(submit_start, before.motion.generation)));
-
-    if (R_OK != result)
-    {
-        tm_printf((const UB *)"[DETOUR] drive %d mm refused (%u)\n",
-                  s5_mm(distance_mm), (unsigned)result);
-        log_encoder_after(p_drive->id, &p_drive->counts, S5_MOVE_FAILED);
-        return false;
-    }
-
-    tm_printf(
-        (const UB *)"[DETOUR] move %u queued: pass, up to %d mm at %d mm/s\n",
-        (unsigned)p_drive->id, s5_mm(distance_mm), s5_mm(S5_DRIVE_SPEED_MM_S));
-    p_drive->start     = motion_hal_time();
-    p_drive->timeout_s = (distance_mm / S5_DRIVE_SPEED_MM_S) + S5_MOVE_SLACK_S;
-    p_drive->centre_m  = before.motion.centre;
-    p_drive->heading_deg     = heading_deg(&before);
-    p_drive->result          = S5_MOVE_RUNNING;
-    p_drive->b_sensor_failed = false;
-    g_s5_stall_since         = -1.0;
-    return true;
+    return b_result;
 }
 
 static s5_move_t
@@ -1523,15 +1563,21 @@ drive_ping (void * p_context, float64_t * p_range_mm)
     float64_t      time_s;
     s5_us_status_t result;
 
+    bool b_result = false;
+
     if ((S5_MOVE_RUNNING != drive_poll(p_drive)) || (p_drive->b_sensor_failed))
     {
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        result = s5_us_ping(p_range_mm, &time_s);
+        p_drive->b_sensor_failed
+            = (S5_US_NO_PULSE == result) || (S5_US_BUSY == result);
+        b_result = S5_US_OK == result;
     }
 
-    result = s5_us_ping(p_range_mm, &time_s);
-    p_drive->b_sensor_failed
-        = (S5_US_NO_PULSE == result) || (S5_US_BUSY == result);
-    return S5_US_OK == result;
+    return b_result;
 }
 
 /* *p_x: where the robot was, halfway through the pings.  Pings that disagree
@@ -1543,6 +1589,7 @@ drive_look (s5_drive_t * p_drive, int angle_deg, float64_t * p_range_mm,
 {
     s5_estimate_t estimate;
     float64_t     first_x;
+    s5_look_t     outcome = S5_LOOK_ECHO;
 
     drive_wait(p_drive, s5_servo_aim(angle_deg));
     first_x = g_s5_x;
@@ -1552,15 +1599,19 @@ drive_look (s5_drive_t * p_drive, int angle_deg, float64_t * p_range_mm,
 
     if ((S5_MOVE_RUNNING != p_drive->result) || (p_drive->b_sensor_failed))
     {
-        return S5_LOOK_FAILED;
+        outcome = S5_LOOK_FAILED;
     }
-
-    if (s5_estimate_usable(&estimate))
+    else if (s5_estimate_usable(&estimate))
     {
-        return S5_LOOK_ECHO;
+        outcome = S5_LOOK_ECHO;
+    }
+    else
+    {
+        outcome = (S5_ECHO_NONE == estimate.status) ? S5_LOOK_CLEAR
+                                                    : S5_LOOK_UNSURE;
     }
 
-    return (S5_ECHO_NONE == estimate.status) ? S5_LOOK_CLEAR : S5_LOOK_UNSURE;
+    return outcome;
 }
 
 /* Wait for the stop, then log and bring the pose up to date.  Leaves it held.
@@ -1570,43 +1621,54 @@ drive_settle (s5_drive_t * p_drive)
 {
     robot_status_t status;
 
+    bool b_result = false;
+
     if ((!s5_wait_still()) || (!s5_status(&status)))
     {
         tm_printf((const UB *)"[DETOUR] move %u could not confirm the stop\n",
                   (unsigned)p_drive->id);
         detour_why(S5_WHY_NOT_STILL, (int)p_drive->id, 0);
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        drive_track(p_drive, &status);
+        log_encoder_after(p_drive->id, &p_drive->counts, p_drive->result);
+        b_result = true;
     }
 
-    drive_track(p_drive, &status);
-    log_encoder_after(p_drive->id, &p_drive->counts, p_drive->result);
-    return true;
+    return b_result;
 }
 
 /* The move ended by itself: the line interrupted it, or something went wrong */
 static bool
 drive_ended (s5_drive_t * p_drive)
 {
+    bool b_result = false;
+
     if (S5_MOVE_REJOIN == p_drive->result)
     {
         g_s5_leg.rejoined = (drive_settle(p_drive)) && (rejoin_after_stop());
-        return g_s5_leg.rejoined;
+        b_result          = g_s5_leg.rejoined;
     }
-
-    if (S5_MOVE_STALLED == p_drive->result)
+    else if (S5_MOVE_STALLED == p_drive->result)
     {
         g_s5_leg.pass_stalled = drive_settle(p_drive);
-        return false;
+        b_result              = false;
     }
-
-    if (S5_MOVE_DONE == p_drive->result)
+    else
     {
-        tm_printf((const UB *)"[DETOUR] drove the whole pass without the "
-                              "obstacle ending\n");
-        detour_why(S5_WHY_OBSTACLE_TOO_LONG, s5_mm(g_s5_x), s5_mm(g_s5_y));
+        if (S5_MOVE_DONE == p_drive->result)
+        {
+            tm_printf((const UB *)"[DETOUR] drove the whole pass without the "
+                                  "obstacle ending\n");
+            detour_why(S5_WHY_OBSTACLE_TOO_LONG, s5_mm(g_s5_x), s5_mm(g_s5_y));
+        }
+
+        b_result = false;
     }
 
-    return false;
+    return b_result;
 }
 
 /* Sensor failed, or something ahead: the caller stops too, but this is moving
@@ -1633,26 +1695,30 @@ drive_look_ahead (s5_drive_t * p_drive)
     s5_look_t result
         = drive_look(p_drive, S5_ANGLE_CENTRE_DEG, &range_mm, &look_x);
 
+    bool b_result = true;
+
     if (S5_MOVE_RUNNING != p_drive->result)
     {
-        return false;
+        b_result = false;
     }
-
-    if (S5_LOOK_FAILED == result)
+    else if (S5_LOOK_FAILED == result)
     {
-        return drive_refuse(S5_WHY_PASS_LOOK_FAILED, "front measurement failed",
-                            0);
+        b_result = drive_refuse(S5_WHY_PASS_LOOK_FAILED,
+                                "front measurement failed", 0);
     }
-
-    if ((S5_LOOK_CLEAR != result)
-        && (s5_forward_mm(range_mm, S5_ANGLE_CENTRE_DEG) <= needed))
+    else if ((S5_LOOK_CLEAR != result)
+             && (s5_forward_mm(range_mm, S5_ANGLE_CENTRE_DEG) <= needed))
     {
-        return drive_refuse(
-            S5_WHY_PASS_AHEAD_BLOCKED, "something ahead",
-            s5_mm(s5_forward_mm(range_mm, S5_ANGLE_CENTRE_DEG)));
+        b_result
+            = drive_refuse(S5_WHY_PASS_AHEAD_BLOCKED, "something ahead",
+                           s5_mm(s5_forward_mm(range_mm, S5_ANGLE_CENTRE_DEG)));
+    }
+    else
+    {
+        /* Nothing to do in any other case. */
     }
 
-    return true;
+    return b_result;
 }
 
 static bool
@@ -1968,18 +2034,25 @@ reverse_to_noted (void)
     robot_status_t status;
     float64_t      back_mm;
 
+    bool b_result = false;
+
     if (!s5_status(&status))
     {
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        back_mm = ((status.motion.centre - g_s5_noted_centre_m) * 1000.0)
+                  + S5_NOTED_OVERSHOOT_MM;
+        tm_printf(
+            (const UB *)"[DETOUR] no line on the straight path; reversing up "
+                        "to %d mm to the "
+                        "line crossed at x %d y %d\n",
+            s5_mm(back_mm), s5_mm(g_s5_noted_x), s5_mm(g_s5_noted_y));
+        b_result = drive_onto_noted(-back_mm);
     }
 
-    back_mm = ((status.motion.centre - g_s5_noted_centre_m) * 1000.0)
-              + S5_NOTED_OVERSHOOT_MM;
-    tm_printf((const UB *)"[DETOUR] no line on the straight path; reversing up "
-                          "to %d mm to the "
-                          "line crossed at x %d y %d\n",
-              s5_mm(back_mm), s5_mm(g_s5_noted_x), s5_mm(g_s5_noted_y));
-    return drive_onto_noted(-back_mm);
+    return b_result;
 }
 
 static bool
@@ -2076,23 +2149,31 @@ s5_back_off (float64_t distance_mm)
 {
     robot_status_t status;
 
+    bool b_result = false;
+
     if ((!release_hold()) || (!s5_status(&status)))
     {
-        return false;
+        b_result = false;
     }
-
-    g_s5_heading0 = status.motion.heading;
-    g_s5_x        = 0.0;
-    g_s5_y        = 0.0;
-
-    if (S5_MOVE_DONE != straight(-distance_mm, false, NULL))
+    else
     {
-        motion_stop();
-        return false;
+        g_s5_heading0 = status.motion.heading;
+        g_s5_x        = 0.0;
+        g_s5_y        = 0.0;
+
+        if (S5_MOVE_DONE != straight(-distance_mm, false, NULL))
+        {
+            motion_stop();
+            b_result = false;
+        }
+        else
+        {
+            motion_stop();
+            b_result = wait_stopped();
+        }
     }
 
-    motion_stop();
-    return wait_stopped();
+    return b_result;
 }
 
 bool

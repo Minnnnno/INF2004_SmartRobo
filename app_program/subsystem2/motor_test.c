@@ -159,38 +159,41 @@ button_irq (void)
 
     if (0U == (start_events | stop_events))
     {
-        return;
+        /* Nothing to do. */
     }
-
-    ++g_button_irq_events;
-
-    if (!gb_active)
+    else
     {
-        return;
-    }
+        ++g_button_irq_events;
 
-    if (0U != (stop_events & GPIO_IRQ_EDGE_FALL))
-    {
-        button_stop_now();
-        return;
-    }
-
-    now = time_us_64();
-
-    if (0U != (start_events & GPIO_IRQ_EDGE_RISE))
-    {
-        g_stop_released_at   = now;
-        gb_stop_release_seen = true;
-    }
-
-    if (0U != (start_events & GPIO_IRQ_EDGE_FALL))
-    {
-        if (gb_stop_release_seen && ((now - g_stop_released_at) >= 40000U))
+        if (!gb_active)
+        {
+            /* Nothing to do. */
+        }
+        else if (0U != (stop_events & GPIO_IRQ_EDGE_FALL))
         {
             button_stop_now();
         }
+        else
+        {
+            now = time_us_64();
 
-        gb_stop_release_seen = false;
+            if (0U != (start_events & GPIO_IRQ_EDGE_RISE))
+            {
+                g_stop_released_at   = now;
+                gb_stop_release_seen = true;
+            }
+
+            if (0U != (start_events & GPIO_IRQ_EDGE_FALL))
+            {
+                if (gb_stop_release_seen
+                    && ((now - g_stop_released_at) >= 40000U))
+                {
+                    button_stop_now();
+                }
+
+                gb_stop_release_seen = false;
+            }
+        }
     }
 }
 #endif
@@ -328,12 +331,18 @@ start_test (unsigned wheel_mask, int direction, bool b_sensor,
 bool
 motor_test_start (unsigned wheel, int direction)
 {
+    bool b_result = false;
+
     if (wheel > 1U)
     {
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        b_result = start_test(1U << wheel, direction, false, TEST_DURATION_US);
     }
 
-    return start_test(1U << wheel, direction, false, TEST_DURATION_US);
+    return b_result;
 }
 
 bool
@@ -353,17 +362,15 @@ motor_test_poll_buttons (void)
 
     if (!gb_ready)
     {
-        return;
+        /* Nothing to do. */
     }
-
-    if (!gpio_get(21U))
-    { /* Stop wins immediately on the next 20 ms poll. */
+    else if (!gpio_get(21U))
+    {
+        /* Stop wins immediately on the next 20 ms poll. */
         disarm_buttons();
         button_stop_now();
-        return;
     }
-
-    if (gpio_get(20U))
+    else if (gpio_get(20U))
     {
         gb_press_tracking = false;
 
@@ -377,35 +384,33 @@ motor_test_poll_buttons (void)
         {
             gb_button_armed = true;
         }
-
-        return;
     }
-
-    gb_release_tracking = false;
-
-    if (!gb_button_armed)
+    else
     {
-        return;
-    }
+        gb_release_tracking = false;
 
-    if (gb_active)
-    {
-        /* GPIO interrupt also handles stop between task polls. */
-        button_stop_now();
-        return;
-    }
-
-    if (!gb_press_tracking)
-    {
-        g_pressed_since   = now;
-        gb_press_tracking = true;
-        return;
-    }
-
-    if ((now - g_pressed_since) >= 40000U)
-    {
-        disarm_buttons();
-        (void)start_test(3U, 1, false, BUTTON_DURATION_US);
+        if (!gb_button_armed)
+        {
+            /* Nothing to do. */
+        }
+        else if (gb_active)
+        {
+            /* GPIO interrupt also handles stop between task polls. */
+            button_stop_now();
+        }
+        else if (!gb_press_tracking)
+        {
+            g_pressed_since   = now;
+            gb_press_tracking = true;
+        }
+        else
+        {
+            if ((now - g_pressed_since) >= 40000U)
+            {
+                disarm_buttons();
+                (void)start_test(3U, 1, false, BUTTON_DURATION_US);
+            }
+        }
     }
 }
 
@@ -414,31 +419,38 @@ motor_test_get_buttons (motor_test_button_diag_t * p_delta)
 {
     uint32_t irq_state;
 
+    bool b_result = false;
+
     if (NULL == p_delta)
     {
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        irq_state = save_and_disable_interrupts();
+        *p_delta  = (motor_test_button_diag_t){
+            .start_high     = gpio_get(20U),
+            .stop_high      = gpio_get(21U),
+            .ready          = gb_ready,
+            .armed          = gb_button_armed,
+            .active         = gb_active,
+            .polls          = g_button_polls,
+            .stop_actions   = g_button_stop_actions,
+            .irq_registered = gb_button_irq_registered,
+            .irq_events     = g_button_irq_events};
+        p_delta->cutoff_irq_count = g_cutoff_irq_count;
+        p_delta->polled_cutoffs   = g_polled_cutoffs;
+        uint64_t now              = time_us_64();
+
+        p_delta->remaining_ms
+            = (gb_active && (g_cutoff_at > now))
+                  ? (uint32_t)((g_cutoff_at - now + 999U) / 1000U)
+                  : 0U;
+        restore_interrupts(irq_state);
+        b_result = true;
     }
 
-    irq_state = save_and_disable_interrupts();
-    *p_delta
-        = (motor_test_button_diag_t){.start_high     = gpio_get(20U),
-                                     .stop_high      = gpio_get(21U),
-                                     .ready          = gb_ready,
-                                     .armed          = gb_button_armed,
-                                     .active         = gb_active,
-                                     .polls          = g_button_polls,
-                                     .stop_actions   = g_button_stop_actions,
-                                     .irq_registered = gb_button_irq_registered,
-                                     .irq_events     = g_button_irq_events};
-    p_delta->cutoff_irq_count = g_cutoff_irq_count;
-    p_delta->polled_cutoffs   = g_polled_cutoffs;
-    uint64_t now              = time_us_64();
-
-    p_delta->remaining_ms = (gb_active && (g_cutoff_at > now))
-                                ? (uint32_t)((g_cutoff_at - now + 999U) / 1000U)
-                                : 0U;
-    restore_interrupts(irq_state);
-    return true;
+    return b_result;
 }
 #endif
 

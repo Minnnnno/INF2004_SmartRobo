@@ -73,19 +73,25 @@ s5_servo_init (int angle_deg)
 unsigned
 s5_servo_aim (int angle_deg)
 {
-    int target = servo_clamp(angle_deg);
-    int travel = (target > g_servo_deg) ? (target - g_servo_deg)
-                                        : (g_servo_deg - target);
+    int          target = servo_clamp(angle_deg);
+    int          travel = (target > g_servo_deg) ? (target - g_servo_deg)
+                                                 : (g_servo_deg - target);
+    unsigned int result = 0U;
 
     if (0U == g_servo_deg)
     {
         s5_servo_init(target); /* waits for itself */
-        return 0U;
+        result = 0U;
+    }
+    else
+    {
+        servo_write(target);
+        g_servo_deg = (uint8_t)target;
+        result      = SERVO_SETTLE_BASE_MS
+                      + ((unsigned)travel * SERVO_SETTLE_PER_DEG_MS);
     }
 
-    servo_write(target);
-    g_servo_deg = (uint8_t)target;
-    return SERVO_SETTLE_BASE_MS + ((unsigned)travel * SERVO_SETTLE_PER_DEG_MS);
+    return result;
 }
 
 void

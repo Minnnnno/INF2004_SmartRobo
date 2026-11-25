@@ -220,21 +220,27 @@ s5_line_expected (float64_t y_mm, float64_t heading_deg)
 static bool
 clip_ray (float64_t offset, float64_t slope, float64_t * p_lo, float64_t * p_hi)
 {
+    bool b_result = false;
+
     if (fabs(slope) < 1e-12)
     {
-        return offset >= 0.0;
-    }
-
-    if (slope > 0.0)
-    {
-        *p_lo = fmax(*p_lo, -offset / slope);
+        b_result = offset >= 0.0;
     }
     else
     {
-        *p_hi = fmin(*p_hi, -offset / slope);
+        if (slope > 0.0)
+        {
+            *p_lo = fmax(*p_lo, -offset / slope);
+        }
+        else
+        {
+            *p_hi = fmin(*p_hi, -offset / slope);
+        }
+
+        b_result = *p_lo <= *p_hi;
     }
 
-    return *p_lo <= *p_hi;
+    return b_result;
 }
 
 float64_t
@@ -279,15 +285,22 @@ s5_echo_on_obstacle (const s5_detour_plan_t * p_plan, float64_t x_mm,
 {
     float64_t expected;
 
+    bool b_result = false;
+
     if ((!p_plan->b_ok) || (S5_AVOID_NONE == p_plan->side))
     {
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        expected
+            = s5_obstacle_range(p_plan, x_mm, y_mm, heading_deg, angle_deg);
+        b_result = (isfinite(expected))
+                   && (fabs(range_mm + S5_SENSOR_OFFSET_MM - expected)
+                       <= S5_KNOWN_RANGE_TOL_MM);
     }
 
-    expected = s5_obstacle_range(p_plan, x_mm, y_mm, heading_deg, angle_deg);
-    return (isfinite(expected))
-           && (fabs(range_mm + S5_SENSOR_OFFSET_MM - expected)
-               <= S5_KNOWN_RANGE_TOL_MM);
+    return b_result;
 }
 
 /*** end of file ***/

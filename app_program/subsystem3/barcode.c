@@ -131,13 +131,19 @@ barcode_ignore_for (float64_t metres)
 barcode_cal_t
 barcode_calibration_result (void)
 {
+    barcode_cal_t result = BARCODE_CAL_NONE;
+
     if (g_bc_cal_results == g_bc_cal_results_seen)
     {
-        return BARCODE_CAL_NONE;
+        result = BARCODE_CAL_NONE;
+    }
+    else
+    {
+        g_bc_cal_results_seen = g_bc_cal_results;
+        result = gb_bc_cal_ok ? BARCODE_CAL_DONE : BARCODE_CAL_FAILED;
     }
 
-    g_bc_cal_results_seen = g_bc_cal_results;
-    return gb_bc_cal_ok ? BARCODE_CAL_DONE : BARCODE_CAL_FAILED;
+    return result;
 }
 
 static uint32_t g_bc_path_now; /* Latest path (0.1 mm), see barcode_path(). */
@@ -342,6 +348,8 @@ static barcode_pass_t
 barcode_pass_check (const uint32_t * p_path, const uint16_t * p_heading,
                     unsigned count, int * p_turned)
 {
+    barcode_pass_t result = BC_PASS_NOT_DRIVING;
+
     *p_turned = 0;
 
     for (unsigned index = BARCODE_QUIET; index < count; ++index)
@@ -362,10 +370,15 @@ barcode_pass_check (const uint32_t * p_path, const uint16_t * p_heading,
 
     if ((p_path[count - 1U] - p_path[BARCODE_QUIET]) < BARCODE_FAIL_MIN_DRIVE)
     {
-        return BC_PASS_NOT_DRIVING;
+        result = BC_PASS_NOT_DRIVING;
+    }
+    else
+    {
+        result = (*p_turned > BARCODE_FAIL_MAX_TURN) ? BC_PASS_TURNING
+                                                     : BC_PASS_OK;
     }
 
-    return (*p_turned > BARCODE_FAIL_MAX_TURN) ? BC_PASS_TURNING : BC_PASS_OK;
+    return result;
 }
 
 /* CALIBRATING: the first usable full pass is the calibration code. It must read
@@ -761,6 +774,7 @@ barcode_record_sample (uint16_t sample)
 static void
 barcode_record_junction (void)
 {
+    /* Nothing to do. */
 }
 #endif
 #endif
@@ -780,25 +794,26 @@ barcode_check_junction (const barcode_seg_t * p_seg, uint16_t sample,
         || (sample <= (p_seg->level + g_bc_arm_rise)))
     {
         hits = 0U;
-        return;
     }
-
-    if (++hits < BARCODE_JUNCTION_HITS)
+    else if (++hits < BARCODE_JUNCTION_HITS)
     {
-        return;
+        /* Nothing to do. */
     }
-
-    hits = 0U;
-    barcode_set_mode(BC_WATCHING);
-    g_bc_junction_sample = g_bc_sample_no;
-    gb_bc_junction_seen  = true;
-    ++g_bc_junctions;
-    barcode_publish();
-    tm_printf((const UB *)"barcode: junction black=%u white=%u threshold=%u "
-                          "path=%u\n",
-              (unsigned)sample, (unsigned)p_seg->level,
-              (unsigned)(p_seg->level + g_bc_arm_rise), (unsigned)sample_time);
-    barcode_record_junction();
+    else
+    {
+        hits = 0U;
+        barcode_set_mode(BC_WATCHING);
+        g_bc_junction_sample = g_bc_sample_no;
+        gb_bc_junction_seen  = true;
+        ++g_bc_junctions;
+        barcode_publish();
+        tm_printf(
+            (const UB *)"barcode: junction black=%u white=%u threshold=%u "
+                        "path=%u\n",
+            (unsigned)sample, (unsigned)p_seg->level,
+            (unsigned)(p_seg->level + g_bc_arm_rise), (unsigned)sample_time);
+        barcode_record_junction();
+    }
 }
 #else
 static void

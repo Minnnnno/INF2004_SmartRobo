@@ -43,10 +43,12 @@ drain (void)
 
     while (comms_hook_next(topic, payload, &qos) >= 0)
     {
+        /* Nothing to do. */
     }
 
     while (take_cmd(&cmd) >= E_OK)
     {
+        /* Nothing to do. */
     }
 }
 

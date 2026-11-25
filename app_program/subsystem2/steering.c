@@ -18,15 +18,20 @@ motion_move_mm (request_source_t source, uint32_t command_id,
                 float64_t distance_mm)
 {
     motion_config_t config = board_motion_config();
+    motion_result_t result = R_INVALID;
 
     if ((!isfinite(distance_mm))
         || (fabs(distance_mm / 1000.0) > config.max_distance))
     {
-        return R_INVALID;
+        result = R_INVALID;
+    }
+    else
+    {
+        result = robot_submit(source, command_id, DISTANCE_MOVE,
+                              distance_mm / 1000.0, 0.0, 0.0);
     }
 
-    return robot_submit(source, command_id, DISTANCE_MOVE, distance_mm / 1000.0,
-                        0.0, 0.0);
+    return result;
 }
 
 motion_result_t
@@ -35,13 +40,19 @@ motion_turn_degrees (request_source_t source, uint32_t command_id,
 {
     motion_config_t config  = board_motion_config();
     float64_t       radians = degrees * DEG_TO_RAD;
+    motion_result_t result  = R_INVALID;
 
     if ((!isfinite(radians)) || (fabs(radians) > config.max_angle))
     {
-        return R_INVALID;
+        result = R_INVALID;
+    }
+    else
+    {
+        result
+            = robot_submit(source, command_id, ENCODER_TURN, radians, 0.0, 0.0);
     }
 
-    return robot_submit(source, command_id, ENCODER_TURN, radians, 0.0, 0.0);
+    return result;
 }
 
 static motion_result_t
@@ -50,23 +61,28 @@ wheel_request (request_source_t source, uint32_t command_id, float64_t left,
 {
     motion_config_t config = board_motion_config();
     float64_t       largest;
+    motion_result_t result = R_INVALID;
 
     if ((!geometry(&config)) || (!isfinite(left)) || (!isfinite(right)))
     {
-        return R_INVALID;
+        result = R_INVALID;
     }
-
-    largest = fmax(fabs(left), fabs(right));
-
-    if (largest > config.max_speed)
+    else
     {
-        left *= config.max_speed / largest;
-        /* Preserve the requested curvature. */
-        right *= config.max_speed / largest;
+        largest = fmax(fabs(left), fabs(right));
+
+        if (largest > config.max_speed)
+        {
+            left *= config.max_speed / largest;
+            /* Preserve the requested curvature. */
+            right *= config.max_speed / largest;
+        }
+
+        result = robot_submit(source, command_id, WHEEL_SPEED_TRACKING, 0.0,
+                              left, right);
     }
 
-    return robot_submit(source, command_id, WHEEL_SPEED_TRACKING, 0.0, left,
-                        right);
+    return result;
 }
 
 motion_result_t
@@ -82,41 +98,58 @@ motion_steer (request_source_t source, uint32_t command_id, float64_t speed,
 {
     motion_config_t config = board_motion_config();
     float64_t       correction;
+    motion_result_t result = R_INVALID;
 
     if ((!geometry(&config)) || (!isfinite(speed)) || (!isfinite(turn_deg_s)))
     {
-        return R_INVALID;
+        result = R_INVALID;
+    }
+    else
+    {
+        correction = (turn_deg_s * DEG_TO_RAD * config.track) / 2.0;
+        result     = wheel_request(source, command_id, speed - correction,
+                                   speed + correction);
     }
 
-    correction = (turn_deg_s * DEG_TO_RAD * config.track) / 2.0;
-    return wheel_request(source, command_id, speed - correction,
-                         speed + correction);
+    return result;
 }
 
 motion_result_t
 motion_steer_left (request_source_t source, uint32_t command_id,
                    float64_t speed, float64_t correction)
 {
+    motion_result_t result = R_INVALID;
+
     if ((!isfinite(speed)) || (!isfinite(correction)) || (correction < 0.0))
     {
-        return R_INVALID;
+        result = R_INVALID;
+    }
+    else
+    {
+        result = wheel_request(source, command_id, speed - correction,
+                               speed + correction);
     }
 
-    return wheel_request(source, command_id, speed - correction,
-                         speed + correction);
+    return result;
 }
 
 motion_result_t
 motion_steer_right (request_source_t source, uint32_t command_id,
                     float64_t speed, float64_t correction)
 {
+    motion_result_t result = R_INVALID;
+
     if ((!isfinite(speed)) || (!isfinite(correction)) || (correction < 0.0))
     {
-        return R_INVALID;
+        result = R_INVALID;
+    }
+    else
+    {
+        result = wheel_request(source, command_id, speed + correction,
+                               speed - correction);
     }
 
-    return wheel_request(source, command_id, speed + correction,
-                         speed - correction);
+    return result;
 }
 
 static motion_result_t
@@ -195,14 +228,20 @@ motion_result_t
 motion_steer_time (request_source_t source, uint32_t command_id,
                    float64_t seconds, float64_t degrees, float64_t speed)
 {
+    motion_result_t result = R_INVALID;
+
     if ((!isfinite(seconds)) || (seconds <= 0.0) || (!isfinite(speed))
         || (0.0 == speed))
     {
-        return R_INVALID;
+        result = R_INVALID;
+    }
+    else
+    {
+        result = arc(source, command_id, speed * seconds, degrees, seconds,
+                     fabs(speed));
     }
 
-    return arc(source, command_id, speed * seconds, degrees, seconds,
-               fabs(speed));
+    return result;
 }
 
 bool
@@ -211,30 +250,36 @@ motion_get_feedback (motion_feedback_t * p_feedback)
     robot_status_t  status;
     motion_config_t config = board_motion_config();
 
+    bool b_result = false;
+
     if ((NULL == p_feedback) || (!geometry(&config))
         || (!motion_get_status(&status)))
     {
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        *p_feedback = (motion_feedback_t){
+            .timestamp_s     = status.motion.sample_time,
+            .left_speed_m_s  = status.motion.speed[0],
+            .right_speed_m_s = status.motion.speed[1],
+            .centre_speed_m_s
+            = (status.motion.speed[0] + status.motion.speed[1]) / 2.0,
+            .turn_deg_s    = (status.motion.speed[1] - status.motion.speed[0])
+                             / config.track / DEG_TO_RAD,
+            .left_metres   = status.motion.travel[0],
+            .right_metres  = status.motion.travel[1],
+            .centre_metres = status.motion.centre,
+            .path_metres   = status.motion.path,
+            .heading_deg   = status.motion.heading / DEG_TO_RAD,
+            .state         = status.motion.state,
+            .fault         = status.motion.fault,
+            .feedback_trusted = (status.motion.feedback_trusted)
+                                && (motion_config_valid(&config))};
+        b_result = true;
     }
 
-    *p_feedback = (motion_feedback_t){
-        .timestamp_s     = status.motion.sample_time,
-        .left_speed_m_s  = status.motion.speed[0],
-        .right_speed_m_s = status.motion.speed[1],
-        .centre_speed_m_s
-        = (status.motion.speed[0] + status.motion.speed[1]) / 2.0,
-        .turn_deg_s    = (status.motion.speed[1] - status.motion.speed[0])
-                         / config.track / DEG_TO_RAD,
-        .left_metres   = status.motion.travel[0],
-        .right_metres  = status.motion.travel[1],
-        .centre_metres = status.motion.centre,
-        .path_metres   = status.motion.path,
-        .heading_deg   = status.motion.heading / DEG_TO_RAD,
-        .state         = status.motion.state,
-        .fault         = status.motion.fault,
-        .feedback_trusted
-        = (status.motion.feedback_trusted) && (motion_config_valid(&config))};
-    return true;
+    return b_result;
 }
 
 bool
@@ -242,25 +287,31 @@ motion_get_measurements_mm (motion_measurements_mm_t * p_measurements)
 {
     motion_feedback_t feedback;
 
+    bool b_result = false;
+
     if ((NULL == p_measurements) || (!motion_get_feedback(&feedback)))
     {
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        *p_measurements = (motion_measurements_mm_t){
+            .timestamp_s        = feedback.timestamp_s,
+            .left_speed_mm_s    = feedback.left_speed_m_s * 1000.0,
+            .right_speed_mm_s   = feedback.right_speed_m_s * 1000.0,
+            .centre_speed_mm_s  = feedback.centre_speed_m_s * 1000.0,
+            .left_distance_mm   = feedback.left_metres * 1000.0,
+            .right_distance_mm  = feedback.right_metres * 1000.0,
+            .centre_distance_mm = feedback.centre_metres * 1000.0,
+            .path_distance_mm   = feedback.path_metres * 1000.0,
+            .heading_deg        = feedback.heading_deg,
+            .state              = feedback.state,
+            .fault              = feedback.fault,
+            .feedback_trusted   = feedback.feedback_trusted};
+        b_result = true;
     }
 
-    *p_measurements = (motion_measurements_mm_t){
-        .timestamp_s        = feedback.timestamp_s,
-        .left_speed_mm_s    = feedback.left_speed_m_s * 1000.0,
-        .right_speed_mm_s   = feedback.right_speed_m_s * 1000.0,
-        .centre_speed_mm_s  = feedback.centre_speed_m_s * 1000.0,
-        .left_distance_mm   = feedback.left_metres * 1000.0,
-        .right_distance_mm  = feedback.right_metres * 1000.0,
-        .centre_distance_mm = feedback.centre_metres * 1000.0,
-        .path_distance_mm   = feedback.path_metres * 1000.0,
-        .heading_deg        = feedback.heading_deg,
-        .state              = feedback.state,
-        .fault              = feedback.fault,
-        .feedback_trusted   = feedback.feedback_trusted};
-    return true;
+    return b_result;
 }
 
 line_direction_t
@@ -269,32 +320,37 @@ motion_line_direction (line_steering_t * p_state, bool b_left, bool b_right)
     unsigned observed = (b_left ? 1U : 0U) | (b_right ? 2U : 0U);
     static const line_direction_t directions[]
         = {LINE_LOST, LINE_LEFT, LINE_RIGHT, LINE_STRAIGHT};
+    line_direction_t result = LINE_WAIT;
 
     if (NULL == p_state)
     {
-        return LINE_WAIT;
-    }
-
-    if (observed != p_state->candidate)
-    {
-        p_state->candidate   = observed;
-        p_state->consecutive = 1U;
-    }
-    else if (p_state->consecutive < 2U)
-    {
-        ++p_state->consecutive;
+        result = LINE_WAIT;
     }
     else
     {
-        /* Nothing to do in any other case. */
+        if (observed != p_state->candidate)
+        {
+            p_state->candidate   = observed;
+            p_state->consecutive = 1U;
+        }
+        else if (p_state->consecutive < 2U)
+        {
+            ++p_state->consecutive;
+        }
+        else
+        {
+            /* Nothing to do in any other case. */
+        }
+
+        if (p_state->consecutive >= 2U)
+        {
+            p_state->direction = directions[observed];
+        }
+
+        result = p_state->direction;
     }
 
-    if (p_state->consecutive >= 2U)
-    {
-        p_state->direction = directions[observed];
-    }
-
-    return p_state->direction;
+    return result;
 }
 
 /*** end of file ***/

@@ -33,20 +33,26 @@ tilt_normalise (float32_t vector[3])
     // sqrt of (x² + y² + z)
     float32_t length = sqrtf(tilt_dot(vector, vector));
 
+    bool b_result = false;
+
     // if legnth is infiity , or NAN , return false, dont normalize
     if ((!isfinite(length)) || (length < 0.01F))
     {
-        return false;
+        b_result = false;
     }
-
-    // else divide each part by length
-    // shrinks/streches the vector without turning it
-    for (uint8_t index = 0U; index < 3U; index++)
+    else
     {
-        vector[index] /= length;
+        // else divide each part by length
+        // shrinks/streches the vector without turning it
+        for (uint8_t index = 0U; index < 3U; index++)
+        {
+            vector[index] /= length;
+        }
+
+        b_result = true;
     }
 
-    return true;
+    return b_result;
 }
 
 // helper function
@@ -199,27 +205,30 @@ tilt_capture (tilt_context_t * p_context, int16_t axis_x, int16_t axis_y,
 static uint8_t
 tilt_classify (int16_t angle, uint8_t previous)
 {
+    uint8_t result = 0U;
+
     if (angle >= TILT_ENTER_TENTHS)
     {
-        return 1U;
+        result = 1U;
     }
-
-    if (angle <= -TILT_ENTER_TENTHS)
+    else if (angle <= -TILT_ENTER_TENTHS)
     {
-        return 2U;
+        result = 2U;
     }
-
-    if ((1U == previous) && (angle >= TILT_EXIT_TENTHS))
+    else if ((1U == previous) && (angle >= TILT_EXIT_TENTHS))
     {
-        return 1U;
+        result = 1U;
     }
-
-    if ((2U == previous) && (angle <= -TILT_EXIT_TENTHS))
+    else if ((2U == previous) && (angle <= -TILT_EXIT_TENTHS))
     {
-        return 2U;
+        result = 2U;
+    }
+    else
+    {
+        /* Nothing to do in any other case. */
     }
 
-    return 0U;
+    return result;
 }
 
 /* Project smoothed gravity onto the reference axes, then compute pitch/roll.
@@ -244,78 +253,86 @@ tilt_update (tilt_context_t * p_context, int16_t axis_x, int16_t axis_y,
     uint8_t   pitch_condition;
     uint8_t   roll_condition;
     uint32_t  result;
+    uint32_t  outcome = 0U;
 
     // checks
     // if total accleration isnt 700-1300 mg ,forget the fliter history and
     // return 0
     if ((NULL == p_context) || (0U == (p_context->progress & TILT_CALIBRATED)))
     {
-        return 0U;
+        outcome = 0U;
     }
-
-    if (!tilt_plausible(accel))
+    else if (!tilt_plausible(accel))
     {
         tilt_discard_history(p_context);
-        return 0U;
+        outcome = 0U;
     }
-
-    // smoothing the reading (low-pass fliter)
-    for (uint8_t index = 0U; index < 3U; index++)
+    else
     {
-        // if fliter hasnt started yet, copy the reading straight in as its
-        // starting value
-        if (0U == (p_context->progress & TILT_FILTER_READY))
+        // smoothing the reading (low-pass fliter)
+        for (uint8_t index = 0U; index < 3U; index++)
         {
-            p_context->filtered[index] = accel[index];
+            // if fliter hasnt started yet, copy the reading straight in as its
+            // starting value
+            if (0U == (p_context->progress & TILT_FILTER_READY))
+            {
+                p_context->filtered[index] = accel[index];
+            }
+
+            // Once the filter has started, each new reading moves the smoothed
+            // value 25% of the way toward that reading.
+            else
+            {
+                p_context->filtered[index]
+                    += 0.25F * (accel[index] - p_context->filtered[index]);
+            }
         }
 
-        // Once the filter has started, each new reading moves the smoothed
-        // value 25% of the way toward that reading.
+        p_context->progress |= TILT_FILTER_READY;
+
+        forward = tilt_dot(p_context->filtered, p_context->forward);
+        side    = tilt_dot(p_context->filtered, p_context->side);
+        up_axis = tilt_dot(p_context->filtered, p_context->up);
+        // working out of the angles
+        // pitch angle of gravity towards the front, roll= angle of gravity
+        // towards the side
+        pitch = TILT_PITCH_SIGN
+                * atan2f(forward, sqrtf((side * side) + (up_axis * up_axis)))
+                * TILT_RAD_TO_DEG;
+        // turns 2 lengths into an angle
+        roll = TILT_ROLL_SIGN * atan2f(side, up_axis) * TILT_RAD_TO_DEG;
+
+        // reject unusable poses
+        //  if Nan/infity , if up<= 0  robot is on its side or upside down
+        //  or pitch/roll +- 75 degrees
+        if ((!isfinite(pitch)) || (!isfinite(roll)) || (up_axis <= 0.0F)
+            || (fabsf(pitch) > 75.0F) || (fabsf(roll) > 75.0F))
+        {
+            tilt_discard_history(p_context);
+            outcome = 0U;
+        }
         else
         {
-            p_context->filtered[index]
-                += 0.25F * (accel[index] - p_context->filtered[index]);
+            // round to tenths and label
+            pitch_tenths = (int16_t)roundf(pitch * 10.0F);
+            roll_tenths  = (int16_t)roundf(roll * 10.0F);
+            // classigy condition
+            pitch_condition
+                = tilt_classify(pitch_tenths, p_context->conditions & 3U);
+            roll_condition = tilt_classify(roll_tenths,
+                                           (p_context->conditions >> 2U) & 3U);
+            // Pack everything into one number
+            p_context->conditions
+                = (uint8_t)(pitch_condition | (roll_condition << 2U));
+            result  = (uint32_t)((int32_t)pitch_tenths + 900)
+                      | ((uint32_t)((int32_t)roll_tenths + 900) << 11U)
+                      | ((uint32_t)pitch_condition << 22U)
+                      | ((uint32_t)roll_condition << 24U) | TILT_RESULT_VALID;
+            outcome = result;
         }
     }
 
-    p_context->progress |= TILT_FILTER_READY;
-
-    forward = tilt_dot(p_context->filtered, p_context->forward);
-    side    = tilt_dot(p_context->filtered, p_context->side);
-    up_axis = tilt_dot(p_context->filtered, p_context->up);
-    // working out of the angles
-    // pitch angle of gravity towards the front, roll= angle of gravity towards
-    // the side
-    pitch = TILT_PITCH_SIGN
-            * atan2f(forward, sqrtf((side * side) + (up_axis * up_axis)))
-            * TILT_RAD_TO_DEG;
-    // turns 2 lengths into an angle
-    roll = TILT_ROLL_SIGN * atan2f(side, up_axis) * TILT_RAD_TO_DEG;
-
-    // reject unusable poses
-    //  if Nan/infity , if up<= 0  robot is on its side or upside down
-    //  or pitch/roll +- 75 degrees
-    if ((!isfinite(pitch)) || (!isfinite(roll)) || (up_axis <= 0.0F)
-        || (fabsf(pitch) > 75.0F) || (fabsf(roll) > 75.0F))
-    {
-        tilt_discard_history(p_context);
-        return 0U;
-    }
-
-    // round to tenths and label
-    pitch_tenths = (int16_t)roundf(pitch * 10.0F);
-    roll_tenths  = (int16_t)roundf(roll * 10.0F);
-    // classigy condition
-    pitch_condition = tilt_classify(pitch_tenths, p_context->conditions & 3U);
-    roll_condition
-        = tilt_classify(roll_tenths, (p_context->conditions >> 2U) & 3U);
-    // Pack everything into one number
-    p_context->conditions = (uint8_t)(pitch_condition | (roll_condition << 2U));
-    result = (uint32_t)((int32_t)pitch_tenths + 900)
-             | ((uint32_t)((int32_t)roll_tenths + 900) << 11U)
-             | ((uint32_t)pitch_condition << 22U)
-             | ((uint32_t)roll_condition << 24U) | TILT_RESULT_VALID;
-    return result;
+    return outcome;
 }
 
 /* Height of the right wheel contact above the left one, in 0.1 mm, for a
@@ -363,26 +380,33 @@ tilt_forward_dynamic_mg (tilt_context_t const * p_context, int16_t axis_x,
 {
     float32_t dynamic[3];
     float32_t forward;
+    int16_t   result = 0;
 
     if ((NULL == p_context)
         || ((TILT_CALIBRATED | TILT_FILTER_READY)
             != (p_context->progress & (TILT_CALIBRATED | TILT_FILTER_READY))))
     {
-        return 0;
+        result = 0;
     }
-
-    dynamic[0] = (float32_t)axis_x - p_context->filtered[0];
-    dynamic[1] = (float32_t)axis_y - p_context->filtered[1];
-    dynamic[2] = (float32_t)axis_z - p_context->filtered[2];
-    forward    = tilt_dot(dynamic, p_context->forward);
-
-    if (!isfinite(forward))
+    else
     {
-        return 0;
+        dynamic[0] = (float32_t)axis_x - p_context->filtered[0];
+        dynamic[1] = (float32_t)axis_y - p_context->filtered[1];
+        dynamic[2] = (float32_t)axis_z - p_context->filtered[2];
+        forward    = tilt_dot(dynamic, p_context->forward);
+
+        if (!isfinite(forward))
+        {
+            result = 0;
+        }
+        else
+        {
+            /* |x|,|y|,|z| <= 2048 mg, so the result fits int16. */
+            result = (int16_t)roundf(forward);
+        }
     }
 
-    /* |x|,|y|,|z| <= 2048 mg, so the result fits int16. */
-    return (int16_t)roundf(forward);
+    return result;
 }
 
 /* Convert packed unsigned offset back to signed tenths. Valid result required.
@@ -399,27 +423,33 @@ tilt_angle_tenths (uint32_t result, uint8_t axis)
 char const *
 tilt_condition_name (uint32_t result, uint8_t axis)
 {
-    uint32_t condition;
+    uint32_t     condition;
+    const char * p_result = "LEVEL";
 
     if (0U == (result & TILT_RESULT_VALID))
     {
-        return "UNAVAILABLE";
-    } // check validity
-
-    // get the 2 bit condition: pitch at bits 22-23, roll at bits 24-25
-    condition = (result >> ((0U == axis) ? 22U : 24U)) & 3U;
-
-    if (1U == condition)
+        p_result = "UNAVAILABLE";
+    }
+    else
     {
-        return (0U == axis) ? "FRONT UP" : "LEFT SIDE LOWER";
+        // get the 2 bit condition: pitch at bits 22-23, roll at bits 24-25
+        condition = (result >> ((0U == axis) ? 22U : 24U)) & 3U;
+
+        if (1U == condition)
+        {
+            p_result = (0U == axis) ? "FRONT UP" : "LEFT SIDE LOWER";
+        }
+        else if (2U == condition)
+        {
+            p_result = (0U == axis) ? "FRONT DOWN" : "RIGHT SIDE LOWER";
+        }
+        else
+        {
+            /* Nothing to do in any other case. */
+        }
     }
 
-    if (2U == condition)
-    {
-        return (0U == axis) ? "FRONT DOWN" : "RIGHT SIDE LOWER";
-    }
-
-    return "LEVEL";
+    return p_result;
 }
 
 /*** end of file ***/

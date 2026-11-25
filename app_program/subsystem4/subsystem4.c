@@ -84,34 +84,39 @@ subsystem4_init (void)
     ID h_device = tk_opn_dev((UB const *)GY511_I2C_DEVICE, TD_UPDATE | TD_EXCL);
     ER status   = E_OK;
     ER close_status = E_OK;
+    ER result       = 0;
 
     /*Leave early if opening of I2c device fail*/
     if (h_device < E_OK)
     {
-        return (ER)h_device;
+        result = (ER)h_device;
     }
-
-    /*Check right chip is connected.*/
-    /* Read the ID registers , wrong chip or wiring problem gives E_IO*/
-    status = subsystem4_check_identity(h_device);
-    for (uint8_t index = 0U;
-         /*Write each setting in*/
-         (E_OK == status)
-         && (index < (sizeof(g_settings) / sizeof(g_settings[0])));
-         index++)
+    else
     {
-        status = subsystem4_apply_setting(h_device, &g_settings[index]);
+        /*Check right chip is connected.*/
+        /* Read the ID registers , wrong chip or wiring problem gives E_IO*/
+        status = subsystem4_check_identity(h_device);
+        for (uint8_t index = 0U;
+             /*Write each setting in*/
+             (E_OK == status)
+             && (index < (sizeof(g_settings) / sizeof(g_settings[0])));
+             index++)
+        {
+            status = subsystem4_apply_setting(h_device, &g_settings[index]);
+        }
+
+        /*Closing of handle so it bus is not left locked. */
+        close_status = tk_cls_dev(h_device, 0U);
+
+        if (E_OK == status)
+        {
+            status = close_status;
+        }
+
+        result = status;
     }
 
-    /*Closing of handle so it bus is not left locked. */
-    close_status = tk_cls_dev(h_device, 0U);
-
-    if (E_OK == status)
-    {
-        status = close_status;
-    }
-
-    return status;
+    return result;
 }
 
 /*

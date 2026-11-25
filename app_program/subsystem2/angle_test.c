@@ -40,54 +40,65 @@ angle_test_init (void)
     pwm_config_t pwm        = pwm_get_default_config();
     T_DINT       definition = {.intatr = TA_HLNG, .inthdr = (FP)deadline_irq};
 
+    bool b_result = false;
+
     brake();
     angle_control_init(&g_control, &config);
 
     if ((!g_control.ready) || (!board_pins_valid())
         || (!motion_hal_sample().reliable))
     {
-        return false;
+        b_result = false;
     }
-
-    if (E_OK != tk_def_int(3U, &definition))
+    else if (E_OK != tk_def_int(3U, &definition))
     {
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        pwm_config_set_wrap(&pwm, 3999U);
+        pwm_config_set_clkdiv(&pwm, 1.5625f);
+        pwm_init(4U, &pwm, false);
+        pwm_init(5U, &pwm, false);
+        out_w(TIMER_ARMED, 8U);
+        out_w(TIMER_INTR, 8U);
+        ClearInt(3U);
+        set_w(TIMER_INTE, 8U);
+        EnableInt(3U, 0);
+        gb_timer_ready = true;
+        b_result       = true;
     }
 
-    pwm_config_set_wrap(&pwm, 3999U);
-    pwm_config_set_clkdiv(&pwm, 1.5625f);
-    pwm_init(4U, &pwm, false);
-    pwm_init(5U, &pwm, false);
-    out_w(TIMER_ARMED, 8U);
-    out_w(TIMER_INTR, 8U);
-    ClearInt(3U);
-    set_w(TIMER_INTE, 8U);
-    EnableInt(3U, 0);
-    gb_timer_ready = true;
-    return true;
+    return b_result;
 }
 
 bool
 angle_test_start (int direction)
 {
+    bool b_result = false;
+
     if ((!gb_timer_ready)
         || (!angle_control_start(&g_control, direction, motion_hal_sample(),
                                  motion_hal_time())))
     {
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        uint32_t irq_state = save_and_disable_interrupts();
+
+        brake();
+        gb_expired = false;
+        out_w(TIMER_ARMED, 8U);
+        out_w(TIMER_INTR, 8U);
+        ClearInt(3U);
+        out_w(TIMER_ALARM3, (uint32_t)(time_us_64() + 8000000U));
+        restore_interrupts(irq_state);
+        angle_test_poll();
+        b_result = true;
     }
 
-    uint32_t irq_state = save_and_disable_interrupts();
-
-    brake();
-    gb_expired = false;
-    out_w(TIMER_ARMED, 8U);
-    out_w(TIMER_INTR, 8U);
-    ClearInt(3U);
-    out_w(TIMER_ALARM3, (uint32_t)(time_us_64() + 8000000U));
-    restore_interrupts(irq_state);
-    angle_test_poll();
-    return true;
+    return b_result;
 }
 
 void

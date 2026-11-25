@@ -844,14 +844,21 @@ line_imu_settled (const robot_status_t * p_status)
 {
     unsigned state;
 
+    bool b_result = false;
+
     if ((!p_status->terrain.available)
         || (!(p_status->terrain.values[3] >= 0.0)))
     {
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        state = ((unsigned)p_status->terrain.values[3] >> 3) & 7U;
+        b_result
+            = (LINE_TERRAIN_INIT != state) && (LINE_TERRAIN_RECOVERY != state);
     }
 
-    state = ((unsigned)p_status->terrain.values[3] >> 3) & 7U;
-    return (LINE_TERRAIN_INIT != state) && (LINE_TERRAIN_RECOVERY != state);
+    return b_result;
 }
 
 /* Runs once before the first motion request; nothing is driving yet.
@@ -982,13 +989,19 @@ line_restart (line_ctx_t * p_context)
 static bool
 line_cal_pressed (line_ctx_t * p_context)
 {
+    bool b_result = false;
+
     if (gpio_get(LINE_CAL_BUTTON))
     {
         p_context->cal_presses = 0U;
-        return false;
+        b_result               = false;
+    }
+    else
+    {
+        b_result = 2U == ++p_context->cal_presses;
     }
 
-    return 2U == ++p_context->cal_presses;
+    return b_result;
 }
 
 /* GP21 calibration: press, drive over the calibration code, stop (CAL_WAIT, no

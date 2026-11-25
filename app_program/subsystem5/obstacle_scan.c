@@ -60,17 +60,22 @@ s5_lateral_mm (float64_t range_mm, float64_t angle_deg)
 uint16_t
 s5_range_code (float64_t range_mm)
 {
+    uint16_t result = 0U;
+
     if (!(range_mm > 0.0))
     {
-        return 0U;
+        result = 0U;
     }
-
-    if (range_mm >= ((float64_t)S5_RANGE_CODE_MAX / S5_RANGE_STEPS_PER_MM))
+    else if (range_mm >= ((float64_t)S5_RANGE_CODE_MAX / S5_RANGE_STEPS_PER_MM))
     {
-        return (uint16_t)S5_RANGE_CODE_MAX;
+        result = (uint16_t)S5_RANGE_CODE_MAX;
+    }
+    else
+    {
+        result = (uint16_t)((range_mm * S5_RANGE_STEPS_PER_MM) + 0.5);
     }
 
-    return (uint16_t)((range_mm * S5_RANGE_STEPS_PER_MM) + 0.5);
+    return result;
 }
 
 float64_t
@@ -166,14 +171,20 @@ s5_point_set_object (s5_point_t * p_point)
 static s5_echo_t
 s5_vote (unsigned support, unsigned valid, unsigned total)
 {
+    s5_echo_t result = S5_ECHO_NONE;
+
     if (((total - valid) * 2U) > total)
     {
-        return S5_ECHO_NONE; /* mostly silent */
+        result = S5_ECHO_NONE; /* mostly silent */
+    }
+    else
+    {
+        result = ((support >= S5_MIN_AGREE) && ((support * 2U) >= total))
+                     ? S5_ECHO_OK
+                     : S5_ECHO_UNSTABLE;
     }
 
-    return ((support >= S5_MIN_AGREE) && ((support * 2U) >= total))
-               ? S5_ECHO_OK
-               : S5_ECHO_UNSTABLE;
+    return result;
 }
 
 static bool
@@ -378,15 +389,21 @@ s5_measure_point (s5_point_t * p_point, int angle_deg,
 {
     s5_estimate_t estimate;
 
+    bool b_result = false;
+
     if (!p_measure(p_context, angle_deg, &estimate))
     {
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        *p_point = s5_point_pack(
+            angle_deg, &estimate,
+            s5_point_is_object(&estimate, angle_deg, centre_forward_mm));
+        b_result = true;
     }
 
-    *p_point = s5_point_pack(
-        angle_deg, &estimate,
-        s5_point_is_object(&estimate, angle_deg, centre_forward_mm));
-    return true;
+    return b_result;
 }
 
 /* Walk back inward from last_deg (clear space, where the outward walk
@@ -1017,14 +1034,20 @@ s5_scan_coarse (s5_scan_t * p_scan, s5_measure_fn_t p_measure, void * p_context)
 bool
 s5_tilt_scan (s5_scan_t * p_scan, s5_measure_fn_t p_measure, void * p_context)
 {
+    bool b_result = false;
+
     if (!s5_scan_coarse(p_scan, p_measure, p_context))
     {
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        p_scan->b_valid = s5_point_object(p_scan->centre);
+        s5_face_fit(p_scan, &p_scan->face);
+        b_result = true;
     }
 
-    p_scan->b_valid = s5_point_object(p_scan->centre);
-    s5_face_fit(p_scan, &p_scan->face);
-    return true;
+    return b_result;
 }
 
 bool
@@ -1288,24 +1311,27 @@ s5_start_tilt_deg (const s5_scan_t * p_scan)
 s5_avoid_side_t
 s5_preferred_side (const s5_scan_t * p_scan)
 {
-    float64_t tilt = s5_start_tilt_deg(p_scan);
+    float64_t       tilt   = s5_start_tilt_deg(p_scan);
+    s5_avoid_side_t result = S5_DEFAULT_AVOID;
 
     if (S5_POSITION_LEFT == p_scan->placement.position)
     {
-        return S5_AVOID_RIGHT;
+        result = S5_AVOID_RIGHT;
     }
-
-    if (S5_POSITION_RIGHT == p_scan->placement.position)
+    else if (S5_POSITION_RIGHT == p_scan->placement.position)
     {
-        return S5_AVOID_LEFT;
+        result = S5_AVOID_LEFT;
     }
-
-    if (fabs(tilt) >= S5_FACE_TILT_MIN_DEG)
+    else if (fabs(tilt) >= S5_FACE_TILT_MIN_DEG)
     {
-        return (tilt < 0.0) ? S5_AVOID_RIGHT : S5_AVOID_LEFT;
+        result = (tilt < 0.0) ? S5_AVOID_RIGHT : S5_AVOID_LEFT;
+    }
+    else
+    {
+        /* Nothing to do in any other case. */
     }
 
-    return S5_DEFAULT_AVOID;
+    return result;
 }
 
 void

@@ -32,77 +32,85 @@ gy511_read_acceleration (gy511_acceleration_t * p_sample)
     ER         status       = E_OK;
     ER         close_status = E_OK;
     ID         h_device     = 0;
+    ER         result       = 0;
 
     // reject a null pointer and return a bad parameter error instead of
     // crashing
     if (NULL == p_sample)
     {
-        return E_PAR;
+        result = E_PAR;
     }
-
-    // open of I2c bus for reading/writing
-    h_device = tk_opn_dev((UB const *)"iicb", TD_UPDATE | TD_EXCL);
-
-    if (h_device < E_OK)
+    else
     {
-        return (ER)h_device;
-    }
+        // open of I2c bus for reading/writing
+        h_device = tk_opn_dev((UB const *)"iicb", TD_UPDATE | TD_EXCL);
 
-    // read the register from accelorometer
-    //  if no new data yet, skip the cycle
-    status
-        = i2c_read_reg(h_device, GY511_ACC_ADDRESS, GY511_ACC_STATUS, &ready);
-
-    if ((E_OK == status) && (0U == (ready & GY511_XYZ_READY)))
-    {
-        status = E_BUSY;
-    }
-
-    // if new data, read all 6 databytes
-    if (E_OK == status)
-    {
-        transaction.sadr     = GY511_ACC_ADDRESS;
-        transaction.snd_size = 1;
-        transaction.snd_data = &start_register;
-        transaction.rcv_size = sizeof(raw);
-        transaction.rcv_data = raw;
-        status               = tk_swri_dev(h_device, TDN_I2C_EXEC, &transaction,
-                                           sizeof(transaction), &actual_size);
-
-        /* This driver reports the descriptor size, not the six data bytes. */
-        if ((E_OK == status) && (actual_size != sizeof(transaction)))
+        if (h_device < E_OK)
         {
-            status = E_IO;
+            result = (ER)h_device;
+        }
+        else
+        {
+            // read the register from accelorometer
+            //  if no new data yet, skip the cycle
+            status = i2c_read_reg(h_device, GY511_ACC_ADDRESS, GY511_ACC_STATUS,
+                                  &ready);
+
+            if ((E_OK == status) && (0U == (ready & GY511_XYZ_READY)))
+            {
+                status = E_BUSY;
+            }
+
+            // if new data, read all 6 databytes
+            if (E_OK == status)
+            {
+                transaction.sadr     = GY511_ACC_ADDRESS;
+                transaction.snd_size = 1;
+                transaction.snd_data = &start_register;
+                transaction.rcv_size = sizeof(raw);
+                transaction.rcv_data = raw;
+                status = tk_swri_dev(h_device, TDN_I2C_EXEC, &transaction,
+                                     sizeof(transaction), &actual_size);
+
+                /* This driver reports the descriptor size, not the six data
+                 * bytes. */
+                if ((E_OK == status) && (actual_size != sizeof(transaction)))
+                {
+                    status = E_IO;
+                }
+            }
+
+            // closing of handle, so bus is not left locked.
+            close_status = tk_cls_dev(h_device, 0U);
+
+            if ((E_OK == status) || (E_BUSY == status))
+            {
+                if (E_OK != close_status)
+                {
+                    status = close_status;
+                }
+            }
+
+            // unpack and pack the result on success
+            if (E_OK == status)
+            {
+                uint32_t axis_x = (((uint32_t)raw[1] << 8U) | raw[0]) >> 4U;
+                uint32_t axis_y = (((uint32_t)raw[3] << 8U) | raw[2]) >> 4U;
+                uint32_t axis_z = (((uint32_t)raw[5] << 8U) | raw[4]) >> 4U;
+
+                p_sample->bytes[0] = (uint8_t)(axis_x & 0xFFU);
+                p_sample->bytes[1]
+                    = (uint8_t)((axis_x >> 8U) | ((axis_y & 0x0FU) << 4U));
+                p_sample->bytes[2] = (uint8_t)(axis_y >> 4U);
+                p_sample->bytes[3] = (uint8_t)(axis_z & 0xFFU);
+                p_sample->bytes[4] = (uint8_t)(axis_z >> 8U);
+            }
+
+            result = status;
         }
     }
 
-    // closing of handle, so bus is not left locked.
-    close_status = tk_cls_dev(h_device, 0U);
-
-    if ((E_OK == status) || (E_BUSY == status))
-    {
-        if (E_OK != close_status)
-        {
-            status = close_status;
-        }
-    }
-
-    // unpack and pack the result on success
-    if (E_OK == status)
-    {
-        uint32_t axis_x = (((uint32_t)raw[1] << 8U) | raw[0]) >> 4U;
-        uint32_t axis_y = (((uint32_t)raw[3] << 8U) | raw[2]) >> 4U;
-        uint32_t axis_z = (((uint32_t)raw[5] << 8U) | raw[4]) >> 4U;
-
-        p_sample->bytes[0] = (uint8_t)(axis_x & 0xFFU);
-        p_sample->bytes[1]
-            = (uint8_t)((axis_x >> 8U) | ((axis_y & 0x0FU) << 4U));
-        p_sample->bytes[2] = (uint8_t)(axis_y >> 4U);
-        p_sample->bytes[3] = (uint8_t)(axis_z & 0xFFU);
-        p_sample->bytes[4] = (uint8_t)(axis_z >> 8U);
-    }
-
-    return status;
+    return result;
 }
 
 /*
@@ -120,45 +128,51 @@ gy511_acceleration_mg (gy511_acceleration_t const * p_sample, uint8_t axis,
 {
     uint32_t value        = 0U;
     int32_t  signed_value = 0;
+    ER       result       = E_OK;
 
     // if null pointer, return Bad parameter error, write nothing
     if ((NULL == p_sample) || (NULL == p_mg) || (axis > 2U))
     {
-        return E_PAR;
+        result = E_PAR;
     }
-
-    switch (axis)
+    else
     {
-        // else pull out the 12 bits for the chosen axis
-        // rebuilds one axis full 12 bits value from packed bytes
-        case 0U: // gives X's low 8bits, all of byte 0 + lower half of byte 1
-            value = p_sample->bytes[0]
-                    | (((uint32_t)p_sample->bytes[1] & 0x0FU) << 8U);
-        break;
+        switch (axis)
+        {
+            // else pull out the 12 bits for the chosen axis
+            // rebuilds one axis full 12 bits value from packed bytes
+            // gives X's low 8bits, all of byte 0 + lower half of byte 1
+            case 0U:
+                value = p_sample->bytes[0]
+                        | (((uint32_t)p_sample->bytes[1] & 0x0FU) << 8U);
+            break;
 
-        case 1U: // Y , Upper half of byte 1  + al of byte 2
-            value = ((uint32_t)p_sample->bytes[1] >> 4U)
-                    | ((uint32_t)p_sample->bytes[2] << 4U);
-        break;
+            case 1U: // Y , Upper half of byte 1  + al of byte 2
+                value = ((uint32_t)p_sample->bytes[1] >> 4U)
+                        | ((uint32_t)p_sample->bytes[2] << 4U);
+            break;
 
-        default: // Z All of byte 3 + lower half of byte 4
-            value = p_sample->bytes[3]
-                    | (((uint32_t)p_sample->bytes[4] & 0x0FU) << 8U);
-        break;
+            default: // Z All of byte 3 + lower half of byte 4
+                value = p_sample->bytes[3]
+                        | (((uint32_t)p_sample->bytes[4] & 0x0FU) << 8U);
+            break;
+        }
+
+        // turns the raw 12 bit number into real signed value
+        signed_value = (int32_t)value;
+
+        // if reading is negative (signed bit =1), do wrapping to find its
+        // negative value.
+        if (value >= 2048U)
+        {
+            signed_value -= 4096;
+        }
+
+        *p_mg  = (int16_t)signed_value;
+        result = E_OK;
     }
 
-    // turns the raw 12 bit number into real signed value
-    signed_value = (int32_t)value;
-
-    // if reading is negative (signed bit =1), do wrapping to find its negative
-    // value.
-    if (value >= 2048U)
-    {
-        signed_value -= 4096;
-    }
-
-    *p_mg = (int16_t)signed_value;
-    return E_OK;
+    return result;
 }
 
 /* Magnetic registers auto-increment from 0x03, in big-endian X,Z,Y order.
@@ -183,6 +197,7 @@ gy511_read_magnetic_diagnostic (gy511_magnetic_t * p_sample,
     ER            status      = E_OK;
     ER            close_status;
     ID            h_device;
+    ER            result = 0;
 
     if (NULL != p_outcome)
     {
@@ -191,93 +206,101 @@ gy511_read_magnetic_diagnostic (gy511_magnetic_t * p_sample,
 
     if (NULL == p_sample)
     {
-        return E_PAR;
+        result = E_PAR;
     }
-
-    h_device = tk_opn_dev((UB const *)"iicb", TD_UPDATE | TD_EXCL);
-
-    if (h_device < E_OK)
+    else
     {
-        return (ER)h_device;
-    }
+        h_device = tk_opn_dev((UB const *)"iicb", TD_UPDATE | TD_EXCL);
 
-    status = i2c_read_reg(h_device, 0x1EU, 0x09U, &ready);
-
-    if ((E_OK == status) && (0U == (ready & 0x03U)))
-    {
-        status       = E_BUSY;
-        busy_outcome = GY511_MAG_NOT_READY;
-    }
-
-    if (E_OK == status)
-    {
-        transaction.sadr     = 0x1EU;
-        transaction.snd_size = 1;
-        transaction.snd_data = &start_register;
-        transaction.rcv_size = sizeof(raw);
-        transaction.rcv_data = raw;
-        status               = tk_swri_dev(h_device, TDN_I2C_EXEC, &transaction,
-                                           sizeof(transaction), &actual_size);
-
-        if ((E_OK == status) && (actual_size != sizeof(transaction)))
+        if (h_device < E_OK)
         {
-            status = E_IO;
-        }
-
-        if ((E_OK == status) && (0U != (ready & 0x02U)))
-        {
-            status       = E_BUSY;
-            busy_outcome = GY511_MAG_LOCKED;
-        }
-    }
-
-    close_status = tk_cls_dev(h_device, 0U);
-
-    if (((E_OK == status) || (E_BUSY == status)) && (E_OK != close_status))
-    {
-        status = close_status;
-    }
-
-    for (uint8_t axis = 0U; (E_OK == status) && (axis < 3U); axis++)
-    {
-        uint8_t  offset = offsets[axis];
-        uint32_t word   = ((uint32_t)raw[offset] << 8U) | raw[offset + 1U];
-
-        if ((word > 0x07FFU) && (word < 0xF800U))
-        {
-            status = E_IO;
-        }
-
-        values[axis] = word & 0x0FFFU;
-    }
-
-    if (E_OK == status)
-    {
-        p_sample->bytes[0] = (uint8_t)(values[0] & 0xFFU);
-        p_sample->bytes[1]
-            = (uint8_t)((values[0] >> 8U) | ((values[1] & 0x0FU) << 4U));
-        p_sample->bytes[2] = (uint8_t)(values[1] >> 4U);
-        p_sample->bytes[3] = (uint8_t)(values[2] & 0xFFU);
-        p_sample->bytes[4] = (uint8_t)(values[2] >> 8U);
-    }
-
-    if (NULL != p_outcome)
-    {
-        if (E_OK == status)
-        {
-            *p_outcome = GY511_MAG_FRESH;
-        }
-        else if (E_BUSY == status)
-        {
-            *p_outcome = busy_outcome;
+            result = (ER)h_device;
         }
         else
         {
-            /* Nothing to do in any other case. */
+            status = i2c_read_reg(h_device, 0x1EU, 0x09U, &ready);
+
+            if ((E_OK == status) && (0U == (ready & 0x03U)))
+            {
+                status       = E_BUSY;
+                busy_outcome = GY511_MAG_NOT_READY;
+            }
+
+            if (E_OK == status)
+            {
+                transaction.sadr     = 0x1EU;
+                transaction.snd_size = 1;
+                transaction.snd_data = &start_register;
+                transaction.rcv_size = sizeof(raw);
+                transaction.rcv_data = raw;
+                status = tk_swri_dev(h_device, TDN_I2C_EXEC, &transaction,
+                                     sizeof(transaction), &actual_size);
+
+                if ((E_OK == status) && (actual_size != sizeof(transaction)))
+                {
+                    status = E_IO;
+                }
+
+                if ((E_OK == status) && (0U != (ready & 0x02U)))
+                {
+                    status       = E_BUSY;
+                    busy_outcome = GY511_MAG_LOCKED;
+                }
+            }
+
+            close_status = tk_cls_dev(h_device, 0U);
+
+            if (((E_OK == status) || (E_BUSY == status))
+                && (E_OK != close_status))
+            {
+                status = close_status;
+            }
+
+            for (uint8_t axis = 0U; (E_OK == status) && (axis < 3U); axis++)
+            {
+                uint8_t  offset = offsets[axis];
+                uint32_t word
+                    = ((uint32_t)raw[offset] << 8U) | raw[offset + 1U];
+
+                if ((word > 0x07FFU) && (word < 0xF800U))
+                {
+                    status = E_IO;
+                }
+
+                values[axis] = word & 0x0FFFU;
+            }
+
+            if (E_OK == status)
+            {
+                p_sample->bytes[0] = (uint8_t)(values[0] & 0xFFU);
+                p_sample->bytes[1] = (uint8_t)((values[0] >> 8U)
+                                               | ((values[1] & 0x0FU) << 4U));
+                p_sample->bytes[2] = (uint8_t)(values[1] >> 4U);
+                p_sample->bytes[3] = (uint8_t)(values[2] & 0xFFU);
+                p_sample->bytes[4] = (uint8_t)(values[2] >> 8U);
+            }
+
+            if (NULL != p_outcome)
+            {
+                if (E_OK == status)
+                {
+                    *p_outcome = GY511_MAG_FRESH;
+                }
+                else if (E_BUSY == status)
+                {
+                    *p_outcome = busy_outcome;
+                }
+                else
+                {
+                    /* Nothing to do in any other case. */
+                }
+            }
+
+            result = status;
         }
     }
 
-    return status;
+    return result;
 }
 
 /* Ordinary acquisition API for callers that do not need diagnostics. */
@@ -295,18 +318,23 @@ gy511_magnetic_counts (gy511_magnetic_t const * p_sample, uint8_t axis,
                        int16_t * p_counts)
 {
     gy511_acceleration_t packed = {{0}};
+    ER                   result = 0;
 
     if (NULL == p_sample)
     {
-        return E_PAR;
+        result = E_PAR;
     }
-
-    for (uint8_t index = 0U; index < sizeof(packed.bytes); index++)
+    else
     {
-        packed.bytes[index] = p_sample->bytes[index];
+        for (uint8_t index = 0U; index < sizeof(packed.bytes); index++)
+        {
+            packed.bytes[index] = p_sample->bytes[index];
+        }
+
+        result = gy511_acceleration_mg(&packed, axis, p_counts);
     }
 
-    return gy511_acceleration_mg(&packed, axis, p_counts);
+    return result;
 }
 
 /*** end of file ***/

@@ -137,70 +137,74 @@ vehicle_controller_cycle (robot_bus_t * p_bus, float64_t now)
         || (p_bus->status.motion.hold) || (FAULT == p_bus->status.motion.state))
     {
         p_bus->count = 0U;
-        return;
     }
-
-    if ((0U == p_bus->count) || (p_bus->approved_valid))
+    else if ((0U == p_bus->count) || (p_bus->approved_valid))
     {
-        return;
+        /* Nothing to do. */
     }
-
-    request     = p_bus->requests[p_bus->head];
-    p_bus->head = (p_bus->head + 1U) % 8U;
-    --p_bus->count;
-
-    if ((request.command.generation != p_bus->generation)
-        || (!isfinite(request.command.expires))
-        || (request.command.expires <= now)
-        || ((p_bus->status.owner_valid)
-            && ((p_bus->status.owner != request.source)
-                || (p_bus->status.motion.id != request.command.id)
-                || (WHEEL_SPEED_TRACKING != request.command.mode))))
+    else
     {
-        ++p_bus->status.rejected_requests;
-        return;
-    }
+        request     = p_bus->requests[p_bus->head];
+        p_bus->head = (p_bus->head + 1U) % 8U;
+        --p_bus->count;
 
-    p_bus->status.owner       = request.source;
-    p_bus->status.owner_valid = true;
-    p_bus->approved           = request.command;
-    p_bus->approved_valid     = true;
+        if ((request.command.generation != p_bus->generation)
+            || (!isfinite(request.command.expires))
+            || (request.command.expires <= now)
+            || ((p_bus->status.owner_valid)
+                && ((p_bus->status.owner != request.source)
+                    || (p_bus->status.motion.id != request.command.id)
+                    || (WHEEL_SPEED_TRACKING != request.command.mode))))
+        {
+            ++p_bus->status.rejected_requests;
+        }
+        else
+        {
+            p_bus->status.owner       = request.source;
+            p_bus->status.owner_valid = true;
+            p_bus->approved           = request.command;
+            p_bus->approved_valid     = true;
+        }
+    }
 }
 
 motion_result_t
 vehicle_controller_remote (robot_bus_t * p_bus, robot_remote_command_t command)
 {
+    motion_result_t result = R_OK;
+
     if (REMOTE_STOP == command)
     {
         p_bus->remote_hold = true;
         robot_control(p_bus, CONTROL_STOP, false, false);
-        return R_OK;
+        result = R_OK;
     }
-
-    if (REMOTE_ESTOP == command)
+    else if (REMOTE_ESTOP == command)
     {
         p_bus->remote_hold = true;
         robot_control(p_bus, CONTROL_ESTOP, false, false);
-        return R_OK;
+        result = R_OK;
     }
-
-    if (REMOTE_START != command)
+    else if (REMOTE_START != command)
     {
-        return R_INVALID;
+        result = R_INVALID;
     }
-
-    if ((p_bus->shutdown_latched) || (0U != p_bus->controls)
-        || (STOPPED != p_bus->status.motion.state)
-        || (F_NONE != p_bus->status.motion.fault)
-        || (!p_bus->status.motion.stationary)
-        || (!p_bus->status.motion.feedback_trusted))
+    else if ((p_bus->shutdown_latched) || (0U != p_bus->controls)
+             || (STOPPED != p_bus->status.motion.state)
+             || (F_NONE != p_bus->status.motion.fault)
+             || (!p_bus->status.motion.stationary)
+             || (!p_bus->status.motion.feedback_trusted))
     {
-        return R_HELD;
+        result = R_HELD;
+    }
+    else
+    {
+        p_bus->remote_hold = false;
+        robot_control(p_bus, CONTROL_RELEASE, true, false);
+        result = R_OK;
     }
 
-    p_bus->remote_hold = false;
-    robot_control(p_bus, CONTROL_RELEASE, true, false);
-    return R_OK;
+    return result;
 }
 
 void

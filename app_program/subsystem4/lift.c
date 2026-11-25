@@ -22,17 +22,22 @@ lift_reset (lift_t * p_lift)
 static int16_t
 lift_clamp16 (float32_t value)
 {
+    int16_t result = 0;
+
     if (!(value > -32768.0F))
     {
-        return (value < 0.0F) ? (int16_t)-32768 : 0;
-    } /* NaN -> 0 */
-
-    if (value > 32767.0F)
+        result = (value < 0.0F) ? (int16_t)-32768 : 0;
+    }
+    else if (value > 32767.0F)
     {
-        return 32767;
+        result = 32767;
+    }
+    else
+    {
+        result = (int16_t)lroundf(value);
     }
 
-    return (int16_t)lroundf(value);
+    return result;
 }
 
 static void
@@ -48,19 +53,25 @@ static bool
 lift_timer (lift_t * p_lift, uint8_t flag, uint32_t * p_since, bool b_condition,
             uint32_t now_ms, uint32_t hold_ms)
 {
+    bool b_result = false;
+
     if (!b_condition)
     {
         p_lift->flags &= (uint8_t)~flag;
-        return false;
+        b_result = false;
     }
-
-    if (0U == (p_lift->flags & flag))
+    else
     {
-        p_lift->flags |= flag;
-        *p_since = now_ms;
+        if (0U == (p_lift->flags & flag))
+        {
+            p_lift->flags |= flag;
+            *p_since = now_ms;
+        }
+
+        b_result = (now_ms - *p_since) >= hold_ms;
     }
 
-    return (now_ms - *p_since) >= hold_ms;
+    return b_result;
 }
 
 uint8_t
@@ -247,17 +258,28 @@ lift_upright_pct (lift_t const * p_lift)
 char const *
 lift_name (uint8_t condition)
 {
+    const char * p_result = NULL;
+
     switch (condition & LIFT_STATE_MASK)
     {
         case LIFT_LIFTED:
-            return "LIFTED";
+            p_result = "LIFTED";
+        break;
+
         case LIFT_OVERTURNED:
-            return "OVERTURNED";
+            p_result = "OVERTURNED";
+        break;
+
         case LIFT_NONE:
-            return "NONE";
+            p_result = "NONE";
+        break;
+
         default:
-            return "INVALID";
+            p_result = "INVALID";
+        break;
     }
+
+    return p_result;
 }
 
 /*** end of file ***/

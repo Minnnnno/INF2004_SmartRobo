@@ -27,14 +27,20 @@ terrain_take_completed (terrain_t * p_terrain)
 {
     bool b_completed;
 
+    bool b_result = false;
+
     if (NULL == p_terrain)
     {
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        b_completed = (0U != (p_terrain->flags & TERRAIN_COMPLETED_EVENT));
+        p_terrain->flags &= (uint8_t)~TERRAIN_COMPLETED_EVENT;
+        b_result = b_completed;
     }
 
-    b_completed = (0U != (p_terrain->flags & TERRAIN_COMPLETED_EVENT));
-    p_terrain->flags &= (uint8_t)~TERRAIN_COMPLETED_EVENT;
-    return b_completed;
+    return b_result;
 }
 
 /* Read public phase/validity without exposing candidate bookkeeping. */
@@ -61,17 +67,28 @@ terrain_run_max (terrain_t const * p_terrain)
 char const *
 terrain_phase_name (uint8_t status)
 {
+    const char * p_result = NULL;
+
     switch (status & TERRAIN_PHASE_MASK)
     {
         case TERRAIN_WAITING:
-            return "WAITING";
+            p_result = "WAITING";
+        break;
+
         case TERRAIN_CLIMBING:
-            return "CLIMBING";
+            p_result = "CLIMBING";
+        break;
+
         case TERRAIN_DESCENDING:
-            return "DESCENDING";
+            p_result = "DESCENDING";
+        break;
+
         default:
-            return "INVALID";
+            p_result = "INVALID";
+        break;
     }
+
+    return p_result;
 }
 
 /* Whole millimetres from 0.1 mm, rounded, limited to the 7-bit field. */
@@ -124,14 +141,20 @@ terrain_drop (uint16_t peak_tenths)
 static bool
 terrain_confirm (terrain_t * p_terrain, uint32_t now_ms, uint32_t hold_ms)
 {
+    bool b_result = false;
+
     if (0U == (p_terrain->flags & TERRAIN_PENDING))
     {
         p_terrain->flags |= TERRAIN_PENDING;
         p_terrain->candidate_since = now_ms;
-        return false;
+        b_result                   = false;
+    }
+    else
+    {
+        b_result = (now_ms - p_terrain->candidate_since) >= hold_ms;
     }
 
-    return (now_ms - p_terrain->candidate_since) >= hold_ms;
+    return b_result;
 }
 
 /* All tests use the smoothed height |h| (seeded from the first sample after a

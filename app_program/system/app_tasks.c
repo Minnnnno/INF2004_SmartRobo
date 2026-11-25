@@ -11,6 +11,7 @@ app_start_task (FP p_entry, PRI priority, UW processor, const char * p_name)
                    .stksz   = TASK_STACK_SIZE};
     ID     task_id;
     ER     result;
+    ID     outcome = 0;
 
     (void)processor;
     (void)p_name; /* This integration requires SMP=OFF. */
@@ -18,18 +19,24 @@ app_start_task (FP p_entry, PRI priority, UW processor, const char * p_name)
 
     if (task_id <= 0)
     {
-        return task_id;
+        outcome = task_id;
     }
-
-    result = tk_sta_tsk(task_id, 0);
-
-    if (result < E_OK)
+    else
     {
-        (void)tk_del_tsk(task_id);
-        return result;
+        result = tk_sta_tsk(task_id, 0);
+
+        if (result < E_OK)
+        {
+            (void)tk_del_tsk(task_id);
+            outcome = result;
+        }
+        else
+        {
+            outcome = task_id;
+        }
     }
 
-    return task_id;
+    return outcome;
 }
 
 /*** end of file ***/

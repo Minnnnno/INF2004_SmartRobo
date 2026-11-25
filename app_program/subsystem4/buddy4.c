@@ -191,14 +191,20 @@ buddy4_clock (buddy4_t * p_context, uint32_t * p_now_ms)
     SYSTIM time   = {0};
     ER     status = tk_get_otm(&time);
 
+    bool b_result = false;
+
     if (E_OK != status)
     {
         buddy4_enter(p_context, B4_FAULT, 0U, status);
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        *p_now_ms = time.lo;
+        b_result  = true;
     }
 
-    *p_now_ms = time.lo;
-    return true;
+    return b_result;
 }
 
 /* Initialise private state with no accepted reference. */
@@ -385,59 +391,63 @@ buddy4_monitor (buddy4_t * p_context, uint32_t now_ms)
     if ((now_ms - p_context->last_fresh) >= B4_LOSS_MS)
     {
         buddy4_enter(p_context, B4_RECOVERY, now_ms, E_TMOUT);
-        return;
-    }
-
-    // read one x y z sample
-    status = buddy4_read(xyz);
-
-    if (!buddy4_clock(p_context, &now_ms))
-    {
-        return;
-    }
-
-    if ((now_ms - p_context->last_fresh) >= B4_STALE_MS)
-    {
-        tilt_discard_history(&p_context->tilt);
-    }
-
-    // Enter RECOVERY if bus or device failure
-    if ((E_OK != status) && (E_BUSY != status))
-    {
-        buddy4_enter(p_context, B4_RECOVERY, now_ms, status);
-    }
-
-    // Busy , but too long without data, Goes to recovery
-    else if ((now_ms - p_context->last_fresh) >= B4_LOSS_MS)
-    {
-        buddy4_enter(p_context, B4_RECOVERY, now_ms, E_TMOUT);
     }
     else
     {
-        if (E_OK == status)
+        // read one x y z sample
+        status = buddy4_read(xyz);
+
+        if (!buddy4_clock(p_context, &now_ms))
         {
-            p_context->last_fresh = now_ms;
-            p_context->error      = E_OK;
-            p_context->result
-                = tilt_update(&p_context->tilt, xyz[0], xyz[1], xyz[2]);
-            p_context->forward_mg
-                = (0U != (p_context->result & TILT_RESULT_VALID))
-                      ? tilt_forward_dynamic_mg(&p_context->tilt, xyz[0],
-                                                xyz[1], xyz[2])
-                      : 0;
-            /* Raw sample, not the tilt result: tilt rejects these very poses.
-             */
-            (void)lift_step(&p_context->lift, &p_context->tilt, xyz[0], xyz[1],
-                            xyz[2], now_ms,
-                            (now_ms - p_context->phase_started)
-                                >= B4_LIFT_SETTLE_MS);
+            /* Nothing to do. */
         }
         else
         {
-            p_context->error = E_BUSY;
-        }
+            if ((now_ms - p_context->last_fresh) >= B4_STALE_MS)
+            {
+                tilt_discard_history(&p_context->tilt);
+            }
 
-        buddy4_poll_magnetic(p_context, now_ms);
+            // Enter RECOVERY if bus or device failure
+            if ((E_OK != status) && (E_BUSY != status))
+            {
+                buddy4_enter(p_context, B4_RECOVERY, now_ms, status);
+            }
+
+            // Busy , but too long without data, Goes to recovery
+            else if ((now_ms - p_context->last_fresh) >= B4_LOSS_MS)
+            {
+                buddy4_enter(p_context, B4_RECOVERY, now_ms, E_TMOUT);
+            }
+            else
+            {
+                if (E_OK == status)
+                {
+                    p_context->last_fresh = now_ms;
+                    p_context->error      = E_OK;
+                    p_context->result
+                        = tilt_update(&p_context->tilt, xyz[0], xyz[1], xyz[2]);
+                    p_context->forward_mg
+                        = (0U != (p_context->result & TILT_RESULT_VALID))
+                              ? tilt_forward_dynamic_mg(&p_context->tilt,
+                                                        xyz[0], xyz[1], xyz[2])
+                              : 0;
+                    /* Raw sample, not the tilt result: tilt rejects these very
+                     * poses.
+                     */
+                    (void)lift_step(&p_context->lift, &p_context->tilt, xyz[0],
+                                    xyz[1], xyz[2], now_ms,
+                                    (now_ms - p_context->phase_started)
+                                        >= B4_LIFT_SETTLE_MS);
+                }
+                else
+                {
+                    p_context->error = E_BUSY;
+                }
+
+                buddy4_poll_magnetic(p_context, now_ms);
+            }
+        }
     }
 }
 
@@ -484,17 +494,23 @@ bool
 buddy4_magnetic (buddy4_t const * p_context, uint32_t now_ms,
                  uint32_t max_age_ms, int16_t * p_x, int16_t * p_y)
 {
+    bool b_result = false;
+
     if ((NULL == p_context) || (NULL == p_x) || (NULL == p_y)
         || (B4_MONITORING != buddy4_state(p_context))
         || (0U == (p_context->mag_flags & B4_MAG_HAVE))
         || ((now_ms - p_context->mag_ms) > max_age_ms))
     {
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        *p_x     = p_context->mag[0];
+        *p_y     = p_context->mag[1];
+        b_result = true;
     }
 
-    *p_x = p_context->mag[0];
-    *p_y = p_context->mag[1];
-    return true;
+    return b_result;
 }
 
 uint8_t
@@ -513,27 +529,31 @@ buddy4_lift (buddy4_t const * p_context)
 bool
 buddy4_hump_start (buddy4_t * p_context, bool b_available, bool b_held)
 {
+    bool b_result = false;
+
     if ((NULL == p_context) || (B4_FREEZE_NONE == p_context->hump_freeze)
         || (!b_available))
     {
-        return false;
+        b_result = false;
     }
-
-    if (b_held)
+    else if (b_held)
     {
         p_context->hump_freeze = B4_FREEZE_HELD;
-        return false;
+        b_result               = false;
     }
-
-    if ((B4_FREEZE_HELD == p_context->hump_freeze)
-        && (B4_MONITORING == buddy4_state(p_context))
-        && (LIFT_NONE == lift_state(&p_context->lift)))
+    else if ((B4_FREEZE_HELD == p_context->hump_freeze)
+             && (B4_MONITORING == buddy4_state(p_context))
+             && (LIFT_NONE == lift_state(&p_context->lift)))
     {
         p_context->hump_freeze = B4_FREEZE_NONE;
-        return true;
+        b_result               = true;
+    }
+    else
+    {
+        /* Nothing to do in any other case. */
     }
 
-    return false;
+    return b_result;
 }
 
 bool
@@ -645,21 +665,36 @@ buddy4_recover (buddy4_t * p_context, uint32_t now_ms)
 char const *
 buddy4_state_name (uint8_t state)
 {
+    const char * p_result = NULL;
+
     switch (state)
     {
         case B4_INIT:
-            return "INIT";
+            p_result = "INIT";
+        break;
+
         case B4_MONITORING:
-            return "MONITORING";
+            p_result = "MONITORING";
+        break;
+
         case B4_RECOVERY:
-            return "SENSOR_RECOVERY";
+            p_result = "SENSOR_RECOVERY";
+        break;
+
         case B4_FAULT:
-            return "SENSOR_FAULT";
+            p_result = "SENSOR_FAULT";
+        break;
+
         case B4_STOP:
-            return "STOP";
+            p_result = "STOP";
+        break;
+
         default:
-            return "INVALID";
+            p_result = "INVALID";
+        break;
     }
+
+    return p_result;
 }
 
 /*** end of file ***/

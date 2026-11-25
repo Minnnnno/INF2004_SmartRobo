@@ -34,25 +34,31 @@ tm_finite (float64_t value)
 static int32_t
 to_int (float64_t value)
 {
+    int32_t result = 0;
+
     if (!tm_finite(value))
     {
-        return 0;
-    }
-
-    if (value > 1.0e6)
-    {
-        value = 1.0e6;
-    }
-    else if (value < -1.0e6)
-    {
-        value = -1.0e6;
+        result = 0;
     }
     else
     {
-        /* Nothing to do in any other case. */
+        if (value > 1.0e6)
+        {
+            value = 1.0e6;
+        }
+        else if (value < -1.0e6)
+        {
+            value = -1.0e6;
+        }
+        else
+        {
+            /* Nothing to do in any other case. */
+        }
+
+        result = (int32_t)lround(value);
     }
 
-    return (int32_t)lround(value);
+    return result;
 }
 
 static int32_t
@@ -66,25 +72,30 @@ static int32_t
 wrap_deg (float64_t rad, int32_t low)
 {
     int32_t degrees;
+    int32_t result = 0;
 
     if (!tm_finite(rad))
     {
-        return low;
+        result = low;
     }
-
-    degrees = to_int(fmod((rad * 180.0) / TM_PI, 360.0));
-
-    while (degrees < low)
+    else
     {
-        degrees += 360;
+        degrees = to_int(fmod((rad * 180.0) / TM_PI, 360.0));
+
+        while (degrees < low)
+        {
+            degrees += 360;
+        }
+
+        while (degrees >= (low + 360))
+        {
+            degrees -= 360;
+        }
+
+        result = degrees;
     }
 
-    while (degrees >= (low + 360))
-    {
-        degrees -= 360;
-    }
-
-    return degrees;
+    return result;
 }
 
 /* B3 barcode slot letter (ASCII code) -> BC_CHAR: 0 none or not a Code 39
@@ -236,20 +247,24 @@ tm_fill_encoder (const robot_status_t * p_status, uint32_t seq, float64_t now_s,
 
     if ((!tm_finite(time_ms)) || (time_ms < 0.0) || (!tm_finite(now_s)))
     {
-        return;
+        /* Nothing to do. */
     }
-
-    p_encoder->sample_ms = (uint32_t)fmod(time_ms * 1000.0, 4294967296.0);
-    age                  = (now_s - time_ms) * 1000.0;
-
-    if ((age < 0.0) || (age >= (float64_t)TF_ENC_AGE_UNKNOWN))
+    else
     {
-        return; /* sample from the future, or very old */
-    }
+        p_encoder->sample_ms = (uint32_t)fmod(time_ms * 1000.0, 4294967296.0);
+        age                  = (now_s - time_ms) * 1000.0;
 
-    /* nearest ms; 65535 still means old */
-    p_encoder->age_ms = (uint16_t)to_int(age);
-    p_encoder->fresh  = (p_encoder->age_ms <= TF_ENC_FRESH_MS);
+        if ((age < 0.0) || (age >= (float64_t)TF_ENC_AGE_UNKNOWN))
+        {
+            /* sample from the future, or very old */
+        }
+        else
+        {
+            /* nearest ms; 65535 still means old */
+            p_encoder->age_ms = (uint16_t)to_int(age);
+            p_encoder->fresh  = (p_encoder->age_ms <= TF_ENC_FRESH_MS);
+        }
+    }
 }
 
 static bool

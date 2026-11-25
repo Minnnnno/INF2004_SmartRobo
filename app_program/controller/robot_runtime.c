@@ -103,30 +103,35 @@ submit (request_source_t source, uint32_t command_id, motion_mode_t mode,
 {
     robot_request_t request;
     motion_result_t result;
-    float64_t       now = motion_hal_time();
+    float64_t       now     = motion_hal_time();
+    motion_result_t outcome = R_BUSY;
 
     if ((!gb_running) || (!lock_bus()))
     {
-        return R_BUSY;
+        outcome = R_BUSY;
+    }
+    else
+    {
+        request.source  = source;
+        request.command = (motion_command_t){
+            .id         = command_id,
+            .generation = g_bus.generation,
+            .mode       = mode,
+            .value      = value,
+            .speed      = {left, right},
+            .expires    = now + gp_runtime_config->command_lifetime,
+            .deadline
+            = now
+              + ((MANUAL_OUTPUT == mode) ? gp_runtime_config->manual_timeout
+                                         : gp_runtime_config->movement_timeout),
+            .angle    = angle,
+            .duration = duration};
+        result = robot_request(&g_bus, &request);
+        unlock_bus();
+        outcome = result;
     }
 
-    request.source  = source;
-    request.command = (motion_command_t){
-        .id         = command_id,
-        .generation = g_bus.generation,
-        .mode       = mode,
-        .value      = value,
-        .speed      = {left, right},
-        .expires    = now + gp_runtime_config->command_lifetime,
-        .deadline
-        = now
-          + ((MANUAL_OUTPUT == mode) ? gp_runtime_config->manual_timeout
-                                     : gp_runtime_config->movement_timeout),
-        .angle    = angle,
-        .duration = duration};
-    result = robot_request(&g_bus, &request);
-    unlock_bus();
-    return result;
+    return outcome;
 }
 
 motion_result_t
@@ -190,14 +195,20 @@ robot_system_fault (void)
 bool
 motion_get_status (robot_status_t * p_status)
 {
+    bool b_result = false;
+
     if ((NULL == p_status) || (!gb_running) || (!lock_bus()))
     {
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        *p_status = g_bus.status;
+        unlock_bus();
+        b_result = true;
     }
 
-    *p_status = g_bus.status;
-    unlock_bus();
-    return true;
+    return b_result;
 }
 
 bool

@@ -78,23 +78,26 @@ static int32_t
 debug_scaled (float64_t value, float64_t scale)
 {
     float64_t scaled = value * scale;
+    int32_t   result = 0;
 
     if (!isfinite(scaled))
     {
-        return INT32_MIN;
+        result = INT32_MIN;
     }
-
-    if (scaled >= (float64_t)INT32_MAX)
+    else if (scaled >= (float64_t)INT32_MAX)
     {
-        return INT32_MAX;
+        result = INT32_MAX;
     }
-
-    if (scaled <= ((float64_t)INT32_MIN + 1.0))
+    else if (scaled <= ((float64_t)INT32_MIN + 1.0))
     {
-        return INT32_MIN + 1;
+        result = INT32_MIN + 1;
+    }
+    else
+    {
+        result = (int32_t)scaled;
     }
 
-    return (int32_t)scaled;
+    return result;
 }
 
 static void
@@ -175,79 +178,142 @@ record_fault_context (motion_t * p_motion, float64_t now)
 const char *
 motion_fault_name (motion_fault_t fault)
 {
+    const char * p_result = NULL;
+
     switch (fault)
     {
         case F_NONE:
-            return "NONE";
+            p_result = "NONE";
+        break;
+
         case F_CONFIG:
-            return "CONFIG";
+            p_result = "CONFIG";
+        break;
+
         case F_SETUP:
-            return "SETUP";
+            p_result = "SETUP";
+        break;
+
         case F_TIMING:
-            return "TIMING";
+            p_result = "TIMING";
+        break;
+
         case F_FEEDBACK:
-            return "FEEDBACK";
+            p_result = "FEEDBACK";
+        break;
+
         case F_DEADLINE:
-            return "DEADLINE";
+            p_result = "DEADLINE";
+        break;
+
         case F_EXPIRED:
-            return "EXPIRED";
+            p_result = "EXPIRED";
+        break;
+
         case F_STOP_TIMEOUT:
-            return "STOP_TIMEOUT";
+            p_result = "STOP_TIMEOUT";
+        break;
+
         case F_FINAL_GOAL:
-            return "FINAL_GOAL";
+            p_result = "FINAL_GOAL";
+        break;
+
         case F_EVENT_OVERFLOW:
-            return "EVENT_OVERFLOW";
+            p_result = "EVENT_OVERFLOW";
+        break;
+
         case F_SYSTEM:
-            return "SYSTEM";
+            p_result = "SYSTEM";
+        break;
+
         case F_ESTOP:
-            return "ESTOP";
+            p_result = "ESTOP";
+        break;
+
         case F_SETUP_TIMEOUT:
-            return "SETUP_TIMEOUT";
+            p_result = "SETUP_TIMEOUT";
+        break;
+
         default:
-            return "UNKNOWN";
+            p_result = "UNKNOWN";
+        break;
     }
+
+    return p_result;
 }
 
 const char *
 motion_feedback_name (motion_feedback_cause_t cause)
 {
+    const char * p_result = NULL;
+
     switch (cause)
     {
         case FB_NONE:
-            return "NONE";
+            p_result = "NONE";
+        break;
+
         case FB_UNRELIABLE:
-            return "UNRELIABLE";
+            p_result = "UNRELIABLE";
+        break;
+
         case FB_INVALID_TRANSITION:
-            return "INVALID_TRANSITION";
+            p_result = "INVALID_TRANSITION";
+        break;
+
         case FB_ODOMETRY:
-            return "ODOMETRY";
+            p_result = "ODOMETRY";
+        break;
+
         case FB_NO_PROGRESS:
-            return "NO_ENCODER_PROGRESS";
+            p_result = "NO_ENCODER_PROGRESS";
+        break;
+
         case FB_RESTART_LATCH:
-            return "MANUAL_RESET_REQUIRED_AFTER_RESTART";
+            p_result = "MANUAL_RESET_REQUIRED_AFTER_RESTART";
+        break;
+
         default:
-            return "UNKNOWN";
+            p_result = "UNKNOWN";
+        break;
     }
+
+    return p_result;
 }
 
 const char *
 motion_mode_name (motion_mode_t mode)
 {
+    const char * p_result = NULL;
+
     switch (mode)
     {
         case DISTANCE_MOVE:
-            return "DISTANCE";
+            p_result = "DISTANCE";
+        break;
+
         case ENCODER_TURN:
-            return "TURN";
+            p_result = "TURN";
+        break;
+
         case WHEEL_SPEED_TRACKING:
-            return "TRACKING";
+            p_result = "TRACKING";
+        break;
+
         case MANUAL_OUTPUT:
-            return "MANUAL";
+            p_result = "MANUAL";
+        break;
+
         case ARC_MOVE:
-            return "ARC";
+            p_result = "ARC";
+        break;
+
         default:
-            return "UNKNOWN";
+            p_result = "UNKNOWN";
+        break;
     }
+
+    return p_result;
 }
 
 static void
@@ -262,58 +328,66 @@ event (motion_t * p_motion, motion_event_type_t type)
         if (!MOTION_FAULTS_ENABLED)
         {
             motion_fault_record(p_motion, F_EVENT_OVERFLOW);
-            return;
         }
-
-        /* Local state remains authoritative even when notifications cannot be
-         * delivered. */
-        record_fault_context(p_motion, p_motion->last_time);
-        zero_output(p_motion);
-        p_motion->active       = false;
-        p_motion->status.hold  = true;
-        p_motion->status.state = FAULT;
-
-        if (F_NONE == p_motion->status.fault)
+        else
         {
-            p_motion->status.fault = F_EVENT_OVERFLOW;
+            /* Local state remains authoritative even when notifications cannot
+             * be delivered. */
+            record_fault_context(p_motion, p_motion->last_time);
+            zero_output(p_motion);
+            p_motion->active       = false;
+            p_motion->status.hold  = true;
+            p_motion->status.state = FAULT;
+
+            if (F_NONE == p_motion->status.fault)
+            {
+                p_motion->status.fault = F_EVENT_OVERFLOW;
+            }
+
+            motion_fault_record(p_motion, F_EVENT_OVERFLOW);
+            ++p_motion->status.generation;
         }
-
-        motion_fault_record(p_motion, F_EVENT_OVERFLOW);
-        ++p_motion->status.generation;
-        return;
     }
+    else
+    {
+        uint32_t index
+            = (motion_queue_head(p_motion) + motion_queue_count(p_motion))
+              % MOTION_EVENT_CAPACITY;
 
-    uint32_t index
-        = (motion_queue_head(p_motion) + motion_queue_count(p_motion))
-          % MOTION_EVENT_CAPACITY;
-
-    p_motion->events.id[index]         = motion_event.id;
-    p_motion->events.generation[index] = motion_event.generation;
-    p_motion->events.info[index]
-        = (uint8_t)((uint32_t)motion_event.type
-                    | ((uint32_t)motion_event.fault << 3u));
-    motion_queue_set(p_motion, motion_queue_head(p_motion),
-                     motion_queue_count(p_motion) + 1u);
+        p_motion->events.id[index]         = motion_event.id;
+        p_motion->events.generation[index] = motion_event.generation;
+        p_motion->events.info[index]
+            = (uint8_t)((uint32_t)motion_event.type
+                        | ((uint32_t)motion_event.fault << 3u));
+        motion_queue_set(p_motion, motion_queue_head(p_motion),
+                         motion_queue_count(p_motion) + 1u);
+    }
 }
 
 bool
 motion_next_event (motion_t * p_motion, motion_event_t * p_event)
 {
+    bool b_result = false;
+
     if (0U == motion_queue_count(p_motion))
     {
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        uint32_t head = motion_queue_head(p_motion);
+        uint32_t info = p_motion->events.info[head];
+
+        *p_event = (motion_event_t){(motion_event_type_t)(info & 7u),
+                                    p_motion->events.id[head],
+                                    p_motion->events.generation[head],
+                                    (motion_fault_t)((info >> 3u) & 15u)};
+        motion_queue_set(p_motion, (head + 1u) % MOTION_EVENT_CAPACITY,
+                         motion_queue_count(p_motion) - 1u);
+        b_result = true;
     }
 
-    uint32_t head = motion_queue_head(p_motion);
-    uint32_t info = p_motion->events.info[head];
-
-    *p_event = (motion_event_t){(motion_event_type_t)(info & 7u),
-                                p_motion->events.id[head],
-                                p_motion->events.generation[head],
-                                (motion_fault_t)((info >> 3u) & 15u)};
-    motion_queue_set(p_motion, (head + 1u) % MOTION_EVENT_CAPACITY,
-                     motion_queue_count(p_motion) - 1u);
-    return true;
+    return b_result;
 }
 
 static void motion_fault_unlatched(motion_t * p_motion, motion_fault_t fault,
@@ -324,39 +398,42 @@ motion_raise_fault (motion_t * p_motion, motion_fault_t fault, float64_t now)
 {
     if (SHUTDOWN == p_motion->status.state)
     {
-        return;
+        /* Nothing to do. */
     }
-
-    motion_fault_record(p_motion, fault);
-    record_fault_context(p_motion, now);
-
-    if (!MOTION_FAULTS_ENABLED)
+    else
     {
-        motion_fault_unlatched(p_motion, fault, now);
-        return;
+        motion_fault_record(p_motion, fault);
+        record_fault_context(p_motion, now);
+
+        if (!MOTION_FAULTS_ENABLED)
+        {
+            motion_fault_unlatched(p_motion, fault, now);
+        }
+        else
+        {
+            zero_output(p_motion);
+            p_motion->status.hold = true;
+            p_motion->active      = false;
+            motion_flag_set(p_motion, MOTION_GOAL_PENDING, false);
+
+            if ((F_FEEDBACK == fault) || (F_TIMING == fault))
+            {
+                motion_flag_set(p_motion, MOTION_FEEDBACK_LATCHED, true);
+                p_motion->status.stationary       = false;
+                p_motion->status.feedback_trusted = false;
+            }
+
+            if (FAULT != p_motion->status.state)
+            {
+                p_motion->status.fault = fault;
+                event(p_motion, EV_FAULT);
+                ++p_motion->status.generation;
+            }
+
+            p_motion->status.state = FAULT;
+            p_motion->entered      = now;
+        }
     }
-
-    zero_output(p_motion);
-    p_motion->status.hold = true;
-    p_motion->active      = false;
-    motion_flag_set(p_motion, MOTION_GOAL_PENDING, false);
-
-    if ((F_FEEDBACK == fault) || (F_TIMING == fault))
-    {
-        motion_flag_set(p_motion, MOTION_FEEDBACK_LATCHED, true);
-        p_motion->status.stationary       = false;
-        p_motion->status.feedback_trusted = false;
-    }
-
-    if (FAULT != p_motion->status.state)
-    {
-        p_motion->status.fault = fault;
-        event(p_motion, EV_FAULT);
-        ++p_motion->status.generation;
-    }
-
-    p_motion->status.state = FAULT;
-    p_motion->entered      = now;
 }
 
 static void
@@ -456,35 +533,33 @@ motion_begin_sampling (motion_t * p_motion, encoder_sample_t sample,
 
     if ((INITIALISING != p_motion->status.state) || (p_motion->active))
     {
-        return;
+        /* Nothing to do. */
     }
-
-    if ((!isfinite(now)) || (now < p_motion->last_time))
+    else if ((!isfinite(now)) || (now < p_motion->last_time))
     {
         timing_fault(p_motion, now, now - p_motion->last_time);
-        return;
     }
-
-    if ((!sample.reliable) || (sample.invalid[0] != p_motion->invalid[0])
-        || (sample.invalid[1] != p_motion->invalid[1]))
+    else if ((!sample.reliable) || (sample.invalid[0] != p_motion->invalid[0])
+             || (sample.invalid[1] != p_motion->invalid[1]))
     {
         record_feedback(p_motion, sample,
                         sample.reliable ? FB_INVALID_TRANSITION
                                         : FB_UNRELIABLE);
         motion_raise_fault(p_motion, F_FEEDBACK, now);
-        return;
     }
-
-    for (wheel = 0U; wheel < 2U; ++wheel)
+    else
     {
-        p_motion->odom.previous[wheel] = sample.count[wheel];
-    }
+        for (wheel = 0U; wheel < 2U; ++wheel)
+        {
+            p_motion->odom.previous[wheel] = sample.count[wheel];
+        }
 
-    p_motion->last_time          = now;
-    p_motion->entered            = now;
-    p_motion->status.sample_time = now;
-    motion_flag_set(p_motion, MOTION_STILL_TRACKING, false);
-    p_motion->status.stationary = false;
+        p_motion->last_time          = now;
+        p_motion->entered            = now;
+        p_motion->status.sample_time = now;
+        motion_flag_set(p_motion, MOTION_STILL_TRACKING, false);
+        p_motion->status.stationary = false;
+    }
 }
 
 static void
@@ -502,38 +577,41 @@ motion_cancel (motion_t * p_motion, float64_t now)
 {
     if (SHUTDOWN == p_motion->status.state)
     {
-        return;
-    }
-
-    p_motion->status.hold = true;
-
-    if (p_motion->active)
-    {
-        event(p_motion, EV_CANCELLED);
-    }
-
-    p_motion->active = false;
-    motion_flag_set(p_motion, MOTION_GOAL_PENDING, false);
-    ++p_motion->status.generation;
-
-    if (FAULT == p_motion->status.state)
-    {
-        zero_output(p_motion);
-        return;
-    }
-
-    if (DRIVING == p_motion->status.state)
-    {
-        stopping(p_motion, now);
-    }
-    else if (STOPPING != p_motion->status.state)
-    {
-        zero_output(p_motion);
-        p_motion->status.state = STOPPED;
+        /* Nothing to do. */
     }
     else
     {
-        /* Nothing to do in any other case. */
+        p_motion->status.hold = true;
+
+        if (p_motion->active)
+        {
+            event(p_motion, EV_CANCELLED);
+        }
+
+        p_motion->active = false;
+        motion_flag_set(p_motion, MOTION_GOAL_PENDING, false);
+        ++p_motion->status.generation;
+
+        if (FAULT == p_motion->status.state)
+        {
+            zero_output(p_motion);
+        }
+        else
+        {
+            if (DRIVING == p_motion->status.state)
+            {
+                stopping(p_motion, now);
+            }
+            else if (STOPPING != p_motion->status.state)
+            {
+                zero_output(p_motion);
+                p_motion->status.state = STOPPED;
+            }
+            else
+            {
+                /* Nothing to do in any other case. */
+            }
+        }
     }
 }
 
@@ -616,19 +694,25 @@ motion_fault_unlatched (motion_t * p_motion, motion_fault_t fault,
 bool
 motion_release (motion_t * p_motion, bool b_checks_ok)
 {
+    bool b_result = false;
+
     if ((STOPPED != p_motion->status.state) || (!b_checks_ok)
         || (!p_motion->status.stationary)
         || (!p_motion->status.feedback_trusted)
         || (F_NONE != p_motion->status.fault)
         || (!motion_config_valid(&p_motion->config)))
     {
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        ++p_motion->status.generation;
+        p_motion->status.hold  = false;
+        p_motion->status.state = READY;
+        b_result               = true;
     }
 
-    ++p_motion->status.generation;
-    p_motion->status.hold  = false;
-    p_motion->status.state = READY;
-    return true;
+    return b_result;
 }
 
 bool
@@ -638,20 +722,27 @@ motion_reset (motion_t * p_motion, bool b_cleared, bool b_external_rest,
     uint32_t        generation = p_motion->status.generation;
     motion_config_t config     = p_motion->config;
 
+    bool b_result = false;
+
     if ((FAULT != p_motion->status.state) || (!b_cleared) || (!sample.reliable)
         || (!motion_config_valid(&config))
         || (motion_flag_get(p_motion, MOTION_FEEDBACK_LATCHED)
                 ? !b_external_rest
                 : !p_motion->status.stationary))
     {
-        return false;
+        b_result = false;
+    }
+    else
+    {
+        motion_init(p_motion, &config, sample, now, true);
+        p_motion->status.generation = generation + 1U;
+        /* Reset remains held: explicit release follows the fresh settling
+         * check. */
+        p_motion->status.hold = true;
+        b_result              = true;
     }
 
-    motion_init(p_motion, &config, sample, now, true);
-    p_motion->status.generation = generation + 1U;
-    /* Reset remains held: explicit release follows the fresh settling check. */
-    p_motion->status.hold = true;
-    return true;
+    return b_result;
 }
 
 motion_result_t
@@ -855,35 +946,43 @@ final_goal (const motion_t * p_motion)
 {
     motion_command_t command;
 
+    bool b_result = false;
+
     if (!motion_compact_decode(&p_motion->command, &p_motion->config, &command))
     {
-        return false;
+        b_result = false;
     }
-
-    float64_t left  = p_motion->odom.travel[0] - p_motion->start[0];
-    float64_t right = p_motion->odom.travel[1] - p_motion->start[1];
-
-    if (ARC_MOVE == command.mode)
+    else
     {
-        return (fabs(((left + right) / 2.0) - command.value)
-                <= p_motion->config.distance_tolerance)
-               && (fabs(((right - left) / p_motion->config.track)
-                        - command.angle)
-                   <= p_motion->config.angle_tolerance);
+        float64_t left  = p_motion->odom.travel[0] - p_motion->start[0];
+        float64_t right = p_motion->odom.travel[1] - p_motion->start[1];
+
+        if (ARC_MOVE == command.mode)
+        {
+            b_result = (fabs(((left + right) / 2.0) - command.value)
+                        <= p_motion->config.distance_tolerance)
+                       && (fabs(((right - left) / p_motion->config.track)
+                                - command.angle)
+                           <= p_motion->config.angle_tolerance);
+        }
+        else if (DISTANCE_MOVE == command.mode)
+        {
+            b_result = (fabs(((left + right) / 2.0) - command.value)
+                        <= p_motion->config.distance_tolerance)
+                       && (fabs(right - left)
+                           <= (2.0 * p_motion->config.distance_tolerance));
+        }
+        else
+        {
+            b_result = (fabs(((right - left) / p_motion->config.track)
+                             - command.value)
+                        <= p_motion->config.angle_tolerance)
+                       && (fabs((left + right) / 2.0)
+                           <= p_motion->config.distance_tolerance);
+        }
     }
 
-    if (DISTANCE_MOVE == command.mode)
-    {
-        return (fabs(((left + right) / 2.0) - command.value)
-                <= p_motion->config.distance_tolerance)
-               && (fabs(right - left)
-                   <= (2.0 * p_motion->config.distance_tolerance));
-    }
-
-    return (fabs(((right - left) / p_motion->config.track) - command.value)
-            <= p_motion->config.angle_tolerance)
-           && (fabs((left + right) / 2.0)
-               <= p_motion->config.distance_tolerance);
+    return b_result;
 }
 
 static void

@@ -131,21 +131,28 @@ comms_send_telemetry (const char * p_name, const char * p_payload)
 {
     char text[COMMS_PAYLOAD_MAX];
     INT  len;
+    ER   result = 0;
 
     if ((NULL == p_name) || (NULL == p_payload))
     {
-        return E_PAR;
+        result = E_PAR;
     }
-
-    len = copy_text(text, p_payload, COMMS_PAYLOAD_MAX);
-
-    if (len < 0)
+    else
     {
-        return E_PAR;
+        len = copy_text(text, p_payload, COMMS_PAYLOAD_MAX);
+
+        if (len < 0)
+        {
+            result = E_PAR;
+        }
+        else
+        {
+            result = queue_message(g_mbf_comms_tlm, 0, COMMS_TOPIC_TELEMETRY,
+                                   p_name, (const UB *)text, len);
+        }
     }
 
-    return queue_message(g_mbf_comms_tlm, 0, COMMS_TOPIC_TELEMETRY, p_name,
-                         (const UB *)text, len);
+    return result;
 }
 
 EXPORT void
@@ -196,22 +203,27 @@ comms_hook_next (char * p_topic, uint8_t * p_payload, int * p_qos)
 {
     comms_msg_t msg;
     INT         index;
+    int         result = 0;
 
     if ((tk_rcv_mbf(g_mbf_comms_evt, &msg, TMO_POL) < E_OK)
         && (tk_rcv_mbf(g_mbf_comms_tlm, &msg, TMO_POL) < E_OK))
     {
-        return -1;
+        result = -1;
     }
-
-    *p_qos = msg.qos;
-    (void)copy_text(p_topic, msg.topic, COMMS_TOPIC_MAX);
-
-    for (index = 0; index < (INT)msg.len; index++)
+    else
     {
-        p_payload[index] = msg.payload[index];
+        *p_qos = msg.qos;
+        (void)copy_text(p_topic, msg.topic, COMMS_TOPIC_MAX);
+
+        for (index = 0; index < (INT)msg.len; index++)
+        {
+            p_payload[index] = msg.payload[index];
+        }
+
+        result = (int)msg.len;
     }
 
-    return (int)msg.len;
+    return result;
 }
 
 /* TRUE if seq is after cmd_seq in 8-bit serial-number order. */
@@ -484,22 +496,31 @@ create_queue (INT depth, INT msgsz)
 EXPORT ER
 comms_init (void)
 {
+    ER result = 0;
+
     g_mbf_comms_tlm = create_queue(COMMS_TLM_DEPTH, sizeof(comms_msg_t));
 
     if (g_mbf_comms_tlm < E_OK)
     {
-        return g_mbf_comms_tlm;
+        result = g_mbf_comms_tlm;
     }
-
-    g_mbf_comms_evt = create_queue(COMMS_EVT_DEPTH, sizeof(comms_msg_t));
-
-    if (g_mbf_comms_evt < E_OK)
+    else
     {
-        return g_mbf_comms_evt;
+        g_mbf_comms_evt = create_queue(COMMS_EVT_DEPTH, sizeof(comms_msg_t));
+
+        if (g_mbf_comms_evt < E_OK)
+        {
+            result = g_mbf_comms_evt;
+        }
+        else
+        {
+            g_mbf_comms_cmd
+                = create_queue(COMMS_CMD_DEPTH, sizeof(comms_cmd_t));
+            result = (g_mbf_comms_cmd < E_OK) ? g_mbf_comms_cmd : E_OK;
+        }
     }
 
-    g_mbf_comms_cmd = create_queue(COMMS_CMD_DEPTH, sizeof(comms_cmd_t));
-    return (g_mbf_comms_cmd < E_OK) ? g_mbf_comms_cmd : E_OK;
+    return result;
 }
 
 EXPORT ER
