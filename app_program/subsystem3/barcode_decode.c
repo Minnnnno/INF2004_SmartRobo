@@ -115,6 +115,20 @@ _Static_assert((sizeof g_code39_symbol - 1U)
                    == (sizeof g_code39_pattern / sizeof g_code39_pattern[0]),
                "one Code 39 pattern per symbol");
 
+static uint16_t barcode_widest(const uint32_t * p_widths, unsigned first,
+                               unsigned count);
+static char     barcode_lookup(uint16_t pattern);
+static uint32_t barcode_nth(const uint32_t * p_widths, unsigned first,
+                            unsigned nth);
+static char     barcode_char(const uint32_t * p_widths);
+static bool     barcode_decode(const uint32_t * p_widths, unsigned count,
+                               char * p_out);
+static unsigned barcode_search(const uint32_t * p_widths, unsigned count,
+                               unsigned first, char * p_out);
+static void     barcode_reverse(uint32_t * p_widths, unsigned count);
+static unsigned barcode_read_strict(uint32_t * p_widths, unsigned count,
+                                    char * p_out);
+
 /* Marks the count longest elements among bars (first = 0) or spaces (first =
  * 1). */
 static uint16_t
@@ -292,6 +306,9 @@ barcode_read_strict (uint32_t * p_widths, unsigned count, char * p_out)
 }
 
 #if BARCODE_EDGE_REPAIR
+
+static unsigned barcode_read(uint32_t * p_widths, unsigned count, char * p_out);
+
 /* The outermost bar of the code, and the wide space inside it, can go missing
  * (that bar sits nearest the sheet's edge): the elements then start (or end)
  * two short. Start and stop are both
@@ -303,7 +320,7 @@ barcode_read (uint32_t * p_widths, unsigned count, char * p_out)
 {
     static uint32_t elements[BARCODE_MAX_ELEMENTS];
     unsigned        chars  = barcode_read_strict(p_widths, count, p_out);
-    unsigned int    result = 0U;
+    unsigned        result = 0U;
 
     if ((0U != chars) || (count < 27U) || ((count + 2U) > BARCODE_MAX_ELEMENTS))
     {
@@ -348,9 +365,306 @@ barcode_read (uint32_t * p_widths, unsigned count, char * p_out)
 
     return result;
 }
+
 #else
 #define barcode_read barcode_read_strict
 #endif
+
+static unsigned barcode_bars(const uint16_t * p_samples, unsigned count,
+                             uint32_t prominence, unsigned * p_peak,
+                             unsigned * p_trough);
+static uint32_t barcode_median_height(const uint16_t * p_samples,
+                                      const unsigned * p_peak, unsigned bars,
+                                      uint32_t white);
+static void     barcode_smooth(uint16_t * p_samples, unsigned count);
+static void barcode_quiet_level(const uint16_t * p_samples, uint32_t * p_white,
+                                uint32_t * p_noise);
+static void barcode_bar_span(const uint16_t * p_samples, unsigned first,
+                             unsigned last, float64_t edge, unsigned * p_start,
+                             unsigned * p_end);
+static unsigned barcode_elements(uint16_t * p_samples, unsigned count,
+                                 uint32_t * p_widths, unsigned contrast_div);
+static uint32_t barcode_prominence(uint32_t noise);
+static bool     barcode_flat(const barcode_seg_t * p_segment);
+static unsigned barcode_resample(const uint16_t * p_samples,
+                                 const uint32_t * p_path, unsigned count,
+                                 uint16_t * p_out);
+static uint16_t barcode_pattern_of(char letter);
+static unsigned barcode_bit_count(uint16_t bits);
+static unsigned barcode_mismatch(const uint32_t * p_widths, uint16_t letter);
+static bool     barcode_allowed(const char * p_letters, char letter);
+
+uint32_t
+barcode_level (const uint16_t * p_samples, unsigned count, uint32_t * p_noise)
+{
+    uint32_t mean   = 0U;
+    uint32_t spread = 0U;
+
+    for (unsigned index = 0U; index < count; ++index)
+    {
+        mean += p_samples[index];
+    }
+
+    mean /= count;
+
+    for (unsigned index = 0U; index < count; ++index)
+    {
+        spread += (p_samples[index] > mean) ? p_samples[index] - mean
+                                            : mean - p_samples[index];
+    }
+
+    *p_noise = spread / count;
+    return mean;
+}
+
+void
+barcode_range (const uint16_t * p_samples, unsigned count, uint16_t * p_low,
+               uint16_t * p_high)
+{
+    *p_low  = 0xFFFFU;
+    *p_high = 0U;
+
+    for (unsigned index = 0U; index < count; ++index)
+    {
+        if (p_samples[index] < *p_low)
+        {
+            *p_low = p_samples[index];
+        }
+
+        if (p_samples[index] > *p_high)
+        {
+            *p_high = p_samples[index];
+        }
+    }
+}
+
+char
+barcode_best_fit (uint32_t * p_widths, unsigned count, const char * p_letters)
+{
+    unsigned best   = 99U;
+    unsigned second = 99U;
+    char     found  = '\0';
+    char     result = 0;
+
+    if ((NULL == p_letters) || (count < 29U)
+        || (count > (29U + BARCODE_MAX_STRAY)))
+    {
+        result = '\0';
+    }
+    else
+    {
+        for (const char * p_letter = p_letters; '\0' != *p_letter; ++p_letter)
+        {
+            uint16_t pattern = barcode_pattern_of(*p_letter);
+            unsigned fit     = 99U;
+
+            if (0U == pattern)
+            {
+                continue;
+            }
+
+            for (unsigned dir = 0U; dir < BARCODE_DIRECTIONS; ++dir)
+            { /* Forward, then reversed (restored below). */
+
+                if (1U == dir)
+                {
+                    barcode_reverse(p_widths, count);
+                }
+
+                for (unsigned start = 0U; (start + 29U) <= count; start += 2U)
+                { /* Every window starts on a bar. */
+                    unsigned misses
+                        = barcode_mismatch(&p_widths[start], pattern);
+
+                    if (misses < fit)
+                    {
+                        fit = misses;
+                    }
+                }
+
+                if (1U == dir)
+                {
+                    barcode_reverse(p_widths, count);
+                }
+            }
+
+            if (fit < best)
+            {
+                second = best;
+                best   = fit;
+                found  = *p_letter;
+            }
+            else if (fit < second)
+            {
+                second = fit;
+            }
+            else
+            {
+                /* Nothing to do in any other case. */
+            }
+        }
+
+        result = ((best <= BARCODE_FIT_MAX_MISMATCH) && (best < second)) ? found
+                                                                         : '\0';
+    }
+
+    return result;
+}
+
+unsigned
+barcode_decode_stretch (const uint16_t * p_samples, const uint32_t * p_path,
+                        unsigned count, uint16_t * p_work, uint32_t * p_widths,
+                        unsigned * p_elements, char * p_text,
+                        unsigned contrast_div, const char * p_letters)
+{
+    unsigned chars;
+
+    *p_elements = barcode_elements(
+        p_work, barcode_resample(p_samples, p_path, count, p_work), p_widths,
+        contrast_div);
+    chars = barcode_read(p_widths, *p_elements, p_text);
+
+    if ((NULL != p_letters) && ('\0' != p_letters[0])
+        && ((3U != chars) || (!barcode_allowed(p_letters, p_text[1]))))
+    {
+        char letter = barcode_best_fit(p_widths, *p_elements, p_letters);
+
+        chars = 0U;
+
+        if ('\0' != letter)
+        {
+            p_text[0] = '*';
+            p_text[1] = letter;
+            p_text[2] = '*';
+            p_text[3] = '\0';
+            chars     = 3U;
+        }
+    }
+
+    return chars;
+}
+
+void
+barcode_seg_init (barcode_seg_t * p_segment)
+{
+    p_segment->count      = 0U;
+    p_segment->head       = 0U;
+    p_segment->filled     = 0U;
+    p_segment->prominence = 0U;
+    p_segment->level      = 0U;
+    p_segment->level_ok   = false;
+    p_segment->done       = false;
+}
+
+barcode_seg_event_t
+barcode_seg_feed (barcode_seg_t * p_segment, uint16_t sample, uint32_t path,
+                  uint16_t heading)
+{
+    barcode_seg_event_t event = BARCODE_SEG_RUNNING;
+
+    if (p_segment->done)
+    { /* The end of the last stretch is the new lead-in. */
+
+        for (unsigned index = 0U; index < BARCODE_QUIET; ++index)
+        {
+            p_segment->quiet[index]
+                = p_segment->samples[p_segment->count - BARCODE_QUIET + index];
+            p_segment->quiet_path[index]
+                = p_segment->path[p_segment->count - BARCODE_QUIET + index];
+            p_segment->quiet_heading[index]
+                = p_segment->heading[p_segment->count - BARCODE_QUIET + index];
+        }
+
+        p_segment->head  = 0U;
+        p_segment->count = 0U;
+        p_segment->done  = false;
+    }
+
+    if (0U == p_segment->count)
+    {
+        uint32_t noise;
+        uint32_t mean = 0U;
+
+        if (BARCODE_QUIET == p_segment->filled)
+        {
+            mean = barcode_level(p_segment->quiet, BARCODE_QUIET, &noise);
+            p_segment->prominence = barcode_prominence(noise);
+            p_segment->level      = mean;
+            p_segment->level_ok   = true;
+        }
+
+        if ((p_segment->filled < BARCODE_QUIET)
+            || (((sample > mean) ? sample - mean : mean - sample)
+                < p_segment->prominence))
+        {
+            /* Still quiet: keep it as the lead-in. */
+            p_segment->quiet[p_segment->head]         = sample;
+            p_segment->quiet_path[p_segment->head]    = path;
+            p_segment->quiet_heading[p_segment->head] = heading;
+            p_segment->head = (p_segment->head + 1U) % BARCODE_QUIET;
+
+            if (p_segment->filled < BARCODE_QUIET)
+            {
+                ++p_segment->filled;
+            }
+
+            return BARCODE_SEG_IDLE;
+        }
+
+        /* The reading left the quiet level: start a stretch with the lead-in.
+         */
+        for (unsigned index = 0U; index < BARCODE_QUIET; ++index)
+        {
+            p_segment->samples[index]
+                = p_segment->quiet[(p_segment->head + index) % BARCODE_QUIET];
+            p_segment->path[index]
+                = p_segment
+                      ->quiet_path[(p_segment->head + index) % BARCODE_QUIET];
+            p_segment->heading[index]
+                = p_segment->quiet_heading[(p_segment->head + index)
+                                           % BARCODE_QUIET];
+        }
+
+        p_segment->count = BARCODE_QUIET;
+        event            = BARCODE_SEG_STARTED;
+    }
+
+    p_segment->path[p_segment->count]      = path;
+    p_segment->heading[p_segment->count]   = heading;
+    p_segment->samples[p_segment->count++] = sample;
+
+    if ((BARCODE_SAMPLES == p_segment->count)
+        || ((p_segment->count >= (BARCODE_QUIET + BARCODE_FLAT))
+            && (barcode_flat(p_segment))))
+    {
+        p_segment->done = true;
+        return BARCODE_SEG_DONE;
+    }
+
+    return event;
+}
+
+unsigned
+barcode_ladder_div (unsigned first, unsigned index)
+{
+    static const unsigned ladder[] = BARCODE_LADDER;
+
+    if (0U == index)
+    {
+        return first;
+    }
+
+    for (size_t position = 0U; position < (sizeof ladder / sizeof ladder[0]);
+         ++position)
+    {
+        if ((ladder[position] != first) && (0U == --index))
+        {
+            return ladder[position];
+        }
+    }
+
+    return 0U;
+}
 
 /* Black reads higher than white. At the robot's ride height the sensor blurs
  * the bars: narrow ones are faint bumps and wide ones tall, so one threshold
@@ -667,55 +981,11 @@ barcode_elements (uint16_t * p_samples, unsigned count, uint32_t * p_widths,
     return sample_count;
 }
 
-uint32_t
-barcode_level (const uint16_t * p_samples, unsigned count, uint32_t * p_noise)
-{
-    uint32_t mean   = 0U;
-    uint32_t spread = 0U;
-
-    for (unsigned index = 0U; index < count; ++index)
-    {
-        mean += p_samples[index];
-    }
-
-    mean /= count;
-
-    for (unsigned index = 0U; index < count; ++index)
-    {
-        spread += (p_samples[index] > mean) ? p_samples[index] - mean
-                                            : mean - p_samples[index];
-    }
-
-    *p_noise = spread / count;
-    return mean;
-}
-
 /* How far a reading must leave the quiet level to count as a bar. */
 static uint32_t
 barcode_prominence (uint32_t noise)
 {
     return (BARCODE_NOISE_GAIN * noise) + BARCODE_MIN_RISE;
-}
-
-void
-barcode_range (const uint16_t * p_samples, unsigned count, uint16_t * p_low,
-               uint16_t * p_high)
-{
-    *p_low  = 0xFFFFU;
-    *p_high = 0U;
-
-    for (unsigned index = 0U; index < count; ++index)
-    {
-        if (p_samples[index] < *p_low)
-        {
-            *p_low = p_samples[index];
-        }
-
-        if (p_samples[index] > *p_high)
-        {
-            *p_high = p_samples[index];
-        }
-    }
 }
 
 /* True when the end of the stretch lies within two prominences (the range of 50
@@ -760,10 +1030,10 @@ static unsigned
 barcode_resample (const uint16_t * p_samples, const uint32_t * p_path,
                   unsigned count, uint16_t * p_out)
 {
-    unsigned     sample_count = BARCODE_QUIET;
-    unsigned     other        = BARCODE_QUIET;
-    uint32_t     sample_time  = p_path[BARCODE_QUIET - 1U] + BARCODE_PATH_STEP;
-    unsigned int result       = 0U;
+    unsigned sample_count = BARCODE_QUIET;
+    unsigned other        = BARCODE_QUIET;
+    uint32_t sample_time  = p_path[BARCODE_QUIET - 1U] + BARCODE_PATH_STEP;
+    unsigned result       = 0U;
 
     for (unsigned index = 0U; index < BARCODE_QUIET; ++index)
     {
@@ -865,79 +1135,6 @@ barcode_mismatch (const uint32_t * p_widths, uint16_t letter)
     return total;
 }
 
-char
-barcode_best_fit (uint32_t * p_widths, unsigned count, const char * p_letters)
-{
-    unsigned best   = 99U;
-    unsigned second = 99U;
-    char     found  = '\0';
-    char     result = 0;
-
-    if ((NULL == p_letters) || (count < 29U)
-        || (count > (29U + BARCODE_MAX_STRAY)))
-    {
-        result = '\0';
-    }
-    else
-    {
-        for (const char * p_letter = p_letters; '\0' != *p_letter; ++p_letter)
-        {
-            uint16_t pattern = barcode_pattern_of(*p_letter);
-            unsigned fit     = 99U;
-
-            if (0U == pattern)
-            {
-                continue;
-            }
-
-            for (unsigned dir = 0U; dir < BARCODE_DIRECTIONS; ++dir)
-            { /* Forward, then reversed (restored below). */
-
-                if (1U == dir)
-                {
-                    barcode_reverse(p_widths, count);
-                }
-
-                for (unsigned start = 0U; (start + 29U) <= count; start += 2U)
-                { /* Every window starts on a bar. */
-                    unsigned misses
-                        = barcode_mismatch(&p_widths[start], pattern);
-
-                    if (misses < fit)
-                    {
-                        fit = misses;
-                    }
-                }
-
-                if (1U == dir)
-                {
-                    barcode_reverse(p_widths, count);
-                }
-            }
-
-            if (fit < best)
-            {
-                second = best;
-                best   = fit;
-                found  = *p_letter;
-            }
-            else if (fit < second)
-            {
-                second = fit;
-            }
-            else
-            {
-                /* Nothing to do in any other case. */
-            }
-        }
-
-        result = ((best <= BARCODE_FIT_MAX_MISMATCH) && (best < second)) ? found
-                                                                         : '\0';
-    }
-
-    return result;
-}
-
 static bool
 barcode_allowed (const char * p_letters, char letter)
 {
@@ -950,161 +1147,6 @@ barcode_allowed (const char * p_letters, char letter)
     }
 
     return false;
-}
-
-unsigned
-barcode_decode_stretch (const uint16_t * p_samples, const uint32_t * p_path,
-                        unsigned count, uint16_t * p_work, uint32_t * p_widths,
-                        unsigned * p_elements, char * p_text,
-                        unsigned contrast_div, const char * p_letters)
-{
-    unsigned chars;
-
-    *p_elements = barcode_elements(
-        p_work, barcode_resample(p_samples, p_path, count, p_work), p_widths,
-        contrast_div);
-    chars = barcode_read(p_widths, *p_elements, p_text);
-
-    if ((NULL != p_letters) && ('\0' != p_letters[0])
-        && ((3U != chars) || (!barcode_allowed(p_letters, p_text[1]))))
-    {
-        char letter = barcode_best_fit(p_widths, *p_elements, p_letters);
-
-        chars = 0U;
-
-        if ('\0' != letter)
-        {
-            p_text[0] = '*';
-            p_text[1] = letter;
-            p_text[2] = '*';
-            p_text[3] = '\0';
-            chars     = 3U;
-        }
-    }
-
-    return chars;
-}
-
-void
-barcode_seg_init (barcode_seg_t * p_segment)
-{
-    p_segment->count      = 0U;
-    p_segment->head       = 0U;
-    p_segment->filled     = 0U;
-    p_segment->prominence = 0U;
-    p_segment->level      = 0U;
-    p_segment->level_ok   = false;
-    p_segment->done       = false;
-}
-
-barcode_seg_event_t
-barcode_seg_feed (barcode_seg_t * p_segment, uint16_t sample, uint32_t path,
-                  uint16_t heading)
-{
-    barcode_seg_event_t event = BARCODE_SEG_RUNNING;
-
-    if (p_segment->done)
-    { /* The end of the last stretch is the new lead-in. */
-
-        for (unsigned index = 0U; index < BARCODE_QUIET; ++index)
-        {
-            p_segment->quiet[index]
-                = p_segment->samples[p_segment->count - BARCODE_QUIET + index];
-            p_segment->quiet_path[index]
-                = p_segment->path[p_segment->count - BARCODE_QUIET + index];
-            p_segment->quiet_heading[index]
-                = p_segment->heading[p_segment->count - BARCODE_QUIET + index];
-        }
-
-        p_segment->head  = 0U;
-        p_segment->count = 0U;
-        p_segment->done  = false;
-    }
-
-    if (0U == p_segment->count)
-    {
-        uint32_t noise;
-        uint32_t mean = 0U;
-
-        if (BARCODE_QUIET == p_segment->filled)
-        {
-            mean = barcode_level(p_segment->quiet, BARCODE_QUIET, &noise);
-            p_segment->prominence = barcode_prominence(noise);
-            p_segment->level      = mean;
-            p_segment->level_ok   = true;
-        }
-
-        if ((p_segment->filled < BARCODE_QUIET)
-            || (((sample > mean) ? sample - mean : mean - sample)
-                < p_segment->prominence))
-        {
-            /* Still quiet: keep it as the lead-in. */
-            p_segment->quiet[p_segment->head]         = sample;
-            p_segment->quiet_path[p_segment->head]    = path;
-            p_segment->quiet_heading[p_segment->head] = heading;
-            p_segment->head = (p_segment->head + 1U) % BARCODE_QUIET;
-
-            if (p_segment->filled < BARCODE_QUIET)
-            {
-                ++p_segment->filled;
-            }
-
-            return BARCODE_SEG_IDLE;
-        }
-
-        /* The reading left the quiet level: start a stretch with the lead-in.
-         */
-        for (unsigned index = 0U; index < BARCODE_QUIET; ++index)
-        {
-            p_segment->samples[index]
-                = p_segment->quiet[(p_segment->head + index) % BARCODE_QUIET];
-            p_segment->path[index]
-                = p_segment
-                      ->quiet_path[(p_segment->head + index) % BARCODE_QUIET];
-            p_segment->heading[index]
-                = p_segment->quiet_heading[(p_segment->head + index)
-                                           % BARCODE_QUIET];
-        }
-
-        p_segment->count = BARCODE_QUIET;
-        event            = BARCODE_SEG_STARTED;
-    }
-
-    p_segment->path[p_segment->count]      = path;
-    p_segment->heading[p_segment->count]   = heading;
-    p_segment->samples[p_segment->count++] = sample;
-
-    if ((BARCODE_SAMPLES == p_segment->count)
-        || ((p_segment->count >= (BARCODE_QUIET + BARCODE_FLAT))
-            && (barcode_flat(p_segment))))
-    {
-        p_segment->done = true;
-        return BARCODE_SEG_DONE;
-    }
-
-    return event;
-}
-
-unsigned
-barcode_ladder_div (unsigned first, unsigned index)
-{
-    static const unsigned ladder[] = BARCODE_LADDER;
-
-    if (0U == index)
-    {
-        return first;
-    }
-
-    for (size_t position = 0U; position < (sizeof ladder / sizeof ladder[0]);
-         ++position)
-    {
-        if ((ladder[position] != first) && (0U == --index))
-        {
-            return ladder[position];
-        }
-    }
-
-    return 0U;
 }
 
 /*** end of file ***/

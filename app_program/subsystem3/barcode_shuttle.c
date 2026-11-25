@@ -25,6 +25,54 @@
 /* Abort if the car has not moved 5 mm this long after the command. */
 #define SHUTTLE_IDLE_S 2.0
 
+static bool shuttle_leg(uint32_t command_id, float64_t metres);
+
+void
+shuttle_task (INT code, void * p_context)
+{
+    uint32_t command_id = 4000U;
+
+    (void)code;
+    (void)p_context;
+    ir_input_init(BOARD_LINE_R);
+    ir_input_init(BOARD_LINE_C);
+    tm_printf((const UB *)"shuttle: %u round trips of %u mm at %u mm/s, "
+                          "starting in 3 s\n",
+              SHUTTLE_TRIPS, (unsigned)(SHUTTLE_DISTANCE_M * 1000.0),
+              (unsigned)(SHUTTLE_SPEED * 1000.0));
+    (void)tk_dly_tsk(3000U);
+
+    for (unsigned trip = 1U; trip <= SHUTTLE_TRIPS; ++trip)
+    {
+        for (unsigned back = 0U; back < 2U; ++back)
+        {
+            tm_printf((const UB *)"shuttle: trip %u %s\n", trip,
+                      back ? "backward" : "forward");
+
+            if (!shuttle_leg(++command_id,
+                             back ? -SHUTTLE_DISTANCE_M : SHUTTLE_DISTANCE_M))
+            {
+                motion_stop();
+                tm_printf((const UB *)"shuttle: leg failed, car stopped\n");
+
+                for (;;)
+                {
+                    (void)tk_dly_tsk(1000U);
+                } /* A task must never return (pc=0 hard fault). */
+            }
+
+            (void)tk_dly_tsk(SHUTTLE_PAUSE_MS);
+        }
+    }
+
+    tm_printf((const UB *)"shuttle: done\n");
+
+    for (;;)
+    {
+        (void)tk_dly_tsk(1000U);
+    } /* A task must never return (pc=0 hard fault). */
+}
+
 /* One finite straight move (negative = backward). True when it completed. */
 static bool
 shuttle_leg (uint32_t command_id, float64_t metres)
@@ -88,51 +136,6 @@ shuttle_leg (uint32_t command_id, float64_t metres)
     }
 }
 
-void
-shuttle_task (INT code, void * p_context)
-{
-    uint32_t command_id = 4000U;
-
-    (void)code;
-    (void)p_context;
-    ir_input_init(BOARD_LINE_R);
-    ir_input_init(BOARD_LINE_C);
-    tm_printf((const UB *)"shuttle: %u round trips of %u mm at %u mm/s, "
-                          "starting in 3 s\n",
-              SHUTTLE_TRIPS, (unsigned)(SHUTTLE_DISTANCE_M * 1000.0),
-              (unsigned)(SHUTTLE_SPEED * 1000.0));
-    (void)tk_dly_tsk(3000U);
-
-    for (unsigned trip = 1U; trip <= SHUTTLE_TRIPS; ++trip)
-    {
-        for (unsigned back = 0U; back < 2U; ++back)
-        {
-            tm_printf((const UB *)"shuttle: trip %u %s\n", trip,
-                      back ? "backward" : "forward");
-
-            if (!shuttle_leg(++command_id,
-                             back ? -SHUTTLE_DISTANCE_M : SHUTTLE_DISTANCE_M))
-            {
-                motion_stop();
-                tm_printf((const UB *)"shuttle: leg failed, car stopped\n");
-
-                for (;;)
-                {
-                    (void)tk_dly_tsk(1000U);
-                } /* A task must never return (pc=0 hard fault). */
-            }
-
-            (void)tk_dly_tsk(SHUTTLE_PAUSE_MS);
-        }
-    }
-
-    tm_printf((const UB *)"shuttle: done\n");
-
-    for (;;)
-    {
-        (void)tk_dly_tsk(1000U);
-    } /* A task must never return (pc=0 hard fault). */
-}
 #endif
 
 /*** end of file ***/

@@ -10,6 +10,13 @@ _Static_assert(TERRAIN_EXIT_TENTHS < TERRAIN_ENTER_TENTHS,
 #define TERRAIN_RETAIN_MASK \
     (TERRAIN_PHASE_MASK | TERRAIN_SIDE_RIGHT | TERRAIN_COMPLETED_EVENT)
 
+static uint8_t terrain_mm(uint16_t tenths);
+static void    terrain_raise_peak(terrain_t * p_terrain, uint16_t magnitude,
+                                  bool b_right);
+static int32_t terrain_drop(uint16_t peak_tenths);
+static bool    terrain_confirm(terrain_t * p_terrain, uint32_t now_ms,
+                               uint32_t hold_ms);
+
 /* Reset the event, peaks and run maximum only when explicitly starting a new
  * run. */
 void
@@ -91,27 +98,6 @@ terrain_phase_name (uint8_t status)
     return p_result;
 }
 
-/* Whole millimetres from 0.1 mm, rounded, limited to the 7-bit field. */
-static uint8_t
-terrain_mm (uint16_t tenths)
-{
-    uint32_t height_mm = ((uint32_t)tenths + 5U) / 10U;
-
-    return (uint8_t)((height_mm > TERRAIN_PEAK_MM_MASK) ? TERRAIN_PEAK_MM_MASK
-                                                        : height_mm);
-}
-
-/* Record a new live peak (and its side). The run maximum is only updated when
- * the hump completes, so a hump that is discarded (lift) never reaches it. */
-static void
-terrain_raise_peak (terrain_t * p_terrain, uint16_t magnitude, bool b_right)
-{
-    p_terrain->peak_tenths = magnitude;
-    p_terrain->flags
-        = (uint8_t)((p_terrain->flags & (uint8_t)~TERRAIN_SIDE_RIGHT)
-                    | (b_right ? TERRAIN_SIDE_RIGHT : 0U));
-}
-
 /* Throw away the hump in progress: WAITING, not valid (the next sample reseeds
  * the smoothing), no pending confirmation. Completed humps, the run maximum and
  * an unconsumed completion event are kept. */
@@ -123,38 +109,6 @@ terrain_discard (terrain_t * p_terrain)
         p_terrain->peak_tenths = 0U;
         p_terrain->flags &= TERRAIN_COMPLETED_EVENT;
     }
-}
-
-/* Fall from the peak that counts as descending: 3 mm, or half the peak when
- * that is smaller, so a hump that peaks below ~3 mm can still complete.
- * Peaks are at least TERRAIN_ENTER_TENTHS, so the result is always positive.
- */
-static int32_t
-terrain_drop (uint16_t peak_tenths)
-{
-    int32_t half = (int32_t)peak_tenths / 2;
-
-    return (half < TERRAIN_DROP_TENTHS) ? half : TERRAIN_DROP_TENTHS;
-}
-
-/* Start or continue a timed confirmation; true once held for hold_ms. */
-static bool
-terrain_confirm (terrain_t * p_terrain, uint32_t now_ms, uint32_t hold_ms)
-{
-    bool b_result = false;
-
-    if (0U == (p_terrain->flags & TERRAIN_PENDING))
-    {
-        p_terrain->flags |= TERRAIN_PENDING;
-        p_terrain->candidate_since = now_ms;
-        b_result                   = false;
-    }
-    else
-    {
-        b_result = (now_ms - p_terrain->candidate_since) >= hold_ms;
-    }
-
-    return b_result;
 }
 
 /* All tests use the smoothed height |h| (seeded from the first sample after a
@@ -286,6 +240,59 @@ terrain_step (terrain_t * p_terrain, bool b_valid, int16_t height_tenths,
         p_terrain->flags       = (uint8_t)(TERRAIN_WAITING | TERRAIN_VALID
                                            | TERRAIN_COMPLETED_EVENT);
     }
+}
+
+/* Whole millimetres from 0.1 mm, rounded, limited to the 7-bit field. */
+static uint8_t
+terrain_mm (uint16_t tenths)
+{
+    uint32_t height_mm = ((uint32_t)tenths + 5U) / 10U;
+
+    return (uint8_t)((height_mm > TERRAIN_PEAK_MM_MASK) ? TERRAIN_PEAK_MM_MASK
+                                                        : height_mm);
+}
+
+/* Record a new live peak (and its side). The run maximum is only updated when
+ * the hump completes, so a hump that is discarded (lift) never reaches it. */
+static void
+terrain_raise_peak (terrain_t * p_terrain, uint16_t magnitude, bool b_right)
+{
+    p_terrain->peak_tenths = magnitude;
+    p_terrain->flags
+        = (uint8_t)((p_terrain->flags & (uint8_t)~TERRAIN_SIDE_RIGHT)
+                    | (b_right ? TERRAIN_SIDE_RIGHT : 0U));
+}
+
+/* Fall from the peak that counts as descending: 3 mm, or half the peak when
+ * that is smaller, so a hump that peaks below ~3 mm can still complete.
+ * Peaks are at least TERRAIN_ENTER_TENTHS, so the result is always positive.
+ */
+static int32_t
+terrain_drop (uint16_t peak_tenths)
+{
+    int32_t half = (int32_t)peak_tenths / 2;
+
+    return (half < TERRAIN_DROP_TENTHS) ? half : TERRAIN_DROP_TENTHS;
+}
+
+/* Start or continue a timed confirmation; true once held for hold_ms. */
+static bool
+terrain_confirm (terrain_t * p_terrain, uint32_t now_ms, uint32_t hold_ms)
+{
+    bool b_result = false;
+
+    if (0U == (p_terrain->flags & TERRAIN_PENDING))
+    {
+        p_terrain->flags |= TERRAIN_PENDING;
+        p_terrain->candidate_since = now_ms;
+        b_result                   = false;
+    }
+    else
+    {
+        b_result = (now_ms - p_terrain->candidate_since) >= hold_ms;
+    }
+
+    return b_result;
 }
 
 /*** end of file ***/

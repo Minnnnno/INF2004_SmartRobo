@@ -53,6 +53,8 @@ __asm__("   .syntax unified         \n"
         "   bx  r1          \n"
         "   .ltorg              \n");
 
+static void freeze_catcher_start(void);
+
 __attribute__((used)) void
 robo_freeze_check (const UW * p_frame)
 {
@@ -79,30 +81,6 @@ robo_freeze_check (const UW * p_frame)
     where = (where & ~(0xffU << 16U)) | (((UW)tk_get_tid() & 0xffU) << 16U);
     out_w(CRASH_WDT_SCRATCH0 + 12U, where);
     crash_log_reboot();
-}
-
-static void
-freeze_catcher_start (void)
-{
-    UINT state;
-
-    /* The kernel leaves SYSCFG, which holds the NMI routing, in reset. */
-    clr_w(RESETS_RESET, RESETS_RESET_SYSCFG);
-
-    while (0U == (in_w(RESETS_RESET_DONE) & RESETS_RESET_SYSCFG))
-    {
-        /* Nothing to do. */
-    }
-
-    DI(state);
-    g_last_feed_us      = in_w(TIMER_TIMERAWL);
-    exchdr_tbl[EXC_NMI] = (UW)robo_freeze_entry;
-    out_w(TIMER_INTR, 1UL << FREEZE_ALARM);
-    set_w(TIMER_INTE, 1UL << FREEZE_ALARM);
-    out_w(TIMER_ALARM2, g_last_feed_us + CRASH_FREEZE_CHECK_US);
-    /* NMI only: the IRQ stays disabled in the NVIC. */
-    set_w(SYSCFG_PROC0_NMI_MASK, 1UL << FREEZE_ALARM);
-    EI(state);
 }
 
 void
@@ -191,7 +169,34 @@ system_report_startup (void)
 #endif
 }
 
+static void
+freeze_catcher_start (void)
+{
+    UINT state;
+
+    /* The kernel leaves SYSCFG, which holds the NMI routing, in reset. */
+    clr_w(RESETS_RESET, RESETS_RESET_SYSCFG);
+
+    while (0U == (in_w(RESETS_RESET_DONE) & RESETS_RESET_SYSCFG))
+    {
+        /* Nothing to do. */
+    }
+
+    DI(state);
+    g_last_feed_us      = in_w(TIMER_TIMERAWL);
+    exchdr_tbl[EXC_NMI] = (UW)robo_freeze_entry;
+    out_w(TIMER_INTR, 1UL << FREEZE_ALARM);
+    set_w(TIMER_INTE, 1UL << FREEZE_ALARM);
+    out_w(TIMER_ALARM2, g_last_feed_us + CRASH_FREEZE_CHECK_US);
+    /* NMI only: the IRQ stays disabled in the NVIC. */
+    set_w(SYSCFG_PROC0_NMI_MASK, 1UL << FREEZE_ALARM);
+    EI(state);
+}
+
 #ifdef ROBO_PRODUCTION_BUILD
+
+static bool report_task_stack(ID task_id, const char * p_name);
+
 static bool
 report_task_stack (ID task_id, const char * p_name)
 {
@@ -223,6 +228,7 @@ report_task_stack (ID task_id, const char * p_name)
 
     return b_result;
 }
+
 #endif
 
 void

@@ -6,12 +6,13 @@
 
 #define DEG_TO_RAD (0.017453292519943295)
 
-static bool
-geometry (const motion_config_t * p_config)
-{
-    return (isfinite(p_config->track)) && (p_config->track > 0.0)
-           && (isfinite(p_config->max_speed)) && (p_config->max_speed > 0.0);
-}
+static bool            geometry(const motion_config_t * p_config);
+static motion_result_t wheel_request(request_source_t source,
+                                     uint32_t command_id, float64_t left,
+                                     float64_t right);
+static motion_result_t arc(request_source_t source, uint32_t command_id,
+                           float64_t metres, float64_t degrees,
+                           float64_t seconds, float64_t speed);
 
 motion_result_t
 motion_move_mm (request_source_t source, uint32_t command_id,
@@ -50,36 +51,6 @@ motion_turn_degrees (request_source_t source, uint32_t command_id,
     {
         result
             = robot_submit(source, command_id, ENCODER_TURN, radians, 0.0, 0.0);
-    }
-
-    return result;
-}
-
-static motion_result_t
-wheel_request (request_source_t source, uint32_t command_id, float64_t left,
-               float64_t right)
-{
-    motion_config_t config = board_motion_config();
-    float64_t       largest;
-    motion_result_t result = R_INVALID;
-
-    if ((!geometry(&config)) || (!isfinite(left)) || (!isfinite(right)))
-    {
-        result = R_INVALID;
-    }
-    else
-    {
-        largest = fmax(fabs(left), fabs(right));
-
-        if (largest > config.max_speed)
-        {
-            left *= config.max_speed / largest;
-            /* Preserve the requested curvature. */
-            right *= config.max_speed / largest;
-        }
-
-        result = robot_submit(source, command_id, WHEEL_SPEED_TRACKING, 0.0,
-                              left, right);
     }
 
     return result;
@@ -150,72 +121,6 @@ motion_steer_right (request_source_t source, uint32_t command_id,
     }
 
     return result;
-}
-
-static motion_result_t
-arc (request_source_t source, uint32_t command_id, float64_t metres,
-     float64_t degrees, float64_t seconds, float64_t speed)
-{
-    motion_config_t config = board_motion_config();
-    float64_t       angle  = degrees * DEG_TO_RAD;
-
-    float64_t goal[2];
-    float64_t wheel[2];
-    float64_t largest;
-
-    if ((!geometry(&config)) || (!isfinite(metres)) || (!isfinite(angle))
-        || (!isfinite(seconds)) || (!isfinite(speed)) || (seconds < 0.0)
-        || (speed <= 0.0) || (speed > config.max_speed)
-        || (fabs(metres) > config.max_distance)
-        || (fabs(angle) > config.max_angle)
-        || ((0.0 == metres) && (0.0 == angle)))
-    {
-        return R_INVALID;
-    }
-
-    goal[0] = metres - ((angle * config.track) / 2.0);
-    goal[1] = metres + ((angle * config.track) / 2.0);
-
-    if (seconds > 0.0)
-    {
-        if ((seconds + config.command_lifetime) >= config.movement_timeout)
-        {
-            return R_INVALID;
-        }
-
-        for (unsigned wheel_index = 0U; wheel_index < MOTION_WHEELS;
-             ++wheel_index)
-        {
-            wheel[wheel_index] = goal[wheel_index] / seconds;
-
-            if (((1.5 * fabs(wheel[wheel_index])) > config.max_speed)
-                || (((6.0 * fabs(goal[wheel_index])) / (seconds * seconds))
-                    > config.acceleration))
-            {
-                return R_INVALID;
-            }
-        }
-    }
-    else
-    {
-        if (0.0 == metres)
-        {
-            return R_INVALID;
-        }
-
-        wheel[0] = (goal[0] * speed) / fabs(metres);
-        wheel[1] = (goal[1] * speed) / fabs(metres);
-        largest  = fmax(fabs(wheel[0]), fabs(wheel[1]));
-
-        if (largest > config.max_speed)
-        {
-            wheel[0] *= config.max_speed / largest;
-            wheel[1] *= config.max_speed / largest;
-        }
-    }
-
-    return robot_submit_arc(source, command_id, metres, angle, seconds,
-                            wheel[0], wheel[1]);
 }
 
 motion_result_t
@@ -352,6 +257,109 @@ motion_line_direction (line_steering_t * p_state, bool b_left, bool b_right)
     }
 
     return result;
+}
+
+static bool
+geometry (const motion_config_t * p_config)
+{
+    return (isfinite(p_config->track)) && (p_config->track > 0.0)
+           && (isfinite(p_config->max_speed)) && (p_config->max_speed > 0.0);
+}
+
+static motion_result_t
+wheel_request (request_source_t source, uint32_t command_id, float64_t left,
+               float64_t right)
+{
+    motion_config_t config = board_motion_config();
+    float64_t       largest;
+    motion_result_t result = R_INVALID;
+
+    if ((!geometry(&config)) || (!isfinite(left)) || (!isfinite(right)))
+    {
+        result = R_INVALID;
+    }
+    else
+    {
+        largest = fmax(fabs(left), fabs(right));
+
+        if (largest > config.max_speed)
+        {
+            left *= config.max_speed / largest;
+            /* Preserve the requested curvature. */
+            right *= config.max_speed / largest;
+        }
+
+        result = robot_submit(source, command_id, WHEEL_SPEED_TRACKING, 0.0,
+                              left, right);
+    }
+
+    return result;
+}
+
+static motion_result_t
+arc (request_source_t source, uint32_t command_id, float64_t metres,
+     float64_t degrees, float64_t seconds, float64_t speed)
+{
+    motion_config_t config = board_motion_config();
+    float64_t       angle  = degrees * DEG_TO_RAD;
+
+    float64_t goal[2];
+    float64_t wheel[2];
+    float64_t largest;
+
+    if ((!geometry(&config)) || (!isfinite(metres)) || (!isfinite(angle))
+        || (!isfinite(seconds)) || (!isfinite(speed)) || (seconds < 0.0)
+        || (speed <= 0.0) || (speed > config.max_speed)
+        || (fabs(metres) > config.max_distance)
+        || (fabs(angle) > config.max_angle)
+        || ((0.0 == metres) && (0.0 == angle)))
+    {
+        return R_INVALID;
+    }
+
+    goal[0] = metres - ((angle * config.track) / 2.0);
+    goal[1] = metres + ((angle * config.track) / 2.0);
+
+    if (seconds > 0.0)
+    {
+        if ((seconds + config.command_lifetime) >= config.movement_timeout)
+        {
+            return R_INVALID;
+        }
+
+        for (unsigned wheel_index = 0U; wheel_index < MOTION_WHEELS;
+             ++wheel_index)
+        {
+            wheel[wheel_index] = goal[wheel_index] / seconds;
+
+            if (((1.5 * fabs(wheel[wheel_index])) > config.max_speed)
+                || (((6.0 * fabs(goal[wheel_index])) / (seconds * seconds))
+                    > config.acceleration))
+            {
+                return R_INVALID;
+            }
+        }
+    }
+    else
+    {
+        if (0.0 == metres)
+        {
+            return R_INVALID;
+        }
+
+        wheel[0] = (goal[0] * speed) / fabs(metres);
+        wheel[1] = (goal[1] * speed) / fabs(metres);
+        largest  = fmax(fabs(wheel[0]), fabs(wheel[1]));
+
+        if (largest > config.max_speed)
+        {
+            wheel[0] *= config.max_speed / largest;
+            wheel[1] *= config.max_speed / largest;
+        }
+    }
+
+    return robot_submit_arc(source, command_id, metres, angle, seconds,
+                            wheel[0], wheel[1]);
 }
 
 /*** end of file ***/

@@ -3,13 +3,8 @@
 #include <math.h>
 #include <string.h>
 static const float64_t g_pi_value = 3.141592653589793;
-static void
-finish (angle_control_t * p_control, angle_state_t state)
-{
-    p_control->state     = state;
-    p_control->output[0] = 0.0;
-    p_control->output[1] = 0.0;
-}
+
+static void finish(angle_control_t * p_control, angle_state_t state);
 
 void
 angle_control_init (angle_control_t *       p_control,
@@ -209,6 +204,14 @@ void
 angle_control_stop (angle_control_t * p_control)
 {
     finish(p_control, ANGLE_STOPPED);
+}
+
+static void
+finish (angle_control_t * p_control, angle_state_t state)
+{
+    p_control->state     = state;
+    p_control->output[0] = 0.0;
+    p_control->output[1] = 0.0;
 }
 
 /*** end of file ***/

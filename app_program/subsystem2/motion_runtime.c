@@ -14,15 +14,6 @@
 
 static motion_t g_motion;
 
-static void
-sync_encoder_fault_latch (void)
-{
-    bool b_latched
-        = 0U != (g_motion.fault_flags & (1U << ((unsigned)F_FEEDBACK - 1U)));
-
-    crash_encoder_fault_update(b_latched, (UW)g_motion.status.feedback_cause);
-}
-
 typedef struct
 {
     bool                  recorded;
@@ -34,77 +25,12 @@ typedef struct
 
 static motor_fault_snapshot_t g_motor_fault_snapshot;
 
-/* Capture while the bus is locked, before the hardware output cutoff. */
-static void
-capture_motor_fault (void)
-{
-    if (F_NONE == g_motion.status.fault)
-    {
-        g_motor_fault_snapshot.recorded = false;
-    }
-    else if (g_motor_fault_snapshot.recorded)
-    {
-        /* Nothing to do. */
-    }
-    else
-    {
-        motion_hal_motor_diagnostics(&g_motor_fault_snapshot.motors);
-        motion_hal_encoder_diagnostics(&g_motor_fault_snapshot.encoders);
-        g_motor_fault_snapshot.command_id    = g_motion.status.debug.id;
-        g_motor_fault_snapshot.fault_time_ms = g_motion.status.debug.time_ms;
-        g_motor_fault_snapshot.recorded      = true;
-    }
-}
-
-static bool
-get_motor_fault (const motion_status_t *  p_status,
-                 motor_fault_snapshot_t * p_snapshot)
-{
-    bool b_available;
-
-    bool b_result = false;
-
-    if (!robot_runtime_lock())
-    {
-        b_result = false;
-    }
-    else
-    {
-        b_available
-            = (g_motor_fault_snapshot.recorded) && (p_status->debug.recorded)
-              && (g_motor_fault_snapshot.command_id == p_status->debug.id)
-              && (g_motor_fault_snapshot.fault_time_ms
-                  == p_status->debug.time_ms);
-
-        if (b_available)
-        {
-            *p_snapshot = g_motor_fault_snapshot;
-        }
-
-        robot_runtime_unlock();
-        b_result = b_available;
-    }
-
-    return b_result;
-}
-
-static motion_result_t
-magnitude (uint32_t command_id, motion_mode_t mode, float64_t value, int sign)
-{
-    motion_result_t result = R_INVALID;
-
-    if ((!isfinite(value)) || (value < 0.0))
-    {
-        result = R_INVALID;
-    }
-    else
-    {
-        result = robot_submit(SOURCE_MANUAL, command_id, mode, value * sign,
-                              0.0, 0.0);
-    }
-
-    return result;
-}
+static void            sync_encoder_fault_latch(void);
+static void            capture_motor_fault(void);
+static bool            get_motor_fault(const motion_status_t *  p_status,
+                                       motor_fault_snapshot_t * p_snapshot);
+static motion_result_t magnitude(uint32_t command_id, motion_mode_t mode,
+                                 float64_t value, int sign);
 
 motion_result_t
 motion_move_forward (uint32_t command_id, float64_t metres)
@@ -306,7 +232,103 @@ motion_task (INT code, void * p_context)
     }
 }
 
+static void
+sync_encoder_fault_latch (void)
+{
+    bool b_latched
+        = 0U != (g_motion.fault_flags & (1U << ((unsigned)F_FEEDBACK - 1U)));
+
+    crash_encoder_fault_update(b_latched, (UW)g_motion.status.feedback_cause);
+}
+
+/* Capture while the bus is locked, before the hardware output cutoff. */
+static void
+capture_motor_fault (void)
+{
+    if (F_NONE == g_motion.status.fault)
+    {
+        g_motor_fault_snapshot.recorded = false;
+    }
+    else if (g_motor_fault_snapshot.recorded)
+    {
+        /* Nothing to do. */
+    }
+    else
+    {
+        motion_hal_motor_diagnostics(&g_motor_fault_snapshot.motors);
+        motion_hal_encoder_diagnostics(&g_motor_fault_snapshot.encoders);
+        g_motor_fault_snapshot.command_id    = g_motion.status.debug.id;
+        g_motor_fault_snapshot.fault_time_ms = g_motion.status.debug.time_ms;
+        g_motor_fault_snapshot.recorded      = true;
+    }
+}
+
+static bool
+get_motor_fault (const motion_status_t *  p_status,
+                 motor_fault_snapshot_t * p_snapshot)
+{
+    bool b_available;
+
+    bool b_result = false;
+
+    if (!robot_runtime_lock())
+    {
+        b_result = false;
+    }
+    else
+    {
+        b_available
+            = (g_motor_fault_snapshot.recorded) && (p_status->debug.recorded)
+              && (g_motor_fault_snapshot.command_id == p_status->debug.id)
+              && (g_motor_fault_snapshot.fault_time_ms
+                  == p_status->debug.time_ms);
+
+        if (b_available)
+        {
+            *p_snapshot = g_motor_fault_snapshot;
+        }
+
+        robot_runtime_unlock();
+        b_result = b_available;
+    }
+
+    return b_result;
+}
+
+static motion_result_t
+magnitude (uint32_t command_id, motion_mode_t mode, float64_t value, int sign)
+{
+    motion_result_t result = R_INVALID;
+
+    if ((!isfinite(value)) || (value < 0.0))
+    {
+        result = R_INVALID;
+    }
+    else
+    {
+        result = robot_submit(SOURCE_MANUAL, command_id, mode, value * sign,
+                              0.0, 0.0);
+    }
+
+    return result;
+}
+
 #ifdef ROBO_PRODUCTION_BUILD
+
+static void report_encoder_error(const motion_status_t * p_status);
+static void report_wheel_registers(const char * p_name, unsigned wheel,
+                                   const motor_diagnostics_t *   p_motor,
+                                   const encoder_diagnostics_t * p_encoder);
+static void report_wheel_checks(const char * p_name, unsigned wheel,
+                                const motor_diagnostics_t *  p_motor,
+                                const motion_fault_debug_t * p_debug);
+static void report_motor_fault(const motion_status_t * p_status);
+static void report_fault_cause(const motion_status_t * p_status,
+                               const motion_config_t * p_config);
+static void report_fault_wheels(const motion_status_t * p_status);
+static void report_motion_fault(const motion_status_t * p_status,
+                                const motion_config_t * p_config);
+
 /* Task context only: the motion task already stopped the outputs and saved
  * this snapshot. Missing counts cannot distinguish a stalled wheel from a
  * disconnected/faulty encoder, so report the observed failure explicitly. */

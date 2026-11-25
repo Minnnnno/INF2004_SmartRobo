@@ -22,6 +22,9 @@
 #if defined(ROBO_SAFE_MOTOR_TEST)
 #include "motor_test.h"
 static volatile bool gb_sensor_paused;
+
+static void line_loop(void);
+
 void
 line_forward_pause (void)
 {
@@ -87,6 +90,8 @@ line_loop (void)
  * (ir_io.h). */
 #define IRMON_ADC_AVERAGE 16U
 
+static void line_loop(void);
+
 static void
 line_loop (void)
 {
@@ -115,7 +120,11 @@ line_loop (void)
         (void)tk_dly_tsk(200U);
     }
 }
+
 #else
+
+static void line_loop(void);
+
 static void
 line_loop (void)
 {
@@ -132,6 +141,7 @@ line_loop (void)
         (void)tk_dly_tsk(50U);
     }
 }
+
 #endif
 
 #elif defined(ROBO_LINE_STEERING)
@@ -262,6 +272,43 @@ typedef struct
     /* Heading when the on-the-spot spin began. */
     float64_t spin_from;
 } line_search_t;
+
+/* ---- Line task state (see the list at the top of this section) ---- */
+typedef enum
+{
+    LS_STARTUP,
+    LS_WAITING,
+    LS_FOLLOWING,
+    LS_BARCODE,
+    LS_GRACE,
+    LS_SEARCHING,
+    LS_LOST,
+    LS_HELD,
+    LS_MANEUVER,
+    LS_STOPPED,
+    LS_CAL_WAIT,
+    LS_COUNT
+} line_state_t;
+
+static void search_toward(line_search_t * p_search, line_direction_t last_side);
+static motion_result_t line_hold(void);
+static bool            line_motion_ok(const robot_status_t * p_status);
+static motion_result_t line_pivot(float64_t dir);
+static motion_result_t line_search_step(line_search_t *         p_search,
+                                        const motion_status_t * p_motion,
+                                        line_direction_t        last_side,
+                                        float64_t               lost_for);
+static motion_result_t line_follow(line_direction_t drive,
+                                   float64_t        correction);
+static void            line_publish(line_direction_t direction, float64_t now);
+static const char *    line_state_name(line_state_t state);
+static const char *    line_search_name(line_search_phase_t phase);
+static bool            line_state_coarse(line_state_t state);
+static void line_set_state(line_state_t * p_state, line_state_t next);
+static void line_report(unsigned centre, unsigned right,
+                        line_direction_t direction, line_state_t lstate,
+                        line_search_phase_t phase, motion_result_t result,
+                        const motion_status_t * p_motion);
 
 static void
 search_toward (line_search_t * p_search, line_direction_t last_side)
@@ -445,23 +492,6 @@ line_publish (line_direction_t direction, float64_t now)
     (void)robot_update_subsystem(SOURCE_LINE, &line_status);
 }
 
-/* ---- Line task state (see the list at the top of this section) ---- */
-typedef enum
-{
-    LS_STARTUP,
-    LS_WAITING,
-    LS_FOLLOWING,
-    LS_BARCODE,
-    LS_GRACE,
-    LS_SEARCHING,
-    LS_LOST,
-    LS_HELD,
-    LS_MANEUVER,
-    LS_STOPPED,
-    LS_CAL_WAIT,
-    LS_COUNT
-} line_state_t;
-
 static const char *
 line_state_name (line_state_t state)
 {
@@ -583,6 +613,12 @@ line_report (unsigned centre, unsigned right, line_direction_t direction,
 #define ROUTE_PIVOT_MIN_RANGE 0.10
 /* GP21, active low: calibrate, and resume after it. */
 #define LINE_CAL_BUTTON       ((unsigned)BOARD_CAL_BUTTON)
+
+static float64_t route_abs(float64_t value);
+static bool      route_brake(void);
+static bool      route_advance(float64_t metres);
+static void      route_flag(bool b_pivoting, bool b_black);
+static bool route_pivot(float64_t dir, float64_t min_turn, float64_t max_turn);
 
 static float64_t
 route_abs (float64_t value)

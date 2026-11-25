@@ -142,44 +142,51 @@ static void terrain_mag_cal(buddy4_t const *    p_context,
                             s4_motion_t const * p_motion);
 #endif
 
-/* Build ID and how to place the robot. */
-static void
-terrain_banner (void)
-{
-#ifndef ROBO_IR_MONITOR /* Keep the IR monitor's single console line clean. */
-#ifdef ROBO_ENCODER_BUILD_ID
-    /* Build ID next to the Buddy 4 start-up lines, to confirm which image is
-     * flashed. */
-    tm_printf((UB const *)"[B4] firmware=%s\n",
-              (UB const *)ROBO_ENCODER_BUILD_ID);
-#endif
-    tm_printf((UB const *)"[B4] GY-511 on I2C1 SDA=GP6 SCL=GP7. Keep the robot "
-                          "LEVEL and STILL:\n");
-    tm_printf((UB const *)"[B4] tilt reference is captured about 1-2 s after "
-                          "boot (50 stable samples).\n");
-#endif
-}
+/* Web Start gate (ROBO_REQUIRE_START: MQTT production images boot held until
+ * the dashboard START). Buddy 4 captures its level reference, and so starts
+ * hump recording and lift detection, only after START: the robot can be
+ * powered up anywhere and placed on the course before the run. START = the
+ * controller hold seen, then released; latched for the rest of the run (a
+ * later STOP/START keeps the reference). Before any hold is seen, missing
+ * motion status means the motion task is not running: no gate, as before.
+ * Without ROBO_REQUIRE_START the reference is captured at boot as before. */
+#define S4_START_NONE (0U) /* No hold seen yet. */
+#define S4_START_HELD (1U) /* Held: waiting for START. */
+/* START seen (or no Start gate): capture allowed. */
+#define S4_START_GIVEN (2U)
 
-/* A finished hump: latch the event and print it.  Owning task consumes the
- * latch; the comms latch is interrupt-safe. */
-static void
-terrain_hump_done (buddy4_t * p_context)
-{
-    if (terrain_take_completed(&p_context->terrain))
-    {
-        comms_latch_event(TF_EV_HUMP_PEAK);
-#ifndef ROBO_IR_MONITOR
-        uint8_t peak = terrain_last_peak(&p_context->terrain);
-
-        tm_printf(
-            (UB const *)"[TERRAIN] Hump completed: peak=%d mm under "
-                        "%s wheel | run max=%d mm\n",
-            (INT)(peak & TERRAIN_PEAK_MM_MASK),
-            (0U != (peak & TERRAIN_PEAK_RIGHT)) ? "RIGHT" : "LEFT",
-            (INT)(terrain_run_max(&p_context->terrain) & TERRAIN_PEAK_MM_MASK));
-#endif
-    }
-}
+static void     terrain_banner(void);
+static void     terrain_hump_done(buddy4_t * p_context);
+static uint32_t terrain_time_ms(void);
+static uint8_t  terrain_inputs(uint8_t state, s4_motion_t const * p_motion,
+                               bool b_wait_start, bool b_turning);
+static bool     terrain_wait_start(s4_motion_t const * p_motion);
+static int16_t  terrain_mm_s(float64_t m_s);
+static void     terrain_read_motion(s4_motion_t * p_motion);
+static void terrain_lift(buddy4_t const *    p_context,
+                         s4_motion_t const * p_motion, uint8_t * p_previous);
+static void terrain_hump_freeze(buddy4_t *          p_context,
+                                s4_motion_t const * p_motion,
+                                bool *              p_previous);
+static bool terrain_turning(buddy4_t const *    p_context,
+                            s4_motion_t const * p_motion, uint32_t now_ms);
+static char const * terrain_hump_label(buddy4_t const * p_context,
+                                       uint8_t          terrain);
+static bool         terrain_hump_paused(buddy4_t const *    p_context,
+                                        s4_motion_t const * p_motion);
+static void terrain_hump_pause(buddy4_t const *    p_context,
+                               s4_motion_t const * p_motion, bool * p_previous);
+static void terrain_classify(buddy4_t * p_context, motion_class_t * p_class,
+                             s4_motion_t const * p_motion);
+static uint8_t      terrain_state_code(buddy4_t const * p_context);
+static void         terrain_publish(buddy4_t const *       p_context,
+                                    motion_class_t const * p_class,
+                                    float64_t *            p_sample_time);
+static void         terrain_report(buddy4_t const *       p_context,
+                                   motion_class_t const * p_class);
+static char const * terrain_mag_reason(uint8_t reason);
+static bool         terrain_compass(buddy4_t const * p_context, uint8_t phase,
+                                    uint32_t now_ms, int32_t * p_ddeg);
 
 /* Started by usermain at priority 8 when ROBO_SUBSYSTEM4 is enabled.
  * One lifecycle step per 20 ms release. Missed releases are skipped, never
@@ -297,6 +304,45 @@ terrain_task (INT code, void * p_context)
     }
 }
 
+/* Build ID and how to place the robot. */
+static void
+terrain_banner (void)
+{
+#ifndef ROBO_IR_MONITOR /* Keep the IR monitor's single console line clean. */
+#ifdef ROBO_ENCODER_BUILD_ID
+    /* Build ID next to the Buddy 4 start-up lines, to confirm which image is
+     * flashed. */
+    tm_printf((UB const *)"[B4] firmware=%s\n",
+              (UB const *)ROBO_ENCODER_BUILD_ID);
+#endif
+    tm_printf((UB const *)"[B4] GY-511 on I2C1 SDA=GP6 SCL=GP7. Keep the robot "
+                          "LEVEL and STILL:\n");
+    tm_printf((UB const *)"[B4] tilt reference is captured about 1-2 s after "
+                          "boot (50 stable samples).\n");
+#endif
+}
+
+/* A finished hump: latch the event and print it.  Owning task consumes the
+ * latch; the comms latch is interrupt-safe. */
+static void
+terrain_hump_done (buddy4_t * p_context)
+{
+    if (terrain_take_completed(&p_context->terrain))
+    {
+        comms_latch_event(TF_EV_HUMP_PEAK);
+#ifndef ROBO_IR_MONITOR
+        uint8_t peak = terrain_last_peak(&p_context->terrain);
+
+        tm_printf(
+            (UB const *)"[TERRAIN] Hump completed: peak=%d mm under "
+                        "%s wheel | run max=%d mm\n",
+            (INT)(peak & TERRAIN_PEAK_MM_MASK),
+            (0U != (peak & TERRAIN_PEAK_RIGHT)) ? "RIGHT" : "LEFT",
+            (INT)(terrain_run_max(&p_context->terrain) & TERRAIN_PEAK_MM_MASK));
+#endif
+    }
+}
+
 /* Low monotonic milliseconds; unsigned differences handle wrap. A clock
  * failure is handled by buddy4_step() (FAULT); here it only shortens a wait.
  */
@@ -357,18 +403,6 @@ terrain_inputs (uint8_t state, s4_motion_t const * p_motion, bool b_wait_start,
     return result;
 }
 
-/* Web Start gate (ROBO_REQUIRE_START: MQTT production images boot held until
- * the dashboard START). Buddy 4 captures its level reference, and so starts
- * hump recording and lift detection, only after START: the robot can be
- * powered up anywhere and placed on the course before the run. START = the
- * controller hold seen, then released; latched for the rest of the run (a
- * later STOP/START keeps the reference). Before any hold is seen, missing
- * motion status means the motion task is not running: no gate, as before.
- * Without ROBO_REQUIRE_START the reference is captured at boot as before. */
-#define S4_START_NONE (0U) /* No hold seen yet. */
-#define S4_START_HELD (1U) /* Held: waiting for START. */
-/* START seen (or no Start gate): capture allowed. */
-#define S4_START_GIVEN (2U)
 static bool
 terrain_wait_start (s4_motion_t const * p_motion)
 {
@@ -1080,6 +1114,11 @@ typedef struct
 
 static s4_cal_t g_s_cal;
 
+static void terrain_mag_cal_stop(char const * p_failure);
+static void terrain_mag_cal_print(void);
+static void terrain_mag_cal(buddy4_t const *    p_context,
+                            s4_motion_t const * p_motion);
+
 static void
 terrain_mag_cal_stop (char const * p_failure)
 {
@@ -1251,6 +1290,7 @@ terrain_mag_cal (buddy4_t const * p_context, s4_motion_t const * p_motion)
                        (S4_CAL_LEFT == g_s_cal.phase) ? S4_CAL_RATE_DEG_S
                                                       : -S4_CAL_RATE_DEG_S);
 }
+
 #endif
 
 /*** end of file ***/

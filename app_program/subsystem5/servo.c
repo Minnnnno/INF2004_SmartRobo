@@ -24,32 +24,8 @@
 
 static uint8_t g_servo_deg; /* 0: not started */
 
-static void
-servo_write (int angle_deg)
-{
-    float64_t mapped = (S5_SERVO_REVERSED != 0) ? (180.0 - (float64_t)angle_deg)
-                                                : (float64_t)angle_deg;
-    float64_t position
-        = fmin(fmax(mapped + (float64_t)S5_SERVO_TRIM_DEG, 0.0), 180.0);
-    float64_t pulse
-        = SERVO_US_AT_0
-          + ((position * (SERVO_US_AT_180 - SERVO_US_AT_0)) / 180.0);
-
-    /* Odd GPIOs use channel B; the alternate diagnostic pin uses channel A. */
-    uint16_t level = (uint16_t)(pulse + 0.5);
-
-    pwm_set_both_levels(SERVO_SLICE, (S5_SERVO_PIN & 1U) ? 0U : level,
-                        (S5_SERVO_PIN & 1U) ? level : 0U);
-}
-
-static int
-servo_clamp (int angle_deg)
-{
-    return (angle_deg < S5_SERVO_MIN_DEG)
-               ? S5_SERVO_MIN_DEG
-               : ((angle_deg > S5_SERVO_MAX_DEG) ? S5_SERVO_MAX_DEG
-                                                 : angle_deg);
-}
+static void servo_write(int angle_deg);
+static int  servo_clamp(int angle_deg);
 
 void
 s5_servo_init (int angle_deg)
@@ -73,10 +49,10 @@ s5_servo_init (int angle_deg)
 unsigned
 s5_servo_aim (int angle_deg)
 {
-    int          target = servo_clamp(angle_deg);
-    int          travel = (target > g_servo_deg) ? (target - g_servo_deg)
-                                                 : (g_servo_deg - target);
-    unsigned int result = 0U;
+    int      target = servo_clamp(angle_deg);
+    int      travel = (target > g_servo_deg) ? (target - g_servo_deg)
+                                             : (g_servo_deg - target);
+    unsigned result = 0U;
 
     if (0U == g_servo_deg)
     {
@@ -109,6 +85,33 @@ int
 s5_servo_angle (void)
 {
     return g_servo_deg;
+}
+
+static void
+servo_write (int angle_deg)
+{
+    float64_t mapped = (S5_SERVO_REVERSED != 0) ? (180.0 - (float64_t)angle_deg)
+                                                : (float64_t)angle_deg;
+    float64_t position
+        = fmin(fmax(mapped + (float64_t)S5_SERVO_TRIM_DEG, 0.0), 180.0);
+    float64_t pulse
+        = SERVO_US_AT_0
+          + ((position * (SERVO_US_AT_180 - SERVO_US_AT_0)) / 180.0);
+
+    /* Odd GPIOs use channel B; the alternate diagnostic pin uses channel A. */
+    uint16_t level = (uint16_t)(pulse + 0.5);
+
+    pwm_set_both_levels(SERVO_SLICE, (S5_SERVO_PIN & 1U) ? 0U : level,
+                        (S5_SERVO_PIN & 1U) ? level : 0U);
+}
+
+static int
+servo_clamp (int angle_deg)
+{
+    return (angle_deg < S5_SERVO_MIN_DEG)
+               ? S5_SERVO_MIN_DEG
+               : ((angle_deg > S5_SERVO_MAX_DEG) ? S5_SERVO_MAX_DEG
+                                                 : angle_deg);
 }
 
 /*** end of file ***/

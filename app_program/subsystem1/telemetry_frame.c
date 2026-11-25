@@ -28,38 +28,13 @@ _Static_assert(TF_FIELD_COUNT <= 32, "clamp mask holds 32 fields");
 const tf_field_t g_tf_fields[TF_FIELD_COUNT] = {TF_FIELDS(TF_ROW_)};
 #undef TF_ROW_
 
-/* Write the low `bits` bits of code, most significant first, at bit *pos. */
-static void
-put_bits (uint8_t * p_buf, unsigned * p_pos, uint32_t code, unsigned bits)
-{
-    while (bits > 0U)
-    {
-        bits--;
-
-        if (0U != ((code >> bits) & 1U))
-        {
-            p_buf[*p_pos >> 3] |= (uint8_t)(0x80U >> (*p_pos & 7U));
-        }
-
-        (*p_pos)++;
-    }
-}
-
-static uint32_t
-get_bits (const uint8_t * p_buf, unsigned * p_pos, unsigned bits)
-{
-    uint32_t code = 0U;
-
-    while (bits > 0U)
-    {
-        bits--;
-        code = (code << 1)
-               | (((uint32_t)p_buf[*p_pos >> 3] >> (7U - (*p_pos & 7U))) & 1U);
-        (*p_pos)++;
-    }
-
-    return code;
-}
+static void     put_bits(uint8_t * p_buf, unsigned * p_pos, uint32_t code,
+                         unsigned bits);
+static uint32_t get_bits(const uint8_t * p_buf, unsigned * p_pos,
+                         unsigned bits);
+static void     put_u32(uint8_t * p_bytes, uint32_t value);
+static uint32_t get_u32(const uint8_t * p_bytes);
+static uint8_t  clamp_u8(uint8_t value, unsigned max, bool * p_clamped);
 
 uint32_t
 tf_pack (const int32_t values[TF_FIELD_COUNT], uint8_t out[TF_FRAME_BYTES])
@@ -192,40 +167,6 @@ tf_ack_encode (tf_ack_t result, const tf_command_t * p_cmd,
     out[1] = (uint8_t)(word & 0xFFU);
 }
 
-static void
-put_u32 (uint8_t * p_bytes, uint32_t value)
-{
-    p_bytes[0] = (uint8_t)(value >> 24);
-    p_bytes[1] = (uint8_t)(value >> 16);
-    p_bytes[2] = (uint8_t)(value >> 8);
-    p_bytes[3] = (uint8_t)value;
-}
-
-static uint32_t
-get_u32 (const uint8_t * p_bytes)
-{
-    return ((uint32_t)p_bytes[0] << 24) | ((uint32_t)p_bytes[1] << 16)
-           | ((uint32_t)p_bytes[2] << 8) | p_bytes[3];
-}
-
-static uint8_t
-clamp_u8 (uint8_t value, unsigned max, bool * p_clamped)
-{
-    uint8_t result = 0U;
-
-    if (value > max)
-    {
-        *p_clamped = true;
-        result     = (uint8_t)max;
-    }
-    else
-    {
-        result = value;
-    }
-
-    return result;
-}
-
 bool
 tf_enc_pack (const tf_encoder_t * p_encoder, uint8_t out[TF_ENC_BYTES])
 {
@@ -331,6 +272,73 @@ tf_ack_decode (const uint8_t * p_data, size_t len, tf_ack_t * p_result,
     }
 
     return b_result;
+}
+
+/* Write the low `bits` bits of code, most significant first, at bit *pos. */
+static void
+put_bits (uint8_t * p_buf, unsigned * p_pos, uint32_t code, unsigned bits)
+{
+    while (bits > 0U)
+    {
+        bits--;
+
+        if (0U != ((code >> bits) & 1U))
+        {
+            p_buf[*p_pos >> 3] |= (uint8_t)(0x80U >> (*p_pos & 7U));
+        }
+
+        (*p_pos)++;
+    }
+}
+
+static uint32_t
+get_bits (const uint8_t * p_buf, unsigned * p_pos, unsigned bits)
+{
+    uint32_t code = 0U;
+
+    while (bits > 0U)
+    {
+        bits--;
+        code = (code << 1)
+               | (((uint32_t)p_buf[*p_pos >> 3] >> (7U - (*p_pos & 7U))) & 1U);
+        (*p_pos)++;
+    }
+
+    return code;
+}
+
+static void
+put_u32 (uint8_t * p_bytes, uint32_t value)
+{
+    p_bytes[0] = (uint8_t)(value >> 24);
+    p_bytes[1] = (uint8_t)(value >> 16);
+    p_bytes[2] = (uint8_t)(value >> 8);
+    p_bytes[3] = (uint8_t)value;
+}
+
+static uint32_t
+get_u32 (const uint8_t * p_bytes)
+{
+    return ((uint32_t)p_bytes[0] << 24) | ((uint32_t)p_bytes[1] << 16)
+           | ((uint32_t)p_bytes[2] << 8) | p_bytes[3];
+}
+
+static uint8_t
+clamp_u8 (uint8_t value, unsigned max, bool * p_clamped)
+{
+    uint8_t result = 0U;
+
+    if (value > max)
+    {
+        *p_clamped = true;
+        result     = (uint8_t)max;
+    }
+    else
+    {
+        result = value;
+    }
+
+    return result;
 }
 
 /*** end of file ***/

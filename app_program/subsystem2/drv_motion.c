@@ -31,95 +31,18 @@ static uint32_t  g_last_write_us;
 #define DRIVER_PWM_READY      0x04u
 #define MOTOR_BRAKE_ENABLED   0x01u
 
-static bool
-motor_state_get (uint8_t mask)
-{
-    return (0u != ((uint32_t)g_driver_flags & mask));
-}
-
-static void
-motor_state_set (uint8_t mask, bool b_value)
-{
-    uint32_t flags = g_driver_flags;
-
-    flags          = b_value ? (flags | mask) : (flags & ~(uint32_t)mask);
-    g_driver_flags = (uint8_t)flags;
-}
-
-static bool
-motor_is_neutral (uint32_t wheel)
-{
-    return (0u != ((uint32_t)g_wheel_flags & (UINT32_C(1) << wheel)));
-}
-
-static void
-motor_neutral_set (uint32_t wheel, bool b_value)
-{
-    uint32_t mask  = UINT32_C(1) << wheel;
-    uint32_t flags = g_wheel_flags;
-
-    flags         = b_value ? (flags | mask) : (flags & ~mask);
-    g_wheel_flags = (uint8_t)flags;
-}
-
-static int32_t
-motor_direction_get (uint32_t wheel)
-{
-    uint32_t encoded = ((uint32_t)g_wheel_flags >> (2u + (2u * wheel))) & 3u;
-
-    return (1u == encoded) ? 1 : ((2u == encoded) ? -1 : 0);
-}
-
-static void
-motor_direction_set (uint32_t wheel, int32_t direction)
-{
-    uint32_t shift   = 2u + (2u * wheel);
-    uint32_t encoded = (direction > 0) ? 1u : ((direction < 0) ? 2u : 0u);
-    uint32_t flags   = g_wheel_flags;
-
-    g_wheel_flags
-        = (uint8_t)((flags & ~(UINT32_C(3) << shift)) | (encoded << shift));
-}
-
-static int32_t
-motor_sign_get (uint32_t wheel)
-{
-    return (0u
-            != ((uint32_t)g_motor_config.flags & (UINT32_C(1) << (wheel + 1u))))
-               ? -1
-               : 1;
-}
-
-static void
-encoder_irq (void)
-{
-    uint32_t pending[4];
-    uint32_t any = 0U;
-    unsigned bank;
-    uint32_t levels;
-
-    for (bank = 0U; bank < GPIO_IRQ_BANKS; ++bank)
-    {
-        pending[bank] = in_w(IO_BANK0_BASE + 0x120U + (bank * 4U))
-                        & g_encoder_event_mask[bank];
-        any |= pending[bank];
-
-        if (0U != pending[bank])
-        {
-            out_w(IO_BANK0_BASE + 0xf0U + (bank * 4U), pending[bank]);
-        }
-    }
-
-    if (0U == any)
-    {
-        return;
-    }
-
-    /* Acknowledge only owned flags, then take one coherent A/B level snapshot.
-     */
-    levels = in_w(GPIO_IN);
-    encoder_capture_events(&g_capture, pending, levels);
-}
+static bool    motor_state_get(uint8_t mask);
+static void    motor_state_set(uint8_t mask, bool b_value);
+static bool    motor_is_neutral(uint32_t wheel);
+static void    motor_neutral_set(uint32_t wheel, bool b_value);
+static int32_t motor_direction_get(uint32_t wheel);
+static void    motor_direction_set(uint32_t wheel, int32_t direction);
+static int32_t motor_sign_get(uint32_t wheel);
+static void    encoder_irq(void);
+static void    init_wheel(const motion_config_t * p_config, unsigned wheel,
+                          float64_t divider, uint32_t * p_mask);
+static void    enable_encoders(const motion_config_t * p_config);
+static int32_t diagnostic_permille(float64_t value);
 
 void
 motion_hal_emergency_stop (void)
@@ -154,87 +77,6 @@ motion_hal_emergency_stop (void)
     gb_last_inhibited    = true;
     g_reversal_wait_mask = 0U;
     g_last_applied[0] = g_last_applied[1] = 0.0;
-}
-
-/* PWM and encoder pins of one wheel, outputs off.  Adds its pins to the mask.
- */
-static void
-init_wheel (const motion_config_t * p_config, unsigned wheel, float64_t divider,
-            uint32_t * p_mask)
-{
-    unsigned channel;
-
-    pwm_config_t pwm = pwm_get_default_config();
-
-    pwm_config_set_wrap(&pwm, g_wrap);
-    pwm_config_set_clkdiv(&pwm, (float32_t)divider);
-    pwm_init(pwm_gpio_to_slice_num(g_motor_pins[wheel][0]), &pwm, false);
-    pwm_set_both_levels(pwm_gpio_to_slice_num(g_motor_pins[wheel][0]), 0U, 0U);
-    g_last_compare[wheel][0] = g_last_compare[wheel][1] = 0U;
-    g_last_requested[wheel] = g_last_applied[wheel] = 0.0;
-
-    for (channel = 0; channel < ENCODER_CHANNELS; ++channel)
-    {
-        unsigned pin = g_encoder_pins[wheel][channel];
-
-        if ((1U == channel) && (!p_config->quadrature[wheel]))
-        {
-            /* Nothing to do. */
-        }
-        else
-        {
-            gpio_init(pin);
-            gpio_set_dir(pin, false);
-            /* External electrical interface must be confirmed. */
-            gpio_disable_pulls(pin);
-            gpio_set_irq_enabled(pin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL,
-                                 false);
-            g_encoder_event_mask[pin / 8U]
-                |= (p_config->quadrature[wheel] ? 12UL : 8UL)
-                   << ((pin % 8U) * 4U);
-            *p_mask |= 1UL << pin;
-        }
-    }
-
-    g_neutral_since[wheel] = motion_hal_time();
-}
-
-/* Start counting encoder edges from a clean state. */
-static void
-enable_encoders (const motion_config_t * p_config)
-{
-    unsigned wheel;
-    uint32_t irq_state;
-
-    motor_state_set(DRIVER_IRQ_REGISTERED, true);
-    irq_state = save_and_disable_interrupts();
-
-    for (wheel = 0U; wheel < GPIO_IRQ_BANKS; ++wheel)
-    {
-        out_w(IO_BANK0_BASE + 0xf0U + (wheel * 4U),
-              g_encoder_event_mask[wheel]);
-    }
-
-    encoder_capture_init(&g_capture, g_encoder_pins, p_config->quadrature,
-                         p_config->encoder_sign, in_w(GPIO_IN));
-
-    for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
-    {
-        gpio_set_irq_enabled(g_encoder_pins[wheel][0],
-                             p_config->quadrature[wheel]
-                                 ? GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL
-                                 : GPIO_IRQ_EDGE_RISE,
-                             true);
-
-        if (p_config->quadrature[wheel])
-        {
-            gpio_set_irq_enabled(g_encoder_pins[wheel][1],
-                                 GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
-        }
-    }
-
-    motor_state_set(DRIVER_ENCODER_READY, true);
-    restore_interrupts(irq_state);
 }
 
 bool
@@ -378,23 +220,6 @@ motion_hal_encoder_diagnostics (encoder_diagnostics_t * p_diagnostics)
     }
 
     restore_interrupts(irq_state);
-}
-
-static int32_t
-diagnostic_permille (float64_t value)
-{
-    int32_t result = 0;
-
-    if (!isfinite(value))
-    {
-        result = INT32_MIN;
-    }
-    else
-    {
-        result = (int32_t)(fmax(-1.0, fmin(1.0, value)) * 1000.0);
-    }
-
-    return result;
 }
 
 void
@@ -584,6 +409,194 @@ motion_hal_console_read (void)
 
     return (int)(in_w(0x40034000U) & 255U);
 #endif
+}
+
+static bool
+motor_state_get (uint8_t mask)
+{
+    return (0u != ((uint32_t)g_driver_flags & mask));
+}
+
+static void
+motor_state_set (uint8_t mask, bool b_value)
+{
+    uint32_t flags = g_driver_flags;
+
+    flags          = b_value ? (flags | mask) : (flags & ~(uint32_t)mask);
+    g_driver_flags = (uint8_t)flags;
+}
+
+static bool
+motor_is_neutral (uint32_t wheel)
+{
+    return (0u != ((uint32_t)g_wheel_flags & (UINT32_C(1) << wheel)));
+}
+
+static void
+motor_neutral_set (uint32_t wheel, bool b_value)
+{
+    uint32_t mask  = UINT32_C(1) << wheel;
+    uint32_t flags = g_wheel_flags;
+
+    flags         = b_value ? (flags | mask) : (flags & ~mask);
+    g_wheel_flags = (uint8_t)flags;
+}
+
+static int32_t
+motor_direction_get (uint32_t wheel)
+{
+    uint32_t encoded = ((uint32_t)g_wheel_flags >> (2u + (2u * wheel))) & 3u;
+
+    return (1u == encoded) ? 1 : ((2u == encoded) ? -1 : 0);
+}
+
+static void
+motor_direction_set (uint32_t wheel, int32_t direction)
+{
+    uint32_t shift   = 2u + (2u * wheel);
+    uint32_t encoded = (direction > 0) ? 1u : ((direction < 0) ? 2u : 0u);
+    uint32_t flags   = g_wheel_flags;
+
+    g_wheel_flags
+        = (uint8_t)((flags & ~(UINT32_C(3) << shift)) | (encoded << shift));
+}
+
+static int32_t
+motor_sign_get (uint32_t wheel)
+{
+    return (0u
+            != ((uint32_t)g_motor_config.flags & (UINT32_C(1) << (wheel + 1u))))
+               ? -1
+               : 1;
+}
+
+static void
+encoder_irq (void)
+{
+    uint32_t pending[4];
+    uint32_t any = 0U;
+    unsigned bank;
+    uint32_t levels;
+
+    for (bank = 0U; bank < GPIO_IRQ_BANKS; ++bank)
+    {
+        pending[bank] = in_w(IO_BANK0_BASE + 0x120U + (bank * 4U))
+                        & g_encoder_event_mask[bank];
+        any |= pending[bank];
+
+        if (0U != pending[bank])
+        {
+            out_w(IO_BANK0_BASE + 0xf0U + (bank * 4U), pending[bank]);
+        }
+    }
+
+    if (0U == any)
+    {
+        return;
+    }
+
+    /* Acknowledge only owned flags, then take one coherent A/B level snapshot.
+     */
+    levels = in_w(GPIO_IN);
+    encoder_capture_events(&g_capture, pending, levels);
+}
+
+/* PWM and encoder pins of one wheel, outputs off.  Adds its pins to the mask.
+ */
+static void
+init_wheel (const motion_config_t * p_config, unsigned wheel, float64_t divider,
+            uint32_t * p_mask)
+{
+    unsigned channel;
+
+    pwm_config_t pwm = pwm_get_default_config();
+
+    pwm_config_set_wrap(&pwm, g_wrap);
+    pwm_config_set_clkdiv(&pwm, (float32_t)divider);
+    pwm_init(pwm_gpio_to_slice_num(g_motor_pins[wheel][0]), &pwm, false);
+    pwm_set_both_levels(pwm_gpio_to_slice_num(g_motor_pins[wheel][0]), 0U, 0U);
+    g_last_compare[wheel][0] = g_last_compare[wheel][1] = 0U;
+    g_last_requested[wheel] = g_last_applied[wheel] = 0.0;
+
+    for (channel = 0; channel < ENCODER_CHANNELS; ++channel)
+    {
+        unsigned pin = g_encoder_pins[wheel][channel];
+
+        if ((1U == channel) && (!p_config->quadrature[wheel]))
+        {
+            /* Nothing to do. */
+        }
+        else
+        {
+            gpio_init(pin);
+            gpio_set_dir(pin, false);
+            /* External electrical interface must be confirmed. */
+            gpio_disable_pulls(pin);
+            gpio_set_irq_enabled(pin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL,
+                                 false);
+            g_encoder_event_mask[pin / 8U]
+                |= (p_config->quadrature[wheel] ? 12UL : 8UL)
+                   << ((pin % 8U) * 4U);
+            *p_mask |= 1UL << pin;
+        }
+    }
+
+    g_neutral_since[wheel] = motion_hal_time();
+}
+
+/* Start counting encoder edges from a clean state. */
+static void
+enable_encoders (const motion_config_t * p_config)
+{
+    unsigned wheel;
+    uint32_t irq_state;
+
+    motor_state_set(DRIVER_IRQ_REGISTERED, true);
+    irq_state = save_and_disable_interrupts();
+
+    for (wheel = 0U; wheel < GPIO_IRQ_BANKS; ++wheel)
+    {
+        out_w(IO_BANK0_BASE + 0xf0U + (wheel * 4U),
+              g_encoder_event_mask[wheel]);
+    }
+
+    encoder_capture_init(&g_capture, g_encoder_pins, p_config->quadrature,
+                         p_config->encoder_sign, in_w(GPIO_IN));
+
+    for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
+    {
+        gpio_set_irq_enabled(g_encoder_pins[wheel][0],
+                             p_config->quadrature[wheel]
+                                 ? GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL
+                                 : GPIO_IRQ_EDGE_RISE,
+                             true);
+
+        if (p_config->quadrature[wheel])
+        {
+            gpio_set_irq_enabled(g_encoder_pins[wheel][1],
+                                 GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
+        }
+    }
+
+    motor_state_set(DRIVER_ENCODER_READY, true);
+    restore_interrupts(irq_state);
+}
+
+static int32_t
+diagnostic_permille (float64_t value)
+{
+    int32_t result = 0;
+
+    if (!isfinite(value))
+    {
+        result = INT32_MIN;
+    }
+    else
+    {
+        result = (int32_t)(fmax(-1.0, fmin(1.0, value)) * 1000.0);
+    }
+
+    return result;
 }
 
 /*** end of file ***/

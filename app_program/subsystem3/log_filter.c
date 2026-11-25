@@ -10,19 +10,7 @@
 #ifdef ROBO_BARCODE_LOG_ONLY
 #include <tk/tkernel.h>
 
-static BOOL
-log_starts_with (const UB * p_text, const char * p_prefix)
-{
-    while ('\0' != *p_prefix)
-    {
-        if ((char)*p_text++ != *p_prefix++)
-        {
-            return FALSE;
-        }
-    }
-
-    return TRUE;
-}
+static BOOL log_starts_with(const UB * p_text, const char * p_prefix);
 
 BOOL
 robo_log_allowed (const UB * p_format)
@@ -46,6 +34,21 @@ robo_log_allowed (const UB * p_format)
 
     return FALSE;
 }
+
+static BOOL
+log_starts_with (const UB * p_text, const char * p_prefix)
+{
+    while ('\0' != *p_prefix)
+    {
+        if ((char)*p_text++ != *p_prefix++)
+        {
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
 #else
 typedef int robo_log_filter_unused_t; /* Not an empty file in normal builds. */
 #endif

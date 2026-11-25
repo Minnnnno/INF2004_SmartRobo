@@ -10,11 +10,9 @@
 
 #define DEG_TO_RAD (0.017453292519943295)
 
-static float64_t
-side_sign (s5_avoid_side_t side)
-{
-    return (S5_AVOID_LEFT == side) ? 1.0 : -1.0;
-}
+static float64_t side_sign(s5_avoid_side_t side);
+static bool      clip_ray(float64_t offset, float64_t slope, float64_t * p_lo,
+                          float64_t * p_hi);
 
 /* Every pose of the outward move keeps the robot's front corners (they
    sweep a circle of front_reach round the centre) S5_TURN_MARGIN_MM short
@@ -215,34 +213,6 @@ s5_line_expected (float64_t y_mm, float64_t heading_deg)
            <= S5_LINE_WINDOW_MM;
 }
 
-/* t >= 0 along a ray stays inside the half-plane a + t * d >= 0: narrow [*p_lo,
- * *p_hi]. */
-static bool
-clip_ray (float64_t offset, float64_t slope, float64_t * p_lo, float64_t * p_hi)
-{
-    bool b_result = false;
-
-    if (fabs(slope) < 1e-12)
-    {
-        b_result = offset >= 0.0;
-    }
-    else
-    {
-        if (slope > 0.0)
-        {
-            *p_lo = fmax(*p_lo, -offset / slope);
-        }
-        else
-        {
-            *p_hi = fmin(*p_hi, -offset / slope);
-        }
-
-        b_result = *p_lo <= *p_hi;
-    }
-
-    return b_result;
-}
-
 float64_t
 s5_obstacle_range (const s5_detour_plan_t * p_plan, float64_t x_mm,
                    float64_t y_mm, float64_t heading_deg, int angle_deg)
@@ -298,6 +268,40 @@ s5_echo_on_obstacle (const s5_detour_plan_t * p_plan, float64_t x_mm,
         b_result = (isfinite(expected))
                    && (fabs(range_mm + S5_SENSOR_OFFSET_MM - expected)
                        <= S5_KNOWN_RANGE_TOL_MM);
+    }
+
+    return b_result;
+}
+
+static float64_t
+side_sign (s5_avoid_side_t side)
+{
+    return (S5_AVOID_LEFT == side) ? 1.0 : -1.0;
+}
+
+/* t >= 0 along a ray stays inside the half-plane a + t * d >= 0: narrow [*p_lo,
+ * *p_hi]. */
+static bool
+clip_ray (float64_t offset, float64_t slope, float64_t * p_lo, float64_t * p_hi)
+{
+    bool b_result = false;
+
+    if (fabs(slope) < 1e-12)
+    {
+        b_result = offset >= 0.0;
+    }
+    else
+    {
+        if (slope > 0.0)
+        {
+            *p_lo = fmax(*p_lo, -offset / slope);
+        }
+        else
+        {
+            *p_hi = fmin(*p_hi, -offset / slope);
+        }
+
+        b_result = *p_lo <= *p_hi;
     }
 
     return b_result;

@@ -110,6 +110,43 @@ _Static_assert(1U == sizeof(g_s5_task), "seven bits of state in one byte");
 static uint8_t   g_s5_scan_why;
 static float64_t g_s5_spurious_path_m; /* path travelled at the last one */
 
+static int          s5_round(float64_t value);
+static int          s5_magnitude(int value);
+static uint32_t     s5_ms(float64_t seconds);
+static void         history_clear(s5_history_t * p_history);
+static void         history_add(s5_history_t * p_history, bool b_echo,
+                                float64_t range_mm, float64_t time_s);
+static float64_t    history_front(const s5_history_t * p_history, float64_t now,
+                                  float64_t speed_mm_s);
+static bool         should_stop(float64_t front_mm, float64_t speed_mm_s);
+static void         note_sensor(s5_us_status_t result);
+static bool         publish_status(float64_t now);
+static bool         publish_verified(void);
+static bool         scan_ping(void * p_context, float64_t * p_range_mm);
+static bool         hold_still(void);
+static bool         scan_measure(void * p_context, int angle_deg,
+                                 s5_estimate_t * p_estimate);
+static void         print_point(const char * p_phase, s5_point_t point);
+static void         print_edge(const char * p_name, const s5_edge_t * p_edge,
+                               int limit_deg);
+static const char * avoid_name(s5_avoid_side_t side);
+static bool         end_known(const s5_scan_t * p_scan, unsigned side);
+static void         print_side(const char * p_name, unsigned side,
+                               const s5_scan_t * p_scan);
+static void         print_avoid(const s5_scan_t * p_scan);
+static const char * position_name(s5_position_t position);
+static void         tenths_of(float64_t degrees, int * p_whole, int * p_tenth);
+static void         print_placement(const s5_placement_t * p_placement);
+static void         print_face(const s5_scan_t * p_scan);
+static void         report_points(const s5_scan_t * p_scan);
+static void         send_scan(const s5_scan_t * p_scan, int width, int distance,
+                              int offset, bool b_complete);
+static void         report_scan(const s5_scan_t * p_scan);
+static int          finite_mm(float64_t value);
+static bool         robot_lifted(void);
+static void         report_abort(s5_why_t why, int detail_a, int detail_b,
+                                 unsigned tries, bool b_pose);
+
 static int
 s5_round (float64_t value)
 {
@@ -828,6 +865,11 @@ report_abort (s5_why_t why, int detail_a, int detail_b, unsigned tries,
 
 #if S5_AVOID_DRIVE
 
+static bool back_off_if_close(void);
+static bool square_wanted(const s5_scan_t * p_scan);
+static bool square_up(float64_t tilt_deg, float64_t * p_turned_deg);
+static bool face_obstacle(float64_t * p_squared_deg);
+
 /* Stopped closer than S5_STOP_MM (a thin post, or one that came into the beam
    late, e.g. mid-curve): reverse in a straight line until the sensor is
    S5_STOP_MM away, measuring again after each move, so the scan and the detour
@@ -1015,26 +1057,12 @@ face_obstacle (float64_t * p_squared_deg)
         }
     }
 }
+
 #endif
 
 /* ---- detour ---- */
 
 #if S5_AVOID_DRIVE
-
-static s5_avoid_side_t
-other_side (s5_avoid_side_t side)
-{
-    return (S5_AVOID_LEFT == side) ? S5_AVOID_RIGHT : S5_AVOID_LEFT;
-}
-
-/* A shallower limit that changes nothing would only repeat the same moves */
-static bool
-same_plan (const s5_detour_plan_t * p_a, const s5_detour_plan_t * p_b)
-{
-    return (p_a->side == p_b->side)
-           && (fabs(p_a->turn_deg - p_b->turn_deg) < 1.0)
-           && (fabs(p_a->backup_mm - p_b->backup_mm) < 1.0);
-}
 
 typedef struct
 {
@@ -1054,6 +1082,31 @@ static const s5_attempt_t g_s5_attempts[] = {
 _Static_assert((4U + S5_RETRY_WAITS)
                    == (sizeof(g_s5_attempts) / sizeof(g_s5_attempts[0])),
                "one waited retry per S5_RETRY_WAITS");
+
+static s5_avoid_side_t other_side(s5_avoid_side_t side);
+static bool            same_plan(const s5_detour_plan_t * p_a,
+                                 const s5_detour_plan_t * p_b);
+static bool            detour_ready(void);
+static void            detour_failed(unsigned tries);
+static bool            drive_round(void);
+static bool            corridor_clear(float64_t reach_mm);
+static bool            spurious_stop(const s5_scan_t * p_scan);
+static bool            resume_line(const s5_scan_t * p_scan);
+
+static s5_avoid_side_t
+other_side (s5_avoid_side_t side)
+{
+    return (S5_AVOID_LEFT == side) ? S5_AVOID_RIGHT : S5_AVOID_LEFT;
+}
+
+/* A shallower limit that changes nothing would only repeat the same moves */
+static bool
+same_plan (const s5_detour_plan_t * p_a, const s5_detour_plan_t * p_b)
+{
+    return (p_a->side == p_b->side)
+           && (fabs(p_a->turn_deg - p_b->turn_deg) < 1.0)
+           && (fabs(p_a->backup_mm - p_b->backup_mm) < 1.0);
+}
 
 /* A side to pass on, the line sensors answering, and the line follower told to
    keep off.  False: report_abort() has said why. */
@@ -1363,6 +1416,7 @@ resume_line (const s5_scan_t * p_scan)
 
     return b_result;
 }
+
 #endif
 
 /* What the task remembers while it watches. */
@@ -1376,6 +1430,9 @@ typedef struct
 } s5_watch_t;
 
 #ifdef S5_DIAG
+
+static void run_diagnostic(void);
+
 /* Only S5_DIAG 3 returns. */
 static void
 run_diagnostic (void)
@@ -1414,7 +1471,15 @@ run_diagnostic (void)
     }
 #endif
 }
+
 #endif
+
+static s5_us_status_t watch_ping(float64_t * p_range_mm, float64_t * p_time_s);
+static bool watch_motion(s5_watch_t * p_watch, const robot_status_t * p_status,
+                         float64_t range_mm, bool * p_echo,
+                         float64_t * p_speed_mm_s);
+static bool prepare_scan(float64_t * p_squared_deg);
+static bool measure_obstacle(float64_t squared_deg);
 
 /* One ping; paces the loop, 60 ms. */
 static s5_us_status_t
@@ -1568,6 +1633,10 @@ measure_obstacle (float64_t squared_deg)
 }
 
 #if S5_AVOID_DRIVE
+
+static void act_on_scan(s5_watch_t * p_watch, robot_status_t * p_status,
+                        bool b_measured);
+
 /* After the scan: resume, drive round it, or stay held. */
 static void
 act_on_scan (s5_watch_t * p_watch, robot_status_t * p_status, bool b_measured)
@@ -1603,7 +1672,44 @@ act_on_scan (s5_watch_t * p_watch, robot_status_t * p_status, bool b_measured)
         /* Nothing to do in any other case. */
     }
 }
+
 #endif
+
+static bool handle_stop(s5_watch_t * p_watch, robot_status_t * p_status,
+                        float64_t speed_mm_s);
+static void warn_sensor(s5_watch_t * p_watch, s5_us_status_t result,
+                        float64_t now);
+static void watch_once(s5_watch_t * p_watch);
+
+/* ---- task ---- */
+
+void
+obstacle_task (INT code, void * p_context)
+{
+    s5_watch_t watch = {0};
+
+    (void)code;
+    (void)p_context;
+#ifdef S5_DIAG
+    run_diagnostic();
+#endif
+    history_clear(&watch.history);
+    s5_curve_reset(&g_s5_curve);
+    s5_servo_init(S5_ANGLE_CENTRE_DEG);
+#if !defined(S5_DIAG) || (S5_DIAG != 3)
+    (void)s5_us_init();
+#endif
+    tm_printf((const UB *)"[OBSTACLE] ready: servo GP%u at 90 deg, ultrasonic "
+                          "TRIG GP16 / ECHO GP17, "
+                          "slow zone %d mm, stop at %d mm\n",
+              (unsigned)S5_SERVO_PIN, s5_round(S5_SLOW_MM),
+              s5_round(S5_STOP_MM));
+
+    for (;;)
+    {
+        watch_once(&watch);
+    }
+}
 
 /* Something is close enough to stop for.  False: the scan could not be made and
    the state has been published already. */
@@ -1746,36 +1852,6 @@ watch_once (s5_watch_t * p_watch)
     if (b_publish)
     {
         (void)publish_status(motion_hal_time());
-    }
-}
-
-/* ---- task ---- */
-
-void
-obstacle_task (INT code, void * p_context)
-{
-    s5_watch_t watch = {0};
-
-    (void)code;
-    (void)p_context;
-#ifdef S5_DIAG
-    run_diagnostic();
-#endif
-    history_clear(&watch.history);
-    s5_curve_reset(&g_s5_curve);
-    s5_servo_init(S5_ANGLE_CENTRE_DEG);
-#if !defined(S5_DIAG) || (S5_DIAG != 3)
-    (void)s5_us_init();
-#endif
-    tm_printf((const UB *)"[OBSTACLE] ready: servo GP%u at 90 deg, ultrasonic "
-                          "TRIG GP16 / ECHO GP17, "
-                          "slow zone %d mm, stop at %d mm\n",
-              (unsigned)S5_SERVO_PIN, s5_round(S5_SLOW_MM),
-              s5_round(S5_STOP_MM));
-
-    for (;;)
-    {
-        watch_once(&watch);
     }
 }
 

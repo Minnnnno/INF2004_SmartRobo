@@ -10,6 +10,8 @@ static volatile uint32_t g_route_word; /* 0 = nothing received yet. */
     | ((uint32_t)(uint8_t)(letter) << (8U * ((unsigned)(action) - 1U)))
 static const uint32_t g_route_fallback = 0U ROUTE_TABLE(ROUTE_BYTE);
 
+static char route_upper(char letter);
+
 uint32_t
 route_get (void)
 {
@@ -31,13 +33,6 @@ route_action (uint32_t route, char letter)
     }
 
     return ROUTE_NONE;
-}
-
-static char
-route_upper (char letter)
-{
-    return ((letter >= 'a') && (letter <= 'z')) ? (char)(letter - ('a' - 'A'))
-                                                : letter;
 }
 
 bool
@@ -105,6 +100,13 @@ route_set (const char * p_text, int len)
 
     g_route_word = route;
     return true;
+}
+
+static char
+route_upper (char letter)
+{
+    return ((letter >= 'a') && (letter <= 'z')) ? (char)(letter - ('a' - 'A'))
+                                                : letter;
 }
 
 /*** end of file ***/

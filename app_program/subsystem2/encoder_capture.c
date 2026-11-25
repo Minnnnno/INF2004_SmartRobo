@@ -7,27 +7,10 @@
 #define ENCODER_WHEELS   2u
 #define ENCODER_CHANNELS 2u
 
-static uint8_t
-encoder_ab_read (const volatile encoder_capture_t * p_capture, uint32_t wheel,
-                 uint32_t levels)
-{
-    uint32_t phase_a = (levels >> p_capture->pins[wheel][0]) & 1u;
-    uint32_t phase_b = (levels >> p_capture->pins[wheel][1]) & 1u;
-
-    return (uint8_t)((phase_a << 1u) | phase_b);
-}
-
-static void
-encoder_ab_store (volatile encoder_capture_t * p_capture, uint32_t wheel,
-                  uint8_t state)
-{
-    uint32_t shift    = wheel * 2u;
-    uint32_t previous = p_capture->previous_ab;
-
-    previous
-        = (previous & ~(UINT32_C(3) << shift)) | ((uint32_t)state << shift);
-    p_capture->previous_ab = (uint8_t)previous;
-}
+static uint8_t encoder_ab_read(const volatile encoder_capture_t * p_capture,
+                               uint32_t wheel, uint32_t levels);
+static void    encoder_ab_store(volatile encoder_capture_t * p_capture,
+                                uint32_t wheel, uint8_t state);
 
 void
 encoder_capture_init (volatile encoder_capture_t * p_capture,
@@ -132,6 +115,28 @@ encoder_capture_events (volatile encoder_capture_t * p_capture,
         /* Defined modulo-2^32 arithmetic, including reverse movement. */
         p_capture->count[wheel] += (uint32_t)delta;
     }
+}
+
+static uint8_t
+encoder_ab_read (const volatile encoder_capture_t * p_capture, uint32_t wheel,
+                 uint32_t levels)
+{
+    uint32_t phase_a = (levels >> p_capture->pins[wheel][0]) & 1u;
+    uint32_t phase_b = (levels >> p_capture->pins[wheel][1]) & 1u;
+
+    return (uint8_t)((phase_a << 1u) | phase_b);
+}
+
+static void
+encoder_ab_store (volatile encoder_capture_t * p_capture, uint32_t wheel,
+                  uint8_t state)
+{
+    uint32_t shift    = wheel * 2u;
+    uint32_t previous = p_capture->previous_ab;
+
+    previous
+        = (previous & ~(UINT32_C(3) << shift)) | ((uint32_t)state << shift);
+    p_capture->previous_ab = (uint8_t)previous;
 }
 
 /*** end of file ***/

@@ -6,6 +6,11 @@
 
 #define MAG_RAD_TO_DDEG (572.957795F) /* 1800 / pi */
 
+static uint8_t mag_popcount(uint64_t bits);
+static void mag_correct(mag_cal_t const * p_cal, int16_t axis_x, int16_t axis_y,
+                        float32_t * p_cx, float32_t * p_cy);
+static float32_t mag_wrap_deg(float32_t degrees);
+
 void
 mag_cal_begin (mag_cal_acc_t * p_acc)
 {
@@ -71,46 +76,6 @@ mag_cal_add (mag_cal_acc_t * p_acc, int16_t axis_x, int16_t axis_y,
         p_acc->bin_x[bin] = axis_x;
         p_acc->bin_y[bin] = axis_y;
     }
-}
-
-static uint8_t
-mag_popcount (uint64_t bits)
-{
-    uint8_t count = 0U;
-
-    while (0ULL != bits)
-    {
-        bits &= bits - 1ULL;
-        count++;
-    }
-
-    return count;
-}
-
-/* Corrected X/Y for a raw sample. */
-static void
-mag_correct (mag_cal_t const * p_cal, int16_t axis_x, int16_t axis_y,
-             float32_t * p_cx, float32_t * p_cy)
-{
-    *p_cx = (float32_t)((int32_t)axis_x - (int32_t)p_cal->offset_x);
-    *p_cy = (float32_t)((int32_t)axis_y - (int32_t)p_cal->offset_y)
-            * ((float32_t)p_cal->scale_y_q12 / (float32_t)MAG_SCALE_ONE_Q12);
-}
-
-static float32_t
-mag_wrap_deg (float32_t degrees)
-{
-    while (degrees > 180.0F)
-    {
-        degrees -= 360.0F;
-    }
-
-    while (degrees <= -180.0F)
-    {
-        degrees += 360.0F;
-    }
-
-    return degrees;
 }
 
 uint8_t
@@ -312,6 +277,46 @@ mag_unwrap (int32_t previous_ddeg, int16_t heading_ddeg)
     }
 
     return previous_ddeg + step;
+}
+
+static uint8_t
+mag_popcount (uint64_t bits)
+{
+    uint8_t count = 0U;
+
+    while (0ULL != bits)
+    {
+        bits &= bits - 1ULL;
+        count++;
+    }
+
+    return count;
+}
+
+/* Corrected X/Y for a raw sample. */
+static void
+mag_correct (mag_cal_t const * p_cal, int16_t axis_x, int16_t axis_y,
+             float32_t * p_cx, float32_t * p_cy)
+{
+    *p_cx = (float32_t)((int32_t)axis_x - (int32_t)p_cal->offset_x);
+    *p_cy = (float32_t)((int32_t)axis_y - (int32_t)p_cal->offset_y)
+            * ((float32_t)p_cal->scale_y_q12 / (float32_t)MAG_SCALE_ONE_Q12);
+}
+
+static float32_t
+mag_wrap_deg (float32_t degrees)
+{
+    while (degrees > 180.0F)
+    {
+        degrees -= 360.0F;
+    }
+
+    while (degrees <= -180.0F)
+    {
+        degrees += 360.0F;
+    }
+
+    return degrees;
 }
 
 /*** end of file ***/

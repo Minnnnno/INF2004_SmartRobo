@@ -36,17 +36,8 @@
 static uint32_t g_us_last_trigger;
 static bool     gb_us_ready;
 
-static UW
-us_reg (UW offset)
-{
-    return PWM_BASE + (US_SLICE * 0x14U) + offset; /* 0 CSR, 8 CTR */
-}
-
-static UW
-us_counter (void)
-{
-    return in_w(us_reg(8U)) & 0xffffU;
-}
+static UW us_reg(UW offset);
+static UW us_counter(void);
 
 bool
 s5_us_init (void)
@@ -161,6 +152,18 @@ s5_us_ping (float64_t * p_range_mm, float64_t * p_time_s)
      */
     *p_time_s = (float64_t)(start + 450U + (pulse / 2U)) / 1000000.0;
     return S5_US_OK;
+}
+
+static UW
+us_reg (UW offset)
+{
+    return PWM_BASE + (US_SLICE * 0x14U) + offset; /* 0 CSR, 8 CTR */
+}
+
+static UW
+us_counter (void)
+{
+    return in_w(us_reg(8U)) & 0xffffU;
 }
 
 /*** end of file ***/

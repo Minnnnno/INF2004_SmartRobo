@@ -13,6 +13,9 @@
 #include <math.h>
 
 #ifdef ROBO_ANGLE_TEST
+
+static const UB * angle_state_name(angle_state_t state);
+
 static const UB *
 angle_state_name (angle_state_t state)
 {
@@ -22,11 +25,18 @@ angle_state_name (angle_state_t state)
 
     return (const UB *)names[(unsigned)state];
 }
+
 #endif
 
 #ifndef ROBO_ENCODER_BUILD_ID
 #define ROBO_ENCODER_BUILD_ID "manual-console-encdiag-v1"
 #endif
+
+static const UB * count_sign(uint32_t raw);
+static uint32_t   count_magnitude(uint32_t raw);
+static void       print_counts(const encoder_sample_t * p_sample);
+static void       encoder_diagnostics(void);
+static void       usb_diagnostics(void);
 
 static const UB *
 count_sign (uint32_t raw)
@@ -129,6 +139,9 @@ usb_diagnostics (void)
 }
 
 #ifdef ROBO_BATTERY_FORWARD_TEST
+
+static void button_diagnostics(void);
+
 static void
 button_diagnostics (void)
 {
@@ -158,6 +171,7 @@ button_diagnostics (void)
               (uint32_t)delta.cutoff_irq_count, (uint32_t)delta.polled_cutoffs,
               (uint32_t)delta.remaining_ms);
 }
+
 #endif
 
 /* Test-only task. No motor activation on USB connection or ARM alone. */
@@ -594,6 +608,7 @@ manual_console (void)
 #endif
     }
 }
+
 #endif
 
 /*** end of file ***/

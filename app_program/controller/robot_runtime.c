@@ -19,18 +19,13 @@ static ID                      g_status_mutex;
 static bool                    gb_running;
 static const motion_config_t * gp_runtime_config;
 
-static bool
-lock_bus (void)
-{
-    return (g_status_mutex > 0)
-           && (E_OK == tk_loc_mtx(g_status_mutex, TMO_POL));
-}
-
-static void
-unlock_bus (void)
-{
-    (void)tk_unl_mtx(g_status_mutex);
-}
+static bool            lock_bus(void);
+static void            unlock_bus(void);
+static motion_result_t submit(request_source_t source, uint32_t command_id,
+                              motion_mode_t mode, float64_t value,
+                              float64_t left, float64_t right, float64_t angle,
+                              float64_t duration);
+static void control(robot_control_t request, bool b_checks, bool b_rest);
 
 void
 robot_runtime_prepare (const motion_config_t * p_config,
@@ -98,44 +93,6 @@ robot_runtime_stop_pending (void)
                   | CONTROL_SHUTDOWN));
 }
 
-static motion_result_t
-submit (request_source_t source, uint32_t command_id, motion_mode_t mode,
-        float64_t value, float64_t left, float64_t right, float64_t angle,
-        float64_t duration)
-{
-    robot_request_t request;
-    motion_result_t result;
-    float64_t       now     = motion_hal_time();
-    motion_result_t outcome = R_BUSY;
-
-    if ((!gb_running) || (!lock_bus()))
-    {
-        outcome = R_BUSY;
-    }
-    else
-    {
-        request.source  = source;
-        request.command = (motion_command_t){
-            .id         = command_id,
-            .generation = g_bus.generation,
-            .mode       = mode,
-            .value      = value,
-            .speed      = {left, right},
-            .expires    = now + gp_runtime_config->command_lifetime,
-            .deadline
-            = now
-              + ((MANUAL_OUTPUT == mode) ? gp_runtime_config->manual_timeout
-                                         : gp_runtime_config->movement_timeout),
-            .angle    = angle,
-            .duration = duration};
-        result = robot_request(&g_bus, &request);
-        unlock_bus();
-        outcome = result;
-    }
-
-    return outcome;
-}
-
 motion_result_t
 robot_submit (request_source_t source, uint32_t command_id, motion_mode_t mode,
               float64_t value, float64_t left, float64_t right)
@@ -150,18 +107,6 @@ robot_submit_arc (request_source_t source, uint32_t command_id,
 {
     return submit(source, command_id, ARC_MOVE, metres, left, right, radians,
                   seconds);
-}
-
-static void
-control (robot_control_t request, bool b_checks, bool b_rest)
-{
-    /* Priority inheritance, bounded short critical sections. Never enqueue
-     * stop. */
-    if (gb_running && (E_OK == tk_loc_mtx(g_status_mutex, TMO_FEVR)))
-    {
-        robot_control(&g_bus, request, b_checks, b_rest);
-        unlock_bus();
-    }
 }
 
 void
@@ -315,6 +260,69 @@ controller_task (INT code, void * p_context)
         }
 
         (void)tk_dly_tsk(10U);
+    }
+}
+
+static bool
+lock_bus (void)
+{
+    return (g_status_mutex > 0)
+           && (E_OK == tk_loc_mtx(g_status_mutex, TMO_POL));
+}
+
+static void
+unlock_bus (void)
+{
+    (void)tk_unl_mtx(g_status_mutex);
+}
+
+static motion_result_t
+submit (request_source_t source, uint32_t command_id, motion_mode_t mode,
+        float64_t value, float64_t left, float64_t right, float64_t angle,
+        float64_t duration)
+{
+    robot_request_t request;
+    motion_result_t result;
+    float64_t       now     = motion_hal_time();
+    motion_result_t outcome = R_BUSY;
+
+    if ((!gb_running) || (!lock_bus()))
+    {
+        outcome = R_BUSY;
+    }
+    else
+    {
+        request.source  = source;
+        request.command = (motion_command_t){
+            .id         = command_id,
+            .generation = g_bus.generation,
+            .mode       = mode,
+            .value      = value,
+            .speed      = {left, right},
+            .expires    = now + gp_runtime_config->command_lifetime,
+            .deadline
+            = now
+              + ((MANUAL_OUTPUT == mode) ? gp_runtime_config->manual_timeout
+                                         : gp_runtime_config->movement_timeout),
+            .angle    = angle,
+            .duration = duration};
+        result = robot_request(&g_bus, &request);
+        unlock_bus();
+        outcome = result;
+    }
+
+    return outcome;
+}
+
+static void
+control (robot_control_t request, bool b_checks, bool b_rest)
+{
+    /* Priority inheritance, bounded short critical sections. Never enqueue
+     * stop. */
+    if (gb_running && (E_OK == tk_loc_mtx(g_status_mutex, TMO_FEVR)))
+    {
+        robot_control(&g_bus, request, b_checks, b_rest);
+        unlock_bus();
     }
 }
 

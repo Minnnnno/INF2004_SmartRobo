@@ -21,34 +21,28 @@
 #define MC_COUNT_MASK      (0x03U)
 #define MC_MDEG_PER_RAD    (57296) /* 180000 / pi, rounded. */
 
-static uint8_t
-mc_pack (uint8_t reported, uint8_t candidate, uint8_t count)
-{
-    return (uint8_t)((reported & MC_CLASS_MASK)
-                     | ((candidate & MC_CLASS_MASK) << MC_CANDIDATE_SHIFT)
-                     | ((count & MC_COUNT_MASK) << MC_COUNT_SHIFT));
-}
-
-static int16_t
-mc_clamp16 (int32_t value)
-{
-    int16_t result = 0;
-
-    if (value > 32767)
-    {
-        result = 32767;
-    }
-    else if (value < -32768)
-    {
-        result = -32768;
-    }
-    else
-    {
-        result = (int16_t)value;
-    }
-
-    return result;
-}
+static uint8_t mc_pack(uint8_t reported, uint8_t candidate, uint8_t count);
+static int16_t mc_clamp16(int32_t value);
+static int16_t mc_abs16(int16_t value);
+static uint8_t mc_ring_count(motion_class_t const * p_context);
+static void mc_ring_seed(motion_class_t *             p_context,
+                         motion_class_input_t const * p_input, uint32_t now_ms);
+static bool mc_heading_window(motion_class_t *             p_context,
+                              motion_class_input_t const * p_input,
+                              uint32_t now_ms, int32_t * p_net_ddeg,
+                              int32_t * p_oldest_ddeg);
+static void mc_record_compass(motion_class_t *             p_context,
+                              motion_class_input_t const * p_input);
+static void mc_track_turn(motion_class_t *             p_context,
+                          motion_class_input_t const * p_input,
+                          bool b_turning_now, bool b_window_full,
+                          int32_t oldest_ddeg, uint32_t now_ms);
+static uint8_t mc_raw_class(motion_class_t const *       p_context,
+                            motion_class_input_t const * p_input,
+                            int16_t centre_mm_s, bool b_window_full,
+                            int32_t net_ddeg);
+static void    mc_update_acceleration(motion_class_t * p_context,
+                                      int16_t centre_mm_s, uint32_t now_ms);
 
 void
 motion_class_reset (motion_class_t * p_context)
@@ -81,6 +75,220 @@ motion_class_yaw_from_speeds (int16_t left_mm_s, int16_t right_mm_s,
                                                  : -(denominator / 2)))
                            / denominator);
         result = mc_clamp16(scaled);
+    }
+
+    return result;
+}
+
+void
+motion_class_step (motion_class_t *             p_context,
+                   motion_class_input_t const * p_input, uint32_t now_ms)
+{
+    uint8_t reported      = 0U;
+    uint8_t candidate     = 0U;
+    uint8_t count         = 0U;
+    uint8_t raw           = 0U;
+    int16_t centre        = 0;
+    int32_t net_ddeg      = 0;
+    int32_t oldest_ddeg   = 0;
+    bool    b_window_full = false;
+
+    if ((NULL == p_context) || (NULL == p_input))
+    {
+        return;
+    }
+
+    if (!p_input->valid)
+    {
+        /* Also drops an unfinished turn (not reported). */
+        p_context->flags       = 0U;
+        p_context->ring        = 0U;
+        p_context->turn_info   = 0U;
+        p_context->packed      = mc_pack(MC_STATIONARY, MC_STATIONARY, 0U);
+        p_context->yaw_deg_s   = 0;
+        p_context->accel_mm_s2 = 0;
+        return;
+    }
+
+    centre = mc_clamp16(
+        ((int32_t)p_input->speed_mm_s[0] + (int32_t)p_input->speed_mm_s[1])
+        / 2);
+    p_context->yaw_deg_s = motion_class_yaw_from_speeds(
+        p_input->speed_mm_s[0], p_input->speed_mm_s[1], p_input->track_mm);
+    mc_update_acceleration(p_context, centre, now_ms);
+    b_window_full = mc_heading_window(p_context, p_input, now_ms, &net_ddeg,
+                                      &oldest_ddeg);
+    p_context->last_ms = now_ms;
+
+    reported = p_context->packed & MC_CLASS_MASK;
+    candidate
+        = (uint8_t)((p_context->packed >> MC_CANDIDATE_SHIFT) & MC_CLASS_MASK);
+    count = (uint8_t)((p_context->packed >> MC_COUNT_SHIFT) & MC_COUNT_MASK);
+    raw   = mc_raw_class(p_context, p_input, centre, b_window_full, net_ddeg);
+
+    if (0U == (p_context->flags & MC_FLAG_VALID))
+    {
+        /* First valid observation is reported directly (nothing to debounce
+         * against). */
+        reported  = raw;
+        candidate = raw;
+        count     = 0U;
+    }
+    else if ((raw == reported) || (MC_OVERTURNED == raw))
+    {
+        reported  = raw;
+        candidate = raw;
+        count     = 0U; /* OVERTURNED is never delayed. */
+    }
+    else if (raw == candidate)
+    {
+        count++;
+
+        if ((uint8_t)(count + 1U) >= MC_CONFIRM_SAMPLES)
+        {
+            reported = raw;
+            count    = 0U;
+        }
+    }
+    else
+    {
+        candidate = raw;
+        count     = 0U;
+    }
+
+    p_context->flags |= MC_FLAG_VALID;
+    p_context->packed = mc_pack(reported, candidate, count);
+    mc_track_turn(p_context, p_input,
+                  b_window_full
+                      && ((net_ddeg >= MC_TURN_NET_DDEG)
+                          || (net_ddeg <= -MC_TURN_NET_DDEG)),
+                  b_window_full, oldest_ddeg, now_ms);
+}
+
+bool
+motion_class_turn_compass (motion_class_t const * p_context,
+                           int16_t *              p_compass_ddeg)
+{
+    bool b_result = false;
+
+    if ((NULL == p_context)
+        || (0U == (p_context->turn_info & MC_TI_LAST_COMPASS)))
+    {
+        b_result = false;
+    }
+    else
+    {
+        if (NULL != p_compass_ddeg)
+        {
+            *p_compass_ddeg = p_context->last_turn_compass;
+        }
+
+        b_result = true;
+    }
+
+    return b_result;
+}
+
+bool
+motion_class_take_turn (motion_class_t * p_context, int16_t * p_angle_ddeg,
+                        uint16_t * p_duration_ms, int16_t * p_peak_deg_s)
+{
+    bool b_result = false;
+
+    if ((NULL == p_context) || (0U == (p_context->flags & MC_FLAG_TURN_DONE)))
+    {
+        b_result = false;
+    }
+    else
+    {
+        p_context->flags &= (uint8_t)~MC_FLAG_TURN_DONE;
+
+        if (NULL != p_angle_ddeg)
+        {
+            *p_angle_ddeg = p_context->last_turn_ddeg;
+        }
+
+        if (NULL != p_duration_ms)
+        {
+            *p_duration_ms = p_context->last_turn_ms;
+        }
+
+        if (NULL != p_peak_deg_s)
+        {
+            *p_peak_deg_s = p_context->last_turn_peak;
+        }
+
+        b_result = true;
+    }
+
+    return b_result;
+}
+
+uint8_t
+motion_class_get (motion_class_t const * p_context)
+{
+    return (NULL == p_context) ? MC_STATIONARY
+                               : (uint8_t)(p_context->packed & MC_CLASS_MASK);
+}
+
+bool
+motion_class_valid (motion_class_t const * p_context)
+{
+    return (NULL != p_context) && (0U != (p_context->flags & MC_FLAG_VALID));
+}
+
+bool
+motion_class_turn_active (motion_class_t const * p_context)
+{
+    return (NULL != p_context) && (0U != (p_context->flags & MC_FLAG_TURN));
+}
+
+int16_t
+motion_class_yaw_deg_s (motion_class_t const * p_context)
+{
+    return (NULL == p_context) ? 0 : p_context->yaw_deg_s;
+}
+
+int16_t
+motion_class_accel_mm_s2 (motion_class_t const * p_context)
+{
+    return (NULL == p_context) ? 0 : p_context->accel_mm_s2;
+}
+
+char const *
+motion_class_name (uint8_t motion_class)
+{
+    static char const * const g_names[]
+        = {"STATIONARY", "MOVING",   "ACCELERATING", "REVERSING",
+           "TURNING",    "CLIMBING", "DESCENDING",   "OVERTURNED"};
+
+    return g_names[motion_class & MC_CLASS_MASK];
+}
+
+static uint8_t
+mc_pack (uint8_t reported, uint8_t candidate, uint8_t count)
+{
+    return (uint8_t)((reported & MC_CLASS_MASK)
+                     | ((candidate & MC_CLASS_MASK) << MC_CANDIDATE_SHIFT)
+                     | ((count & MC_COUNT_MASK) << MC_COUNT_SHIFT));
+}
+
+static int16_t
+mc_clamp16 (int32_t value)
+{
+    int16_t result = 0;
+
+    if (value > 32767)
+    {
+        result = 32767;
+    }
+    else if (value < -32768)
+    {
+        result = -32768;
+    }
+    else
+    {
+        result = (int16_t)value;
     }
 
     return result;
@@ -388,191 +596,6 @@ mc_update_acceleration (motion_class_t * p_context, int16_t centre_mm_s,
         p_context->window_ms   = now_ms;
         p_context->window_mm_s = size;
     }
-}
-
-void
-motion_class_step (motion_class_t *             p_context,
-                   motion_class_input_t const * p_input, uint32_t now_ms)
-{
-    uint8_t reported      = 0U;
-    uint8_t candidate     = 0U;
-    uint8_t count         = 0U;
-    uint8_t raw           = 0U;
-    int16_t centre        = 0;
-    int32_t net_ddeg      = 0;
-    int32_t oldest_ddeg   = 0;
-    bool    b_window_full = false;
-
-    if ((NULL == p_context) || (NULL == p_input))
-    {
-        return;
-    }
-
-    if (!p_input->valid)
-    {
-        /* Also drops an unfinished turn (not reported). */
-        p_context->flags       = 0U;
-        p_context->ring        = 0U;
-        p_context->turn_info   = 0U;
-        p_context->packed      = mc_pack(MC_STATIONARY, MC_STATIONARY, 0U);
-        p_context->yaw_deg_s   = 0;
-        p_context->accel_mm_s2 = 0;
-        return;
-    }
-
-    centre = mc_clamp16(
-        ((int32_t)p_input->speed_mm_s[0] + (int32_t)p_input->speed_mm_s[1])
-        / 2);
-    p_context->yaw_deg_s = motion_class_yaw_from_speeds(
-        p_input->speed_mm_s[0], p_input->speed_mm_s[1], p_input->track_mm);
-    mc_update_acceleration(p_context, centre, now_ms);
-    b_window_full = mc_heading_window(p_context, p_input, now_ms, &net_ddeg,
-                                      &oldest_ddeg);
-    p_context->last_ms = now_ms;
-
-    reported = p_context->packed & MC_CLASS_MASK;
-    candidate
-        = (uint8_t)((p_context->packed >> MC_CANDIDATE_SHIFT) & MC_CLASS_MASK);
-    count = (uint8_t)((p_context->packed >> MC_COUNT_SHIFT) & MC_COUNT_MASK);
-    raw   = mc_raw_class(p_context, p_input, centre, b_window_full, net_ddeg);
-
-    if (0U == (p_context->flags & MC_FLAG_VALID))
-    {
-        /* First valid observation is reported directly (nothing to debounce
-         * against). */
-        reported  = raw;
-        candidate = raw;
-        count     = 0U;
-    }
-    else if ((raw == reported) || (MC_OVERTURNED == raw))
-    {
-        reported  = raw;
-        candidate = raw;
-        count     = 0U; /* OVERTURNED is never delayed. */
-    }
-    else if (raw == candidate)
-    {
-        count++;
-
-        if ((uint8_t)(count + 1U) >= MC_CONFIRM_SAMPLES)
-        {
-            reported = raw;
-            count    = 0U;
-        }
-    }
-    else
-    {
-        candidate = raw;
-        count     = 0U;
-    }
-
-    p_context->flags |= MC_FLAG_VALID;
-    p_context->packed = mc_pack(reported, candidate, count);
-    mc_track_turn(p_context, p_input,
-                  b_window_full
-                      && ((net_ddeg >= MC_TURN_NET_DDEG)
-                          || (net_ddeg <= -MC_TURN_NET_DDEG)),
-                  b_window_full, oldest_ddeg, now_ms);
-}
-
-bool
-motion_class_turn_compass (motion_class_t const * p_context,
-                           int16_t *              p_compass_ddeg)
-{
-    bool b_result = false;
-
-    if ((NULL == p_context)
-        || (0U == (p_context->turn_info & MC_TI_LAST_COMPASS)))
-    {
-        b_result = false;
-    }
-    else
-    {
-        if (NULL != p_compass_ddeg)
-        {
-            *p_compass_ddeg = p_context->last_turn_compass;
-        }
-
-        b_result = true;
-    }
-
-    return b_result;
-}
-
-bool
-motion_class_take_turn (motion_class_t * p_context, int16_t * p_angle_ddeg,
-                        uint16_t * p_duration_ms, int16_t * p_peak_deg_s)
-{
-    bool b_result = false;
-
-    if ((NULL == p_context) || (0U == (p_context->flags & MC_FLAG_TURN_DONE)))
-    {
-        b_result = false;
-    }
-    else
-    {
-        p_context->flags &= (uint8_t)~MC_FLAG_TURN_DONE;
-
-        if (NULL != p_angle_ddeg)
-        {
-            *p_angle_ddeg = p_context->last_turn_ddeg;
-        }
-
-        if (NULL != p_duration_ms)
-        {
-            *p_duration_ms = p_context->last_turn_ms;
-        }
-
-        if (NULL != p_peak_deg_s)
-        {
-            *p_peak_deg_s = p_context->last_turn_peak;
-        }
-
-        b_result = true;
-    }
-
-    return b_result;
-}
-
-uint8_t
-motion_class_get (motion_class_t const * p_context)
-{
-    return (NULL == p_context) ? MC_STATIONARY
-                               : (uint8_t)(p_context->packed & MC_CLASS_MASK);
-}
-
-bool
-motion_class_valid (motion_class_t const * p_context)
-{
-    return (NULL != p_context) && (0U != (p_context->flags & MC_FLAG_VALID));
-}
-
-bool
-motion_class_turn_active (motion_class_t const * p_context)
-{
-    return (NULL != p_context) && (0U != (p_context->flags & MC_FLAG_TURN));
-}
-
-int16_t
-motion_class_yaw_deg_s (motion_class_t const * p_context)
-{
-    return (NULL == p_context) ? 0 : p_context->yaw_deg_s;
-}
-
-int16_t
-motion_class_accel_mm_s2 (motion_class_t const * p_context)
-{
-    return (NULL == p_context) ? 0 : p_context->accel_mm_s2;
-}
-
-char const *
-motion_class_name (uint8_t motion_class)
-{
-    static char const * const g_names[]
-        = {"STATIONARY", "MOVING",   "ACCELERATING", "REVERSING",
-           "TURNING",    "CLIMBING", "DESCENDING",   "OVERTURNED"};
-
-    return g_names[motion_class & MC_CLASS_MASK];
 }
 
 /*** end of file ***/

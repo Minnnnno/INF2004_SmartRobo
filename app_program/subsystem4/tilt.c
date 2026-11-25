@@ -12,65 +12,10 @@
 #define TILT_ENTER_TENTHS (50) // 5.0°: start calling it tilted
 #define TILT_EXIT_TENTHS  (30) // 3.0°: go back to level below this
 
-/* Dot product in the sensor coordinate system. Inputs are private 3-vectors. */
-// The dot product converts gravity from sensor axes into robot axes using the
-// reference saved at startup.
-static float32_t
-tilt_dot (float32_t const first[3], float32_t const second[3])
-{
-    return (first[0] * second[0]) + (first[1] * second[1])
-           + (first[2] * second[2]);
-}
-
-/* Normalise a private vector, rejecting zero/nonfinite magnitudes. */
-// normalize needed because if If the axis were, say, length 1000, every
-// projection would come out 1000 times too big, and pitch and roll would be
-// wrong.
-static bool
-tilt_normalise (float32_t vector[3])
-{
-    // working out of the length//
-    // sqrt of (x² + y² + z)
-    float32_t length = sqrtf(tilt_dot(vector, vector));
-
-    bool b_result = false;
-
-    // if legnth is infiity , or NAN , return false, dont normalize
-    if ((!isfinite(length)) || (length < 0.01F))
-    {
-        b_result = false;
-    }
-    else
-    {
-        // else divide each part by length
-        // shrinks/streches the vector without turning it
-        for (uint8_t index = 0U; index < TILT_AXES; index++)
-        {
-            vector[index] /= length;
-        }
-
-        b_result = true;
-    }
-
-    return b_result;
-}
-
-// helper function
-/* Basic plausibility check, not proof of stationary motion or trustworthy tilt.
- * Reject near-freefall and large acceleration. Constant acceleration can pass.
- */
-//(Flitering)
-static bool
-tilt_plausible (float32_t const acceleration[3])
-{
-    // total acceleration squared.
-    float32_t square = tilt_dot(acceleration, acceleration);
-
-    // returns true only if its a real number,  total at least 700mg and at most
-    // 1300mg
-    return (isfinite(square)) && (square >= (700.0F * 700.0F))
-           && (square <= (1300.0F * 1300.0F));
-}
+static float32_t tilt_dot(float32_t const first[3], float32_t const second[3]);
+static bool      tilt_normalise(float32_t vector[3]);
+static bool      tilt_plausible(float32_t const acceleration[3]);
+static uint8_t   tilt_classify(int16_t angle, uint8_t previous);
 
 /* Clear transient history without redefining level after a data gap. */
 void
@@ -197,38 +142,6 @@ tilt_capture (tilt_context_t * p_context, int16_t axis_x, int16_t axis_y,
                           - (p_context->forward[1] * p_context->up[0]);
     p_context->progress = TILT_CALIBRATED;
     return true;
-}
-
-/* Schmitt-trigger classification: enter tilt at +/-5 deg, leave below 3 deg.
- * A direct strong opposite tilt switches direction. Conditions are independent.
- */
-static uint8_t
-tilt_classify (int16_t angle, uint8_t previous)
-{
-    uint8_t result = 0U;
-
-    if (angle >= TILT_ENTER_TENTHS)
-    {
-        result = 1U;
-    }
-    else if (angle <= -TILT_ENTER_TENTHS)
-    {
-        result = 2U;
-    }
-    else if ((1U == previous) && (angle >= TILT_EXIT_TENTHS))
-    {
-        result = 1U;
-    }
-    else if ((2U == previous) && (angle <= -TILT_EXIT_TENTHS))
-    {
-        result = 2U;
-    }
-    else
-    {
-        /* Nothing to do in any other case. */
-    }
-
-    return result;
 }
 
 /* Project smoothed gravity onto the reference axes, then compute pitch/roll.
@@ -450,6 +363,98 @@ tilt_condition_name (uint32_t result, uint8_t axis)
     }
 
     return p_result;
+}
+
+/* Dot product in the sensor coordinate system. Inputs are private 3-vectors. */
+// The dot product converts gravity from sensor axes into robot axes using the
+// reference saved at startup.
+static float32_t
+tilt_dot (float32_t const first[3], float32_t const second[3])
+{
+    return (first[0] * second[0]) + (first[1] * second[1])
+           + (first[2] * second[2]);
+}
+
+/* Normalise a private vector, rejecting zero/nonfinite magnitudes. */
+// normalize needed because if If the axis were, say, length 1000, every
+// projection would come out 1000 times too big, and pitch and roll would be
+// wrong.
+static bool
+tilt_normalise (float32_t vector[3])
+{
+    // working out of the length//
+    // sqrt of (x² + y² + z)
+    float32_t length = sqrtf(tilt_dot(vector, vector));
+
+    bool b_result = false;
+
+    // if legnth is infiity , or NAN , return false, dont normalize
+    if ((!isfinite(length)) || (length < 0.01F))
+    {
+        b_result = false;
+    }
+    else
+    {
+        // else divide each part by length
+        // shrinks/streches the vector without turning it
+        for (uint8_t index = 0U; index < TILT_AXES; index++)
+        {
+            vector[index] /= length;
+        }
+
+        b_result = true;
+    }
+
+    return b_result;
+}
+
+// helper function
+/* Basic plausibility check, not proof of stationary motion or trustworthy tilt.
+ * Reject near-freefall and large acceleration. Constant acceleration can pass.
+ */
+//(Flitering)
+static bool
+tilt_plausible (float32_t const acceleration[3])
+{
+    // total acceleration squared.
+    float32_t square = tilt_dot(acceleration, acceleration);
+
+    // returns true only if its a real number,  total at least 700mg and at most
+    // 1300mg
+    return (isfinite(square)) && (square >= (700.0F * 700.0F))
+           && (square <= (1300.0F * 1300.0F));
+}
+
+/* Schmitt-trigger classification: enter tilt at +/-5 deg, leave below 3 deg.
+ * A direct strong opposite tilt switches direction. Conditions are independent.
+ */
+static uint8_t
+tilt_classify (int16_t angle, uint8_t previous)
+{
+    uint8_t result = 0U;
+
+    if (angle >= TILT_ENTER_TENTHS)
+    {
+        result = 1U;
+    }
+    else if (angle <= -TILT_ENTER_TENTHS)
+    {
+        result = 2U;
+    }
+    else if ((1U == previous) && (angle >= TILT_EXIT_TENTHS))
+    {
+        result = 1U;
+    }
+    else if ((2U == previous) && (angle <= -TILT_EXIT_TENTHS))
+    {
+        result = 2U;
+    }
+    else
+    {
+        /* Nothing to do in any other case. */
+    }
+
+    return result;
 }
 
 /*** end of file ***/

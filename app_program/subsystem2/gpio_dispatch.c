@@ -1,23 +1,15 @@
 #include "template_hal.h"
+
 static struct
 {
     uint32_t mask;
 
     void (*handler)(void);
 } g_owners[4];
+
 static unsigned g_owner_count;
-static void
-dispatch (UINT number)
-{
-    unsigned index;
 
-    (void)number;
-
-    for (index = 0; index < g_owner_count; ++index)
-    {
-        g_owners[index].handler();
-    }
-}
+static void dispatch(UINT number);
 
 bool
 board_gpio_irq_register (uint32_t mask, void (*p_handler)(void))
@@ -51,6 +43,19 @@ board_gpio_irq_register (uint32_t mask, void (*p_handler)(void))
     EI(state);
     EnableInt(13U, 1);
     return true;
+}
+
+static void
+dispatch (UINT number)
+{
+    unsigned index;
+
+    (void)number;
+
+    for (index = 0; index < g_owner_count; ++index)
+    {
+        g_owners[index].handler();
+    }
 }
 
 /*** end of file ***/

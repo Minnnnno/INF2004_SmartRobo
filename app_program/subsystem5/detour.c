@@ -62,6 +62,10 @@
 #define S5_ID_FIRST           5100U
 #define S5_ID_LAST            5999U
 
+#define S5_STILL_MOVE_MM 5.0
+
+static float64_t g_s5_still_travel[2];
+
 bool
 s5_status (robot_status_t * p_status)
 {
@@ -79,10 +83,6 @@ s5_status (robot_status_t * p_status)
 
     return false;
 }
-
-#define S5_STILL_MOVE_MM 5.0
-
-static float64_t g_s5_still_travel[2];
 
 void
 s5_still_mark (void)
@@ -146,39 +146,6 @@ typedef enum
     S5_MOVE_RUNNING,
     S5_MOVE_STALLED
 } s5_move_t;
-
-encoder_sample_t
-s5_log_encoders (const char * p_phase, uint32_t command_id)
-{
-    encoder_sample_t sample = motion_hal_sample();
-
-    tm_printf((const UB *)"[OBSTACLE] enc phase=%s id=%u L=%lu R=%lu "
-                          "invalid=%lu,%lu reliable=%u\n",
-              p_phase, (unsigned)command_id, (uint32_t)sample.count[0],
-              (uint32_t)sample.count[1], (uint32_t)sample.invalid[0],
-              (uint32_t)sample.invalid[1], (unsigned)sample.reliable);
-    return sample;
-}
-
-static void
-log_encoder_after (uint32_t command_id, const encoder_sample_t * p_before,
-                   s5_move_t result)
-{
-    encoder_sample_t after = s5_log_encoders("move-after", command_id);
-
-    /* encoder_delta returns the signed 32-bit modular difference. Use the
-       monitor's supported long format (it does not support long long). */
-    tm_printf(
-        (const UB *)"[DETOUR] enc id=%u delta_L=%ld delta_R=%ld result=%s\n",
-        (unsigned)command_id,
-        (int32_t)encoder_delta(after.count[0], p_before->count[0]),
-        (int32_t)encoder_delta(after.count[1], p_before->count[1]),
-        (S5_MOVE_DONE == result)      ? "done"
-        : (S5_MOVE_LINE == result)    ? "line"
-        : (S5_MOVE_REJOIN == result)  ? "rejoin"
-        : (S5_MOVE_STALLED == result) ? "stalled"
-                                      : "failed");
-}
 
 /* One byte, obstacle_task only: changing a bit needs no lock */
 static struct
@@ -284,10 +251,321 @@ _Static_assert(S5_WHY_COUNT
                "one name per code");
 _Static_assert(S5_WHY_COUNT <= 64, "a code is 6 bits");
 
+typedef enum
+{
+    S5_LOOK_ECHO,
+    S5_LOOK_CLEAR,
+    S5_LOOK_FAILED,
+    S5_LOOK_UNSURE
+} s5_look_t;
+
+/* ---- the pass: one long move, measured while it runs ---- */
+
+typedef struct
+{
+    uint32_t  id;
+    float64_t start;
+    float64_t timeout_s;
+    /* s5_x and s5_y are up to date for this travel */
+    float64_t        centre_m;
+    float64_t        heading_deg; /* and this heading */
+    encoder_sample_t counts;
+    s5_move_t        result; /* S5_MOVE_RUNNING until the move is over */
+    bool             b_sensor_failed;
+} s5_drive_t;
+
+static void      log_encoder_after(uint32_t                 command_id,
+                                   const encoder_sample_t * p_before,
+                                   s5_move_t                result);
+static int16_t   why_number(int value);
+static void      detour_why(s5_why_t why, int detail_a, int detail_b);
+static int       s5_mm(float64_t value);
+static void      detour_stage(UW marker, const char * p_name);
+static bool      line_seen(const robot_status_t * p_status, float64_t now);
+static float64_t heading_deg(const robot_status_t * p_status);
+static void move_pose(const robot_status_t * p_status, bool b_straight,
+                      float64_t centre0_m, float64_t * p_x, float64_t * p_y);
+static bool line_where_expected(float64_t x_mm, float64_t y_mm,
+                                float64_t heading_now_deg);
+static void note_line(float64_t x_mm, float64_t y_mm, float64_t heading_now_deg,
+                      float64_t centre_m);
+static uint32_t  next_id(void);
+static bool      release_hold(void);
+static s5_move_t poll_failure(uint32_t               command_id,
+                              const robot_status_t * p_status);
+static s5_move_t poll_rejoin(const robot_status_t * p_status, float64_t now,
+                             bool b_watch_line, float64_t centre0_m);
+static s5_move_t poll_watch(uint32_t               command_id,
+                            const robot_status_t * p_status, float64_t now,
+                            float64_t centre0_m, float64_t * p_line_centre_m);
+static s5_move_t poll_stall(uint32_t               command_id,
+                            const robot_status_t * p_status, float64_t now);
+static s5_move_t poll_end(uint32_t command_id, const robot_status_t * p_status,
+                          float64_t elapsed, float64_t timeout_s);
+static s5_move_t move_poll(uint32_t command_id, float64_t start,
+                           float64_t timeout_s, bool b_watch_line,
+                           float64_t centre0_m, float64_t * p_line_centre_m);
+static s5_move_t wait_move(uint32_t command_id, float64_t timeout_s,
+                           bool b_watch_line, float64_t centre0_m,
+                           float64_t * p_line_centre_m);
+static bool      retry_busy(float64_t start, uint32_t generation);
+static s5_move_t straight(float64_t distance_mm, bool b_watch_line,
+                          float64_t * p_line_centre_m);
+static s5_move_t turn_to(float64_t target_deg);
+static bool      detour_ping(void * p_context, float64_t * p_range_mm);
+static bool      look_still(uint32_t generation);
+static s5_look_t look_failed(int angle_deg, s5_why_t code, const char * p_why,
+                             const s5_estimate_t * p_estimate);
+static s5_look_t look_ex(int angle_deg, float64_t * p_range_mm, bool b_unsure,
+                         s5_estimate_t * p_estimate);
+static s5_look_t look(int angle_deg, float64_t * p_range_mm);
+static bool      path_clear(float64_t distance_mm);
+static bool echo_in_path(float64_t range_mm, int angle_deg, float64_t needed_mm,
+                         float64_t half_width_mm);
+static bool echo_is_known(const robot_status_t * p_status, int angle_deg,
+                          float64_t range_mm);
+static s5_why_t sweep_why(bool b_status, const robot_status_t * p_status,
+                          s5_why_t otherwise);
+static void     sweep_failed(const char * p_phase, int angle, s5_look_t look);
+static void     sweep_block(int angle, float64_t range_mm);
+static bool     sweep_unsure_clear(const char * p_phase, int angle,
+                                   const s5_estimate_t *  p_estimate,
+                                   const robot_status_t * p_status,
+                                   float64_t needed, float64_t half_width);
+static bool sweep_echo_clear(const char * p_phase, int angle,
+                             float64_t              range_mm,
+                             const robot_status_t * p_status, float64_t needed,
+                             float64_t half_width);
+static bool clearance_sweep(float64_t distance_mm, const char * p_phase);
+static int  obstacle_look_angle(const s5_detour_plan_t * p_plan);
+static bool passing_clearance(const s5_detour_plan_t * p_plan);
+static bool turn_further(float64_t sign, bool b_travelled,
+                         float64_t * p_heading_deg, float64_t * p_remaining);
+static bool go_out(const s5_detour_plan_t * p_plan);
+static bool line_confirm(void);
+static bool rejoin_after_stop(void);
+static void drive_track(s5_drive_t * p_drive, const robot_status_t * p_status);
+static bool drive_start(s5_drive_t * p_drive, float64_t distance_mm);
+static s5_move_t drive_poll(s5_drive_t * p_drive);
+static void      drive_wait(s5_drive_t * p_drive, unsigned wait_ms);
+static bool      drive_ping(void * p_context, float64_t * p_range_mm);
+static s5_look_t drive_look(s5_drive_t * p_drive, int angle_deg,
+                            float64_t * p_range_mm, float64_t * p_x);
+static bool      drive_settle(s5_drive_t * p_drive);
+static bool      drive_ended(s5_drive_t * p_drive);
+static bool drive_refuse(s5_why_t code, const char * p_reason, int value_mm);
+static bool drive_look_ahead(s5_drive_t * p_drive);
+static void pass_note_look(s5_pass_t * p_pass, const s5_detour_plan_t * p_plan,
+                           s5_look_t result, float64_t range_mm,
+                           float64_t look_x);
+static bool pass_steps(const s5_detour_plan_t * p_plan);
+static bool escape_stall(const s5_detour_plan_t * p_plan, unsigned attempt);
+static bool pass_obstacle(const s5_detour_plan_t * p_plan);
+static bool drive_onto_noted(float64_t distance_mm);
+static bool return_to_noted(void);
+static bool reverse_to_noted(void);
+static bool return_to_line(const s5_detour_plan_t * p_plan);
+static bool wait_stopped(void);
+static bool back_to_start(const s5_detour_plan_t * p_plan);
+
+encoder_sample_t
+s5_log_encoders (const char * p_phase, uint32_t command_id)
+{
+    encoder_sample_t sample = motion_hal_sample();
+
+    tm_printf((const UB *)"[OBSTACLE] enc phase=%s id=%u L=%lu R=%lu "
+                          "invalid=%lu,%lu reliable=%u\n",
+              p_phase, (unsigned)command_id, (uint32_t)sample.count[0],
+              (uint32_t)sample.count[1], (uint32_t)sample.invalid[0],
+              (uint32_t)sample.invalid[1], (unsigned)sample.reliable);
+    return sample;
+}
+
 const char *
 s5_why_name (s5_why_t why)
 {
     return g_s5_why_names[(why < S5_WHY_COUNT) ? why : S5_WHY_UNKNOWN];
+}
+
+void
+s5_detour_reason_clear (void)
+{
+    g_s5_why   = (uint8_t)S5_WHY_NONE;
+    g_s5_why_a = 0;
+    g_s5_why_b = 0;
+}
+
+s5_why_t
+s5_detour_reason (int * p_a, int * p_b)
+{
+    *p_a = g_s5_why_a;
+    *p_b = g_s5_why_b;
+    return (s5_why_t)g_s5_why;
+}
+
+void
+s5_detour_pose (int * p_x_mm, int * p_y_mm)
+{
+    *p_x_mm = s5_mm(g_s5_x);
+    *p_y_mm = s5_mm(g_s5_y);
+}
+
+bool
+s5_release (void)
+{
+    return release_hold();
+}
+
+bool
+s5_back_off (float64_t distance_mm)
+{
+    robot_status_t status;
+
+    bool b_result = false;
+
+    if ((!release_hold()) || (!s5_status(&status)))
+    {
+        b_result = false;
+    }
+    else
+    {
+        g_s5_heading0 = status.motion.heading;
+        g_s5_x        = 0.0;
+        g_s5_y        = 0.0;
+
+        if (S5_MOVE_DONE != straight(-distance_mm, false, NULL))
+        {
+            motion_stop();
+            b_result = false;
+        }
+        else
+        {
+            motion_stop();
+            b_result = wait_stopped();
+        }
+    }
+
+    return b_result;
+}
+
+bool
+s5_square_up (float64_t degrees, float64_t * p_turned_deg)
+{
+    robot_status_t before;
+    robot_status_t after;
+    s5_move_t      move;
+
+    if ((!release_hold()) || (!s5_status(&before)))
+    {
+        return false;
+    }
+
+    g_s5_heading0 = before.motion.heading;
+    move          = turn_to(degrees);
+    motion_stop();
+
+    if (((S5_MOVE_DONE != move) && (S5_MOVE_STALLED != move))
+        || (!wait_stopped()))
+    {
+        return false;
+    }
+
+    (void)tk_dly_tsk(S5_SQUARE_SETTLE_MS);
+
+    if ((!wait_stopped()) || (!s5_status(&after)))
+    {
+        return false;
+    }
+
+    *p_turned_deg
+        = (after.motion.heading - before.motion.heading) / S5_DEG_TO_RAD;
+    return true;
+}
+
+bool
+s5_detour_run (const s5_detour_plan_t * p_plan)
+{
+    robot_status_t status;
+
+    g_s5_leg.out_blocked = false;
+    g_s5_leg.line_noted  = false;
+    g_s5_leg.line_goal   = false;
+
+    if ((!p_plan->b_ok) || (!release_hold()) || (!s5_status(&status)))
+    {
+        return false;
+    }
+
+    /* Heading 0 is square to the face: every turn from here is relative to it
+     */
+    g_s5_heading0 = status.motion.heading + (p_plan->tilt_deg * S5_DEG_TO_RAD);
+    g_s5_x        = 0.0;
+    g_s5_y        = p_plan->start_y_mm;
+    gp_s5_known   = p_plan;
+
+    if (!go_out(p_plan))
+    {
+        gp_s5_known = NULL;
+
+        if (g_s5_leg.out_blocked)
+        {
+            /* Not given up yet: the caller tries another way from the start */
+            g_s5_leg.out_blocked = back_to_start(p_plan);
+
+            if (g_s5_leg.out_blocked)
+            {
+                return false;
+            }
+        }
+
+        tm_printf((const UB *)"[DETOUR] gave up at x %d y %d, heading %d deg\n",
+                  s5_mm(g_s5_x), s5_mm(g_s5_y),
+                  s5_status(&status) ? s5_mm(heading_deg(&status)) : 0);
+        return false;
+    }
+
+    if ((!pass_obstacle(p_plan))
+        || ((!g_s5_leg.rejoined) && (!return_to_line(p_plan))))
+    {
+        gp_s5_known = NULL;
+        tm_printf((const UB *)"[DETOUR] gave up at x %d y %d, heading %d deg\n",
+                  s5_mm(g_s5_x), s5_mm(g_s5_y),
+                  s5_status(&status) ? s5_mm(heading_deg(&status)) : 0);
+        return false;
+    }
+
+    gp_s5_known = NULL;
+    tm_printf((const UB *)"[DETOUR] back on the line at x %d%s; line following "
+                          "resumes\n",
+              s5_mm(g_s5_x),
+              g_s5_leg.rejoined ? " (interrupted mid-pass)" : "");
+    return true;
+}
+
+bool
+s5_detour_retryable (void)
+{
+    return g_s5_leg.out_blocked;
+}
+
+static void
+log_encoder_after (uint32_t command_id, const encoder_sample_t * p_before,
+                   s5_move_t result)
+{
+    encoder_sample_t after = s5_log_encoders("move-after", command_id);
+
+    /* encoder_delta returns the signed 32-bit modular difference. Use the
+       monitor's supported long format (it does not support long long). */
+    tm_printf(
+        (const UB *)"[DETOUR] enc id=%u delta_L=%ld delta_R=%ld result=%s\n",
+        (unsigned)command_id,
+        (int32_t)encoder_delta(after.count[0], p_before->count[0]),
+        (int32_t)encoder_delta(after.count[1], p_before->count[1]),
+        (S5_MOVE_DONE == result)      ? "done"
+        : (S5_MOVE_LINE == result)    ? "line"
+        : (S5_MOVE_REJOIN == result)  ? "rejoin"
+        : (S5_MOVE_STALLED == result) ? "stalled"
+                                      : "failed");
 }
 
 /* 14 bits, clamped */
@@ -308,33 +586,10 @@ detour_why (s5_why_t why, int detail_a, int detail_b)
     }
 }
 
-void
-s5_detour_reason_clear (void)
-{
-    g_s5_why   = (uint8_t)S5_WHY_NONE;
-    g_s5_why_a = 0;
-    g_s5_why_b = 0;
-}
-
-s5_why_t
-s5_detour_reason (int * p_a, int * p_b)
-{
-    *p_a = g_s5_why_a;
-    *p_b = g_s5_why_b;
-    return (s5_why_t)g_s5_why;
-}
-
 static int
 s5_mm (float64_t value)
 {
     return (int)((value < 0.0) ? (value - 0.5) : (value + 0.5));
-}
-
-void
-s5_detour_pose (int * p_x_mm, int * p_y_mm)
-{
-    *p_x_mm = s5_mm(g_s5_x);
-    *p_y_mm = s5_mm(g_s5_y);
 }
 
 static void
@@ -462,12 +717,6 @@ release_hold (void)
     tm_printf((const UB *)"[DETOUR] Motion Control did not release the hold\n");
     detour_why(S5_WHY_NO_RELEASE, 0, 0);
     return false;
-}
-
-bool
-s5_release (void)
-{
-    return release_hold();
 }
 
 /* The move was stopped from outside, or Motion Control ended it unfinished. */
@@ -930,14 +1179,6 @@ detour_ping (void * p_context, float64_t * p_range_mm)
 
     return b_result;
 }
-
-typedef enum
-{
-    S5_LOOK_ECHO,
-    S5_LOOK_CLEAR,
-    S5_LOOK_FAILED,
-    S5_LOOK_UNSURE
-} s5_look_t;
 
 /* Measurements are only useful while still at the same command generation.
    In particular, never resume a detour across a user stop/reset during a sweep.
@@ -1582,21 +1823,6 @@ rejoin_after_stop (void)
 
     return b_result;
 }
-
-/* ---- the pass: one long move, measured while it runs ---- */
-
-typedef struct
-{
-    uint32_t  id;
-    float64_t start;
-    float64_t timeout_s;
-    /* s5_x and s5_y are up to date for this travel */
-    float64_t        centre_m;
-    float64_t        heading_deg; /* and this heading */
-    encoder_sample_t counts;
-    s5_move_t        result; /* S5_MOVE_RUNNING until the move is over */
-    bool             b_sensor_failed;
-} s5_drive_t;
 
 static void
 drive_track (s5_drive_t * p_drive, const robot_status_t * p_status)
@@ -2298,72 +2524,6 @@ wait_stopped (void)
     return false;
 }
 
-bool
-s5_back_off (float64_t distance_mm)
-{
-    robot_status_t status;
-
-    bool b_result = false;
-
-    if ((!release_hold()) || (!s5_status(&status)))
-    {
-        b_result = false;
-    }
-    else
-    {
-        g_s5_heading0 = status.motion.heading;
-        g_s5_x        = 0.0;
-        g_s5_y        = 0.0;
-
-        if (S5_MOVE_DONE != straight(-distance_mm, false, NULL))
-        {
-            motion_stop();
-            b_result = false;
-        }
-        else
-        {
-            motion_stop();
-            b_result = wait_stopped();
-        }
-    }
-
-    return b_result;
-}
-
-bool
-s5_square_up (float64_t degrees, float64_t * p_turned_deg)
-{
-    robot_status_t before;
-    robot_status_t after;
-    s5_move_t      move;
-
-    if ((!release_hold()) || (!s5_status(&before)))
-    {
-        return false;
-    }
-
-    g_s5_heading0 = before.motion.heading;
-    move          = turn_to(degrees);
-    motion_stop();
-
-    if (((S5_MOVE_DONE != move) && (S5_MOVE_STALLED != move))
-        || (!wait_stopped()))
-    {
-        return false;
-    }
-
-    (void)tk_dly_tsk(S5_SQUARE_SETTLE_MS);
-
-    if ((!wait_stopped()) || (!s5_status(&after)))
-    {
-        return false;
-    }
-
-    *p_turned_deg
-        = (after.motion.heading - before.motion.heading) / S5_DEG_TO_RAD;
-    return true;
-}
-
 /* The way out was blocked before any of the diagonal was driven: turn back to
    the heading it stopped at and drive forward over the reversing, so that the
    next plan starts from the pose the scan was taken at.  True: held and still
@@ -2403,72 +2563,6 @@ back_to_start (const s5_detour_plan_t * p_plan)
     }
 
     return true;
-}
-
-bool
-s5_detour_run (const s5_detour_plan_t * p_plan)
-{
-    robot_status_t status;
-
-    g_s5_leg.out_blocked = false;
-    g_s5_leg.line_noted  = false;
-    g_s5_leg.line_goal   = false;
-
-    if ((!p_plan->b_ok) || (!release_hold()) || (!s5_status(&status)))
-    {
-        return false;
-    }
-
-    /* Heading 0 is square to the face: every turn from here is relative to it
-     */
-    g_s5_heading0 = status.motion.heading + (p_plan->tilt_deg * S5_DEG_TO_RAD);
-    g_s5_x        = 0.0;
-    g_s5_y        = p_plan->start_y_mm;
-    gp_s5_known   = p_plan;
-
-    if (!go_out(p_plan))
-    {
-        gp_s5_known = NULL;
-
-        if (g_s5_leg.out_blocked)
-        {
-            /* Not given up yet: the caller tries another way from the start */
-            g_s5_leg.out_blocked = back_to_start(p_plan);
-
-            if (g_s5_leg.out_blocked)
-            {
-                return false;
-            }
-        }
-
-        tm_printf((const UB *)"[DETOUR] gave up at x %d y %d, heading %d deg\n",
-                  s5_mm(g_s5_x), s5_mm(g_s5_y),
-                  s5_status(&status) ? s5_mm(heading_deg(&status)) : 0);
-        return false;
-    }
-
-    if ((!pass_obstacle(p_plan))
-        || ((!g_s5_leg.rejoined) && (!return_to_line(p_plan))))
-    {
-        gp_s5_known = NULL;
-        tm_printf((const UB *)"[DETOUR] gave up at x %d y %d, heading %d deg\n",
-                  s5_mm(g_s5_x), s5_mm(g_s5_y),
-                  s5_status(&status) ? s5_mm(heading_deg(&status)) : 0);
-        return false;
-    }
-
-    gp_s5_known = NULL;
-    tm_printf((const UB *)"[DETOUR] back on the line at x %d%s; line following "
-                          "resumes\n",
-              s5_mm(g_s5_x),
-              g_s5_leg.rejoined ? " (interrupted mid-pass)" : "");
-    return true;
-}
-
-bool
-s5_detour_retryable (void)
-{
-    return g_s5_leg.out_blocked;
 }
 
 #endif

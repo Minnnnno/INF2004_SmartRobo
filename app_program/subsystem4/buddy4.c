@@ -13,15 +13,20 @@
 // RECOVERY step 3: confirm fresh data arrives
 #define B4_RECOVERY_VERIFY (2U)
 
-/* Read this file starting with buddy4_step(): it chooses one handler. */
-static bool buddy4_clock(buddy4_t * p_context, uint32_t * p_now_ms);
+static uint8_t buddy4_phase(buddy4_t const * p_context);
+static void    buddy4_set_phase(buddy4_t * p_context, uint8_t phase,
+                                uint32_t now_ms);
 static void buddy4_enter(buddy4_t * p_context, uint8_t state, uint32_t now_ms,
                          ER error);
+static bool buddy4_clock(buddy4_t * p_context, uint32_t * p_now_ms);
+static ER   buddy4_read(int16_t xyz[3]);
+static void buddy4_retry_failed(buddy4_t * p_context, uint32_t now_ms,
+                                ER error);
 static void buddy4_initialise(buddy4_t * p_context, uint8_t inputs,
                               uint32_t now_ms);
 static void buddy4_monitor(buddy4_t * p_context, uint32_t now_ms);
-static void buddy4_recover(buddy4_t * p_context, uint32_t now_ms);
 static void buddy4_poll_magnetic(buddy4_t * p_context, uint32_t now_ms);
+static void buddy4_recover(buddy4_t * p_context, uint32_t now_ms);
 
 /* One bounded logical step; hardware transaction latency is documented.
  * STOP takes precedence over RESET and autonomous recovery. Commands are
@@ -149,6 +154,126 @@ buddy4_attempts (buddy4_t const * p_context)
     return (NULL == p_context) ? 0U : p_context->control.attempts;
 }
 
+/* Initialise private state with no accepted reference. */
+void
+buddy4_begin (buddy4_t * p_context, uint32_t now_ms)
+{
+    if (NULL != p_context)
+    {
+        *p_context = (buddy4_t){0};
+        buddy4_enter(p_context, B4_INIT, now_ms, E_OK);
+        p_context->last_fresh = now_ms;
+    }
+}
+
+bool
+buddy4_magnetic (buddy4_t const * p_context, uint32_t now_ms,
+                 uint32_t max_age_ms, int16_t * p_x, int16_t * p_y)
+{
+    bool b_result = false;
+
+    if ((NULL == p_context) || (NULL == p_x) || (NULL == p_y)
+        || (B4_MONITORING != buddy4_state(p_context))
+        || (0U == (p_context->mag_flags & B4_MAG_HAVE))
+        || ((now_ms - p_context->mag_ms) > max_age_ms))
+    {
+        b_result = false;
+    }
+    else
+    {
+        *p_x     = p_context->mag[0];
+        *p_y     = p_context->mag[1];
+        b_result = true;
+    }
+
+    return b_result;
+}
+
+uint8_t
+buddy4_lift (buddy4_t const * p_context)
+{
+    return ((NULL == p_context) || (B4_MONITORING != buddy4_state(p_context)))
+               ? LIFT_NONE
+               : lift_state(&p_context->lift);
+}
+
+/* Unfreeze hump recording on START (see buddy4.h). The hold must be seen
+ * first, so a stale "not held" from the cycle before motion_stop() takes
+ * effect cannot unfreeze it. Unfreezing also needs MONITORING with the lift
+ * latch clear (the robot is back down), so START in the air or during sensor
+ * recovery keeps it frozen. No motion status: stays frozen (safe side). */
+bool
+buddy4_hump_start (buddy4_t * p_context, bool b_available, bool b_held)
+{
+    bool b_result = false;
+
+    if ((NULL == p_context) || (B4_FREEZE_NONE == p_context->hump_freeze)
+        || (!b_available))
+    {
+        b_result = false;
+    }
+    else if (b_held)
+    {
+        p_context->hump_freeze = B4_FREEZE_HELD;
+        b_result               = false;
+    }
+    else if ((B4_FREEZE_HELD == p_context->hump_freeze)
+             && (B4_MONITORING == buddy4_state(p_context))
+             && (LIFT_NONE == lift_state(&p_context->lift)))
+    {
+        p_context->hump_freeze = B4_FREEZE_NONE;
+        b_result               = true;
+    }
+    else
+    {
+        /* Nothing to do in any other case. */
+    }
+
+    return b_result;
+}
+
+bool
+buddy4_hump_frozen (buddy4_t const * p_context)
+{
+    return (NULL != p_context) && (B4_FREEZE_NONE != p_context->hump_freeze);
+}
+
+/* Constant names for diagnostics. No state transition occurs here. */
+char const *
+buddy4_state_name (uint8_t state)
+{
+    const char * p_result = NULL;
+
+    switch (state)
+    {
+        case B4_INIT:
+            p_result = "INIT";
+        break;
+
+        case B4_MONITORING:
+            p_result = "MONITORING";
+        break;
+
+        case B4_RECOVERY:
+            p_result = "SENSOR_RECOVERY";
+        break;
+
+        case B4_FAULT:
+            p_result = "SENSOR_FAULT";
+        break;
+
+        case B4_STOP:
+            p_result = "STOP";
+        break;
+
+        default:
+            p_result = "INVALID";
+        break;
+    }
+
+    return p_result;
+}
+
 /* Phase is private: INIT=config/wait/capture;
  * RECOVERY=configure/backoff/verify. */
 static uint8_t
@@ -205,18 +330,6 @@ buddy4_clock (buddy4_t * p_context, uint32_t * p_now_ms)
     }
 
     return b_result;
-}
-
-/* Initialise private state with no accepted reference. */
-void
-buddy4_begin (buddy4_t * p_context, uint32_t now_ms)
-{
-    if (NULL != p_context)
-    {
-        *p_context = (buddy4_t){0};
-        buddy4_enter(p_context, B4_INIT, now_ms, E_OK);
-        p_context->last_fresh = now_ms;
-    }
 }
 
 /* Acquire/convert one fresh sample. No value is used after a failed read. */
@@ -486,78 +599,6 @@ buddy4_poll_magnetic (buddy4_t * p_context, uint32_t now_ms)
     }
 }
 
-bool
-buddy4_magnetic (buddy4_t const * p_context, uint32_t now_ms,
-                 uint32_t max_age_ms, int16_t * p_x, int16_t * p_y)
-{
-    bool b_result = false;
-
-    if ((NULL == p_context) || (NULL == p_x) || (NULL == p_y)
-        || (B4_MONITORING != buddy4_state(p_context))
-        || (0U == (p_context->mag_flags & B4_MAG_HAVE))
-        || ((now_ms - p_context->mag_ms) > max_age_ms))
-    {
-        b_result = false;
-    }
-    else
-    {
-        *p_x     = p_context->mag[0];
-        *p_y     = p_context->mag[1];
-        b_result = true;
-    }
-
-    return b_result;
-}
-
-uint8_t
-buddy4_lift (buddy4_t const * p_context)
-{
-    return ((NULL == p_context) || (B4_MONITORING != buddy4_state(p_context)))
-               ? LIFT_NONE
-               : lift_state(&p_context->lift);
-}
-
-/* Unfreeze hump recording on START (see buddy4.h). The hold must be seen
- * first, so a stale "not held" from the cycle before motion_stop() takes
- * effect cannot unfreeze it. Unfreezing also needs MONITORING with the lift
- * latch clear (the robot is back down), so START in the air or during sensor
- * recovery keeps it frozen. No motion status: stays frozen (safe side). */
-bool
-buddy4_hump_start (buddy4_t * p_context, bool b_available, bool b_held)
-{
-    bool b_result = false;
-
-    if ((NULL == p_context) || (B4_FREEZE_NONE == p_context->hump_freeze)
-        || (!b_available))
-    {
-        b_result = false;
-    }
-    else if (b_held)
-    {
-        p_context->hump_freeze = B4_FREEZE_HELD;
-        b_result               = false;
-    }
-    else if ((B4_FREEZE_HELD == p_context->hump_freeze)
-             && (B4_MONITORING == buddy4_state(p_context))
-             && (LIFT_NONE == lift_state(&p_context->lift)))
-    {
-        p_context->hump_freeze = B4_FREEZE_NONE;
-        b_result               = true;
-    }
-    else
-    {
-        /* Nothing to do in any other case. */
-    }
-
-    return b_result;
-}
-
-bool
-buddy4_hump_frozen (buddy4_t const * p_context)
-{
-    return (NULL != p_context) && (B4_FREEZE_NONE != p_context->hump_freeze);
-}
-
 /* Recover the owned sensor automatically, even without motor-status inputs.
  * Never capture a new reference here. Configuration plus a fresh sample proves
  * communication resumed, not that tilt is trustworthy while accelerating.
@@ -655,42 +696,6 @@ buddy4_recover (buddy4_t * p_context, uint32_t now_ms)
     {
         buddy4_retry_failed(p_context, now_ms, status);
     }
-}
-
-/* Constant names for diagnostics. No state transition occurs here. */
-char const *
-buddy4_state_name (uint8_t state)
-{
-    const char * p_result = NULL;
-
-    switch (state)
-    {
-        case B4_INIT:
-            p_result = "INIT";
-        break;
-
-        case B4_MONITORING:
-            p_result = "MONITORING";
-        break;
-
-        case B4_RECOVERY:
-            p_result = "SENSOR_RECOVERY";
-        break;
-
-        case B4_FAULT:
-            p_result = "SENSOR_FAULT";
-        break;
-
-        case B4_STOP:
-            p_result = "STOP";
-        break;
-
-        default:
-            p_result = "INVALID";
-        break;
-    }
-
-    return p_result;
 }
 
 /*** end of file ***/

@@ -14,6 +14,662 @@
 #define MOTION_FAULTS_ENABLED true
 #endif
 
+static bool motion_flag_get(const motion_t * p_motion, uint8_t mask);
+static void motion_flag_set(motion_t * p_motion, uint8_t mask, bool b_value);
+static uint32_t motion_queue_count(const motion_t * p_motion);
+static uint32_t motion_queue_head(const motion_t * p_motion);
+static void     motion_queue_set(motion_t * p_motion, uint32_t head,
+                                 uint32_t count);
+static void     motion_fault_record(motion_t * p_motion, motion_fault_t fault);
+static void     zero_output(motion_t * p_motion);
+static int32_t  debug_scaled(float64_t value, float64_t scale);
+static void     record_fault_context(motion_t * p_motion, float64_t now);
+static void     event(motion_t * p_motion, motion_event_type_t type);
+static void     record_feedback(motion_t * p_motion, encoder_sample_t sample,
+                                motion_feedback_cause_t cause);
+static void timing_fault(motion_t * p_motion, float64_t now, float64_t delta_s);
+static void stopping(motion_t * p_motion, float64_t now);
+static void motion_fault_unlatched(motion_t * p_motion, motion_fault_t fault,
+                                   float64_t now);
+static bool accept_arc(const motion_t *         p_motion,
+                       const motion_command_t * p_command, float64_t now);
+static bool accept_rounded_arc(const motion_t *         p_motion,
+                               const motion_command_t * p_decoded);
+static bool final_goal(const motion_t * p_motion);
+static bool drive_expired(motion_t *               p_motion,
+                          const motion_command_t * p_command, float64_t now);
+static void drive_arc_match(const motion_t *         p_motion,
+                            const motion_command_t * p_command, float64_t left,
+                            float64_t right, float64_t desired[2]);
+static bool drive_arc(motion_t * p_motion, const motion_command_t * p_command,
+                      float64_t now, float64_t desired[2]);
+static bool drive_finite(motion_t *               p_motion,
+                         const motion_command_t * p_command, float64_t now,
+                         float64_t desired[2]);
+static bool drive_wheel(motion_t * p_motion, const motion_command_t * p_command,
+                        unsigned wheel, float64_t * p_desired,
+                        bool b_progressed, float64_t now, float64_t delta_s);
+static void drive(motion_t * p_motion, float64_t now, float64_t delta_s,
+                  const bool progressed[2]);
+static void step_startup_gap(motion_t * p_motion, encoder_sample_t sample,
+                             float64_t now, float64_t delta_s);
+static bool step_bad_interval(motion_t * p_motion, float64_t now,
+                              float64_t * p_delta_s);
+static bool step_odometry(motion_t * p_motion, encoder_sample_t sample,
+                          float64_t now, float64_t delta_s, bool progressed[2],
+                          bool * p_fresh);
+static void step_stationary(motion_t * p_motion, float64_t now);
+static void step_state(motion_t * p_motion, float64_t now, float64_t delta_s,
+                       const bool progressed[2]);
+
+const char *
+motion_fault_name (motion_fault_t fault)
+{
+    const char * p_result = NULL;
+
+    switch (fault)
+    {
+        case F_NONE:
+            p_result = "NONE";
+        break;
+
+        case F_CONFIG:
+            p_result = "CONFIG";
+        break;
+
+        case F_SETUP:
+            p_result = "SETUP";
+        break;
+
+        case F_TIMING:
+            p_result = "TIMING";
+        break;
+
+        case F_FEEDBACK:
+            p_result = "FEEDBACK";
+        break;
+
+        case F_DEADLINE:
+            p_result = "DEADLINE";
+        break;
+
+        case F_EXPIRED:
+            p_result = "EXPIRED";
+        break;
+
+        case F_STOP_TIMEOUT:
+            p_result = "STOP_TIMEOUT";
+        break;
+
+        case F_FINAL_GOAL:
+            p_result = "FINAL_GOAL";
+        break;
+
+        case F_EVENT_OVERFLOW:
+            p_result = "EVENT_OVERFLOW";
+        break;
+
+        case F_SYSTEM:
+            p_result = "SYSTEM";
+        break;
+
+        case F_ESTOP:
+            p_result = "ESTOP";
+        break;
+
+        case F_SETUP_TIMEOUT:
+            p_result = "SETUP_TIMEOUT";
+        break;
+
+        default:
+            p_result = "UNKNOWN";
+        break;
+    }
+
+    return p_result;
+}
+
+const char *
+motion_feedback_name (motion_feedback_cause_t cause)
+{
+    const char * p_result = NULL;
+
+    switch (cause)
+    {
+        case FB_NONE:
+            p_result = "NONE";
+        break;
+
+        case FB_UNRELIABLE:
+            p_result = "UNRELIABLE";
+        break;
+
+        case FB_INVALID_TRANSITION:
+            p_result = "INVALID_TRANSITION";
+        break;
+
+        case FB_ODOMETRY:
+            p_result = "ODOMETRY";
+        break;
+
+        case FB_NO_PROGRESS:
+            p_result = "NO_ENCODER_PROGRESS";
+        break;
+
+        case FB_RESTART_LATCH:
+            p_result = "MANUAL_RESET_REQUIRED_AFTER_RESTART";
+        break;
+
+        default:
+            p_result = "UNKNOWN";
+        break;
+    }
+
+    return p_result;
+}
+
+const char *
+motion_mode_name (motion_mode_t mode)
+{
+    const char * p_result = NULL;
+
+    switch (mode)
+    {
+        case DISTANCE_MOVE:
+            p_result = "DISTANCE";
+        break;
+
+        case ENCODER_TURN:
+            p_result = "TURN";
+        break;
+
+        case WHEEL_SPEED_TRACKING:
+            p_result = "TRACKING";
+        break;
+
+        case MANUAL_OUTPUT:
+            p_result = "MANUAL";
+        break;
+
+        case ARC_MOVE:
+            p_result = "ARC";
+        break;
+
+        default:
+            p_result = "UNKNOWN";
+        break;
+    }
+
+    return p_result;
+}
+
+bool
+motion_next_event (motion_t * p_motion, motion_event_t * p_event)
+{
+    bool b_result = false;
+
+    if (0U == motion_queue_count(p_motion))
+    {
+        b_result = false;
+    }
+    else
+    {
+        uint32_t head = motion_queue_head(p_motion);
+        uint32_t info = p_motion->events.info[head];
+
+        *p_event = (motion_event_t){(motion_event_type_t)(info & 7u),
+                                    p_motion->events.id[head],
+                                    p_motion->events.generation[head],
+                                    (motion_fault_t)((info >> 3u) & 15u)};
+        motion_queue_set(p_motion, (head + 1u) % MOTION_EVENT_CAPACITY,
+                         motion_queue_count(p_motion) - 1u);
+        b_result = true;
+    }
+
+    return b_result;
+}
+
+void
+motion_raise_fault (motion_t * p_motion, motion_fault_t fault, float64_t now)
+{
+    if (SHUTDOWN == p_motion->status.state)
+    {
+        return;
+    }
+
+    motion_fault_record(p_motion, fault);
+    record_fault_context(p_motion, now);
+
+    if (!MOTION_FAULTS_ENABLED)
+    {
+        motion_fault_unlatched(p_motion, fault, now);
+        return;
+    }
+
+    zero_output(p_motion);
+    p_motion->status.hold = true;
+    p_motion->active      = false;
+    motion_flag_set(p_motion, MOTION_GOAL_PENDING, false);
+
+    if ((F_FEEDBACK == fault) || (F_TIMING == fault))
+    {
+        motion_flag_set(p_motion, MOTION_FEEDBACK_LATCHED, true);
+        p_motion->status.stationary       = false;
+        p_motion->status.feedback_trusted = false;
+    }
+
+    if (FAULT != p_motion->status.state)
+    {
+        p_motion->status.fault = fault;
+        event(p_motion, EV_FAULT);
+        ++p_motion->status.generation;
+    }
+
+    p_motion->status.state = FAULT;
+    p_motion->entered      = now;
+}
+
+void
+motion_restore_encoder_fault (motion_t * p_motion, encoder_sample_t sample,
+                              float64_t now)
+{
+    record_feedback(p_motion, sample, FB_RESTART_LATCH);
+    motion_raise_fault(p_motion, F_FEEDBACK, now);
+}
+
+void
+motion_init (motion_t * p_motion, const motion_config_t * p_config,
+             encoder_sample_t sample, float64_t now, bool b_setup_ok)
+{
+    unsigned wheel;
+
+    memset(p_motion, 0, sizeof(*p_motion));
+    p_motion->config                     = *p_config;
+    p_motion->status.state               = INITIALISING;
+    p_motion->status.generation          = 1U;
+    p_motion->last_time                  = now;
+    p_motion->entered                    = now;
+    p_motion->status.sample_time         = now;
+    p_motion->status.encoder             = sample;
+    p_motion->status.encoder_sample_time = now;
+    p_motion->status.feedback_trusted    = sample.reliable;
+
+    for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
+    {
+        p_motion->odom.previous[wheel] = sample.count[wheel];
+        p_motion->invalid[wheel]       = sample.invalid[wheel];
+    }
+
+    zero_output(p_motion);
+
+    if ((!motion_config_valid(p_config)) || (!isfinite(now)))
+    {
+        motion_raise_fault(p_motion, F_CONFIG, now);
+    }
+    else if (!b_setup_ok)
+    {
+        motion_raise_fault(p_motion, F_SETUP, now);
+    }
+    else if (!sample.reliable)
+    {
+        record_feedback(p_motion, sample, FB_UNRELIABLE);
+        motion_raise_fault(p_motion, F_FEEDBACK, now);
+    }
+    else
+    {
+        /* Nothing to do in any other case. */
+    }
+}
+
+void
+motion_begin_sampling (motion_t * p_motion, encoder_sample_t sample,
+                       float64_t now)
+{
+    unsigned wheel;
+
+    p_motion->status.encoder             = sample;
+    p_motion->status.encoder_sample_time = now;
+
+    if ((INITIALISING != p_motion->status.state) || (p_motion->active))
+    {
+        /* Nothing to do. */
+    }
+    else if ((!isfinite(now)) || (now < p_motion->last_time))
+    {
+        timing_fault(p_motion, now, now - p_motion->last_time);
+    }
+    else if ((!sample.reliable) || (sample.invalid[0] != p_motion->invalid[0])
+             || (sample.invalid[1] != p_motion->invalid[1]))
+    {
+        record_feedback(p_motion, sample,
+                        sample.reliable ? FB_INVALID_TRANSITION
+                                        : FB_UNRELIABLE);
+        motion_raise_fault(p_motion, F_FEEDBACK, now);
+    }
+    else
+    {
+        for (wheel = 0U; wheel < MOTION_WHEELS; ++wheel)
+        {
+            p_motion->odom.previous[wheel] = sample.count[wheel];
+        }
+
+        p_motion->last_time          = now;
+        p_motion->entered            = now;
+        p_motion->status.sample_time = now;
+        motion_flag_set(p_motion, MOTION_STILL_TRACKING, false);
+        p_motion->status.stationary = false;
+    }
+}
+
+void
+motion_cancel (motion_t * p_motion, float64_t now)
+{
+    if (SHUTDOWN == p_motion->status.state)
+    {
+        return;
+    }
+
+    p_motion->status.hold = true;
+
+    if (p_motion->active)
+    {
+        event(p_motion, EV_CANCELLED);
+    }
+
+    p_motion->active = false;
+    motion_flag_set(p_motion, MOTION_GOAL_PENDING, false);
+    ++p_motion->status.generation;
+
+    if (FAULT == p_motion->status.state)
+    {
+        zero_output(p_motion);
+        return;
+    }
+
+    if (DRIVING == p_motion->status.state)
+    {
+        stopping(p_motion, now);
+    }
+    else if (STOPPING != p_motion->status.state)
+    {
+        zero_output(p_motion);
+        p_motion->status.state = STOPPED;
+    }
+    else
+    {
+        /* Nothing to do in any other case. */
+    }
+}
+
+void
+motion_shutdown (motion_t * p_motion, float64_t now)
+{
+    motion_cancel(p_motion, now);
+    zero_output(p_motion);
+    p_motion->status.state = SHUTDOWN;
+    p_motion->status.hold  = true;
+}
+
+bool
+motion_release (motion_t * p_motion, bool b_checks_ok)
+{
+    bool b_result = false;
+
+    if ((STOPPED != p_motion->status.state) || (!b_checks_ok)
+        || (!p_motion->status.stationary)
+        || (!p_motion->status.feedback_trusted)
+        || (F_NONE != p_motion->status.fault)
+        || (!motion_config_valid(&p_motion->config)))
+    {
+        b_result = false;
+    }
+    else
+    {
+        ++p_motion->status.generation;
+        p_motion->status.hold  = false;
+        p_motion->status.state = READY;
+        b_result               = true;
+    }
+
+    return b_result;
+}
+
+bool
+motion_reset (motion_t * p_motion, bool b_cleared, bool b_external_rest,
+              encoder_sample_t sample, float64_t now)
+{
+    uint32_t        generation = p_motion->status.generation;
+    motion_config_t config     = p_motion->config;
+
+    bool b_result = false;
+
+    if ((FAULT != p_motion->status.state) || (!b_cleared) || (!sample.reliable)
+        || (!motion_config_valid(&config))
+        || (motion_flag_get(p_motion, MOTION_FEEDBACK_LATCHED)
+                ? !b_external_rest
+                : !p_motion->status.stationary))
+    {
+        b_result = false;
+    }
+    else
+    {
+        motion_init(p_motion, &config, sample, now, true);
+        p_motion->status.generation = generation + 1U;
+        /* Reset remains held: explicit release follows the fresh settling
+         * check. */
+        p_motion->status.hold = true;
+        b_result              = true;
+    }
+
+    return b_result;
+}
+
+motion_result_t
+motion_accept (motion_t * p_motion, const motion_command_t * p_command,
+               float64_t now)
+{
+    unsigned                 wheel;
+    motion_storage_command_t stored;
+    motion_command_t         decoded;
+
+    if (NULL == p_command)
+    {
+        return R_INVALID;
+    }
+
+    bool b_refresh
+        = (p_motion->active)
+          && (WHEEL_SPEED_TRACKING == motion_compact_mode(&p_motion->command))
+          && (WHEEL_SPEED_TRACKING == p_command->mode);
+
+    if ((p_command->generation != p_motion->status.generation)
+        || (!isfinite(now)) || (!isfinite(p_command->expires))
+        || (p_command->expires <= now))
+    {
+        return R_STALE;
+    }
+
+    if ((0U == p_command->id) || (!isfinite(p_command->value))
+        || (!isfinite(p_command->speed[0])) || (!isfinite(p_command->speed[1]))
+        || (!isfinite(p_command->deadline)) || (p_command->deadline <= now)
+        || (p_command->deadline > (now + p_motion->config.movement_timeout))
+        || (p_command->expires > (now + p_motion->config.command_lifetime))
+        || (!isfinite(p_command->angle)) || (!isfinite(p_command->duration))
+        || ((unsigned)p_command->mode > (unsigned)ARC_MOVE))
+    {
+        return R_INVALID;
+    }
+
+    if ((FAULT == p_motion->status.state)
+        || (SHUTDOWN == p_motion->status.state) || (p_motion->status.hold)
+        || (INITIALISING == p_motion->status.state))
+    {
+        return R_HELD;
+    }
+
+    if ((READY != p_motion->status.state) && (!b_refresh))
+    {
+        return R_BUSY;
+    }
+
+    if ((DISTANCE_MOVE == p_command->mode)
+        && (fabs(p_command->value) > p_motion->config.max_distance))
+    {
+        return R_INVALID;
+    }
+
+    if ((ENCODER_TURN == p_command->mode)
+        && (fabs(p_command->value) > p_motion->config.max_angle))
+    {
+        return R_INVALID;
+    }
+
+    if ((ARC_MOVE == p_command->mode)
+        && (!accept_arc(p_motion, p_command, now)))
+    {
+        return R_INVALID;
+    }
+
+    for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
+    {
+        float64_t limit = (MANUAL_OUTPUT == p_command->mode)
+                              ? p_motion->config.manual_limit
+                              : p_motion->config.max_speed;
+
+        if (fabs(p_command->speed[wheel]) > limit)
+        {
+            return R_INVALID;
+        }
+    }
+
+    if ((MANUAL_OUTPUT == p_command->mode)
+        && ((!p_motion->config.manual_enabled)
+            || (p_command->deadline > (now + p_motion->config.manual_timeout))))
+    {
+        return R_INVALID;
+    }
+
+    if (b_refresh && (p_command->id != p_motion->command.id))
+    {
+        return R_BUSY;
+    }
+
+    if (b_refresh && (p_command->expires < p_motion->command.expires))
+    {
+        return R_STALE;
+    }
+
+    if ((!motion_compact_encode(p_command, &p_motion->config, &stored))
+        || (!motion_compact_decode(&stored, &p_motion->config, &decoded)))
+    {
+        return R_INVALID;
+    }
+
+    if ((ARC_MOVE == decoded.mode) && (!accept_rounded_arc(p_motion, &decoded)))
+    {
+        return R_INVALID;
+    }
+
+    if (!b_refresh)
+    {
+        for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
+        {
+            p_motion->start_count[wheel]    = p_motion->odom.previous[wheel];
+            p_motion->start[wheel]          = p_motion->odom.travel[wheel];
+            p_motion->last_progress[wheel]  = now;
+            p_motion->expected_since[wheel] = now;
+            pid_reset(&p_motion->pid[wheel]);
+        }
+
+        p_motion->entered = now;
+    }
+
+    p_motion->command           = stored;
+    p_motion->status.id         = p_command->id;
+    p_motion->status.mode       = p_command->mode;
+    p_motion->status.state      = DRIVING;
+    p_motion->status.stationary = false;
+    p_motion->status.inhibited  = false;
+    p_motion->active            = true;
+    return R_OK;
+}
+
+void
+motion_step (motion_t * p_motion, encoder_sample_t sample, float64_t now)
+{
+    float64_t delta_s = now - p_motion->last_time;
+    bool      progressed[2];
+    bool      b_fresh;
+    unsigned  wheel;
+
+    p_motion->status.encoder             = sample;
+    p_motion->status.encoder_sample_time = now;
+
+    if (SHUTDOWN == p_motion->status.state)
+    {
+        zero_output(p_motion);
+        return;
+    }
+
+    p_motion->status.last_dt = delta_s;
+
+    if ((isfinite(delta_s)) && (delta_s > p_motion->status.max_observed_dt))
+    {
+        p_motion->status.max_observed_dt = delta_s;
+    }
+
+    if (!motion_config_valid(&p_motion->config))
+    {
+        motion_raise_fault(p_motion, F_CONFIG, now);
+        return;
+    }
+
+    if ((isfinite(now)) && (isfinite(delta_s))
+        && (delta_s > p_motion->config.max_dt)
+        && (INITIALISING == p_motion->status.state) && (!p_motion->active)
+        && (p_motion->status.inhibited))
+    {
+        step_startup_gap(p_motion, sample, now, delta_s);
+        return;
+    }
+    else if ((!isfinite(now)) || (!isfinite(delta_s)) || (delta_s <= 0.0)
+             || (delta_s > p_motion->config.max_dt))
+    {
+        if (!step_bad_interval(p_motion, now, &delta_s))
+        {
+            return;
+        }
+    }
+    else
+    {
+        /* Nothing to do in any other case. */
+    }
+
+    p_motion->last_time          = now;
+    p_motion->status.sample_time = now;
+
+    if (!step_odometry(p_motion, sample, now, delta_s, progressed, &b_fresh))
+    {
+        return;
+    }
+
+    p_motion->status.feedback_trusted
+        = b_fresh && (!motion_flag_get(p_motion, MOTION_FEEDBACK_LATCHED));
+
+    for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
+    {
+        p_motion->status.speed[wheel]  = p_motion->odom.speed[wheel];
+        p_motion->status.travel[wheel] = p_motion->odom.travel[wheel];
+    }
+
+    p_motion->status.centre  = p_motion->odom.centre;
+    p_motion->status.path    = p_motion->odom.path;
+    p_motion->status.heading = p_motion->odom.heading;
+
+    step_stationary(p_motion, now);
+    step_state(p_motion, now, delta_s, progressed);
+}
+
 static bool
 motion_flag_get (const motion_t * p_motion, uint8_t mask)
 {
@@ -175,147 +831,6 @@ record_fault_context (motion_t * p_motion, float64_t now)
     p_debug->recorded = true;
 }
 
-const char *
-motion_fault_name (motion_fault_t fault)
-{
-    const char * p_result = NULL;
-
-    switch (fault)
-    {
-        case F_NONE:
-            p_result = "NONE";
-        break;
-
-        case F_CONFIG:
-            p_result = "CONFIG";
-        break;
-
-        case F_SETUP:
-            p_result = "SETUP";
-        break;
-
-        case F_TIMING:
-            p_result = "TIMING";
-        break;
-
-        case F_FEEDBACK:
-            p_result = "FEEDBACK";
-        break;
-
-        case F_DEADLINE:
-            p_result = "DEADLINE";
-        break;
-
-        case F_EXPIRED:
-            p_result = "EXPIRED";
-        break;
-
-        case F_STOP_TIMEOUT:
-            p_result = "STOP_TIMEOUT";
-        break;
-
-        case F_FINAL_GOAL:
-            p_result = "FINAL_GOAL";
-        break;
-
-        case F_EVENT_OVERFLOW:
-            p_result = "EVENT_OVERFLOW";
-        break;
-
-        case F_SYSTEM:
-            p_result = "SYSTEM";
-        break;
-
-        case F_ESTOP:
-            p_result = "ESTOP";
-        break;
-
-        case F_SETUP_TIMEOUT:
-            p_result = "SETUP_TIMEOUT";
-        break;
-
-        default:
-            p_result = "UNKNOWN";
-        break;
-    }
-
-    return p_result;
-}
-
-const char *
-motion_feedback_name (motion_feedback_cause_t cause)
-{
-    const char * p_result = NULL;
-
-    switch (cause)
-    {
-        case FB_NONE:
-            p_result = "NONE";
-        break;
-
-        case FB_UNRELIABLE:
-            p_result = "UNRELIABLE";
-        break;
-
-        case FB_INVALID_TRANSITION:
-            p_result = "INVALID_TRANSITION";
-        break;
-
-        case FB_ODOMETRY:
-            p_result = "ODOMETRY";
-        break;
-
-        case FB_NO_PROGRESS:
-            p_result = "NO_ENCODER_PROGRESS";
-        break;
-
-        case FB_RESTART_LATCH:
-            p_result = "MANUAL_RESET_REQUIRED_AFTER_RESTART";
-        break;
-
-        default:
-            p_result = "UNKNOWN";
-        break;
-    }
-
-    return p_result;
-}
-
-const char *
-motion_mode_name (motion_mode_t mode)
-{
-    const char * p_result = NULL;
-
-    switch (mode)
-    {
-        case DISTANCE_MOVE:
-            p_result = "DISTANCE";
-        break;
-
-        case ENCODER_TURN:
-            p_result = "TURN";
-        break;
-
-        case WHEEL_SPEED_TRACKING:
-            p_result = "TRACKING";
-        break;
-
-        case MANUAL_OUTPUT:
-            p_result = "MANUAL";
-        break;
-
-        case ARC_MOVE:
-            p_result = "ARC";
-        break;
-
-        default:
-            p_result = "UNKNOWN";
-        break;
-    }
-
-    return p_result;
-}
-
 static void
 event (motion_t * p_motion, motion_event_type_t type)
 {
@@ -362,75 +877,6 @@ event (motion_t * p_motion, motion_event_type_t type)
                      motion_queue_count(p_motion) + 1u);
 }
 
-bool
-motion_next_event (motion_t * p_motion, motion_event_t * p_event)
-{
-    bool b_result = false;
-
-    if (0U == motion_queue_count(p_motion))
-    {
-        b_result = false;
-    }
-    else
-    {
-        uint32_t head = motion_queue_head(p_motion);
-        uint32_t info = p_motion->events.info[head];
-
-        *p_event = (motion_event_t){(motion_event_type_t)(info & 7u),
-                                    p_motion->events.id[head],
-                                    p_motion->events.generation[head],
-                                    (motion_fault_t)((info >> 3u) & 15u)};
-        motion_queue_set(p_motion, (head + 1u) % MOTION_EVENT_CAPACITY,
-                         motion_queue_count(p_motion) - 1u);
-        b_result = true;
-    }
-
-    return b_result;
-}
-
-static void motion_fault_unlatched(motion_t * p_motion, motion_fault_t fault,
-                                   float64_t now);
-
-void
-motion_raise_fault (motion_t * p_motion, motion_fault_t fault, float64_t now)
-{
-    if (SHUTDOWN == p_motion->status.state)
-    {
-        return;
-    }
-
-    motion_fault_record(p_motion, fault);
-    record_fault_context(p_motion, now);
-
-    if (!MOTION_FAULTS_ENABLED)
-    {
-        motion_fault_unlatched(p_motion, fault, now);
-        return;
-    }
-
-    zero_output(p_motion);
-    p_motion->status.hold = true;
-    p_motion->active      = false;
-    motion_flag_set(p_motion, MOTION_GOAL_PENDING, false);
-
-    if ((F_FEEDBACK == fault) || (F_TIMING == fault))
-    {
-        motion_flag_set(p_motion, MOTION_FEEDBACK_LATCHED, true);
-        p_motion->status.stationary       = false;
-        p_motion->status.feedback_trusted = false;
-    }
-
-    if (FAULT != p_motion->status.state)
-    {
-        p_motion->status.fault = fault;
-        event(p_motion, EV_FAULT);
-        ++p_motion->status.generation;
-    }
-
-    p_motion->status.state = FAULT;
-    p_motion->entered      = now;
-}
-
 static void
 record_feedback (motion_t * p_motion, encoder_sample_t sample,
                  motion_feedback_cause_t cause)
@@ -452,58 +898,6 @@ record_feedback (motion_t * p_motion, encoder_sample_t sample,
     }
 }
 
-void
-motion_restore_encoder_fault (motion_t * p_motion, encoder_sample_t sample,
-                              float64_t now)
-{
-    record_feedback(p_motion, sample, FB_RESTART_LATCH);
-    motion_raise_fault(p_motion, F_FEEDBACK, now);
-}
-
-void
-motion_init (motion_t * p_motion, const motion_config_t * p_config,
-             encoder_sample_t sample, float64_t now, bool b_setup_ok)
-{
-    unsigned wheel;
-
-    memset(p_motion, 0, sizeof(*p_motion));
-    p_motion->config                     = *p_config;
-    p_motion->status.state               = INITIALISING;
-    p_motion->status.generation          = 1U;
-    p_motion->last_time                  = now;
-    p_motion->entered                    = now;
-    p_motion->status.sample_time         = now;
-    p_motion->status.encoder             = sample;
-    p_motion->status.encoder_sample_time = now;
-    p_motion->status.feedback_trusted    = sample.reliable;
-
-    for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
-    {
-        p_motion->odom.previous[wheel] = sample.count[wheel];
-        p_motion->invalid[wheel]       = sample.invalid[wheel];
-    }
-
-    zero_output(p_motion);
-
-    if ((!motion_config_valid(p_config)) || (!isfinite(now)))
-    {
-        motion_raise_fault(p_motion, F_CONFIG, now);
-    }
-    else if (!b_setup_ok)
-    {
-        motion_raise_fault(p_motion, F_SETUP, now);
-    }
-    else if (!sample.reliable)
-    {
-        record_feedback(p_motion, sample, FB_UNRELIABLE);
-        motion_raise_fault(p_motion, F_FEEDBACK, now);
-    }
-    else
-    {
-        /* Nothing to do in any other case. */
-    }
-}
-
 static void
 timing_fault (motion_t * p_motion, float64_t now, float64_t delta_s)
 {
@@ -517,46 +911,6 @@ timing_fault (motion_t * p_motion, float64_t now, float64_t delta_s)
     motion_raise_fault(p_motion, F_TIMING, now);
 }
 
-void
-motion_begin_sampling (motion_t * p_motion, encoder_sample_t sample,
-                       float64_t now)
-{
-    unsigned wheel;
-
-    p_motion->status.encoder             = sample;
-    p_motion->status.encoder_sample_time = now;
-
-    if ((INITIALISING != p_motion->status.state) || (p_motion->active))
-    {
-        /* Nothing to do. */
-    }
-    else if ((!isfinite(now)) || (now < p_motion->last_time))
-    {
-        timing_fault(p_motion, now, now - p_motion->last_time);
-    }
-    else if ((!sample.reliable) || (sample.invalid[0] != p_motion->invalid[0])
-             || (sample.invalid[1] != p_motion->invalid[1]))
-    {
-        record_feedback(p_motion, sample,
-                        sample.reliable ? FB_INVALID_TRANSITION
-                                        : FB_UNRELIABLE);
-        motion_raise_fault(p_motion, F_FEEDBACK, now);
-    }
-    else
-    {
-        for (wheel = 0U; wheel < MOTION_WHEELS; ++wheel)
-        {
-            p_motion->odom.previous[wheel] = sample.count[wheel];
-        }
-
-        p_motion->last_time          = now;
-        p_motion->entered            = now;
-        p_motion->status.sample_time = now;
-        motion_flag_set(p_motion, MOTION_STILL_TRACKING, false);
-        p_motion->status.stationary = false;
-    }
-}
-
 static void
 stopping (motion_t * p_motion, float64_t now)
 {
@@ -565,55 +919,6 @@ stopping (motion_t * p_motion, float64_t now)
     p_motion->entered      = now;
     motion_flag_set(p_motion, MOTION_STILL_TRACKING, false);
     p_motion->status.stationary = false;
-}
-
-void
-motion_cancel (motion_t * p_motion, float64_t now)
-{
-    if (SHUTDOWN == p_motion->status.state)
-    {
-        return;
-    }
-
-    p_motion->status.hold = true;
-
-    if (p_motion->active)
-    {
-        event(p_motion, EV_CANCELLED);
-    }
-
-    p_motion->active = false;
-    motion_flag_set(p_motion, MOTION_GOAL_PENDING, false);
-    ++p_motion->status.generation;
-
-    if (FAULT == p_motion->status.state)
-    {
-        zero_output(p_motion);
-        return;
-    }
-
-    if (DRIVING == p_motion->status.state)
-    {
-        stopping(p_motion, now);
-    }
-    else if (STOPPING != p_motion->status.state)
-    {
-        zero_output(p_motion);
-        p_motion->status.state = STOPPED;
-    }
-    else
-    {
-        /* Nothing to do in any other case. */
-    }
-}
-
-void
-motion_shutdown (motion_t * p_motion, float64_t now)
-{
-    motion_cancel(p_motion, now);
-    zero_output(p_motion);
-    p_motion->status.state = SHUTDOWN;
-    p_motion->status.hold  = true;
 }
 
 /* Only reached with faults disabled. Nothing here sets FAULT or status.fault.
@@ -681,60 +986,6 @@ motion_fault_unlatched (motion_t * p_motion, motion_fault_t fault,
             /* Setup/timing/feedback/event failures: recorded, keep running. */
         break;
     }
-}
-
-bool
-motion_release (motion_t * p_motion, bool b_checks_ok)
-{
-    bool b_result = false;
-
-    if ((STOPPED != p_motion->status.state) || (!b_checks_ok)
-        || (!p_motion->status.stationary)
-        || (!p_motion->status.feedback_trusted)
-        || (F_NONE != p_motion->status.fault)
-        || (!motion_config_valid(&p_motion->config)))
-    {
-        b_result = false;
-    }
-    else
-    {
-        ++p_motion->status.generation;
-        p_motion->status.hold  = false;
-        p_motion->status.state = READY;
-        b_result               = true;
-    }
-
-    return b_result;
-}
-
-bool
-motion_reset (motion_t * p_motion, bool b_cleared, bool b_external_rest,
-              encoder_sample_t sample, float64_t now)
-{
-    uint32_t        generation = p_motion->status.generation;
-    motion_config_t config     = p_motion->config;
-
-    bool b_result = false;
-
-    if ((FAULT != p_motion->status.state) || (!b_cleared) || (!sample.reliable)
-        || (!motion_config_valid(&config))
-        || (motion_flag_get(p_motion, MOTION_FEEDBACK_LATCHED)
-                ? !b_external_rest
-                : !p_motion->status.stationary))
-    {
-        b_result = false;
-    }
-    else
-    {
-        motion_init(p_motion, &config, sample, now, true);
-        p_motion->status.generation = generation + 1U;
-        /* Reset remains held: explicit release follows the fresh settling
-         * check. */
-        p_motion->status.hold = true;
-        b_result              = true;
-    }
-
-    return b_result;
 }
 
 /* An arc must be possible for both wheels.  */
@@ -824,136 +1075,6 @@ accept_rounded_arc (const motion_t *         p_motion,
     }
 
     return true;
-}
-
-motion_result_t
-motion_accept (motion_t * p_motion, const motion_command_t * p_command,
-               float64_t now)
-{
-    unsigned                 wheel;
-    motion_storage_command_t stored;
-    motion_command_t         decoded;
-
-    if (NULL == p_command)
-    {
-        return R_INVALID;
-    }
-
-    bool b_refresh
-        = (p_motion->active)
-          && (WHEEL_SPEED_TRACKING == motion_compact_mode(&p_motion->command))
-          && (WHEEL_SPEED_TRACKING == p_command->mode);
-
-    if ((p_command->generation != p_motion->status.generation)
-        || (!isfinite(now)) || (!isfinite(p_command->expires))
-        || (p_command->expires <= now))
-    {
-        return R_STALE;
-    }
-
-    if ((0U == p_command->id) || (!isfinite(p_command->value))
-        || (!isfinite(p_command->speed[0])) || (!isfinite(p_command->speed[1]))
-        || (!isfinite(p_command->deadline)) || (p_command->deadline <= now)
-        || (p_command->deadline > (now + p_motion->config.movement_timeout))
-        || (p_command->expires > (now + p_motion->config.command_lifetime))
-        || (!isfinite(p_command->angle)) || (!isfinite(p_command->duration))
-        || ((unsigned)p_command->mode > (unsigned)ARC_MOVE))
-    {
-        return R_INVALID;
-    }
-
-    if ((FAULT == p_motion->status.state)
-        || (SHUTDOWN == p_motion->status.state) || (p_motion->status.hold)
-        || (INITIALISING == p_motion->status.state))
-    {
-        return R_HELD;
-    }
-
-    if ((READY != p_motion->status.state) && (!b_refresh))
-    {
-        return R_BUSY;
-    }
-
-    if ((DISTANCE_MOVE == p_command->mode)
-        && (fabs(p_command->value) > p_motion->config.max_distance))
-    {
-        return R_INVALID;
-    }
-
-    if ((ENCODER_TURN == p_command->mode)
-        && (fabs(p_command->value) > p_motion->config.max_angle))
-    {
-        return R_INVALID;
-    }
-
-    if ((ARC_MOVE == p_command->mode)
-        && (!accept_arc(p_motion, p_command, now)))
-    {
-        return R_INVALID;
-    }
-
-    for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
-    {
-        float64_t limit = (MANUAL_OUTPUT == p_command->mode)
-                              ? p_motion->config.manual_limit
-                              : p_motion->config.max_speed;
-
-        if (fabs(p_command->speed[wheel]) > limit)
-        {
-            return R_INVALID;
-        }
-    }
-
-    if ((MANUAL_OUTPUT == p_command->mode)
-        && ((!p_motion->config.manual_enabled)
-            || (p_command->deadline > (now + p_motion->config.manual_timeout))))
-    {
-        return R_INVALID;
-    }
-
-    if (b_refresh && (p_command->id != p_motion->command.id))
-    {
-        return R_BUSY;
-    }
-
-    if (b_refresh && (p_command->expires < p_motion->command.expires))
-    {
-        return R_STALE;
-    }
-
-    if ((!motion_compact_encode(p_command, &p_motion->config, &stored))
-        || (!motion_compact_decode(&stored, &p_motion->config, &decoded)))
-    {
-        return R_INVALID;
-    }
-
-    if ((ARC_MOVE == decoded.mode) && (!accept_rounded_arc(p_motion, &decoded)))
-    {
-        return R_INVALID;
-    }
-
-    if (!b_refresh)
-    {
-        for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
-        {
-            p_motion->start_count[wheel]    = p_motion->odom.previous[wheel];
-            p_motion->start[wheel]          = p_motion->odom.travel[wheel];
-            p_motion->last_progress[wheel]  = now;
-            p_motion->expected_since[wheel] = now;
-            pid_reset(&p_motion->pid[wheel]);
-        }
-
-        p_motion->entered = now;
-    }
-
-    p_motion->command           = stored;
-    p_motion->status.id         = p_command->id;
-    p_motion->status.mode       = p_command->mode;
-    p_motion->status.state      = DRIVING;
-    p_motion->status.stationary = false;
-    p_motion->status.inhibited  = false;
-    p_motion->active            = true;
-    return R_OK;
 }
 
 static bool
@@ -1561,82 +1682,6 @@ step_state (motion_t * p_motion, float64_t now, float64_t delta_s,
         default:
         break;
     }
-}
-
-void
-motion_step (motion_t * p_motion, encoder_sample_t sample, float64_t now)
-{
-    float64_t delta_s = now - p_motion->last_time;
-    bool      progressed[2];
-    bool      b_fresh;
-    unsigned  wheel;
-
-    p_motion->status.encoder             = sample;
-    p_motion->status.encoder_sample_time = now;
-
-    if (SHUTDOWN == p_motion->status.state)
-    {
-        zero_output(p_motion);
-        return;
-    }
-
-    p_motion->status.last_dt = delta_s;
-
-    if ((isfinite(delta_s)) && (delta_s > p_motion->status.max_observed_dt))
-    {
-        p_motion->status.max_observed_dt = delta_s;
-    }
-
-    if (!motion_config_valid(&p_motion->config))
-    {
-        motion_raise_fault(p_motion, F_CONFIG, now);
-        return;
-    }
-
-    if ((isfinite(now)) && (isfinite(delta_s))
-        && (delta_s > p_motion->config.max_dt)
-        && (INITIALISING == p_motion->status.state) && (!p_motion->active)
-        && (p_motion->status.inhibited))
-    {
-        step_startup_gap(p_motion, sample, now, delta_s);
-        return;
-    }
-    else if ((!isfinite(now)) || (!isfinite(delta_s)) || (delta_s <= 0.0)
-             || (delta_s > p_motion->config.max_dt))
-    {
-        if (!step_bad_interval(p_motion, now, &delta_s))
-        {
-            return;
-        }
-    }
-    else
-    {
-        /* Nothing to do in any other case. */
-    }
-
-    p_motion->last_time          = now;
-    p_motion->status.sample_time = now;
-
-    if (!step_odometry(p_motion, sample, now, delta_s, progressed, &b_fresh))
-    {
-        return;
-    }
-
-    p_motion->status.feedback_trusted
-        = b_fresh && (!motion_flag_get(p_motion, MOTION_FEEDBACK_LATCHED));
-
-    for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
-    {
-        p_motion->status.speed[wheel]  = p_motion->odom.speed[wheel];
-        p_motion->status.travel[wheel] = p_motion->odom.travel[wheel];
-    }
-
-    p_motion->status.centre  = p_motion->odom.centre;
-    p_motion->status.path    = p_motion->odom.path;
-    p_motion->status.heading = p_motion->odom.heading;
-
-    step_stationary(p_motion, now);
-    step_state(p_motion, now, delta_s, progressed);
 }
 
 /*** end of file ***/

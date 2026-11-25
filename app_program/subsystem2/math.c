@@ -3,11 +3,7 @@
 #include <math.h>
 #include <string.h>
 
-static float64_t
-clamp (float64_t value, float64_t limit)
-{
-    return fmax(-limit, fmin(limit, value));
-}
+static float64_t clamp(float64_t value, float64_t limit);
 
 void
 pid_reset (pid_t * p_pid)
@@ -109,6 +105,12 @@ odometry_step (odometry_t * p_odom, const motion_config_t * p_config,
     p_odom->path += fabs((change[0] + change[1]) / 2.0);
     p_odom->heading += (change[1] - change[0]) / p_config->track;
     return true;
+}
+
+static float64_t
+clamp (float64_t value, float64_t limit)
+{
+    return fmax(-limit, fmin(limit, value));
 }
 
 /*** end of file ***/
