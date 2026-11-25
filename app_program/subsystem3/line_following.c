@@ -2,6 +2,8 @@
  * (ROBO_LINE_TASK in subsystems.h; host tests define the same macros). */
 #if defined(ROBO_SAFE_MOTOR_TEST) || defined(ROBO_LINE_STEERING)
 #ifdef ROBO_LINE_TEST_HOST
+#include "../../include/float_types.h"
+#include <stdint.h>
 #include "line_test_fake_hal.h"
 #else
 #include "subsystems.h"
@@ -240,21 +242,21 @@ typedef enum
 typedef struct
 {
     line_search_phase_t phase;
-    double              dir; /* +1 pivot left, -1 pivot right. */
+    float64_t           dir; /* +1 pivot left, -1 pivot right. */
     /* Already reversed once during this loss. */
     bool backed;
     /* Heading while the line was last seen. */
-    double seen_heading;
+    float64_t seen_heading;
     /* Centre travel (m) while the line was last seen. */
-    double seen_centre;
+    float64_t seen_centre;
     /* Centre travel when the search started. */
-    double lost_centre;
+    float64_t lost_centre;
     /* Centre travel when reversing started. */
-    double backup_from;
+    float64_t backup_from;
     /* Time since loss when the stop phase began. */
-    double stop_from;
+    float64_t stop_from;
     /* Heading when the on-the-spot spin began. */
-    double spin_from;
+    float64_t spin_from;
 } line_search_t;
 
 static void
@@ -283,9 +285,9 @@ line_motion_ok (const robot_status_t * status)
 
 /* Inner wheel stopped, outer wheel at LINE_SEARCH_SPEED. */
 static motion_result_t
-line_pivot (double dir)
+line_pivot (float64_t dir)
 {
-    const double half = LINE_SEARCH_SPEED / 2.0;
+    const float64_t half = LINE_SEARCH_SPEED / 2.0;
 
     return (dir < 0.0)
                ? motion_steer_right(SOURCE_LINE, LINE_SESSION, half, half)
@@ -300,9 +302,9 @@ line_pivot (double dir)
  * raise F_EXPIRED. */
 static motion_result_t
 line_search_step (line_search_t * s, const motion_status_t * motion,
-                  line_direction_t last_side, double lost_for)
+                  line_direction_t last_side, float64_t lost_for)
 {
-    double turned = motion->heading - s->seen_heading;
+    float64_t turned = motion->heading - s->seen_heading;
 
     if (SEARCH_IDLE == s->phase)
     {
@@ -386,7 +388,7 @@ line_search_step (line_search_t * s, const motion_status_t * motion,
 }
 
 static motion_result_t
-line_follow (line_direction_t drive, double correction)
+line_follow (line_direction_t drive, float64_t correction)
 {
     if (LINE_LEFT == drive)
     {
@@ -407,10 +409,10 @@ line_follow (line_direction_t drive, double correction)
  * (values[3] stays 0; route_flag() sets it while a route pivots). Junctions
  * come from the barcode reader. */
 static void
-line_publish (line_direction_t direction, double now)
+line_publish (line_direction_t direction, float64_t now)
 {
-    double error   = 0.0;
-    bool   on_line = (LINE_LOST != direction) && (LINE_WAIT != direction);
+    float64_t error   = 0.0;
+    bool      on_line = (LINE_LOST != direction) && (LINE_WAIT != direction);
 
     if (LINE_LEFT == direction)
     {
@@ -519,10 +521,10 @@ line_report (unsigned centre, unsigned right, line_direction_t direction,
         tm_printf((const UB *)"line_fb cause=%u reliable=%u counts=%lu,%lu "
                               "invalid=%lu,%lu previous_invalid=%lu,%lu\n",
                   (unsigned)m->feedback_cause, (unsigned)f->reliable,
-                  (unsigned long)f->count[0], (unsigned long)f->count[1],
-                  (unsigned long)f->invalid[0], (unsigned long)f->invalid[1],
-                  (unsigned long)m->feedback_previous_invalid[0],
-                  (unsigned long)m->feedback_previous_invalid[1]);
+                  (uint32_t)f->count[0], (uint32_t)f->count[1],
+                  (uint32_t)f->invalid[0], (uint32_t)f->invalid[1],
+                  (uint32_t)m->feedback_previous_invalid[0],
+                  (uint32_t)m->feedback_previous_invalid[1]);
     }
 }
 
@@ -566,8 +568,8 @@ line_report (unsigned centre, unsigned right, line_direction_t direction,
 /* GP21, active low: calibrate, and resume after it. */
 #define LINE_CAL_BUTTON       ((unsigned)BOARD_CAL_BUTTON)
 
-static double
-route_abs (double x)
+static float64_t
+route_abs (float64_t x)
 {
     return (x < 0.0) ? -x : x;
 }
@@ -577,7 +579,7 @@ route_abs (double x)
 static bool
 route_brake (void)
 {
-    double start = motion_hal_time();
+    float64_t start = motion_hal_time();
     /* Static: the line task stack is nearly full. */
     static robot_status_t status;
 
@@ -606,10 +608,10 @@ route_brake (void)
  * given up: an expired tracking command is a latched F_EXPIRED fault in
  * production (motion.c), and only COMPLETE/CANCELLED/FAULT drop the owner. */
 static bool
-route_advance (double metres)
+route_advance (float64_t metres)
 {
-    double start = motion_hal_time();
-    double from;
+    float64_t start = motion_hal_time();
+    float64_t from;
     /* Static: the line task stack is nearly full. */
     static robot_status_t status;
 
@@ -658,16 +660,16 @@ route_flag (bool pivoting, bool black)
  * turned at least min_turn. Returns at once on the black, without braking, so
  * the line loop takes over the same session immediately. */
 static bool
-route_pivot (double dir, double min_turn, double max_turn)
+route_pivot (float64_t dir, float64_t min_turn, float64_t max_turn)
 {
     static robot_status_t status;
 
-    double   heading0;
-    double   turned    = 0.0;
-    double   start     = motion_hal_time();
-    bool     left_line = false;
-    unsigned seen      = 0U;
-    unsigned rejected  = 0U;
+    float64_t heading0;
+    float64_t turned    = 0.0;
+    float64_t start     = motion_hal_time();
+    bool      left_line = false;
+    unsigned  seen      = 0U;
+    unsigned  rejected  = 0U;
 
     if (!motion_get_status(&status))
     {
@@ -759,13 +761,13 @@ route_pivot (double dir, double min_turn, double max_turn)
 /* One route action. Returns true when following can resume; *side is where the
  * line will be after it. */
 static bool
-route_run (route_action_t action, bool at_junction, double path_seen,
+route_run (route_action_t action, bool at_junction, float64_t path_seen,
            line_direction_t * side)
 {
     /* Static: the line task stack is nearly full. */
     static robot_status_t status;
     /* The U-turn spins left. */
-    double dir = (ROUTE_RIGHT == action) ? -1.0 : 1.0;
+    float64_t dir = (ROUTE_RIGHT == action) ? -1.0 : 1.0;
 
     *side = LINE_STRAIGHT;
 
@@ -784,7 +786,7 @@ route_run (route_action_t action, bool at_junction, double path_seen,
     {
         /* Distance still to drive past the trigger, minus what the car coasted
          * (never reverses). */
-        double advance = ROUTE_ADVANCE_M - (status.motion.path - path_seen);
+        float64_t advance = ROUTE_ADVANCE_M - (status.motion.path - path_seen);
 
         tm_printf(
             (const UB *)"route: stopped, coasted %d mm, advancing %d mm\n",
@@ -843,7 +845,7 @@ line_imu_settled (const robot_status_t * status)
 static void
 line_wait_for_imu (void)
 {
-    double         start;
+    float64_t      start;
     robot_status_t status;
     bool           settled = false;
 #ifdef ROBO_REQUIRE_START
@@ -880,8 +882,8 @@ typedef struct
     line_direction_t last_side;
     /* Last follow command, repeated during GRACE. */
     line_direction_t follow;
-    double           lost_since;  /* Last time the line was seen. */
-    double           next_report; /* Next line_pid report. */
+    float64_t        lost_since;  /* Last time the line was seen. */
+    float64_t        next_report; /* Next line_pid report. */
     /* Barcode counters read once: earlier events cannot trigger anything. */
     bool baselined;
     /* A failed route action latched the car: STOPPED, not HELD. */
@@ -897,7 +899,7 @@ typedef struct
      */
     uint8_t route_pending;
     /* Path (m) at that read: sizes the U-turn's barcode ignore. */
-    double route_read_path;
+    float64_t route_read_path;
     /* Consecutive polls with GP21 pressed (debounce). */
     unsigned cal_presses;
     /* GP21 pressed: the reader is calibrating on the next full pass. */
@@ -905,24 +907,25 @@ typedef struct
     /* CAL_WAIT: calibration finished, stopped until GP21 is pressed again. */
     bool cal_wait;
     /* Path (m) where the barcode pass began, see LINE_BC_*; < 0 = none. */
-    double bc_hold_from;
+    float64_t bc_hold_from;
     /* Path (m) where the line was lost during that pass; < 0 = not lost. */
-    double bc_lost_from;
-    double bc_heading_from; /* Heading (rad) at the start of that pass. */
+    float64_t bc_lost_from;
+    float64_t bc_heading_from; /* Heading (rad) at the start of that pass. */
 #endif
 #ifdef ROBO_LINE_RUN_LIMIT_S
     /* First follow command; the car is held still ROBO_LINE_RUN_LIMIT_S later.
      */
-    double run_start;
-    bool   run_done;
+    float64_t run_start;
+    bool      run_done;
 #endif
 #ifdef ROBO_LINE_LOSS_TEST
-    double on_line_since; /* Start of the current stretch with the line seen. */
+    /* Start of the current stretch with the line seen. */
+    float64_t on_line_since;
     /* When the current search started; glimpses do not reset it. */
-    double search_began;
+    float64_t search_began;
 #ifdef ROBO_LINE_VEER_TEST
-    double veer_until;
-    bool   veered;
+    float64_t veer_until;
+    bool      veered;
 #endif
 #endif
 } line_ctx_t;
@@ -1189,7 +1192,7 @@ line_barcode_events (line_ctx_t * c, const robot_status_t * status, bool owns)
 /* While a barcode pass is read: the steering correction to use, and *hold =
  * hold the heading through a short loss (BARCODE state). Both end at a bend
  * (LINE_BC_MAX_TURN) or after LINE_BC_HOLD_MAX. */
-static double
+static float64_t
 line_barcode_window (line_ctx_t * c, const robot_status_t * status,
                      line_direction_t direction, bool * window, bool * hold)
 {
@@ -1241,7 +1244,7 @@ line_barcode_window (line_ctx_t * c, const robot_status_t * status,
 static void
 line_drive (line_ctx_t * c, const robot_status_t * status, bool owns,
             line_direction_t direction, unsigned centre, unsigned right,
-            double now)
+            float64_t now)
 {
     /* Subsystem 5 drives round obstacles itself; keep off the wheels until it
      * publishes that it is back on the line. Exact compare: the value is
@@ -1256,7 +1259,7 @@ line_drive (line_ctx_t * c, const robot_status_t * status, bool owns,
     bool             grace_ok = true;
     bool             window;
     bool             bc_hold;
-    double           correction
+    float64_t        correction
         = line_barcode_window(c, status, direction, &window, &bc_hold);
 #ifdef ROBO_LINE_LOSS_TEST
     /* A glimpse of tape during a search is not "found": keep the 360 deg budget
@@ -1297,7 +1300,7 @@ line_drive (line_ctx_t * c, const robot_status_t * status, bool owns,
     /* Analysis builds: one run of ROBO_LINE_RUN_LIMIT_S seconds, then stand
      * still (reset to rerun). */
     if (!c->run_done && c->run_start >= 0.0
-        && (now - c->run_start) >= (double)ROBO_LINE_RUN_LIMIT_S)
+        && (now - c->run_start) >= (float64_t)ROBO_LINE_RUN_LIMIT_S)
     {
         c->run_done = true;
         tm_printf((const UB *)"line_test: run limit reached, car stopped\n");
@@ -1343,8 +1346,8 @@ line_drive (line_ctx_t * c, const robot_status_t * status, bool owns,
     else if (bc_hold && (LINE_LOST == drive) && usable
              && (line_driving(status, owns)))
     {
-        double turn = LINE_BC_HOLD_GAIN
-                      * (c->search.seen_heading - status->motion.heading);
+        float64_t turn = LINE_BC_HOLD_GAIN
+                         * (c->search.seen_heading - status->motion.heading);
 
         if (turn > LINE_BC_HOLD_RATE)
         {
@@ -1364,7 +1367,7 @@ line_drive (line_ctx_t * c, const robot_status_t * status, bool owns,
     }
     else if ((LINE_LOST == drive) && usable && (line_driving(status, owns)))
     {
-        double lost_for = now - c->lost_since;
+        float64_t lost_for = now - c->lost_since;
 #ifdef ROBO_LINE_LOSS_TEST
         if (SEARCH_IDLE == c->search.phase)
         {
@@ -1462,7 +1465,7 @@ line_loop (void)
         line_direction_t direction
             = motion_line_direction(&c->filter, 1U == centre, 1U == right);
         robot_status_t status;
-        double         now = motion_hal_time();
+        float64_t      now = motion_hal_time();
 
         /* Raw, not debounced: a single centre-only sample before the loss still
          * counts. */

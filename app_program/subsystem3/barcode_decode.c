@@ -1,4 +1,5 @@
 /* Barcode decoding, see barcode_decode.h. */
+#include "../../include/float_types.h"
 #include "barcode_decode.h"
 
 #ifndef BARCODE_SMOOTH
@@ -179,13 +180,15 @@ barcode_nth (const uint32_t * d, unsigned first, unsigned nth)
 static char
 barcode_char (const uint32_t * d)
 {
-    double normal
-        = ((double)barcode_nth(d, 0U, 2U) / (double)barcode_nth(d, 0U, 3U))
-          * ((double)barcode_nth(d, 1U, 1U) / (double)barcode_nth(d, 1U, 2U));
-    double spaces
-        = ((double)barcode_nth(d, 1U, 3U) / (double)barcode_nth(d, 1U, 4U))
-          * ((double)barcode_nth(d, 0U, 5U) / (double)barcode_nth(d, 0U, 1U));
-    bool spaces_only = spaces > normal;
+    float64_t normal      = ((float64_t)barcode_nth(d, 0U, 2U)
+                             / (float64_t)barcode_nth(d, 0U, 3U))
+                            * ((float64_t)barcode_nth(d, 1U, 1U)
+                               / (float64_t)barcode_nth(d, 1U, 2U));
+    float64_t spaces      = ((float64_t)barcode_nth(d, 1U, 3U)
+                             / (float64_t)barcode_nth(d, 1U, 4U))
+                            * ((float64_t)barcode_nth(d, 0U, 5U)
+                               / (float64_t)barcode_nth(d, 0U, 1U));
+    bool      spaces_only = spaces > normal;
 
     return barcode_lookup(spaces_only
                               ? barcode_widest(d, 1U, 3U)
@@ -444,16 +447,16 @@ barcode_elements (uint16_t * m, unsigned count, uint32_t * d,
     uint16_t raw[BARCODE_SMOOTH] = {0};
 
     /* Trough: lowest point before each bar, and after the last. */
-    unsigned peak[BARCODE_MAX_BARS];
-    unsigned trough[BARCODE_MAX_BARS + 1U];
-    unsigned bars;
-    unsigned n     = 0U;
-    uint32_t white = 0U;
-    uint32_t noise = 0U;
-    uint32_t prominence;
-    uint32_t highest = 0U;
-    uint32_t contrast;
-    double   previous_end = 0.0;
+    unsigned  peak[BARCODE_MAX_BARS];
+    unsigned  trough[BARCODE_MAX_BARS + 1U];
+    unsigned  bars;
+    unsigned  n     = 0U;
+    uint32_t  white = 0U;
+    uint32_t  noise = 0U;
+    uint32_t  prominence;
+    uint32_t  highest = 0U;
+    uint32_t  contrast;
+    float64_t previous_end = 0.0;
 
     if ((count < BARCODE_QUIET) || (count > BARCODE_SAMPLES))
     {
@@ -547,33 +550,34 @@ barcode_elements (uint16_t * m, unsigned count, uint32_t * d,
             }
         }
 #endif
-        double base = ((double)m[trough[k]] + (double)m[trough[k + 1U]]) / 2.0;
-        double edge = base + ((double)prominence / 2.0);
-        double area = 0.0;
-        double moment = 0.0;
-        double width;
-        double centre;
-        unsigned start = peak[k];
-        unsigned end   = peak[k];
+        float64_t base
+            = ((float64_t)m[trough[k]] + (float64_t)m[trough[k + 1U]]) / 2.0;
+        float64_t edge   = base + ((float64_t)prominence / 2.0);
+        float64_t area   = 0.0;
+        float64_t moment = 0.0;
+        float64_t width;
+        float64_t centre;
+        unsigned  start = peak[k];
+        unsigned  end   = peak[k];
 
-        while ((start > trough[k]) && ((double)m[start - 1U] > edge))
+        while ((start > trough[k]) && ((float64_t)m[start - 1U] > edge))
         {
             --start;
         }
 
-        while ((end < trough[k + 1U]) && ((double)m[end + 1U] > edge))
+        while ((end < trough[k + 1U]) && ((float64_t)m[end + 1U] > edge))
         {
             ++end;
         }
 
         for (unsigned i = start; i <= end; ++i)
         {
-            double above = (double)m[i] - base;
+            float64_t above = (float64_t)m[i] - base;
 
             if (above > 0.0)
             {
                 area += above;
-                moment += above * (double)i;
+                moment += above * (float64_t)i;
             }
         }
 
@@ -582,12 +586,12 @@ barcode_elements (uint16_t * m, unsigned count, uint32_t * d,
             continue;
         }
 
-        width  = area / (double)contrast; /* In samples. */
+        width  = area / (float64_t)contrast; /* In samples. */
         centre = moment / area;
 
         if (n > 0U)
         {
-            double gap = (centre - (width / 2.0)) - previous_end;
+            float64_t gap = (centre - (width / 2.0)) - previous_end;
 
             d[n++] = (uint32_t)(((gap > 1.0) ? gap : 1.0) * BARCODE_SAMPLE_US);
         }

@@ -1,3 +1,4 @@
+#include "../../include/float_types.h"
 #include "motion.h"
 #include "board_config.h"
 #include <math.h>
@@ -126,28 +127,28 @@ board_motion_config (void)
 bool
 motion_config_valid (const motion_config_t * c)
 {
-    unsigned     wheel;
-    const double positive[] = {c->track,
-                               c->max_speed,
-                               c->acceleration,
-                               c->max_output,
-                               c->period,
-                               c->max_dt,
-                               c->distance_tolerance,
-                               c->angle_tolerance,
-                               c->stopped_speed,
-                               c->settle_time,
-                               c->startup_grace,
-                               c->feedback_timeout,
-                               c->stop_timeout,
-                               c->setup_timeout,
-                               c->command_lifetime,
-                               c->movement_timeout,
-                               c->max_distance,
-                               c->max_angle,
-                               c->reversal_time,
-                               c->manual_limit,
-                               c->manual_timeout};
+    unsigned        wheel;
+    const float64_t positive[] = {c->track,
+                                  c->max_speed,
+                                  c->acceleration,
+                                  c->max_output,
+                                  c->period,
+                                  c->max_dt,
+                                  c->distance_tolerance,
+                                  c->angle_tolerance,
+                                  c->stopped_speed,
+                                  c->settle_time,
+                                  c->startup_grace,
+                                  c->feedback_timeout,
+                                  c->stop_timeout,
+                                  c->setup_timeout,
+                                  c->command_lifetime,
+                                  c->movement_timeout,
+                                  c->max_distance,
+                                  c->max_angle,
+                                  c->reversal_time,
+                                  c->manual_limit,
+                                  c->manual_timeout};
 
     for (wheel = 0; wheel < (sizeof(positive) / sizeof(positive[0])); ++wheel)
     {

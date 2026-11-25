@@ -18,6 +18,7 @@
  *  optional noise, stray echoes, a beam cone and servo gear backlash.
  */
 
+#include "../../include/float_types.h"
 #include "obstacle_scan.h"
 #include "detour_plan.h"
 #include "../../tests/subsystem5/face_scans.h"
@@ -29,30 +30,31 @@
 
 typedef struct
 {
-    double depth_mm; /* box front face, forward of the servo axis */
-    double left_mm;  /* box edges, lateral, + left */
-    double right_mm;
-    double wall_mm;  /* background wall forward distance, 0 = none */
-    double noise_mm; /* uniform +/- noise on every echo */
-    double cone_deg; /* beam half-angle, 0 = ideal ray */
+    float64_t depth_mm; /* box front face, forward of the servo axis */
+    float64_t left_mm;  /* box edges, lateral, + left */
+    float64_t right_mm;
+    float64_t wall_mm;  /* background wall forward distance, 0 = none */
+    float64_t noise_mm; /* uniform +/- noise on every echo */
+    float64_t cone_deg; /* beam half-angle, 0 = ideal ray */
     /* horn lags this far behind the direction of travel */
-    double   backlash_deg;
-    double   other_depth_mm; /* second object beside the first, 0 = none */
-    double   other_left_mm;
-    double   other_right_mm;
-    unsigned stray_every; /* every Nth ping is a stray echo or a miss */
-    unsigned seed;
-    unsigned pings;
-    unsigned measures;
-    unsigned abort_after;   /* measure() fails after this many, 0 = never */
-    int      commanded_deg; /* last servo command */
+    float64_t backlash_deg;
+    float64_t other_depth_mm; /* second object beside the first, 0 = none */
+    float64_t other_left_mm;
+    float64_t other_right_mm;
+    unsigned  stray_every; /* every Nth ping is a stray echo or a miss */
+    unsigned  seed;
+    unsigned  pings;
+    unsigned  measures;
+    unsigned  abort_after;   /* measure() fails after this many, 0 = never */
+    int       commanded_deg; /* last servo command */
     /* +1 / -1: last move towards higher / lower angles */
-    int    direction;
-    double servo_deg; /* where the horn really points */
+    int       direction;
+    float64_t servo_deg; /* where the horn really points */
 } world_t;
 
-static double curve_drive(s5_curve_t * p_curve, double path_mm,
-                          double * p_heading_deg, double mm, double deg_per_mm);
+static float64_t curve_drive(s5_curve_t * p_curve, float64_t path_mm,
+                             float64_t * p_heading_deg, float64_t mm,
+                             float64_t deg_per_mm);
 
 static unsigned failures;
 static unsigned checks;
@@ -70,7 +72,7 @@ check (bool b_ok, const char * p_name)
 }
 
 static void
-check_near (double actual, double expected, double tolerance,
+check_near (float64_t actual, float64_t expected, float64_t tolerance,
             const char * p_name)
 {
     checks++;
@@ -85,7 +87,7 @@ check_near (double actual, double expected, double tolerance,
 
 /* s5_estimate() takes the echoes as a mask */
 static void
-estimate (const double range_mm[], const bool echo[], unsigned count,
+estimate (const float64_t range_mm[], const bool echo[], unsigned count,
           s5_estimate_t * p_out)
 {
     uint16_t mask = 0U;
@@ -102,30 +104,30 @@ estimate (const double range_mm[], const bool echo[], unsigned count,
     s5_estimate(range_mm, mask, count, p_out);
 }
 
-static double
+static float64_t
 world_random (world_t * p_world) /* 0..1, deterministic */
 {
     p_world->seed = (p_world->seed * 1103515245U) + 12345U;
-    return (double)((p_world->seed >> 8) & 0xffffU) / 65535.0;
+    return (float64_t)((p_world->seed >> 8) & 0xffffU) / 65535.0;
 }
 
 /* Echo from one flat face square to the robot: the nearest point of it
    inside the beam answers first. */
 static bool
-face_echo (const world_t * p_world, double depth_mm, double left_mm,
-           double right_mm, double * p_range_mm)
+face_echo (const world_t * p_world, float64_t depth_mm, float64_t left_mm,
+           float64_t right_mm, float64_t * p_range_mm)
 {
-    double bearing
-        = ((double)S5_ANGLE_CENTRE_DEG - p_world->servo_deg) * DEG_TO_RAD;
-    double cone = p_world->cone_deg * DEG_TO_RAD;
+    float64_t bearing
+        = ((float64_t)S5_ANGLE_CENTRE_DEG - p_world->servo_deg) * DEG_TO_RAD;
+    float64_t cone = p_world->cone_deg * DEG_TO_RAD;
     /* the sensor rides on the horn, S5_SENSOR_OFFSET_MM out along the beam */
-    double sensor_fwd = S5_SENSOR_OFFSET_MM * cos(bearing);
-    double sensor_lat = S5_SENSOR_OFFSET_MM * sin(bearing);
-    double face_left  = atan2(left_mm - sensor_lat, depth_mm - sensor_fwd);
-    double face_right = atan2(right_mm - sensor_lat, depth_mm - sensor_fwd);
-    double low        = fmax(bearing - cone, face_right);
-    double high       = fmin(bearing + cone, face_left);
-    double nearest;
+    float64_t sensor_fwd = S5_SENSOR_OFFSET_MM * cos(bearing);
+    float64_t sensor_lat = S5_SENSOR_OFFSET_MM * sin(bearing);
+    float64_t face_left  = atan2(left_mm - sensor_lat, depth_mm - sensor_fwd);
+    float64_t face_right = atan2(right_mm - sensor_lat, depth_mm - sensor_fwd);
+    float64_t low        = fmax(bearing - cone, face_right);
+    float64_t high       = fmin(bearing + cone, face_left);
+    float64_t nearest;
 
     if (low > high)
     {
@@ -138,17 +140,17 @@ face_echo (const world_t * p_world, double depth_mm, double left_mm,
 }
 
 static bool
-world_ping (void * p_context, double * p_range_mm)
+world_ping (void * p_context, float64_t * p_range_mm)
 {
     world_t * p_world = (world_t *)p_context;
-    double    bearing
-        = ((double)S5_ANGLE_CENTRE_DEG - p_world->servo_deg) * DEG_TO_RAD;
-    double sensor_fwd = S5_SENSOR_OFFSET_MM * cos(bearing);
-    double other_mm   = 0.0;
-    bool   b_other    = (p_world->other_depth_mm > 0.0)
-                        && (face_echo(p_world, p_world->other_depth_mm,
-                                      p_world->other_left_mm,
-                                      p_world->other_right_mm, &other_mm));
+    float64_t bearing
+        = ((float64_t)S5_ANGLE_CENTRE_DEG - p_world->servo_deg) * DEG_TO_RAD;
+    float64_t sensor_fwd = S5_SENSOR_OFFSET_MM * cos(bearing);
+    float64_t other_mm   = 0.0;
+    bool      b_other    = (p_world->other_depth_mm > 0.0)
+                           && (face_echo(p_world, p_world->other_depth_mm,
+                                         p_world->other_left_mm,
+                                         p_world->other_right_mm, &other_mm));
 
     p_world->pings++;
 
@@ -208,8 +210,9 @@ world_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
     }
 
     p_world->commanded_deg = angle_deg;
-    p_world->servo_deg = (double)angle_deg
-                         - (p_world->backlash_deg * (double)p_world->direction);
+    p_world->servo_deg
+        = (float64_t)angle_deg
+          - (p_world->backlash_deg * (float64_t)p_world->direction);
     s5_sample_point(world_ping, p_world, p_estimate);
     return true;
 }
@@ -219,25 +222,25 @@ world_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
    servo axis, which the robot's turn leaves on the line. */
 typedef struct
 {
-    double yaw_deg;
-    double half_width_mm;
+    float64_t yaw_deg;
+    float64_t half_width_mm;
     /* middle of the face from the perpendicular's foot, + left */
-    double centre_mm;
+    float64_t centre_mm;
 } yawed_t;
 
 static bool
 yawed_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
 {
     const yawed_t * p_yawed = (const yawed_t *)p_context;
-    double          yaw     = p_yawed->yaw_deg * DEG_TO_RAD;
-    double          ray
-        = (((double)S5_ANGLE_CENTRE_DEG - (double)angle_deg) * DEG_TO_RAD)
+    float64_t       yaw     = p_yawed->yaw_deg * DEG_TO_RAD;
+    float64_t       ray
+        = (((float64_t)S5_ANGLE_CENTRE_DEG - (float64_t)angle_deg) * DEG_TO_RAD)
           + yaw;
-    double   face     = 180.0 * cos(yaw);
-    double   axis     = face / cos(ray);
-    double   range[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
-    bool     echo[5]  = {false, false, false, false, false};
-    unsigned i;
+    float64_t face     = 180.0 * cos(yaw);
+    float64_t axis     = face / cos(ray);
+    float64_t range[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
+    bool      echo[5]  = {false, false, false, false, false};
+    unsigned  i;
 
     if ((cos(ray) > 0.0)
         && (fabs((axis * sin(ray)) - p_yawed->centre_mm)
@@ -255,7 +258,8 @@ yawed_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
 }
 
 static world_t
-box (double depth_mm, double left_mm, double right_mm, double wall_mm)
+box (float64_t depth_mm, float64_t left_mm, float64_t right_mm,
+     float64_t wall_mm)
 {
     world_t world = {0};
 
@@ -270,14 +274,14 @@ box (double depth_mm, double left_mm, double right_mm, double wall_mm)
 static void
 test_estimate (void)
 {
-    s5_estimate_t e;
-    const double  agree[5]    = {400.0, 401.0, 399.0, 400.0, 402.0};
-    const double  stray[5]    = {400.0, 250.0, 401.0, 399.0, 900.0};
-    const double  spread[5]   = {300.0, 400.0, 500.0, 600.0, 700.0};
-    const double  tie[4]      = {600.0, 601.0, 400.0, 401.0};
-    const bool    all[5]      = {true, true, true, true, true};
-    const bool    silent[5]   = {false, true, false, true, false};
-    const bool    one_miss[5] = {true, true, true, true, false};
+    s5_estimate_t   e;
+    const float64_t agree[5]    = {400.0, 401.0, 399.0, 400.0, 402.0};
+    const float64_t stray[5]    = {400.0, 250.0, 401.0, 399.0, 900.0};
+    const float64_t spread[5]   = {300.0, 400.0, 500.0, 600.0, 700.0};
+    const float64_t tie[4]      = {600.0, 601.0, 400.0, 401.0};
+    const bool      all[5]      = {true, true, true, true, true};
+    const bool      silent[5]   = {false, true, false, true, false};
+    const bool      one_miss[5] = {true, true, true, true, false};
 
     estimate(agree, all, 5U, &e);
     check((S5_ECHO_OK == e.status) && (5U == e.support),
@@ -326,12 +330,12 @@ test_geometry (void)
 }
 
 static void
-run_box (world_t * p_world, double tolerance_mm, const char * p_name)
+run_box (world_t * p_world, float64_t tolerance_mm, const char * p_name)
 {
     static s5_scan_t scan;
     char             name[96];
-    double           width  = p_world->left_mm - p_world->right_mm;
-    double           offset = 0.5 * (p_world->left_mm + p_world->right_mm);
+    float64_t        width  = p_world->left_mm - p_world->right_mm;
+    float64_t        offset = 0.5 * (p_world->left_mm + p_world->right_mm);
 
     check(s5_scan_run(&scan, world_measure, p_world), p_name);
     check(scan.b_valid, p_name);
@@ -403,7 +407,7 @@ test_scans (void)
     check((s5_scan_run(&scan, world_measure, &world)) && (scan.b_valid),
           "cone: scanned");
     {
-        double by_edges
+        float64_t by_edges
             = scan.edge[S5_LEFT].lateral_mm - scan.edge[S5_RIGHT].lateral_mm;
 
         check((by_edges > (300.0 + 20.0))
@@ -439,7 +443,7 @@ test_placement (void)
 {
     static s5_scan_t scan;
     world_t          world;
-    double           expected;
+    float64_t        expected;
 
     world = box(400.0, 150.0, -150.0, 1500.0);
     run_placement(&world, S5_POSITION_CENTRE, false, "placement: centred box");
@@ -558,7 +562,7 @@ test_avoidance (void)
 {
     static s5_scan_t scan;
     world_t          world;
-    double           margin = S5_ROBOT_HALF_WIDTH_MM + S5_PASS_MARGIN_MM;
+    float64_t        margin = S5_ROBOT_HALF_WIDTH_MM + S5_PASS_MARGIN_MM;
 
     /* The obstacle blocks the left: pass right, and vice versa */
     world = box(400.0, 250.0, -50.0, 0.0);
@@ -614,21 +618,22 @@ static void check_plan_geometry(const s5_detour_plan_t * p_plan,
 static void
 test_face (void)
 {
-    static s5_scan_t    scan;
-    static const double yaws[] = {0.0, 10.0, -10.0, 20.0, -20.0, 30.0, -30.0};
-    s5_detour_plan_t    plan;
-    unsigned            i;
+    static s5_scan_t       scan;
+    static const float64_t yaws[]
+        = {0.0, 10.0, -10.0, 20.0, -20.0, 30.0, -30.0};
+    s5_detour_plan_t plan;
+    unsigned         i;
 
     for (i = 0U; i < (sizeof(yaws) / sizeof(yaws[0])); i++)
     {
-        yawed_t yawed = {yaws[i], 100.0, 0.0};
-        double  face  = 180.0 * cos(yaws[i] * DEG_TO_RAD);
+        yawed_t   yawed = {yaws[i], 100.0, 0.0};
+        float64_t face  = 180.0 * cos(yaws[i] * DEG_TO_RAD);
         /* the robot's, square to the face */
-        double heading = yaws[i] * DEG_TO_RAD;
+        float64_t heading = yaws[i] * DEG_TO_RAD;
 
-        double start_y;
-        double servo_y;
-        double end_y;
+        float64_t start_y;
+        float64_t servo_y;
+        float64_t end_y;
 
         check((s5_scan_run(&scan, yawed_measure, &yawed)) && (scan.b_valid),
               "face: scanned");
@@ -757,7 +762,7 @@ test_face (void)
 }
 
 static s5_point_t
-logged_point (int angle_deg, double range_mm)
+logged_point (int angle_deg, float64_t range_mm)
 {
     s5_estimate_t e
         = {S5_ECHO_NONE, 0.0, 0U, 0U, S5_SAMPLES_PER_POINT, 0.0, 0.0};
@@ -805,8 +810,8 @@ test_point_pack (void)
 {
     static const struct
     {
-        int    angle_deg;
-        double range_mm;
+        int       angle_deg;
+        float64_t range_mm;
 
         unsigned support;
         unsigned valid;
@@ -878,15 +883,15 @@ test_point_pack (void)
         {
             for (support = (valid > 0U) ? 1U : 0U; support <= valid; support++)
             {
-                double        range[S5_MAX_SAMPLES] = {0.0};
+                float64_t     range[S5_MAX_SAMPLES] = {0.0};
                 s5_estimate_t e;
                 s5_point_t    p;
 
                 /* "support" agreeing pings, the rest of the echoes far apart */
                 for (i = 0U; i < valid; i++)
                 {
-                    range[i]
-                        = (i < support) ? 200.0 : 300.0 + (100.0 * (double)i);
+                    range[i] = (i < support) ? 200.0
+                                             : 300.0 + (100.0 * (float64_t)i);
                 }
 
                 s5_estimate(range, (uint16_t)((1U << valid) - 1U), total, &e);
@@ -907,15 +912,15 @@ static void
 test_curve_wrap (void)
 {
     static s5_curve_t curve;
-    double            path    = 65536.0 - 150.0;
-    double            heading = 3276.0; /* in 0.1 deg this passes 2^15 */
+    float64_t         path    = 65536.0 - 150.0;
+    float64_t         heading = 3276.0; /* in 0.1 deg this passes 2^15 */
 
     s5_curve_reset(&curve);
     path = curve_drive(&curve, path, &heading, 100.0, 0.0);
     check(!s5_curve_recent(&curve), "curve wrap: straight up to it");
     path = curve_drive(&curve, path, &heading, 100.0, 0.5);
     check(s5_curve_recent(&curve), "curve wrap: seen across it");
-    check_near((double)curve.swing_ddeg / 10.0, 51.0, 0.1,
+    check_near((float64_t)curve.swing_ddeg / 10.0, 51.0, 0.1,
                "curve wrap: true size");
     path = curve_drive(&curve, path, &heading, 700.0, 0.0);
     check(!s5_curve_recent(&curve), "curve wrap: forgotten");
@@ -990,11 +995,11 @@ test_face_logged (void)
 
 /* Drive this far at this heading rate (deg per mm), noting every 6 mm as the
    task does at line speed.  Returns the path reached. */
-static double
-curve_drive (s5_curve_t * p_curve, double path_mm, double * p_heading_deg,
-             double mm, double deg_per_mm)
+static float64_t
+curve_drive (s5_curve_t * p_curve, float64_t path_mm, float64_t * p_heading_deg,
+             float64_t mm, float64_t deg_per_mm)
 {
-    double end = path_mm + mm;
+    float64_t end = path_mm + mm;
 
     while (path_mm < end)
     {
@@ -1010,15 +1015,15 @@ static void
 test_curve (void)
 {
     static s5_curve_t curve;
-    double            path    = 0.0;
-    double            heading = 0.0;
+    float64_t         path    = 0.0;
+    float64_t         heading = 0.0;
     unsigned          i;
 
     s5_curve_reset(&curve);
     check(!s5_curve_recent(&curve), "curve: not at the start");
     path = curve_drive(&curve, path, &heading, 1000.0, 0.0);
     check(!s5_curve_recent(&curve), "curve: not on a straight");
-    check_near((double)curve.swing_ddeg / 10.0, 0.0, 1e-9,
+    check_near((float64_t)curve.swing_ddeg / 10.0, 0.0, 1e-9,
                "curve: a straight has no swing");
 
     /* The follower's zigzag: +/- 8 deg every 100 mm */
@@ -1037,17 +1042,17 @@ test_curve (void)
     check(s5_curve_recent(&curve),
           "curve: remembered past the end of the curve");
     path = curve_drive(&curve, path, &heading,
-                       (double)S5_CURVE_WINDOW_MM + S5_CURVE_HOLD_MM + 12.0,
+                       (float64_t)S5_CURVE_WINDOW_MM + S5_CURVE_HOLD_MM + 12.0,
                        0.0);
     check(!s5_curve_recent(&curve), "curve: forgotten");
-    check_near((double)curve.swing_ddeg / 10.0, 0.0, 1e-9,
+    check_near((float64_t)curve.swing_ddeg / 10.0, 0.0, 1e-9,
                "curve: old samples dropped");
 
     /* Either direction */
     path = curve_drive(&curve, path, &heading, 150.0, -0.6);
     check(s5_curve_recent(&curve), "curve: to the right too");
     path = curve_drive(&curve, path, &heading,
-                       2.0 * ((double)S5_CURVE_WINDOW_MM + S5_CURVE_HOLD_MM),
+                       2.0 * ((float64_t)S5_CURVE_WINDOW_MM + S5_CURVE_HOLD_MM),
                        0.0);
     check(!s5_curve_recent(&curve), "curve: right forgotten");
 
@@ -1057,7 +1062,7 @@ test_curve (void)
     path = curve_drive(&curve, path, &heading, 600.0, 0.1);
     check(s5_curve_recent(&curve), "curve: a long sweep counts");
     path = curve_drive(&curve, path, &heading,
-                       2.0 * ((double)S5_CURVE_WINDOW_MM + S5_CURVE_HOLD_MM),
+                       2.0 * ((float64_t)S5_CURVE_WINDOW_MM + S5_CURVE_HOLD_MM),
                        0.0);
     check(!s5_curve_recent(&curve), "curve: sweep forgotten");
 
@@ -1066,7 +1071,7 @@ test_curve (void)
     s5_curve_note(&curve, path, heading);
     check(s5_curve_recent(&curve), "curve: pivot counts");
     path = curve_drive(&curve, path, &heading,
-                       2.0 * ((double)S5_CURVE_WINDOW_MM + S5_CURVE_HOLD_MM),
+                       2.0 * ((float64_t)S5_CURVE_WINDOW_MM + S5_CURVE_HOLD_MM),
                        0.0);
 
     /* Standing still does not age the curve or lose samples */
@@ -1078,7 +1083,7 @@ test_curve (void)
     }
 
     check(s5_curve_recent(&curve), "curve: still recent after standing still");
-    check(((double)curve.swing_ddeg / 10.0) >= S5_CURVE_MIN_DEG,
+    check(((float64_t)curve.swing_ddeg / 10.0) >= S5_CURVE_MIN_DEG,
           "curve: standing still keeps the samples");
 
     /* Marked after a rejoin: however straight the odometry looks */
@@ -1097,8 +1102,8 @@ test_curve (void)
    face. Each row holds from that angle upwards. */
 typedef struct
 {
-    int    angle_deg;
-    double range_mm;
+    int       angle_deg;
+    float64_t range_mm;
 } replay_t;
 
 static const replay_t replay_scan[]
@@ -1111,7 +1116,7 @@ static bool
 replay_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
 {
     unsigned * p_calls = (unsigned *)p_context;
-    double     range[5];
+    float64_t  range[5];
     bool       echo[5] = {true, true, true, true, true};
 
     unsigned i;
@@ -1194,13 +1199,13 @@ static const replay_t bend_scan[]
        {100, 159.0}, {110, 165.0}, {120, 172.0}, {122, 168.0},  {125, 181.0},
        {126, 178.0}, {127, 386.0}, {128, 571.0}, {130, 2238.0}, {140, 585.0},
        {150, 641.0}, {160, 1423.0}};
-static double bend_128_mm;
+static float64_t bend_128_mm;
 
 static bool
 bend_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
 {
-    double range[5];
-    bool   echo[5] = {true, true, true, true, true};
+    float64_t range[5];
+    bool      echo[5] = {true, true, true, true, true};
 
     unsigned i;
     unsigned row = 0U;
@@ -1272,9 +1277,9 @@ test_edge_still_ends (void)
 static void
 check_plan_geometry (const s5_detour_plan_t * p_plan, const char * p_name)
 {
-    double front_reach = hypot(S5_FRONT_MM, S5_ROBOT_HALF_WIDTH_MM);
+    float64_t front_reach = hypot(S5_FRONT_MM, S5_ROBOT_HALF_WIDTH_MM);
     /* the robot's at the start */
-    double heading = -p_plan->tilt_deg * DEG_TO_RAD;
+    float64_t heading = -p_plan->tilt_deg * DEG_TO_RAD;
 
     check((fabs(p_plan->turn_deg) >= (S5_OUT_MIN_DEG - 1e-9))
               && (fabs(p_plan->turn_deg) <= (S5_OUT_MAX_DEG + 1e-9)),
@@ -1300,7 +1305,7 @@ test_detour_plan (void)
     static s5_scan_t scan;
     s5_detour_plan_t plan;
     world_t          world;
-    double           margin = S5_ROBOT_HALF_WIDTH_MM + S5_PASS_MARGIN_MM;
+    float64_t        margin = S5_ROBOT_HALF_WIDTH_MM + S5_PASS_MARGIN_MM;
 
     /* Obstacle reaching right, at the 150 mm stop: out to the left */
     world = box(180.0, 50.0, -150.0, 0.0);
@@ -1357,26 +1362,26 @@ test_detour_plan (void)
    miss_every-th echo from it is lost; far_mm > 0 puts a wall that far
    beyond its side, heard whenever the box is not. */
 static bool
-simulate_pass (const s5_detour_plan_t * p_plan, double depth_mm,
-               unsigned miss_every, double far_mm, s5_pass_t * p_pass)
+simulate_pass (const s5_detour_plan_t * p_plan, float64_t depth_mm,
+               unsigned miss_every, float64_t far_mm, s5_pass_t * p_pass)
 {
-    double   look = (double)S5_SIDE_LOOK_DEG * DEG_TO_RAD;
-    double   x    = p_plan->out_x_mm;
-    double   y    = p_plan->shift_mm;
-    double   gap  = fabs(y - p_plan->edge_mm);
-    unsigned count;
+    float64_t look = (float64_t)S5_SIDE_LOOK_DEG * DEG_TO_RAD;
+    float64_t x    = p_plan->out_x_mm;
+    float64_t y    = p_plan->shift_mm;
+    float64_t gap  = fabs(y - p_plan->edge_mm);
+    unsigned  count;
 
     s5_pass_init(p_pass, p_plan);
 
     for (count = 1U; x <= (p_plan->out_x_mm + S5_PASS_MAX_MM); count++)
     {
-        double crossing = x + S5_SERVO_AHEAD_MM + (gap / tan(look));
-        bool   b_box    = (crossing >= p_plan->face_mm)
-                          && (crossing <= (p_plan->face_mm + depth_mm));
-        bool   b_echo
+        float64_t crossing = x + S5_SERVO_AHEAD_MM + (gap / tan(look));
+        bool      b_box    = (crossing >= p_plan->face_mm)
+                             && (crossing <= (p_plan->face_mm + depth_mm));
+        bool      b_echo
             = b_box && ((0U == miss_every) || (0U != (count % miss_every)));
         /* Driver ranges start at the transducer, not the servo axis. */
-        double range = (gap / sin(look)) - S5_SENSOR_OFFSET_MM;
+        float64_t range = (gap / sin(look)) - S5_SENSOR_OFFSET_MM;
 
         if ((!b_echo) && (far_mm > 0.0))
         {
@@ -1396,16 +1401,16 @@ simulate_pass (const s5_detour_plan_t * p_plan, double depth_mm,
 }
 
 static void
-check_pass (const s5_detour_plan_t * p_plan, double depth_mm,
-            unsigned miss_every, double far_mm, const char * p_name)
+check_pass (const s5_detour_plan_t * p_plan, float64_t depth_mm,
+            unsigned miss_every, float64_t far_mm, const char * p_name)
 {
     s5_pass_t pass;
-    double    rear_reach = hypot(S5_REAR_MM, S5_ROBOT_HALF_WIDTH_MM);
-    double    end        = p_plan->face_mm + depth_mm;
-    double    turn_in;
-    double    past;
-    double    gap  = fabs(p_plan->shift_mm - p_plan->edge_mm);
-    double    back = S5_RETURN_DEG * DEG_TO_RAD;
+    float64_t rear_reach = hypot(S5_REAR_MM, S5_ROBOT_HALF_WIDTH_MM);
+    float64_t end        = p_plan->face_mm + depth_mm;
+    float64_t turn_in;
+    float64_t past;
+    float64_t gap  = fabs(p_plan->shift_mm - p_plan->edge_mm);
+    float64_t back = S5_RETURN_DEG * DEG_TO_RAD;
 
     check(simulate_pass(p_plan, depth_mm, miss_every, far_mm, &pass), p_name);
     /* the end is never estimated short of the true end ... */
@@ -1482,10 +1487,10 @@ test_detour_retry (void)
     s5_detour_plan_t shallow;
     s5_detour_plan_t other;
     s5_avoid_side_t  side;
-    double           x;
-    double           expected;
-    double           echo;
-    double           needed;
+    float64_t        x;
+    float64_t        expected;
+    float64_t        echo;
+    float64_t        needed;
     int              look;
 
     check((s5_scan_run(&scan, yawed_measure, &yawed)) && (scan.b_valid),

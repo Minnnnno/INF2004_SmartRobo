@@ -3,6 +3,7 @@
 /* RP2040 register adapter using the template's genuine micro T-Kernel BSP.
  * Kernel owns startup and interrupt vectors; no Pico SDK runtime is linked. */
 #include "robot_rtos.h"
+#include "../../include/float_types.h"
 #include <stdint.h>
 #include <stdbool.h>
 _Static_assert(TMCLK_MHz == 125,
@@ -10,8 +11,8 @@ _Static_assert(TMCLK_MHz == 125,
 
 typedef struct
 {
-    uint16_t wrap;
-    float    divider;
+    uint16_t  wrap;
+    float32_t divider;
 } pwm_config;
 
 bool board_gpio_irq_register(uint32_t mask, void (*handler)(void));
@@ -136,7 +137,7 @@ pwm_config_set_wrap (pwm_config * p, uint16_t wrap)
 }
 
 static inline void
-pwm_config_set_clkdiv (pwm_config * p, float divider)
+pwm_config_set_clkdiv (pwm_config * p, float32_t divider)
 {
     p->divider = divider;
 }

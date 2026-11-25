@@ -1,3 +1,4 @@
+#include "../../include/float_types.h"
 #include "robot.h"
 #include <math.h>
 #include <string.h>
@@ -101,7 +102,7 @@ robot_control (robot_bus_t * b, robot_control_t control, bool checks_ok,
 }
 
 void
-vehicle_controller_cycle (robot_bus_t * b, double now)
+vehicle_controller_cycle (robot_bus_t * b, float64_t now)
 {
     robot_request_t r;
     unsigned        i;
@@ -196,7 +197,7 @@ vehicle_controller_remote_command (robot_bus_t *          b,
 
 void
 robot_motion_inputs (robot_bus_t * b, motion_t * m, encoder_sample_t sample,
-                     double now)
+                     float64_t now)
 {
     uint32_t controls = b->controls;
 
@@ -271,7 +272,7 @@ robot_motion_inputs (robot_bus_t * b, motion_t * m, encoder_sample_t sample,
 }
 
 void
-robot_publish (robot_bus_t * b, motion_t * m, double now)
+robot_publish (robot_bus_t * b, motion_t * m, float64_t now)
 {
     motion_event_t e;
 

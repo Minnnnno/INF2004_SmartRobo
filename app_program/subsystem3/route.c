@@ -1,12 +1,13 @@
 /* Barcode route (route.h). The MQTT callback is the only writer; the barcode
  * and line tasks read. One aligned 32-bit store with SMP off, so a reader
  * always sees a whole route. */
+#include <stdint.h>
 #include "route.h"
 
 static volatile uint32_t route_word; /* 0 = nothing received yet. */
 
 #define ROUTE_BYTE(letter, action) \
-    | ((uint32_t)(unsigned char)(letter) << (8U * ((unsigned)(action) - 1U)))
+    | ((uint32_t)(uint8_t)(letter) << (8U * ((unsigned)(action) - 1U)))
 static const uint32_t route_fallback = 0U ROUTE_TABLE(ROUTE_BYTE);
 
 uint32_t
@@ -79,7 +80,7 @@ route_set (const char * text, int len)
             return false;
         }
 
-        route |= (uint32_t)(unsigned char)letter << (8U * slot);
+        route |= (uint32_t)(uint8_t)letter << (8U * slot);
         i += 3;
 
         if ((i < len) && (' ' != text[i]) && (',' != text[i]))

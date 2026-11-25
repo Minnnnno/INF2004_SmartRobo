@@ -12,6 +12,7 @@
 #ifndef S5_DETOUR_H
 #define S5_DETOUR_H
 
+#include "../../include/float_types.h"
 #include "robot.h"
 #include "detour_plan.h"
 
@@ -28,7 +29,7 @@ bool s5_wait_still(void);
 void s5_still_mark(void);
 bool s5_still_moved(const robot_status_t * p_status);
 /* Buddy 3 is publishing fresh line readings */
-bool s5_line_reporting(const robot_status_t * p_status, double now);
+bool s5_line_reporting(const robot_status_t * p_status, float64_t now);
 
 /* Task-context diagnostic: coherent live left/right encoder counts. id=0 for
    stop/scan boundaries; finite moves use their command ID. Production only. */
@@ -37,13 +38,13 @@ encoder_sample_t s5_log_encoders(const char * phase, uint32_t id);
 /* Reverse straight back mm, from a held robot, then hold it still again.
    The line follower must already be told to keep off the wheels.
    True: moved back and held still. */
-bool s5_back_off(double mm);
+bool s5_back_off(float64_t mm);
 
 /* Turn on the spot by degrees (+ left), from a held robot, then hold it still
    and let it settle.  The line follower must already be told to keep off the
    wheels.  *p_turned_deg: what the encoders measured, which a stall cuts short.
    True: held and still.  False: the caller must stop it. */
-bool s5_square_up(double degrees, double * p_turned_deg);
+bool s5_square_up(float64_t degrees, float64_t * p_turned_deg);
 
 /* Release the obstacle hold, drive round the obstacle and back onto the
    line.  If Buddy 3's centre and right sensors both see black while passing
@@ -60,36 +61,43 @@ bool s5_detour_retryable(void);
 
 /* Why a scan or detour stopped (README.md "Why a detour stopped"): a 6-bit
    index kept in one byte, with one table of names for the console and MQTT. */
-#define S5_WHY_CODES(X)                                                    \
-    X(ahead_blocked)                                                       \
-    X(diagonal_blocked)                                                    \
-    X(lifted)                                                              \
-    X(line_lost_at_stop)                                                   \
-    X(line_not_found)                                                      \
-    X(line_not_reporting)                                                  \
-    X(look_moved)                                                          \
-    X(look_unstable)                                                       \
-    X(motion_fault)                                                        \
-    X(move_event)                                                          \
-    X(moved)                                                               \
-    X(moved_while_scanning)                                                \
-    X(no_progress)                                                         \
-    X(no_release)                                                          \
-    X(no_safe_detour)                                                      \
-    X(no_status)                                                           \
-    X(no_way_around)                                                       \
-    X(not_accepted)                                                        \
-    X(not_still)                                                           \
-    X(noted_line_blocked)                                                  \
-    X(noted_line_not_found)                                                \
-    X(obstacle_too_long)                                                   \
-    X(parallel_blocked)                                                    \
-    X(pass_ahead_blocked)                                                  \
-    X(pass_look_failed) X(publish_failed) X(refused)                       \
-        X(released_while_scanning) X(repeated_spurious) X(scan_failed)     \
-            X(scan_setup_failed) X(sensor_failed) X(sensor_fault)          \
-                X(side_too_close) X(stall_no_escape) X(stalled) X(stopped) \
-                    X(timeout) X(ultrasonic_failed) X(unknown)
+#define S5_WHY_CODES(X)        \
+    X(ahead_blocked)           \
+    X(diagonal_blocked)        \
+    X(lifted)                  \
+    X(line_lost_at_stop)       \
+    X(line_not_found)          \
+    X(line_not_reporting)      \
+    X(look_moved)              \
+    X(look_unstable)           \
+    X(motion_fault)            \
+    X(move_event)              \
+    X(moved)                   \
+    X(moved_while_scanning)    \
+    X(no_progress)             \
+    X(no_release)              \
+    X(no_safe_detour)          \
+    X(no_status)               \
+    X(no_way_around)           \
+    X(not_accepted)            \
+    X(not_still)               \
+    X(noted_line_blocked)      \
+    X(noted_line_not_found)    \
+    X(obstacle_too_long)       \
+    X(parallel_blocked)        \
+    X(pass_ahead_blocked)      \
+    X(pass_look_failed)        \
+    X(publish_failed)          \
+    X(refused)                 \
+    X(released_while_scanning) \
+    X(repeated_spurious)       \
+    X(scan_failed)             \
+    X(scan_setup_failed)       \
+    X(sensor_failed)           \
+    X(sensor_fault)            \
+    X(side_too_close)          \
+    X(stall_no_escape)         \
+    X(stalled) X(stopped) X(timeout) X(ultrasonic_failed) X(unknown)
 #define S5_WHY_ENUM(name) S5_WHY_##name,
 typedef enum
 {

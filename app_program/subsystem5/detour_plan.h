@@ -27,6 +27,7 @@
 #ifndef S5_DETOUR_PLAN_H
 #define S5_DETOUR_PLAN_H
 
+#include "../../include/float_types.h"
 #include "obstacle_scan.h"
 
 /* ---- robot dimensions, from the axle centre: MEASURE THESE ---- */
@@ -138,16 +139,16 @@ typedef struct
 {
     bool            b_ok; /* false: no safe detour, stay stopped */
     s5_avoid_side_t side;
-    double          shift_mm;    /* y to pass the obstacle at */
-    double          edge_mm;     /* y of the end being passed */
-    double          face_mm;     /* obstacle face, x */
-    double          backup_mm;   /* reverse this far first (>= 0) */
-    double          turn_deg;    /* outward turn, + left */
-    double          diagonal_mm; /* drive this far after the turn */
-    double          out_x_mm;    /* centre x when back parallel to the line */
+    float64_t       shift_mm;    /* y to pass the obstacle at */
+    float64_t       edge_mm;     /* y of the end being passed */
+    float64_t       face_mm;     /* obstacle face, x */
+    float64_t       backup_mm;   /* reverse this far first (>= 0) */
+    float64_t       turn_deg;    /* outward turn, + left */
+    float64_t       diagonal_mm; /* drive this far after the turn */
+    float64_t       out_x_mm;    /* centre x when back parallel to the line */
     /* the frame: s5_face_t's tilt, 0 if none was fitted */
-    double tilt_deg;
-    double start_y_mm; /* axle's y at the start */
+    float64_t tilt_deg;
+    float64_t start_y_mm; /* axle's y at the start */
 } s5_detour_plan_t;
 
 /* Plan step 1 from a finished scan.  Needs a pass side with room. */
@@ -156,32 +157,33 @@ bool s5_detour_plan(const s5_scan_t * p_scan, s5_detour_plan_t * p_plan);
    (S5_OUT_MIN_DEG..S5_OUT_MAX_DEG): a shallower turn backs up further first.
    s5_detour_plan() is this with the scan's side and S5_OUT_MAX_DEG. */
 bool s5_detour_plan_side(const s5_scan_t * p_scan, s5_avoid_side_t side,
-                         double max_out_deg, s5_detour_plan_t * p_plan);
+                         float64_t max_out_deg, s5_detour_plan_t * p_plan);
 
 /* Axis range (from the servo axis) of the scanned obstacle's nearest point
    within S5_KNOWN_BEAM_HALF_DEG of a look at servo angle_deg, with the axle at
    (x_mm, y_mm) and heading heading_deg in the plan's frame.  The obstacle is
    everything beyond its face on its side of the passed end.  INFINITY: not in
    that beam. */
-double s5_obstacle_range(const s5_detour_plan_t * p_plan, double x_mm,
-                         double y_mm, double heading_deg, int angle_deg);
+float64_t s5_obstacle_range(const s5_detour_plan_t * p_plan, float64_t x_mm,
+                            float64_t y_mm, float64_t heading_deg,
+                            int angle_deg);
 /* TRUE when an echo (range_mm from the transducer, as s5_us_ping returns it)
    is the scanned obstacle rather than something new: see
    S5_KNOWN_BEAM_HALF_DEG. */
-bool s5_echo_on_obstacle(const s5_detour_plan_t * p_plan, double x_mm,
-                         double y_mm, double heading_deg, int angle_deg,
-                         double range_mm);
+bool s5_echo_on_obstacle(const s5_detour_plan_t * p_plan, float64_t x_mm,
+                         float64_t y_mm, float64_t heading_deg, int angle_deg,
+                         float64_t range_mm);
 
 typedef struct
 {
-    double rear_mm; /* furthest x the obstacle has been seen at */
+    float64_t rear_mm; /* furthest x the obstacle has been seen at */
     /* x where the first of the latest clear looks crossed its side: the
      * obstacle ends before this */
-    double  end_mm;
-    double  gap_mm;    /* centre line to the obstacle's side, last look */
-    uint8_t clear_run; /* clear looks in a row past rear_mm */
-    uint8_t seen;      /* looks that heard the obstacle; saturates */
-    bool    b_ended;
+    float64_t end_mm;
+    float64_t gap_mm;    /* centre line to the obstacle's side, last look */
+    uint8_t   clear_run; /* clear looks in a row past rear_mm */
+    uint8_t   seen;      /* looks that heard the obstacle; saturates */
+    bool      b_ended;
 } s5_pass_t;
 
 void s5_pass_init(s5_pass_t * p_pass, const s5_detour_plan_t * p_plan);
@@ -190,17 +192,18 @@ void s5_pass_init(s5_pass_t * p_pass, const s5_detour_plan_t * p_plan);
    from the transducer (as returned by s5_us_ping). The sensor's offset from
    the servo axis is applied here. Returns true once the obstacle has ended. */
 bool s5_pass_observe(s5_pass_t * p_pass, const s5_detour_plan_t * p_plan,
-                     double x_mm, double y_mm, bool b_echo, double range_mm);
+                     float64_t x_mm, float64_t y_mm, bool b_echo,
+                     float64_t range_mm);
 /* Centre x from which turning in cannot swing the rear into the obstacle
    (once s5_pass_observe has returned true) */
-double s5_pass_clear_x(const s5_pass_t * p_pass);
+float64_t s5_pass_clear_x(const s5_pass_t * p_pass);
 
 /* Length of the return leg from lateral y_mm at S5_RETURN_DEG, with
    S5_RETURN_EXTRA_MM to spare */
-double s5_return_length(double y_mm);
+float64_t s5_return_length(float64_t y_mm);
 /* TRUE when the line sensors are near enough where the line should be
    for black under them to be the line */
-bool s5_line_expected(double y_mm, double heading_deg);
+bool s5_line_expected(float64_t y_mm, float64_t heading_deg);
 
 #endif /* S5_DETOUR_PLAN_H */
 

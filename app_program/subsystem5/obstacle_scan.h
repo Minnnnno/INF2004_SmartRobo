@@ -16,6 +16,7 @@
 #ifndef S5_OBSTACLE_SCAN_H
 #define S5_OBSTACLE_SCAN_H
 
+#include "../../include/float_types.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -166,19 +167,19 @@ typedef enum
 typedef struct
 {
     s5_echo_t status;
-    double    range_mm;   /* mean of the agreeing pings */
+    float64_t range_mm;   /* mean of the agreeing pings */
     unsigned  support;    /* pings in the agreeing group */
     unsigned  valid;      /* pings that heard an echo */
     unsigned  total;      /* pings taken */
-    double    nearest_mm; /* nearest and furthest echo of all (valid > 0) */
-    double    farthest_mm;
+    float64_t nearest_mm; /* nearest and furthest echo of all (valid > 0) */
+    float64_t farthest_mm;
 } s5_estimate_t;
 
 /* Stored ranges: 0.25 mm steps, 0..4000 mm in 14 bits */
 #define S5_RANGE_STEPS_PER_MM 4.0
 #define S5_RANGE_CODE_MAX     16000U
-uint16_t s5_range_code(double range_mm); /* rounded, clamped */
-double   s5_range_mm(unsigned code);
+uint16_t  s5_range_code(float64_t range_mm); /* rounded, clamped */
+float64_t s5_range_mm(unsigned code);
 
 /* A stored reading, 32 bits:
      0..13 range code   14..21 angle - S5_ANGLE_LEFT_DEG   22..25 support
@@ -194,7 +195,7 @@ typedef struct
 s5_point_t s5_point_pack(int angle_deg, const s5_estimate_t * p_estimate,
                          bool b_object);
 int        s5_point_angle(s5_point_t point);
-double     s5_point_range(s5_point_t point);
+float64_t  s5_point_range(s5_point_t point);
 unsigned   s5_point_support(s5_point_t point);
 unsigned   s5_point_valid(s5_point_t point);
 unsigned   s5_point_total(s5_point_t point);
@@ -217,13 +218,13 @@ typedef struct
     /* first clear angle past it (= last when not found) */
     uint8_t first_clear_deg;
     /* midpoint walking outward (last_object..first_clear) */
-    double outward_deg;
+    float64_t outward_deg;
     /* midpoint walking back inward (= outward_deg if not done) */
-    double inward_deg;
+    float64_t inward_deg;
     /* edge estimate: mean of both walks, after beam correction */
-    double angle_deg;
-    double range_mm;   /* obstacle range at last_object_deg */
-    double lateral_mm; /* edge position, + left */
+    float64_t angle_deg;
+    float64_t range_mm;   /* obstacle range at last_object_deg */
+    float64_t lateral_mm; /* edge position, + left */
 } s5_edge_t;
 
 typedef enum
@@ -238,10 +239,10 @@ typedef struct
 {
     s5_position_t position;
     /* left edge, degrees left of straight ahead */
-    double left_deg;
+    float64_t left_deg;
     /* right edge, degrees right of straight ahead */
-    double right_deg;
-    double difference_deg; /* left_deg - right_deg: + further left */
+    float64_t right_deg;
+    float64_t difference_deg; /* left_deg - right_deg: + further left */
     /* an edge lay beyond the sweep: that angle is a minimum */
     bool b_bounded;
 } s5_placement_t;
@@ -257,14 +258,14 @@ typedef struct
     uint8_t end_deg[2];
     /* bearing of the face's perpendicular from straight ahead, + left.
      * Negative: the robot points left of square to the face */
-    double tilt_deg;
-    double distance_mm; /* servo axis to the face, along the perpendicular */
+    float64_t tilt_deg;
+    float64_t distance_mm; /* servo axis to the face, along the perpendicular */
     /* left corner, along the face from the perpendicular's foot */
-    double left_mm;
-    double right_mm; /* right corner, the same way */
-    double width_mm;
-    double offset_mm; /* the face's middle from that foot, + left */
-    double far_mm;    /* longest range on the face */
+    float64_t left_mm;
+    float64_t right_mm; /* right corner, the same way */
+    float64_t width_mm;
+    float64_t offset_mm; /* the face's middle from that foot, + left */
+    float64_t far_mm;    /* longest range on the face */
 } s5_face_t;
 
 static inline bool
@@ -287,11 +288,11 @@ typedef struct
     /* Sideways move of the robot's centre that clears each side of the
        obstacle by S5_PASS_MARGIN_MM.  A minimum if that edge lay beyond
        the sweep. */
-    double shift_mm[2]; /* [S5_LEFT], [S5_RIGHT], both >= 0 */
+    float64_t shift_mm[2]; /* [S5_LEFT], [S5_RIGHT], both >= 0 */
     /* Nearest other echo beside the obstacle on each side, mm from the
        robot's centre line; INFINITY when none was heard. */
-    double clear_mm[2];
-    bool   b_room[2]; /* edge found, and the robot fits past it */
+    float64_t clear_mm[2];
+    bool      b_room[2]; /* edge found, and the robot fits past it */
 } s5_avoid_t;
 
 typedef struct
@@ -304,14 +305,14 @@ typedef struct
     s5_point_t centre;
     s5_point_t coarse[S5_COARSE_POINTS];
     s5_point_t fine[2][S5_FINE_MAX_POINTS + S5_INWARD_MAX_STEPS];
-    double     centre_forward_mm;
+    float64_t  centre_forward_mm;
     s5_edge_t  edge[2];   /* [S5_LEFT], [S5_RIGHT] */
-    double     width_mm;  /* lower bound unless both ends are known */
-    double     offset_mm; /* obstacle centre, + left */
+    float64_t  width_mm;  /* lower bound unless both ends are known */
+    float64_t  offset_mm; /* obstacle centre, + left */
     /* tilt, distance and corners; decides when valid */
     s5_face_t face;
     /* turned before this scan to face it, + left; the caller sets it */
-    double squared_deg;
+    float64_t squared_deg;
     /* centre / left / right: from the face when valid, else the edge angles;
      * its degrees are always the edges' */
     s5_placement_t placement;
@@ -319,25 +320,25 @@ typedef struct
 } s5_scan_t;
 
 /* One ping.  Returns true with *p_range_mm set when an echo came back. */
-typedef bool (*s5_ping_fn)(void * p_context, double * p_range_mm);
+typedef bool (*s5_ping_fn)(void * p_context, float64_t * p_range_mm);
 
 /* Point the sensor at angle_deg and measure there.  Return false to abort. */
 typedef bool (*s5_measure_fn)(void * p_context, int angle_deg,
                               s5_estimate_t * p_estimate);
 
-double s5_forward_mm(double range_mm, double angle_deg);
-double s5_lateral_mm(double range_mm, double angle_deg);
+float64_t s5_forward_mm(float64_t range_mm, float64_t angle_deg);
+float64_t s5_lateral_mm(float64_t range_mm, float64_t angle_deg);
 
 /* Robust "mode with a tolerance": the largest group of pings that agree
    within S5_CLUSTER_TOL_MM wins and is averaged.  Missed pings count as
    votes for "nothing there".  echo: bit i set when ping i heard something. */
-void s5_estimate(const double range_mm[], uint16_t echo, unsigned count,
+void s5_estimate(const float64_t range_mm[], uint16_t echo, unsigned count,
                  s5_estimate_t * p_out);
 /* TRUE when the estimate is a usable echo (an unstable one counts only if
    its group outvotes the silent pings). */
 bool s5_estimate_usable(const s5_estimate_t * p_estimate);
 bool s5_point_is_object(const s5_estimate_t * p_estimate, int angle_deg,
-                        double centre_forward_mm);
+                        float64_t centre_forward_mm);
 
 /* S5_SAMPLES_PER_POINT pings, plus S5_RETRY_SAMPLES more if they disagree. */
 void s5_sample_point(s5_ping_fn ping, void * p_context, s5_estimate_t * p_out);
@@ -371,7 +372,7 @@ s5_avoid_side_t s5_preferred_side(const s5_scan_t * p_scan);
 bool s5_tilt_scan(s5_scan_t * p_scan, s5_measure_fn measure, void * p_context);
 /* The tilt the robot stopped with: what is left, plus what it turned to square
  * up */
-double s5_start_tilt_deg(const s5_scan_t * p_scan);
+float64_t s5_start_tilt_deg(const s5_scan_t * p_scan);
 
 /* The face from the coarse sweep and the outward fine walks.  s5_scan_run
    fills p_scan->face with this. */
@@ -393,9 +394,10 @@ typedef struct
 } s5_curve_t;
 
 void s5_curve_reset(s5_curve_t * p_curve);
-void s5_curve_note(s5_curve_t * p_curve, double path_mm, double heading_deg);
+void s5_curve_note(s5_curve_t * p_curve, float64_t path_mm,
+                   float64_t heading_deg);
 /* Treat the next S5_CURVE_HOLD_MM as just after a curve, e.g. after a rejoin */
-void s5_curve_mark(s5_curve_t * p_curve, double path_mm);
+void s5_curve_mark(s5_curve_t * p_curve, float64_t path_mm);
 bool s5_curve_recent(const s5_curve_t * p_curve);
 
 #endif /* S5_OBSTACLE_SCAN_H */

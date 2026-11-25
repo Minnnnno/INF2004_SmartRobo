@@ -1,4 +1,5 @@
 /* Buddy 4 compass calibration and heading; see mag_heading.h. */
+#include "../../include/float_types.h"
 #include "mag_heading.h"
 #include <math.h>
 #include <stddef.h>
@@ -88,16 +89,16 @@ mag_popcount (uint64_t bits)
 
 /* Corrected X/Y for a raw sample. */
 static void
-mag_correct (mag_cal_t const * p_cal, int16_t x, int16_t y, float * p_cx,
-             float * p_cy)
+mag_correct (mag_cal_t const * p_cal, int16_t x, int16_t y, float32_t * p_cx,
+             float32_t * p_cy)
 {
-    *p_cx = (float)((int32_t)x - (int32_t)p_cal->offset_x);
-    *p_cy = (float)((int32_t)y - (int32_t)p_cal->offset_y)
-            * ((float)p_cal->scale_y_q12 / (float)MAG_SCALE_ONE_Q12);
+    *p_cx = (float32_t)((int32_t)x - (int32_t)p_cal->offset_x);
+    *p_cy = (float32_t)((int32_t)y - (int32_t)p_cal->offset_y)
+            * ((float32_t)p_cal->scale_y_q12 / (float32_t)MAG_SCALE_ONE_Q12);
 }
 
-static float
-mag_wrap_deg (float degrees)
+static float32_t
+mag_wrap_deg (float32_t degrees)
 {
     while (degrees > 180.0F)
     {
@@ -115,14 +116,14 @@ mag_wrap_deg (float degrees)
 uint8_t
 mag_cal_finish (mag_cal_acc_t const * p_acc, mag_cal_result_t * p_result)
 {
-    int32_t  half_x   = 0;
-    int32_t  half_y   = 0;
-    float    sum      = 0.0F;
-    float    sum_sq   = 0.0F;
-    float    mean     = 0.0F;
-    float    turn     = 0.0F;
-    float    previous = 0.0F;
-    uint32_t scale    = 0U;
+    int32_t   half_x   = 0;
+    int32_t   half_y   = 0;
+    float32_t sum      = 0.0F;
+    float32_t sum_sq   = 0.0F;
+    float32_t mean     = 0.0F;
+    float32_t turn     = 0.0F;
+    float32_t previous = 0.0F;
+    uint32_t  scale    = 0U;
 
     if ((NULL == p_acc) || (NULL == p_result))
     {
@@ -169,9 +170,9 @@ mag_cal_finish (mag_cal_acc_t const * p_acc, mag_cal_result_t * p_result)
     /* Circle fit over one sample per bin, and the rotation sense. */
     for (uint32_t bin = 0U; bin < MAG_BINS; bin++)
     {
-        float cx    = 0.0F;
-        float cy    = 0.0F;
-        float angle = 0.0F;
+        float32_t cx    = 0.0F;
+        float32_t cy    = 0.0F;
+        float32_t angle = 0.0F;
 
         mag_correct(&p_result->cal, p_acc->bin_x[bin], p_acc->bin_y[bin], &cx,
                     &cy);
@@ -186,13 +187,13 @@ mag_cal_finish (mag_cal_acc_t const * p_acc, mag_cal_result_t * p_result)
         previous = angle;
     }
 
-    mean = sum / (float)MAG_BINS;
+    mean = sum / (float32_t)MAG_BINS;
 
     for (uint32_t bin = 0U; bin < MAG_BINS; bin++)
     {
-        float cx    = 0.0F;
-        float cy    = 0.0F;
-        float error = 0.0F;
+        float32_t cx    = 0.0F;
+        float32_t cy    = 0.0F;
+        float32_t error = 0.0F;
 
         mag_correct(&p_result->cal, p_acc->bin_x[bin], p_acc->bin_y[bin], &cx,
                     &cy);
@@ -201,7 +202,7 @@ mag_cal_finish (mag_cal_acc_t const * p_acc, mag_cal_result_t * p_result)
     }
 
     p_result->fit_permille
-        = (uint16_t)((sqrtf(sum_sq / (float)MAG_BINS) * 1000.0F) + 0.5F);
+        = (uint16_t)((sqrtf(sum_sq / (float32_t)MAG_BINS) * 1000.0F) + 0.5F);
     p_result->cal.field = (uint16_t)(mean + 0.5F);
     /* Bins follow increasing encoder heading (left). If the raw angle fell,
      * the sensor's sense is opposite: flip so + = left like the encoders. */
@@ -231,9 +232,9 @@ mag_cal_status_name (uint8_t status)
 uint16_t
 mag_field (mag_cal_t const * p_cal, int16_t x, int16_t y)
 {
-    float cx        = (float)x;
-    float cy        = (float)y;
-    float magnitude = 0.0F;
+    float32_t cx        = (float32_t)x;
+    float32_t cy        = (float32_t)y;
+    float32_t magnitude = 0.0F;
 
     if ((NULL != p_cal) && (p_cal->calibrated))
     {
@@ -249,12 +250,12 @@ bool
 mag_heading_ddeg (mag_cal_t const * p_cal, int16_t x, int16_t y,
                   int16_t * p_heading_ddeg)
 {
-    float   cx        = 0.0F;
-    float   cy        = 0.0F;
-    float   heading   = 0.0F;
-    int32_t field     = 0;
-    int32_t reference = 0;
-    int32_t ddeg      = 0;
+    float32_t cx        = 0.0F;
+    float32_t cy        = 0.0F;
+    float32_t heading   = 0.0F;
+    int32_t   field     = 0;
+    int32_t   reference = 0;
+    int32_t   ddeg      = 0;
 
     if ((NULL == p_cal) || (NULL == p_heading_ddeg) || (!p_cal->calibrated)
         || (0U == p_cal->field))
@@ -272,7 +273,7 @@ mag_heading_ddeg (mag_cal_t const * p_cal, int16_t x, int16_t y,
     }
 
     mag_correct(p_cal, x, y, &cx, &cy);
-    heading = (float)p_cal->sign * atan2f(cy, cx) * MAG_RAD_TO_DDEG;
+    heading = (float32_t)p_cal->sign * atan2f(cy, cx) * MAG_RAD_TO_DDEG;
     ddeg = (int32_t)((heading >= 0.0F) ? (heading + 0.5F) : (heading - 0.5F));
     ddeg %= 3600;
 

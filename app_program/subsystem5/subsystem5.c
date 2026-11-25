@@ -17,6 +17,7 @@
  *  This file is the task and its motion rules.
  */
 
+#include "../../include/float_types.h"
 #include "subsystem5.h"
 #include "obstacle_scan.h"
 #include "ultrasonic.h"
@@ -51,7 +52,7 @@
 /* stop latch until the next 10 ms motion tick */
 #define S5_STOP_LATENCY_S 0.010
 #define S5_BRAKE_MM       3.0 /* travel while braking from line speed; tune */
-#define S5_PING_PERIOD_S  ((double)S5_US_CYCLE_MS / 1000.0)
+#define S5_PING_PERIOD_S  ((float64_t)S5_US_CYCLE_MS / 1000.0)
 #define S5_HISTORY        3U   /* front distance: median of the last 3 pings */
 #define S5_HISTORY_AGE_MS 250U /* older pings no longer count */
 #define S5_WARN_PERIOD_S  5.0
@@ -79,9 +80,9 @@ typedef struct
 /* ~1 KB: kept off the task stack.  Its avoid is the decision. */
 static s5_scan_t  s5_scan;
 static s5_curve_t s5_curve;
-static double     s5_front_mm = INFINITY;
-static double     s5_width_m;
-static double     s5_offset_m;
+static float64_t  s5_front_mm = INFINITY;
+static float64_t  s5_width_m;
+static float64_t  s5_offset_m;
 
 typedef enum
 {
@@ -104,11 +105,12 @@ static struct
 } s5_task;
 
 _Static_assert(1U == sizeof(s5_task), "seven bits of state in one byte");
-static uint8_t s5_scan_why;        /* s5_why_t: why the last scan step failed */
-static double  s5_spurious_path_m; /* path travelled at the last one */
+/* s5_why_t: why the last scan step failed */
+static uint8_t   s5_scan_why;
+static float64_t s5_spurious_path_m; /* path travelled at the last one */
 
 static int
-s5_round (double value)
+s5_round (float64_t value)
 {
     return (int)((value < 0.0) ? (value - 0.5) : (value + 0.5));
 }
@@ -120,7 +122,7 @@ s5_magnitude (int value)
 }
 
 static uint32_t
-s5_ms (double seconds)
+s5_ms (float64_t seconds)
 {
     return (uint32_t)(uint64_t)(fmax(0.0, seconds) * 1000.0);
 }
@@ -132,8 +134,8 @@ history_clear (s5_history_t * p_history)
 }
 
 static void
-history_add (s5_history_t * p_history, bool b_echo, double range_mm,
-             double time_s)
+history_add (s5_history_t * p_history, bool b_echo, float64_t range_mm,
+             float64_t time_s)
 {
     unsigned next = (unsigned)p_history->flags >> S5_HISTORY_NEXT_SHIFT;
     unsigned echo = p_history->flags & S5_HISTORY_ECHO_MASK & ~(1U << next);
@@ -153,13 +155,14 @@ history_add (s5_history_t * p_history, bool b_echo, double range_mm,
 /* Median of the last pings, each moved forward to "now" by the distance
    driven since it was taken.  A missed or stale ping votes for "clear", so
    one stray short echo cannot stop the robot but two can. */
-static double
-history_front (const s5_history_t * p_history, double now, double speed_mm_s)
+static float64_t
+history_front (const s5_history_t * p_history, float64_t now,
+               float64_t speed_mm_s)
 {
-    double   value[S5_HISTORY];
-    double   swap;
-    uint32_t now_ms = s5_ms(now);
-    unsigned i;
+    float64_t value[S5_HISTORY];
+    float64_t swap;
+    uint32_t  now_ms = s5_ms(now);
+    unsigned  i;
 
     for (i = 0U; i < S5_HISTORY; i++)
     {
@@ -168,7 +171,7 @@ history_front (const s5_history_t * p_history, double now, double speed_mm_s)
         value[i] = ((0U != (((unsigned)p_history->flags >> i) & 1U))
                     && (age_ms <= S5_HISTORY_AGE_MS))
                        ? s5_range_mm(p_history->range[i])
-                             - ((speed_mm_s * (double)age_ms) / 1000.0)
+                             - ((speed_mm_s * (float64_t)age_ms) / 1000.0)
                        : INFINITY;
     }
 
@@ -199,11 +202,11 @@ history_front (const s5_history_t * p_history, double now, double speed_mm_s)
 /* Stop on the ping nearest to S5_STOP_MM: the next one comes a ping period
    (~5 mm at line speed) later, so stop now if that is closer to target. */
 static bool
-should_stop (double front_mm, double speed_mm_s)
+should_stop (float64_t front_mm, float64_t speed_mm_s)
 {
-    double speed     = fmax(0.0, speed_mm_s);
-    double predicted = front_mm - (speed * S5_STOP_LATENCY_S)
-                       - ((speed > 1.0) ? S5_BRAKE_MM : 0.0);
+    float64_t speed     = fmax(0.0, speed_mm_s);
+    float64_t predicted = front_mm - (speed * S5_STOP_LATENCY_S)
+                          - ((speed > 1.0) ? S5_BRAKE_MM : 0.0);
 
     return (isfinite(predicted))
            && ((predicted - S5_STOP_MM) <= (0.5 * speed * S5_PING_PERIOD_S));
@@ -216,7 +219,7 @@ note_sensor (s5_us_status_t result)
 }
 
 static bool
-publish_status (double now)
+publish_status (float64_t now)
 {
     subsystem_status_t status;
 
@@ -261,9 +264,9 @@ publish_verified (void)
 /* ---- scan callbacks ---- */
 
 static bool
-scan_ping (void * p_context, double * p_range_mm)
+scan_ping (void * p_context, float64_t * p_range_mm)
 {
-    double         time_s;
+    float64_t      time_s;
     bool *         p_failed = p_context;
     s5_us_status_t result;
 
@@ -344,8 +347,8 @@ scan_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
 static void
 print_point (const char * p_phase, s5_point_t point)
 {
-    int    angle_deg = s5_point_angle(point);
-    double range_mm  = s5_point_range(point);
+    int       angle_deg = s5_point_angle(point);
+    float64_t range_mm  = s5_point_range(point);
 
     if (!s5_point_usable(point))
     {
@@ -361,7 +364,7 @@ print_point (const char * p_phase, s5_point_t point)
     tm_printf((const UB *)"[OBSTACLE] %s %3d deg: %4d mm, forward %4d mm, "
                           "%2u/%2u agree -> %s\n",
               p_phase, angle_deg, s5_round(range_mm),
-              s5_round(s5_forward_mm(range_mm, (double)angle_deg)),
+              s5_round(s5_forward_mm(range_mm, (float64_t)angle_deg)),
               s5_point_support(point), s5_point_total(point),
               s5_point_object(point) ? "OBSTACLE" : "clear");
 }
@@ -497,7 +500,7 @@ position_name (s5_position_t position)
 
 /* Degrees as "<whole>.<tenth>" of the magnitude; the sign is in the words */
 static void
-tenths_of (double degrees, int * p_whole, int * p_tenth)
+tenths_of (float64_t degrees, int * p_whole, int * p_tenth)
 {
     int tenths = s5_magnitude(s5_round(degrees * 10.0));
 
@@ -704,7 +707,7 @@ report_scan (const s5_scan_t * p_scan)
 
 /* -1 for "none" (INFINITY), so that it can be printed */
 static int
-finite_mm (double value)
+finite_mm (float64_t value)
 {
     return isfinite(value) ? s5_round(value) : -1;
 }
@@ -791,8 +794,8 @@ back_off_if_close (void)
     {
         /* At an angle, the nearest part of the face is not straight ahead */
         static const int angles[]   = {90, 70, 110, 50, 130};
-        double           nearest_mm = INFINITY;
-        double           short_mm;
+        float64_t        nearest_mm = INFINITY;
+        float64_t        short_mm;
         bool             b_moved;
         unsigned         i;
 
@@ -883,10 +886,10 @@ square_wanted (const s5_scan_t * p_scan)
 
 /* True: turned (*p_turned_deg added to) and held still, ready to look again. */
 static bool
-square_up (double tilt_deg, double * p_turned_deg)
+square_up (float64_t tilt_deg, float64_t * p_turned_deg)
 {
-    double turned = 0.0;
-    bool   b_ok;
+    float64_t turned = 0.0;
+    bool      b_ok;
 
     tm_printf((const UB *)"[OBSTACLE] turning %d deg to face it square\n",
               s5_round(tilt_deg));
@@ -920,7 +923,7 @@ square_up (double tilt_deg, double * p_turned_deg)
    and the last turn is followed by that full scan anyway.  True: ready for it.
  */
 static bool
-face_obstacle (double * p_squared_deg)
+face_obstacle (float64_t * p_squared_deg)
 {
     unsigned squares;
 
@@ -976,9 +979,9 @@ same_plan (const s5_detour_plan_t * p_a, const s5_detour_plan_t * p_b)
 
 typedef struct
 {
-    bool     b_other; /* the side the scan did not choose */
-    double   max_out_deg;
-    unsigned wait_ms; /* before trying: something in the way may move */
+    bool      b_other; /* the side the scan did not choose */
+    float64_t max_out_deg;
+    unsigned  wait_ms; /* before trying: something in the way may move */
 } s5_attempt_t;
 
 static const s5_attempt_t s5_attempts[] = {
@@ -1123,11 +1126,11 @@ drive_round (void)
    back-off uses.  True: no echo in it within reach_mm of the sensor.  An
    unsure look counts as something there. */
 static bool
-corridor_clear (double reach_mm)
+corridor_clear (float64_t reach_mm)
 {
     static const int angles[]   = {90, 70, 110, 50, 130};
-    double           needed     = reach_mm + S5_SENSOR_OFFSET_MM;
-    double           half_width = S5_ROBOT_HALF_WIDTH_MM + S5_PASS_MARGIN_MM;
+    float64_t        needed     = reach_mm + S5_SENSOR_OFFSET_MM;
+    float64_t        half_width = S5_ROBOT_HALF_WIDTH_MM + S5_PASS_MARGIN_MM;
     unsigned         i;
 
     for (i = 0U; i < (sizeof(angles) / sizeof(angles[0])); i++)
@@ -1141,10 +1144,13 @@ corridor_clear (double reach_mm)
 
         if (s5_estimate_usable(&estimate))
         {
-            double axis_range = estimate.range_mm + S5_SENSOR_OFFSET_MM;
-            double bearing    = fabs((double)(angles[i] - S5_ANGLE_CENTRE_DEG));
-            double near_bearing = fmax(0.0, bearing - S5_GUARD_BEAM_HALF_DEG);
-            double far_bearing  = fmin(90.0, bearing + S5_GUARD_BEAM_HALF_DEG);
+            float64_t axis_range = estimate.range_mm + S5_SENSOR_OFFSET_MM;
+            float64_t bearing
+                = fabs((float64_t)(angles[i] - S5_ANGLE_CENTRE_DEG));
+            float64_t near_bearing
+                = fmax(0.0, bearing - S5_GUARD_BEAM_HALF_DEG);
+            float64_t far_bearing
+                = fmin(90.0, bearing + S5_GUARD_BEAM_HALF_DEG);
 
             if (((axis_range * cos(far_bearing / S5_RAD_TO_DEG)) <= needed)
                 && ((axis_range * sin(near_bearing / S5_RAD_TO_DEG))
@@ -1191,7 +1197,7 @@ static bool
 resume_line (const s5_scan_t * p_scan)
 {
     robot_status_t status;
-    double         path_m = s5_status(&status) ? status.motion.path : 0.0;
+    float64_t      path_m = s5_status(&status) ? status.motion.path : 0.0;
     int ahead = p_scan->b_valid ? s5_round(s5_point_range(p_scan->centre)) : -1;
     bool b_again = (s5_task.spurious_count > 0U)
                    && ((fabs(path_m - s5_spurious_path_m) * 1000.0)
@@ -1264,7 +1270,7 @@ obstacle_task (INT code, void * p_context)
     bool         b_scanned    = false; /* this obstacle has been measured */
     bool         b_announced  = false; /* approach zone already reported */
     bool         b_hump_noted = false; /* "on a hump" printed for this hump */
-    double       next_warning = 0.0;
+    float64_t    next_warning = 0.0;
 
     (void)code;
     (void)p_context;
@@ -1281,8 +1287,8 @@ obstacle_task (INT code, void * p_context)
 
     for (;;)
     {
-        double diag_range_mm;
-        double diag_time_s;
+        float64_t diag_range_mm;
+        float64_t diag_time_s;
 
         (void)s5_us_ping(&diag_range_mm, &diag_time_s);
     }
@@ -1317,10 +1323,10 @@ obstacle_task (INT code, void * p_context)
     for (;;)
     {
         robot_status_t status;
-        double         range_mm;
-        double         time_s;
-        double         now;
-        double         speed_mm_s = 0.0;
+        float64_t      range_mm;
+        float64_t      time_s;
+        float64_t      now;
+        float64_t      speed_mm_s = 0.0;
         bool           b_may_move = false;
         bool           b_echo;
         s5_us_status_t result;
@@ -1436,8 +1442,8 @@ obstacle_task (INT code, void * p_context)
 
             if (!b_scanned)
             {
-                double squared_deg = 0.0;
-                bool   b_measured;
+                float64_t squared_deg = 0.0;
+                bool      b_measured;
 
                 s5_scan_why = (uint8_t)S5_WHY_none;
 #if S5_AVOID_DRIVE
@@ -1468,7 +1474,7 @@ obstacle_task (INT code, void * p_context)
                 tm_printf((const UB *)"[OBSTACLE] curve check: heading changed "
                                       "%d deg in the last %d mm "
                                       "(curve from %d deg) -> %s\n",
-                          s5_round((double)s5_curve.swing_ddeg / 10.0),
+                          s5_round((float64_t)s5_curve.swing_ddeg / 10.0),
                           S5_CURVE_WINDOW_MM, s5_round(S5_CURVE_MIN_DEG),
                           s5_curve_recent(&s5_curve) ? "after a curve"
                                                      : "not after a curve");

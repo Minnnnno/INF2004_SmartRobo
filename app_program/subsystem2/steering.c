@@ -1,3 +1,4 @@
+#include "../../include/float_types.h"
 #include "steering.h"
 #include "board_config.h"
 #include <math.h>
@@ -13,7 +14,7 @@ geometry (const motion_config_t * c)
 }
 
 motion_result_t
-motion_move_mm (request_source_t source, uint32_t id, double mm)
+motion_move_mm (request_source_t source, uint32_t id, float64_t mm)
 {
     motion_config_t c = board_motion_config();
 
@@ -26,10 +27,10 @@ motion_move_mm (request_source_t source, uint32_t id, double mm)
 }
 
 motion_result_t
-motion_turn_degrees (request_source_t source, uint32_t id, double degrees)
+motion_turn_degrees (request_source_t source, uint32_t id, float64_t degrees)
 {
     motion_config_t c       = board_motion_config();
-    double          radians = degrees * DEG_TO_RAD;
+    float64_t       radians = degrees * DEG_TO_RAD;
 
     if ((!isfinite(radians)) || (fabs(radians) > c.max_angle))
     {
@@ -40,10 +41,11 @@ motion_turn_degrees (request_source_t source, uint32_t id, double degrees)
 }
 
 static motion_result_t
-wheel_request (request_source_t source, uint32_t id, double left, double right)
+wheel_request (request_source_t source, uint32_t id, float64_t left,
+               float64_t right)
 {
     motion_config_t c = board_motion_config();
-    double          largest;
+    float64_t       largest;
 
     if ((!geometry(&c)) || (!isfinite(left)) || (!isfinite(right)))
     {
@@ -62,18 +64,18 @@ wheel_request (request_source_t source, uint32_t id, double left, double right)
 }
 
 motion_result_t
-motion_set_wheel_speeds_mm_s (request_source_t source, uint32_t id, double left,
-                              double right)
+motion_set_wheel_speeds_mm_s (request_source_t source, uint32_t id,
+                              float64_t left, float64_t right)
 {
     return wheel_request(source, id, left / 1000.0, right / 1000.0);
 }
 
 motion_result_t
-motion_steer (request_source_t source, uint32_t id, double speed,
-              double turn_deg_s)
+motion_steer (request_source_t source, uint32_t id, float64_t speed,
+              float64_t turn_deg_s)
 {
     motion_config_t c = board_motion_config();
-    double          correction;
+    float64_t       correction;
 
     if ((!geometry(&c)) || (!isfinite(speed)) || (!isfinite(turn_deg_s)))
     {
@@ -85,8 +87,8 @@ motion_steer (request_source_t source, uint32_t id, double speed,
 }
 
 motion_result_t
-motion_steer_left (request_source_t source, uint32_t id, double speed,
-                   double correction)
+motion_steer_left (request_source_t source, uint32_t id, float64_t speed,
+                   float64_t correction)
 {
     if ((!isfinite(speed)) || (!isfinite(correction)) || (correction < 0.0))
     {
@@ -97,8 +99,8 @@ motion_steer_left (request_source_t source, uint32_t id, double speed,
 }
 
 motion_result_t
-motion_steer_right (request_source_t source, uint32_t id, double speed,
-                    double correction)
+motion_steer_right (request_source_t source, uint32_t id, float64_t speed,
+                    float64_t correction)
 {
     if ((!isfinite(speed)) || (!isfinite(correction)) || (correction < 0.0))
     {
@@ -109,15 +111,15 @@ motion_steer_right (request_source_t source, uint32_t id, double speed,
 }
 
 static motion_result_t
-arc (request_source_t source, uint32_t id, double metres, double degrees,
-     double seconds, double speed)
+arc (request_source_t source, uint32_t id, float64_t metres, float64_t degrees,
+     float64_t seconds, float64_t speed)
 {
     motion_config_t c     = board_motion_config();
-    double          angle = degrees * DEG_TO_RAD;
+    float64_t       angle = degrees * DEG_TO_RAD;
 
-    double goal[2];
-    double wheel[2];
-    double largest;
+    float64_t goal[2];
+    float64_t wheel[2];
+    float64_t largest;
 
     if ((!geometry(&c)) || (!isfinite(metres)) || (!isfinite(angle))
         || (!isfinite(seconds)) || (!isfinite(speed)) || (seconds < 0.0)
@@ -173,15 +175,15 @@ arc (request_source_t source, uint32_t id, double metres, double degrees,
 }
 
 motion_result_t
-motion_steer_distance (request_source_t source, uint32_t id, double metres,
-                       double degrees, double speed)
+motion_steer_distance (request_source_t source, uint32_t id, float64_t metres,
+                       float64_t degrees, float64_t speed)
 {
     return arc(source, id, metres, degrees, 0.0, speed);
 }
 
 motion_result_t
-motion_steer_time (request_source_t source, uint32_t id, double seconds,
-                   double degrees, double speed)
+motion_steer_time (request_source_t source, uint32_t id, float64_t seconds,
+                   float64_t degrees, float64_t speed)
 {
     if ((!isfinite(seconds)) || (seconds <= 0.0) || (!isfinite(speed))
         || (0.0 == speed))

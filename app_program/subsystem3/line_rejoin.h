@@ -13,13 +13,14 @@
 #ifndef LINE_REJOIN_H
 #define LINE_REJOIN_H
 
+#include "../../include/float_types.h"
 #include "robot.h"
 
 #define LINE_VALUE_BOTH_BLACK 2U  /* index into the line status values[] */
 #define LINE_REJOIN_FRESH_S   0.2 /* readings older than this are stale */
 
 static inline bool
-line_rejoin_seen (const robot_status_t * p_status, double now)
+line_rejoin_seen (const robot_status_t * p_status, float64_t now)
 {
     return (p_status->line.available)
            && ((now - p_status->line.timestamp) <= LINE_REJOIN_FRESH_S)

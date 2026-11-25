@@ -1,5 +1,6 @@
 #ifndef ROBO_MOTION_HAL_H
 #define ROBO_MOTION_HAL_H
+#include "float_types.h"
 #include "motion.h"
 bool             motion_hal_init(const motion_config_t * config);
 encoder_sample_t motion_hal_sample(void);
@@ -44,12 +45,12 @@ typedef struct
     uint32_t output_age_ms;
 } motor_diagnostics_t;
 
-void   motion_hal_motor_diagnostics(motor_diagnostics_t * diagnostics);
-void   motion_hal_write(const double output[2], bool inhibited, double now);
-void   motion_hal_emergency_stop(void);
-double motion_hal_time(void);
-void   motion_hal_console_init(void);
-int    motion_hal_console_read(void);
+void motion_hal_motor_diagnostics(motor_diagnostics_t * diagnostics);
+void motion_hal_write(const float64_t output[2], bool inhibited, float64_t now);
+void motion_hal_emergency_stop(void);
+float64_t motion_hal_time(void);
+void      motion_hal_console_init(void);
+int       motion_hal_console_read(void);
 #endif
 
 /*** end of file ***/

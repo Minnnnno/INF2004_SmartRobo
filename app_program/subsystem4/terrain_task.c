@@ -9,6 +9,7 @@
  * calibration build (ROBO_MAG_CAL), both through the Controller.
  */
 #include "robot_rtos.h" /* Standard size_t before the kernel headers. */
+#include "../../include/float_types.h"
 #include "robot.h"
 #include "terrain_status.h"
 #include "subsystems.h"
@@ -130,7 +131,7 @@ static void terrain_hump_pause(buddy4_t const *    p_context,
 static uint8_t      terrain_state_code(buddy4_t const * p_context);
 static void         terrain_publish(buddy4_t const *       p_context,
                                     motion_class_t const * p_class,
-                                    double *               p_sample_time);
+                                    float64_t *            p_sample_time);
 static void         terrain_report(buddy4_t const *       p_context,
                                    motion_class_t const * p_class);
 static bool         terrain_compass(buddy4_t const * p_context, uint8_t phase,
@@ -152,7 +153,7 @@ terrain_task (INT code, void * p_context)
     static buddy4_t       s_context;
     static motion_class_t s_class; /* Task-owned motion classifier. */
     s4_motion_t           motion;
-    double                sample_time          = -1.0;
+    float64_t             sample_time          = -1.0;
     uint32_t              release              = 0U;
     uint32_t              last_report          = 0U;
     uint8_t               previous_state       = B4_INIT;
@@ -398,9 +399,9 @@ terrain_wait_start (s4_motion_t const * p_motion)
 /* m/s to rounded mm/s. Clamp before converting: a non-finite or huge speed
  * never wraps (NaN becomes 0). */
 static int16_t
-terrain_mm_s (double m_s)
+terrain_mm_s (float64_t m_s)
 {
-    double mm_s = m_s * 1000.0;
+    float64_t mm_s = m_s * 1000.0;
 
     if (!(mm_s > -2000.0))
     {
@@ -441,7 +442,7 @@ terrain_read_motion (s4_motion_t * p_motion)
     }
 
     {
-        double ddeg = status.motion.heading * S4_RAD_TO_DDEG;
+        float64_t ddeg = status.motion.heading * S4_RAD_TO_DDEG;
 
         /* NaN fails both comparisons; a heading beyond int32 is not used. */
         if ((ddeg > -S4_HEADING_LIMIT_DDEG) && (ddeg < S4_HEADING_LIMIT_DDEG))
@@ -772,19 +773,19 @@ terrain_state_code (buddy4_t const * p_context)
  */
 static void
 terrain_publish (buddy4_t const * p_context, motion_class_t const * p_class,
-                 double * p_sample_time)
+                 float64_t * p_sample_time)
 {
     uint32_t           word    = 0U;
     subsystem_status_t status  = {0};
     uint8_t            valid   = 0U;
     uint8_t            run_max = 0U;
-    double             now     = motion_hal_time();
+    float64_t          now     = motion_hal_time();
 
     if (0U != (p_context->result & TILT_RESULT_VALID))
     {
         valid            = TF_TV_PITCH;
         *p_sample_time   = now;
-        status.values[1] = (double)tilt_angle_tenths(p_context->result, 0U)
+        status.values[1] = (float64_t)tilt_angle_tenths(p_context->result, 0U)
                            * S4_TENTHS_TO_RAD;
     }
 
@@ -793,7 +794,7 @@ terrain_publish (buddy4_t const * p_context, motion_class_t const * p_class,
     if (0U != (run_max & TERRAIN_RUN_VALID))
     {
         valid |= TF_TV_HUMP;
-        status.values[2] = (double)(run_max & TERRAIN_PEAK_MM_MASK) / 1000.0;
+        status.values[2] = (float64_t)(run_max & TERRAIN_PEAK_MM_MASK) / 1000.0;
     }
 
     status.available = true;
@@ -804,12 +805,12 @@ terrain_publish (buddy4_t const * p_context, motion_class_t const * p_class,
     {
         /* Turn rate rad/s (+ = left) and class share TERRAIN_MOTION_VALID. */
         status.values[0]
-            = (double)motion_class_yaw_deg_s(p_class) * S4_DEG_TO_RAD;
+            = (float64_t)motion_class_yaw_deg_s(p_class) * S4_DEG_TO_RAD;
         word |= ((uint32_t)motion_class_get(p_class) << TERRAIN_MC_SHIFT)
                 | TERRAIN_MOTION_VALID;
     }
 
-    status.values[3] = (double)word;
+    status.values[3] = (float64_t)word;
     (void)robot_update_subsystem(SOURCE_TERRAIN, &status);
 }
 

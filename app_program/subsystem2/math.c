@@ -1,9 +1,10 @@
+#include "../../include/float_types.h"
 #include "motion.h"
 #include <math.h>
 #include <string.h>
 
-static double
-clamp (double value, double limit)
+static float64_t
+clamp (float64_t value, float64_t limit)
 {
     return fmax(-limit, fmin(limit, value));
 }
@@ -14,14 +15,14 @@ pid_reset (pid_t * pid)
     memset(pid, 0, sizeof(*pid));
 }
 
-double
-pid_step (pid_t * pid, const pid_config_t * config, double target,
-          double measured, double dt, double limit)
+float64_t
+pid_step (pid_t * pid, const pid_config_t * config, float64_t target,
+          float64_t measured, float64_t dt, float64_t limit)
 {
-    double error      = target - measured;
-    double derivative = pid->seeded ? -(measured - pid->previous) / dt : 0.0;
-    double candidate;
-    double output;
+    float64_t error      = target - measured;
+    float64_t derivative = pid->seeded ? -(measured - pid->previous) / dt : 0.0;
+    float64_t candidate;
+    float64_t output;
 
     pid->derivative += (dt / (config->derivative_tau + dt))
                        * (derivative - pid->derivative);
@@ -67,10 +68,10 @@ encoder_quadrature (uint8_t before, uint8_t after, bool * invalid)
 
 bool
 odometry_step (odometry_t * odom, const motion_config_t * config,
-               const encoder_sample_t * sample, double dt)
+               const encoder_sample_t * sample, float64_t dt)
 {
-    double   change[2];
-    unsigned wheel;
+    float64_t change[2];
+    unsigned  wheel;
 
     if ((!isfinite(dt)) || (dt <= 0.0) || (dt > config->max_dt))
     {
@@ -79,12 +80,12 @@ odometry_step (odometry_t * odom, const motion_config_t * config,
 
     for (wheel = 0; wheel < 2U; ++wheel)
     {
-        double quantum = (3.141592653589793 * config->diameter[wheel])
-                         / config->counts_per_rev[wheel];
+        float64_t quantum = (3.141592653589793 * config->diameter[wheel])
+                            / config->counts_per_rev[wheel];
 
-        change[wheel]
-            = (double)encoder_delta(sample->count[wheel], odom->previous[wheel])
-              * quantum;
+        change[wheel] = (float64_t)encoder_delta(sample->count[wheel],
+                                                 odom->previous[wheel])
+                        * quantum;
 
         if ((!isfinite(change[wheel]))
             || (fabs(change[wheel])

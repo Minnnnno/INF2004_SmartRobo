@@ -13,6 +13,7 @@
  *  cannot be heard by the next.
  */
 
+#include "../../include/float_types.h"
 #include "ultrasonic.h"
 #include "../subsystem2/template_hal.h"
 
@@ -62,8 +63,9 @@ s5_us_init (void)
     clr_w(GPIO(S5_US_ECHO_PIN), GPIO_PUE);
     set_w(GPIO(S5_US_ECHO_PIN), GPIO_PDE);
 
-    pwm_config_set_wrap(&config, 0xffffU);            /* 65 ms > echo timeout */
-    pwm_config_set_clkdiv(&config, (float)TMCLK_MHz); /* 1 count per us */
+    /* 65 ms > echo timeout */
+    pwm_config_set_wrap(&config, 0xffffU);
+    pwm_config_set_clkdiv(&config, (float32_t)TMCLK_MHz); /* 1 count per us */
     pwm_init(US_SLICE, &config, false);
     out_w(us_reg(0U), US_PWM_CSR_LEVEL | US_PWM_CSR_EN);
     /* B is an input in this mode */
@@ -75,7 +77,7 @@ s5_us_init (void)
 }
 
 s5_us_status_t
-s5_us_ping (double * p_range_mm, double * p_time_s)
+s5_us_ping (float64_t * p_range_mm, float64_t * p_time_s)
 {
     uint64_t start;
     uint32_t since;
@@ -148,7 +150,7 @@ s5_us_ping (double * p_range_mm, double * p_time_s)
         return S5_US_NO_ECHO;
     }
 
-    *p_range_mm = ((double)pulse * US_SOUND_MM_PER_US) / 2.0;
+    *p_range_mm = ((float64_t)pulse * US_SOUND_MM_PER_US) / 2.0;
 
     if (*p_range_mm > S5_US_MAX_MM)
     {
@@ -157,7 +159,7 @@ s5_us_ping (double * p_range_mm, double * p_time_s)
 
     /* The burst leaves ~0.45 ms after the trigger; the reflection is mid-pulse
      */
-    *p_time_s = (double)(start + 450U + (pulse / 2U)) / 1000000.0;
+    *p_time_s = (float64_t)(start + 450U + (pulse / 2U)) / 1000000.0;
     return S5_US_OK;
 }
 

@@ -7,6 +7,7 @@
 #ifndef S5_ULTRASONIC_H
 #define S5_ULTRASONIC_H
 
+#include "../../include/float_types.h"
 #include <stdbool.h>
 
 #define S5_US_TRIG_PIN 16U
@@ -27,7 +28,7 @@ bool s5_us_init(void);
 /* One ping.  Waits for the 60 ms cycle, triggers, and sleeps until the echo
    pulse ends (<= ~31 ms).  *p_time_s is when the sound hit the obstacle,
    on the motion_hal_time() clock. */
-s5_us_status_t s5_us_ping(double * p_range_mm, double * p_time_s);
+s5_us_status_t s5_us_ping(float64_t * p_range_mm, float64_t * p_time_s);
 
 #endif /* S5_ULTRASONIC_H */
 

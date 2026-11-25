@@ -1,3 +1,5 @@
+#include "../../include/float_types.h"
+#include <stdint.h>
 #include "subsystems.h"
 
 /* The barcode reader runs in the line-steering image and in the barcode test
@@ -120,7 +122,7 @@ barcode_calibrate_begin (void)
 }
 
 void
-barcode_ignore_for (double metres)
+barcode_ignore_for (float64_t metres)
 {
     bc_ignore_distance = (uint32_t)(metres * 10000.0);
     ++bc_ignore_requests;
@@ -232,9 +234,9 @@ barcode_path (void)
 
 /* ---- Published status (see robot.h): letter, valid read counter, junction
  * counter, failed reads ---- */
-static unsigned bc_reads;
-static double   bc_letter;
-static unsigned bc_junctions;
+static unsigned  bc_reads;
+static float64_t bc_letter;
+static unsigned  bc_junctions;
 /* Long passes that did not decode (line images stop the car on this). */
 static unsigned bc_failures;
 /* The last publish failed (bus busy): retried every sample until it goes
@@ -258,8 +260,8 @@ barcode_publish (void)
     subsystem_status_t status
         = {.available = true,
            .timestamp = motion_hal_time(),
-           .values    = {bc_letter, (double)bc_reads, (double)bc_junctions,
-                         (double)bc_failures}};
+           .values = {bc_letter, (float64_t)bc_reads, (float64_t)bc_junctions,
+                      (float64_t)bc_failures}};
 
     bc_dirty = !robot_update_subsystem(SOURCE_BARCODE, &status);
 }
@@ -568,7 +570,7 @@ barcode_finish (const uint16_t * samples, const uint32_t * path,
                       (const UB *)&text[1], used);
         }
 
-        bc_letter = (double)(unsigned char)text[1];
+        bc_letter = (float64_t)(uint8_t)text[1];
         barcode_publish();
 #if ROBO_LINE_TASK
         /* The next black after this read is the junction: half the bar rise

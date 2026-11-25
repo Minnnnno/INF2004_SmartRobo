@@ -1,6 +1,7 @@
 #ifndef ROBO_SUBSYSTEMS_H
 #define ROBO_SUBSYSTEMS_H
 #include "robot_rtos.h"
+#include "float_types.h"
 #include <stdbool.h>
 
 /* Subsystem 3 tasks exist only in images where they do something; elsewhere
@@ -56,7 +57,7 @@ void barcode_calibrate_begin(void);
 /* DONE or FAILED once when calibration ends, else NONE. */
 barcode_cal_t barcode_calibration_result(void);
 /* After a U-turn: no reads or junction for this distance. */
-void barcode_ignore_for(double metres);
+void barcode_ignore_for(float64_t metres);
 #endif
 #if ROBO_SHUTTLE_TASK
 void shuttle_task(INT code, void * context);

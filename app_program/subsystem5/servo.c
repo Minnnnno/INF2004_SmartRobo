@@ -6,6 +6,7 @@
  *  for the horn to arrive AND the sensor to stop swinging before a ping.
  */
 
+#include "../../include/float_types.h"
 #include "servo.h"
 #include "../subsystem2/template_hal.h"
 #include <math.h>
@@ -26,12 +27,13 @@ static uint8_t servo_deg; /* 0: not started */
 static void
 servo_write (int angle_deg)
 {
-    double mapped = (S5_SERVO_REVERSED != 0) ? (180.0 - (double)angle_deg)
-                                             : (double)angle_deg;
-    double position
-        = fmin(fmax(mapped + (double)S5_SERVO_TRIM_DEG, 0.0), 180.0);
-    double pulse = SERVO_US_AT_0
-                   + ((position * (SERVO_US_AT_180 - SERVO_US_AT_0)) / 180.0);
+    float64_t mapped = (S5_SERVO_REVERSED != 0) ? (180.0 - (float64_t)angle_deg)
+                                                : (float64_t)angle_deg;
+    float64_t position
+        = fmin(fmax(mapped + (float64_t)S5_SERVO_TRIM_DEG, 0.0), 180.0);
+    float64_t pulse
+        = SERVO_US_AT_0
+          + ((position * (SERVO_US_AT_180 - SERVO_US_AT_0)) / 180.0);
 
     /* Odd GPIOs use channel B; the alternate diagnostic pin uses channel A. */
     uint16_t level = (uint16_t)(pulse + 0.5);
@@ -55,7 +57,7 @@ s5_servo_init (int angle_deg)
     pwm_config config = pwm_get_default_config();
 
     pwm_config_set_wrap(&config, (uint16_t)(SERVO_PERIOD_US - 1U));
-    pwm_config_set_clkdiv(&config, (float)TMCLK_MHz); /* 1 count per us */
+    pwm_config_set_clkdiv(&config, (float32_t)TMCLK_MHz); /* 1 count per us */
     pwm_init(SERVO_SLICE, &config, false);
 
     servo_deg = (uint8_t)servo_clamp(angle_deg);

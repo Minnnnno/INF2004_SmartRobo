@@ -1,5 +1,6 @@
 /* Shared request bus and task-context API; only the motion owner mutates
  * motion_t. */
+#include "../../include/float_types.h"
 #include "robot_runtime.h"
 #include "../subsystem1/comms.h"
 #include "../app.h"
@@ -74,13 +75,13 @@ robot_runtime_unlock (void)
 
 void
 robot_runtime_motion_inputs (motion_t * owner, encoder_sample_t sample,
-                             double now)
+                             float64_t now)
 {
     robot_motion_inputs(&bus, owner, sample, now);
 }
 
 void
-robot_runtime_publish (motion_t * owner, double now)
+robot_runtime_publish (motion_t * owner, float64_t now)
 {
     robot_publish(&bus, owner, now);
 }
@@ -95,12 +96,13 @@ robot_runtime_stop_pending (void)
 }
 
 static motion_result_t
-submit (request_source_t source, uint32_t id, motion_mode_t mode, double value,
-        double left, double right, double angle, double duration)
+submit (request_source_t source, uint32_t id, motion_mode_t mode,
+        float64_t value, float64_t left, float64_t right, float64_t angle,
+        float64_t duration)
 {
     robot_request_t request;
     motion_result_t result;
-    double          now = motion_hal_time();
+    float64_t       now = motion_hal_time();
 
     if ((!running) || (!lock_bus()))
     {
@@ -128,14 +130,15 @@ submit (request_source_t source, uint32_t id, motion_mode_t mode, double value,
 
 motion_result_t
 robot_submit (request_source_t source, uint32_t id, motion_mode_t mode,
-              double value, double left, double right)
+              float64_t value, float64_t left, float64_t right)
 {
     return submit(source, id, mode, value, left, right, 0.0, 0.0);
 }
 
 motion_result_t
-robot_submit_arc (request_source_t source, uint32_t id, double metres,
-                  double radians, double seconds, double left, double right)
+robot_submit_arc (request_source_t source, uint32_t id, float64_t metres,
+                  float64_t radians, float64_t seconds, float64_t left,
+                  float64_t right)
 {
     return submit(source, id, ARC_MOVE, metres, left, right, radians, seconds);
 }

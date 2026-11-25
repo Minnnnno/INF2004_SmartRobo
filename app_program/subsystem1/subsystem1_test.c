@@ -11,6 +11,7 @@
  *  commands on mbf_comms_cmd, and a running controller would act on them.
  */
 
+#include <stdint.h>
 #include "subsystem1.h"
 #include "../test_report.h"
 
@@ -35,10 +36,10 @@ take_cmd (COMMS_CMD * cmd)
 LOCAL void
 drain (void)
 {
-    char          topic[COMMS_TOPIC_MAX];
-    unsigned char payload[COMMS_PAYLOAD_MAX];
-    int           qos;
-    COMMS_CMD     cmd;
+    char      topic[COMMS_TOPIC_MAX];
+    uint8_t   payload[COMMS_PAYLOAD_MAX];
+    int       qos;
+    COMMS_CMD cmd;
 
     while (comms_hook_next(topic, payload, &qos) >= 0)
     {

@@ -13,6 +13,8 @@
  *    obstacle values[0] distance m, [2] width m, [3] TF_OF_* flags
  */
 
+#include "../../include/float_types.h"
+#include <stdint.h>
 #include "telemetry_map.h"
 #include "terrain_status.h"
 #include <math.h>
@@ -22,7 +24,7 @@
 /* TRUE for a finite double.  NaN fails both comparisons.  (Avoids the
    isfinite macro, which warns under -Wconversion on some host libcs.) */
 static bool
-tm_finite (double v)
+tm_finite (float64_t v)
 {
     return (v > -1.0e300) && (v < 1.0e300);
 }
@@ -30,7 +32,7 @@ tm_finite (double v)
 /* Round half away from zero; non-finite -> 0.  The double is limited first
    so the conversion is always defined; tf_pack() does the real clamp. */
 static int32_t
-to_int (double v)
+to_int (float64_t v)
 {
     if (!tm_finite(v))
     {
@@ -57,7 +59,7 @@ saturate (uint32_t v, uint32_t max)
 
 /* Degrees wrapped into [lo, lo + 360). */
 static int32_t
-wrap_deg (double rad, int32_t lo)
+wrap_deg (float64_t rad, int32_t lo)
 {
     int32_t d;
 
@@ -84,7 +86,7 @@ wrap_deg (double rad, int32_t lo)
 /* B3 barcode slot letter (ASCII code) -> BC_CHAR: 0 none or not a Code 39
    character, n = TF_BC_CHARS[n - 1]. */
 static int32_t
-bc_char_code (double ascii)
+bc_char_code (float64_t ascii)
 {
     static const char chars[] = TF_BC_CHARS;
     int32_t           c       = to_int(ascii);
@@ -97,7 +99,7 @@ bc_char_code (double ascii)
 
     for (i = 0U; i < (sizeof(chars) - 1U); i++)
     {
-        if ((int32_t)(unsigned char)chars[i] == c)
+        if ((int32_t)(uint8_t)chars[i] == c)
         {
             return (int32_t)i + 1;
         }
@@ -198,12 +200,12 @@ _Static_assert((SHUTDOWN == TF_ENC_STATE_MAX)
                "encoder frame ranges must match the motion enums");
 
 void
-tm_fill_encoder (const robot_status_t * st, uint32_t seq, double now_s,
+tm_fill_encoder (const robot_status_t * st, uint32_t seq, float64_t now_s,
                  tf_encoder_t * e)
 {
     const motion_status_t * m = &st->motion;
-    double                  t = m->encoder_sample_time;
-    double                  age;
+    float64_t               t = m->encoder_sample_time;
+    float64_t               age;
 
     e->seq        = (uint8_t)(seq & 0xFFU);
     e->reliable   = m->encoder.reliable;
@@ -228,7 +230,7 @@ tm_fill_encoder (const robot_status_t * st, uint32_t seq, double now_s,
     e->sample_ms = (uint32_t)fmod(t * 1000.0, 4294967296.0);
     age          = (now_s - t) * 1000.0;
 
-    if ((age < 0.0) || (age >= (double)TF_ENC_AGE_UNKNOWN))
+    if ((age < 0.0) || (age >= (float64_t)TF_ENC_AGE_UNKNOWN))
     {
         return; /* sample from the future, or very old */
     }

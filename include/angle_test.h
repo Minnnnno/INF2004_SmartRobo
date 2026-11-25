@@ -1,5 +1,6 @@
 #ifndef ROBO_ANGLE_TEST_H
 #define ROBO_ANGLE_TEST_H
+#include "float_types.h"
 #include "motion.h"
 typedef enum
 {
@@ -24,21 +25,21 @@ typedef struct
     encoder_sample_t previous;
     uint32_t         delta[2];
 
-    double goal[2];
-    double output[2];
-    double angle;
-    double deadline;
-    double brake_deadline;
-    double last_change[2];
-    double quiet_since;
+    float64_t goal[2];
+    float64_t output[2];
+    float64_t angle;
+    float64_t deadline;
+    float64_t brake_deadline;
+    float64_t last_change[2];
+    float64_t quiet_since;
 } angle_control_t;
 
 void angle_control_init(angle_control_t *       control,
                         const motion_config_t * config);
 bool angle_control_start(angle_control_t * control, int direction,
-                         encoder_sample_t sample, double now);
+                         encoder_sample_t sample, float64_t now);
 void angle_control_step(angle_control_t * control, encoder_sample_t sample,
-                        double now);
+                        float64_t now);
 void angle_control_stop(angle_control_t * control);
 #ifdef ROBO_ANGLE_TEST
 bool            angle_test_init(void);

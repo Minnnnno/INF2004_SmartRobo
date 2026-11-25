@@ -1,4 +1,5 @@
 /* Shared watchdog/crash handling and low-priority system supervision. */
+#include "../../include/float_types.h"
 #include "system_runtime.h"
 #include "../app.h"
 #include "robot.h"
@@ -112,7 +113,7 @@ system_watchdog_start (void)
 }
 
 void
-system_watchdog_feed (double now)
+system_watchdog_feed (float64_t now)
 {
     crash_watchdog_feed(1000U);
     last_feed_us = in_w(TIMER_TIMERAWL);

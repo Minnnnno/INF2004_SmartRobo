@@ -2,6 +2,7 @@
  * line steering profile). Drives the car straight forward and back over the
  * barcode so the reader can be scored again and again, in both directions. The
  * line task is off in this image; nothing here ships in production. */
+#include "../../include/float_types.h"
 #include "subsystems.h"
 #if ROBO_SHUTTLE_TASK
 #include "../subsystem2/template_hal.h"
@@ -26,10 +27,10 @@
 
 /* One finite straight move (negative = backward). True when it completed. */
 static bool
-shuttle_leg (uint32_t id, double metres)
+shuttle_leg (uint32_t id, float64_t metres)
 {
     robot_status_t status;
-    double         start = motion_hal_time(), path = 0.0;
+    float64_t      start = motion_hal_time(), path = 0.0;
 
     if (motion_get_status(&status))
     {
@@ -45,7 +46,7 @@ shuttle_leg (uint32_t id, double metres)
 
     for (;;)
     {
-        double elapsed;
+        float64_t elapsed;
 
         (void)tk_dly_tsk(20U);
         elapsed = motion_hal_time() - start;

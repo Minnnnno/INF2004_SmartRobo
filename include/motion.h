@@ -1,6 +1,7 @@
 #ifndef ROBO_MOTION_H
 #define ROBO_MOTION_H
 
+#include "float_types.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include "motion_storage.h"
@@ -81,56 +82,56 @@ _Static_assert((SHUTDOWN <= 7) && (ARC_MOVE <= 7) && (F_SETUP_TIMEOUT <= 15)
 
 typedef struct
 {
-    double kp;
-    double ki;
-    double kd;
-    double derivative_tau;
+    float64_t kp;
+    float64_t ki;
+    float64_t kd;
+    float64_t derivative_tau;
 } pid_config_t;
 
 typedef struct
 {
-    double integral;
-    double previous;
-    double derivative;
-    bool   seeded;
+    float64_t integral;
+    float64_t previous;
+    float64_t derivative;
+    bool      seeded;
 } pid_t;
 
 typedef struct
 {
-    double counts_per_rev[2];
-    double diameter[2];
-    double track;
-    int    motor_sign[2];
-    int    encoder_sign[2];
-    bool   quadrature[2]; /* x4 A/B; single channel counts A rising edges. */
+    float64_t counts_per_rev[2];
+    float64_t diameter[2];
+    float64_t track;
+    int       motor_sign[2];
+    int       encoder_sign[2];
+    bool      quadrature[2]; /* x4 A/B; single channel counts A rising edges. */
 
-    double max_speed;
-    double acceleration;
-    double max_output;
-    double period;
-    double max_dt;
-    double distance_tolerance;
-    double angle_tolerance;
-    double stopped_speed;
-    double settle_time;
-    double startup_grace;
-    double feedback_timeout;
-    double stop_timeout;
-    double setup_timeout;
-    double command_lifetime;
-    double movement_timeout;
-    double max_distance;
-    double max_angle;
-    double straight_gain;
-    double reversal_time;
-    double manual_limit;
-    double manual_timeout;
+    float64_t max_speed;
+    float64_t acceleration;
+    float64_t max_output;
+    float64_t period;
+    float64_t max_dt;
+    float64_t distance_tolerance;
+    float64_t angle_tolerance;
+    float64_t stopped_speed;
+    float64_t settle_time;
+    float64_t startup_grace;
+    float64_t feedback_timeout;
+    float64_t stop_timeout;
+    float64_t setup_timeout;
+    float64_t command_lifetime;
+    float64_t movement_timeout;
+    float64_t max_distance;
+    float64_t max_angle;
+    float64_t straight_gain;
+    float64_t reversal_time;
+    float64_t manual_limit;
+    float64_t manual_timeout;
     /* Slowest wheel speed (m/s) the DISTANCE_MOVE/ENCODER_TURN deceleration
      * ramp may ask for before the goal; 0 = ramp all the way down. */
-    double min_goal_speed;
+    float64_t min_goal_speed;
     /* Least output (fraction of max) given to a wheel that is asked to move or
      * speed up but saw no encoder count this cycle; 0 = PID only. */
-    double       breakaway[2];
+    float64_t    breakaway[2];
     pid_config_t pid[2];
     unsigned     pwm_hz;
 
@@ -145,14 +146,14 @@ typedef struct
     uint32_t      generation;
     motion_mode_t mode;
 
-    double value;
-    double speed[2];
-    double expires;
-    double deadline;
+    float64_t value;
+    float64_t speed[2];
+    float64_t expires;
+    float64_t deadline;
     /* ARC_MOVE: heading change radians; 0=distance goal, >0=timed trajectory.
      */
-    double angle;
-    double duration;
+    float64_t angle;
+    float64_t duration;
 } motion_command_t;
 
 typedef struct
@@ -166,11 +167,11 @@ typedef struct
 {
     uint32_t previous[2];
 
-    double travel[2];
-    double speed[2];
-    double centre;
-    double path;
-    double heading;
+    float64_t travel[2];
+    float64_t speed[2];
+    float64_t centre;
+    float64_t path;
+    float64_t heading;
 } odometry_t;
 
 typedef struct
@@ -209,33 +210,33 @@ typedef struct
     motion_mode_t  mode;
     motion_fault_t fault;
 
-    uint32_t id;
-    uint32_t generation;
-    double   speed[2];
-    double   travel[2];
-    double   output[2];
-    double   target[2];
-    double   centre;
-    double   path;
-    double   heading;
-    double   sample_time;
+    uint32_t  id;
+    uint32_t  generation;
+    float64_t speed[2];
+    float64_t travel[2];
+    float64_t output[2];
+    float64_t target[2];
+    float64_t centre;
+    float64_t path;
+    float64_t heading;
+    float64_t sample_time;
     /* Latest raw sample, including while faulted; [0] left, [1] right.
      * Counts are modulo 2^32, not fault-time snapshots or distance units. */
     encoder_sample_t encoder;
-    double           encoder_sample_time;
+    float64_t        encoder_sample_time;
 
     bool stationary;
     bool feedback_trusted;
     bool inhibited;
     bool hold;
     /* First timing failure is retained until init/reset; never print in ISR. */
-    double                  last_dt;
-    double                  max_observed_dt;
-    double                  timing_fault_dt;
+    float64_t               last_dt;
+    float64_t               max_observed_dt;
+    float64_t               timing_fault_dt;
     motion_state_t          timing_fault_state;
     bool                    timing_fault_recorded;
     uint32_t                startup_gaps;
-    double                  max_startup_gap;
+    float64_t               max_startup_gap;
     motion_feedback_cause_t feedback_cause;
     encoder_sample_t        feedback_fault_sample;
 
@@ -254,13 +255,13 @@ typedef struct
     /* Raw modular counts captured on command entry. */
     uint32_t start_count[2];
 
-    double   start[2];
-    double   last_time;
-    double   entered;
-    double   last_progress[2];
-    double   expected_since[2];
-    double   still_since;
-    uint32_t invalid[2];
+    float64_t start[2];
+    float64_t last_time;
+    float64_t entered;
+    float64_t last_progress[2];
+    float64_t expected_since[2];
+    float64_t still_since;
+    uint32_t  invalid[2];
     /* active remains a public bridge member used by the unchanged controller.
      * Other owner-only booleans and independent fault causes are packed. */
     bool    active;
@@ -272,32 +273,32 @@ typedef struct
     uint8_t event_queue;
 } motion_t;
 
-bool    motion_config_valid(const motion_config_t * config);
-double  pid_step(pid_t * pid, const pid_config_t * config, double target,
-                 double measured, double dt, double limit);
-void    pid_reset(pid_t * pid);
-int64_t encoder_delta(uint32_t now, uint32_t before);
-int     encoder_quadrature(uint8_t before, uint8_t after, bool * invalid);
-bool    odometry_step(odometry_t * odom, const motion_config_t * config,
-                      const encoder_sample_t * sample, double dt);
-void    motion_init(motion_t * motion, const motion_config_t * config,
-                    encoder_sample_t sample, double now, bool setup_ok);
+bool      motion_config_valid(const motion_config_t * config);
+float64_t pid_step(pid_t * pid, const pid_config_t * config, float64_t target,
+                   float64_t measured, float64_t dt, float64_t limit);
+void      pid_reset(pid_t * pid);
+int64_t   encoder_delta(uint32_t now, uint32_t before);
+int       encoder_quadrature(uint8_t before, uint8_t after, bool * invalid);
+bool      odometry_step(odometry_t * odom, const motion_config_t * config,
+                        const encoder_sample_t * sample, float64_t dt);
+void      motion_init(motion_t * motion, const motion_config_t * config,
+                      encoder_sample_t sample, float64_t now, bool setup_ok);
 /* Call once at task startup, before the first update. Never clears a fault. */
 void motion_begin_sampling(motion_t * motion, encoder_sample_t sample,
-                           double now);
-void motion_step(motion_t * motion, encoder_sample_t sample, double now);
+                           float64_t now);
+void motion_step(motion_t * motion, encoder_sample_t sample, float64_t now);
 motion_result_t motion_accept(motion_t *               motion,
-                              const motion_command_t * command, double now);
-void            motion_cancel(motion_t * motion, double now);
-void motion_raise_fault(motion_t * motion, motion_fault_t fault, double now);
+                              const motion_command_t * command, float64_t now);
+void            motion_cancel(motion_t * motion, float64_t now);
+void motion_raise_fault(motion_t * motion, motion_fault_t fault, float64_t now);
 /* Restore a known pre-reboot encoder fault; a quiet startup cannot clear it. */
 void motion_restore_encoder_fault(motion_t * motion, encoder_sample_t sample,
-                                  double now);
+                                  float64_t now);
 bool motion_release(motion_t * motion, bool checks_ok);
 bool motion_reset(motion_t * motion, bool cause_cleared,
                   bool externally_verified_rest, encoder_sample_t sample,
-                  double now);
-void motion_shutdown(motion_t * motion, double now);
+                  float64_t now);
+void motion_shutdown(motion_t * motion, float64_t now);
 bool motion_next_event(motion_t * motion, motion_event_t * event);
 const char * motion_fault_name(motion_fault_t fault);
 const char * motion_feedback_name(motion_feedback_cause_t cause);

@@ -1,5 +1,7 @@
 /* Buddy 2 runtime: owns the live motion controller, 10 ms task and motor
  * diagnostics. */
+#include "../../include/float_types.h"
+#include <stdint.h>
 #include "motion_runtime.h"
 #include "board_config.h"
 #include "motion_hal.h"
@@ -78,7 +80,7 @@ get_motor_fault (const motion_status_t * s, motor_fault_snapshot_t * snapshot)
 }
 
 static motion_result_t
-magnitude (uint32_t id, motion_mode_t mode, double value, int sign)
+magnitude (uint32_t id, motion_mode_t mode, float64_t value, int sign)
 {
     if ((!isfinite(value)) || (value < 0.0))
     {
@@ -89,37 +91,37 @@ magnitude (uint32_t id, motion_mode_t mode, double value, int sign)
 }
 
 motion_result_t
-motion_move_forward (uint32_t id, double m)
+motion_move_forward (uint32_t id, float64_t m)
 {
     return magnitude(id, DISTANCE_MOVE, m, 1);
 }
 
 motion_result_t
-motion_move_backward (uint32_t id, double m)
+motion_move_backward (uint32_t id, float64_t m)
 {
     return magnitude(id, DISTANCE_MOVE, m, -1);
 }
 
 motion_result_t
-motion_turn_left (uint32_t id, double r)
+motion_turn_left (uint32_t id, float64_t r)
 {
     return magnitude(id, ENCODER_TURN, r, 1);
 }
 
 motion_result_t
-motion_turn_right (uint32_t id, double r)
+motion_turn_right (uint32_t id, float64_t r)
 {
     return magnitude(id, ENCODER_TURN, r, -1);
 }
 
 motion_result_t
-motion_set_wheel_speeds (uint32_t id, double l, double r)
+motion_set_wheel_speeds (uint32_t id, float64_t l, float64_t r)
 {
     return robot_submit(SOURCE_MANUAL, id, WHEEL_SPEED_TRACKING, 0.0, l, r);
 }
 
 motion_result_t
-motion_manual_output (uint32_t id, double l, double r)
+motion_manual_output (uint32_t id, float64_t l, float64_t r)
 {
     return robot_submit(SOURCE_MANUAL, id, MANUAL_OUTPUT, 0.0, l, r);
 }
@@ -128,12 +130,12 @@ void
 motion_runtime_init (void)
 {
     motion_config_t config;
-    double          start;
+    float64_t       start;
 
-    config       = board_motion_config();
-    start        = motion_hal_time();
-    bool   setup = motion_hal_init(&config);
-    double now   = motion_hal_time();
+    config          = board_motion_config();
+    start           = motion_hal_time();
+    bool      setup = motion_hal_init(&config);
+    float64_t now   = motion_hal_time();
 
     motion_init(&motion, &config, motion_hal_sample(), now, setup);
 
@@ -205,8 +207,8 @@ motion_runtime_report_startup (void)
 void
 motion_task (INT code, void * context)
 {
-    double next         = motion_hal_time();
-    bool   first_sample = true;
+    float64_t next         = motion_hal_time();
+    bool      first_sample = true;
 
     (void)code;
     (void)context;
@@ -218,11 +220,11 @@ motion_task (INT code, void * context)
 
     for (;;)
     {
-        double now = motion_hal_time();
+        float64_t now = motion_hal_time();
 
         system_watchdog_feed(now);
         crash_mark(CRASH_MARK_MOTION, CRASH_MOTION_INPUTS);
-        double           previous_time = motion.last_time;
+        float64_t        previous_time = motion.last_time;
         encoder_sample_t sample        = motion_hal_sample();
 
         if (robot_runtime_wait())
@@ -313,8 +315,8 @@ report_encoder_error (const motion_status_t * s)
             tm_printf((const UB *)"[ERROR] %s ENCODER: wheel commanded to move "
                                   "but no encoder count change for %ld ms "
                                   "(limit %ld ms).\n",
-                      name, (long)d->no_progress_ms[w],
-                      (long)d->feedback_limit_ms[w]);
+                      name, (int32_t)d->no_progress_ms[w],
+                      (int32_t)d->feedback_limit_ms[w]);
             tm_printf((const UB *)"[ERROR] %s ENCODER: wheel may be stalled or "
                                   "encoder/wiring may be faulty.\n",
                       name);
@@ -395,8 +397,9 @@ report_motor_fault (const motion_status_t * s)
         tm_printf(
             (const UB *)"[PWM] %s prior_request_permille=%ld "
                         "applied_permille=%ld reverse_wait=%u enabled=%u\n",
-            name, (long)p->requested_permille[w], (long)p->applied_permille[w],
-            reversing, (unsigned)((p->enabled_mask >> w) & 1U));
+            name, (int32_t)p->requested_permille[w],
+            (int32_t)p->applied_permille[w], reversing,
+            (unsigned)((p->enabled_mask >> w) & 1U));
         tm_printf((const UB *)"[PWM REGS] %s GP%u/GP%u actual=%u,%u "
                               "expected=%u,%u top=%u div16=%u func=%u,%u\n",
                   name, motor_pins[w][0], motor_pins[w][1],
@@ -464,7 +467,7 @@ report_motor_fault (const motion_status_t * s)
         {
             tm_printf((const UB *)"[MOTOR CHECK] %s requested output reached "
                                   "the configured cap (%ld permille).\n",
-                      name, (long)p->cap_permille);
+                      name, (int32_t)p->cap_permille);
         }
 
         if ((0 == d->target_mm_s[w]) && (0 == d->output_permille[w]))
@@ -518,11 +521,11 @@ report_motion_fault (const motion_status_t * s, const motion_config_t * config)
             tm_printf(
                 (const UB *)"[ERROR] MOTION SETUP TIMEOUT: initialization or "
                             "startup qualification exceeded %lu ms.\n",
-                (unsigned long)(config->setup_timeout * 1000.0));
+                (uint32_t)(config->setup_timeout * 1000.0));
             tm_printf((const UB *)"[SETUP] startup_gaps=%u max_gap_us=%lu "
                                   "stationary=%u feedback_trusted=%u\n",
                       (unsigned)s->startup_gaps,
-                      (unsigned long)(s->max_startup_gap * 1000000.0),
+                      (uint32_t)(s->max_startup_gap * 1000000.0),
                       (unsigned)s->stationary, (unsigned)s->feedback_trusted);
         break;
 
@@ -530,8 +533,8 @@ report_motion_fault (const motion_status_t * s, const motion_config_t * config)
             tm_printf(
                 (const UB *)"[ERROR] MOTOR CONTROL TIMING: interval must be "
                             "finite, positive and <= %lu us; nominal=%lu us.\n",
-                (unsigned long)(config->max_dt * 1000000.0),
-                (unsigned long)(config->period * 1000000.0));
+                (uint32_t)(config->max_dt * 1000000.0),
+                (uint32_t)(config->period * 1000000.0));
         break;
 
         case F_FEEDBACK:
@@ -543,14 +546,14 @@ report_motion_fault (const motion_status_t * s, const motion_config_t * config)
             tm_printf(
                 (const UB *)"[ERROR] MOTOR MOVEMENT: command deadline reached "
                             "before completion; movement_timeout_ms=%lu.\n",
-                (unsigned long)(config->movement_timeout * 1000.0));
+                (uint32_t)(config->movement_timeout * 1000.0));
         break;
 
         case F_EXPIRED:
             tm_printf(
                 (const UB *)"[ERROR] STEERING EXPIRED: wheel-speed command was "
                             "not refreshed before expiry; lifetime_ms=%lu.\n",
-                (unsigned long)(config->command_lifetime * 1000.0));
+                (uint32_t)(config->command_lifetime * 1000.0));
         break;
 
         case F_STOP_TIMEOUT:
@@ -558,9 +561,9 @@ report_motion_fault (const motion_status_t * s, const motion_config_t * config)
                 (const UB *)"[ERROR] MOTOR STOP: stationary confirmation did "
                             "not arrive within %lu ms; both speed magnitudes "
                             "must be <= %lu mm/s for %lu ms.\n",
-                (unsigned long)(config->stop_timeout * 1000.0),
-                (unsigned long)(config->stopped_speed * 1000.0),
-                (unsigned long)(config->settle_time * 1000.0));
+                (uint32_t)(config->stop_timeout * 1000.0),
+                (uint32_t)(config->stopped_speed * 1000.0),
+                (uint32_t)(config->settle_time * 1000.0));
         break;
 
         case F_FINAL_GOAL:
@@ -568,8 +571,8 @@ report_motion_fault (const motion_status_t * s, const motion_config_t * config)
                 (const UB *)"[ERROR] MOTOR MOVEMENT: final distance/heading "
                             "check failed; distance_tolerance_um=%lu "
                             "angle_tolerance_mrad=%lu.\n",
-                (unsigned long)(config->distance_tolerance * 1000000.0),
-                (unsigned long)(config->angle_tolerance * 1000.0));
+                (uint32_t)(config->distance_tolerance * 1000000.0),
+                (uint32_t)(config->angle_tolerance * 1000.0));
         break;
 
         case F_EVENT_OVERFLOW:
@@ -611,8 +614,8 @@ report_motion_fault (const motion_status_t * s, const motion_config_t * config)
 
     tm_printf((const UB *)"[FAULT] captured_ms=%ld mode=%s previous_state=%u "
                           "dt_us=%ld finite_goal=%u (INT32_MIN=invalid)\n",
-              (long)d->time_ms, motion_mode_name(d->mode), (unsigned)d->state,
-              (long)d->dt_us, (unsigned)d->finite_goal);
+              (int32_t)d->time_ms, motion_mode_name(d->mode),
+              (unsigned)d->state, (int32_t)d->dt_us, (unsigned)d->finite_goal);
 
     for (unsigned w = 0U; w < 2U; ++w)
     {
@@ -621,12 +624,13 @@ report_motion_fault (const motion_status_t * s, const motion_config_t * config)
         tm_printf((const UB *)"[FAULT] %s stalled=%u target_mm_s=%ld "
                               "speed_mm_s=%ld request_permille=%ld\n",
                   name, (unsigned)((d->stalled_wheels >> w) & 1U),
-                  (long)d->target_mm_s[w], (long)d->speed_mm_s[w],
-                  (long)d->output_permille[w]);
+                  (int32_t)d->target_mm_s[w], (int32_t)d->speed_mm_s[w],
+                  (int32_t)d->output_permille[w]);
         tm_printf((const UB *)"[FAULT] %s remaining_um=%ld no_progress_ms=%ld "
                               "limit_ms=%ld count=%u invalid=%u\n",
-                  name, (long)d->remaining_um[w], (long)d->no_progress_ms[w],
-                  (long)d->feedback_limit_ms[w],
+                  name, (int32_t)d->remaining_um[w],
+                  (int32_t)d->no_progress_ms[w],
+                  (int32_t)d->feedback_limit_ms[w],
                   (unsigned)s->feedback_fault_sample.count[w],
                   (unsigned)s->feedback_fault_sample.invalid[w]);
 

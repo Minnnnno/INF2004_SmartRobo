@@ -1,5 +1,6 @@
 #ifndef ROBO_ROBOT_H
 #define ROBO_ROBOT_H
+#include "float_types.h"
 #include "motion.h"
 
 typedef enum
@@ -41,9 +42,9 @@ typedef struct
 
 typedef struct
 {
-    bool   available; /* false until owner supplies genuine data */
-    double timestamp;
-    double values[4]; /* subsystem-specific; see docs/API.md */
+    bool      available; /* false until owner supplies genuine data */
+    float64_t timestamp;
+    float64_t values[4]; /* subsystem-specific; see docs/API.md */
 } subsystem_status_t;
 
 typedef struct
@@ -95,7 +96,7 @@ motion_result_t robot_request(robot_bus_t *           bus,
                               const robot_request_t * request);
 void robot_control(robot_bus_t * bus, robot_control_t control, bool checks_ok,
                    bool external_rest);
-void vehicle_controller_cycle(robot_bus_t * bus, double now);
+void vehicle_controller_cycle(robot_bus_t * bus, float64_t now);
 /* Bridge for Buddy 1's queued start/stop/estop commands; caller holds bus
  * mutex. */
 motion_result_t
@@ -103,23 +104,26 @@ vehicle_controller_remote_command(robot_bus_t *          bus,
                                   robot_remote_command_t command);
 /* Take controls/approved under lock; run control calculations outside lock. */
 void robot_motion_inputs(robot_bus_t * bus, motion_t * motion,
-                         encoder_sample_t sample, double now);
-void robot_publish(robot_bus_t * bus, motion_t * motion, double now);
+                         encoder_sample_t sample, float64_t now);
+void robot_publish(robot_bus_t * bus, motion_t * motion, float64_t now);
 
 /* Target task-context API. Nonblocking submission; result is acceptance into
  * request buffer. */
-motion_result_t motion_move_forward(uint32_t id, double metres);
-motion_result_t motion_move_backward(uint32_t id, double metres);
-motion_result_t motion_turn_left(uint32_t id, double radians);
-motion_result_t motion_turn_right(uint32_t id, double radians);
-motion_result_t motion_set_wheel_speeds(uint32_t id, double left, double right);
-motion_result_t motion_manual_output(uint32_t id, double left, double right);
+motion_result_t motion_move_forward(uint32_t id, float64_t metres);
+motion_result_t motion_move_backward(uint32_t id, float64_t metres);
+motion_result_t motion_turn_left(uint32_t id, float64_t radians);
+motion_result_t motion_turn_right(uint32_t id, float64_t radians);
+motion_result_t motion_set_wheel_speeds(uint32_t id, float64_t left,
+                                        float64_t right);
+motion_result_t motion_manual_output(uint32_t id, float64_t left,
+                                     float64_t right);
 motion_result_t robot_submit(request_source_t source, uint32_t id,
-                             motion_mode_t mode, double value, double left,
-                             double right);
+                             motion_mode_t mode, float64_t value,
+                             float64_t left, float64_t right);
 motion_result_t robot_submit_arc(request_source_t source, uint32_t id,
-                                 double metres, double radians, double seconds,
-                                 double left, double right);
+                                 float64_t metres, float64_t radians,
+                                 float64_t seconds, float64_t left,
+                                 float64_t right);
 void            motion_stop(void);
 void            motion_controller_release(bool checks_ok);
 void motion_fault_reset(bool cause_cleared, bool externally_verified_rest);

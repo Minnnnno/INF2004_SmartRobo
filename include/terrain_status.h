@@ -10,6 +10,7 @@
  */
 #ifndef ROBO_TERRAIN_STATUS_H
 #define ROBO_TERRAIN_STATUS_H
+#include "float_types.h"
 #include "robot.h"
 #include <stdbool.h>
 #include <stddef.h>
@@ -36,7 +37,7 @@
 static inline uint8_t
 terrain_published_state (subsystem_status_t const * p_terrain)
 {
-    double word;
+    float64_t word;
 
     if ((NULL == p_terrain) || (!p_terrain->available))
     {

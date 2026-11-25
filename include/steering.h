@@ -1,5 +1,6 @@
 #ifndef ROBO_STEERING_H
 #define ROBO_STEERING_H
+#include "float_types.h"
 #include "robot.h"
 
 /* Buddy task API: millimetres, mm/s, degrees. Task context only.
@@ -7,27 +8,27 @@
  * Turn is an in-place robot heading change, not motor-shaft rotation.
  * Motion Control chooses/ramp-limits finite-move speed from configuration. */
 motion_result_t motion_move_mm(request_source_t source, uint32_t id,
-                               double distance_mm);
+                               float64_t distance_mm);
 motion_result_t motion_turn_degrees(request_source_t source, uint32_t id,
-                                    double degrees);
+                                    float64_t degrees);
 /* Refresh the same nonzero ID every 20-50 ms. Targets are scaled together
  * to the configured wheel-speed limit, preserving curvature. */
 motion_result_t motion_set_wheel_speeds_mm_s(request_source_t source,
-                                             uint32_t id, double left_mm_s,
-                                             double right_mm_s);
+                                             uint32_t id, float64_t left_mm_s,
+                                             float64_t right_mm_s);
 
 typedef struct
 {
-    double timestamp_s;
+    float64_t timestamp_s;
 
-    double         left_speed_mm_s;
-    double         right_speed_mm_s;
-    double         centre_speed_mm_s;
-    double         left_distance_mm;
-    double         right_distance_mm;
-    double         centre_distance_mm;
-    double         path_distance_mm;
-    double         heading_deg;
+    float64_t      left_speed_mm_s;
+    float64_t      right_speed_mm_s;
+    float64_t      centre_speed_mm_s;
+    float64_t      left_distance_mm;
+    float64_t      right_distance_mm;
+    float64_t      centre_distance_mm;
+    float64_t      path_distance_mm;
+    float64_t      heading_deg;
     motion_state_t state;
     motion_fault_t fault;
     bool           feedback_trusted;
@@ -44,32 +45,34 @@ bool motion_get_measurements_mm(motion_measurements_mm_t * measurements);
  * Continuous commands: refresh the same nonzero ID every 20-50 ms.
  * Finite commands: submit once, then wait for matching completion/fault. */
 motion_result_t motion_steer(request_source_t source, uint32_t id,
-                             double speed_m_s, double turn_deg_s);
+                             float64_t speed_m_s, float64_t turn_deg_s);
 motion_result_t motion_steer_left(request_source_t source, uint32_t id,
-                                  double speed_m_s, double correction_m_s);
+                                  float64_t speed_m_s,
+                                  float64_t correction_m_s);
 motion_result_t motion_steer_right(request_source_t source, uint32_t id,
-                                   double speed_m_s, double correction_m_s);
+                                   float64_t speed_m_s,
+                                   float64_t correction_m_s);
 motion_result_t motion_steer_distance(request_source_t source, uint32_t id,
-                                      double metres, double heading_deg,
-                                      double speed_m_s);
+                                      float64_t metres, float64_t heading_deg,
+                                      float64_t speed_m_s);
 /* speed_m_s is average centre speed; timed arcs use smooth start/end ramps.
  * Physically impossible speed/acceleration/time combinations are rejected. */
 motion_result_t motion_steer_time(request_source_t source, uint32_t id,
-                                  double seconds, double heading_deg,
-                                  double speed_m_s);
+                                  float64_t seconds, float64_t heading_deg,
+                                  float64_t speed_m_s);
 
 typedef struct
 {
-    double         timestamp_s;
-    double         left_speed_m_s;
-    double         right_speed_m_s;
-    double         centre_speed_m_s;
-    double         turn_deg_s;
-    double         left_metres;
-    double         right_metres;
-    double         centre_metres;
-    double         path_metres;
-    double         heading_deg;
+    float64_t      timestamp_s;
+    float64_t      left_speed_m_s;
+    float64_t      right_speed_m_s;
+    float64_t      centre_speed_m_s;
+    float64_t      turn_deg_s;
+    float64_t      left_metres;
+    float64_t      right_metres;
+    float64_t      centre_metres;
+    float64_t      path_metres;
+    float64_t      heading_deg;
     motion_state_t state;
     motion_fault_t fault;
     bool           feedback_trusted;

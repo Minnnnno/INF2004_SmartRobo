@@ -1,3 +1,4 @@
+#include "../../include/float_types.h"
 #include "motion.h"
 #include "motion_compact.h"
 #include <math.h>
@@ -74,21 +75,21 @@ zero_output (motion_t * m)
 }
 
 static int32_t
-debug_scaled (double value, double scale)
+debug_scaled (float64_t value, float64_t scale)
 {
-    double scaled = value * scale;
+    float64_t scaled = value * scale;
 
     if (!isfinite(scaled))
     {
         return INT32_MIN;
     }
 
-    if (scaled >= (double)INT32_MAX)
+    if (scaled >= (float64_t)INT32_MAX)
     {
         return INT32_MAX;
     }
 
-    if (scaled <= ((double)INT32_MIN + 1.0))
+    if (scaled <= ((float64_t)INT32_MIN + 1.0))
     {
         return INT32_MIN + 1;
     }
@@ -97,7 +98,7 @@ debug_scaled (double value, double scale)
 }
 
 static void
-record_fault_context (motion_t * m, double now)
+record_fault_context (motion_t * m, float64_t now)
 {
     motion_fault_debug_t * d = &m->status.debug;
     motion_command_t       command;
@@ -122,8 +123,8 @@ record_fault_context (motion_t * m, double now)
 
     for (unsigned w = 0U; w < 2U; ++w)
     {
-        double target = fabs(m->status.target[w]);
-        double limit  = 0.0;
+        float64_t target = fabs(m->status.target[w]);
+        float64_t limit  = 0.0;
 
         d->target_mm_s[w]     = debug_scaled(m->status.target[w], 1000.0);
         d->speed_mm_s[w]      = debug_scaled(m->status.speed[w], 1000.0);
@@ -132,8 +133,8 @@ record_fault_context (motion_t * m, double now)
 
         if ((target > 1e-9) && (m->config.counts_per_rev[w] > 0.0))
         {
-            double quantum = (3.141592653589793 * m->config.diameter[w])
-                             / m->config.counts_per_rev[w];
+            float64_t quantum = (3.141592653589793 * m->config.diameter[w])
+                                / m->config.counts_per_rev[w];
 
             limit = m->config.feedback_timeout + ((2.0 * quantum) / target);
         }
@@ -142,8 +143,8 @@ record_fault_context (motion_t * m, double now)
 
         if (d->finite_goal)
         {
-            double goal = command.value;
-            double sign = (0U == w) ? -1.0 : 1.0;
+            float64_t goal = command.value;
+            float64_t sign = (0U == w) ? -1.0 : 1.0;
 
             if (ENCODER_TURN == command.mode)
             {
@@ -303,10 +304,10 @@ motion_next_event (motion_t * m, motion_event_t * e)
 }
 
 static void motion_fault_unlatched(motion_t * m, motion_fault_t fault,
-                                   double now);
+                                   float64_t now);
 
 void
-motion_raise_fault (motion_t * m, motion_fault_t fault, double now)
+motion_raise_fault (motion_t * m, motion_fault_t fault, float64_t now)
 {
     if (SHUTDOWN == m->status.state)
     {
@@ -365,7 +366,8 @@ record_feedback (motion_t * m, encoder_sample_t sample,
 }
 
 void
-motion_restore_encoder_fault (motion_t * m, encoder_sample_t sample, double now)
+motion_restore_encoder_fault (motion_t * m, encoder_sample_t sample,
+                              float64_t now)
 {
     record_feedback(m, sample, FB_RESTART_LATCH);
     motion_raise_fault(m, F_FEEDBACK, now);
@@ -373,7 +375,7 @@ motion_restore_encoder_fault (motion_t * m, encoder_sample_t sample, double now)
 
 void
 motion_init (motion_t * m, const motion_config_t * c, encoder_sample_t sample,
-             double now, bool setup_ok)
+             float64_t now, bool setup_ok)
 {
     unsigned w;
 
@@ -412,7 +414,7 @@ motion_init (motion_t * m, const motion_config_t * c, encoder_sample_t sample,
 }
 
 static void
-timing_fault (motion_t * m, double now, double dt)
+timing_fault (motion_t * m, float64_t now, float64_t dt)
 {
     if (!m->status.timing_fault_recorded)
     {
@@ -425,7 +427,7 @@ timing_fault (motion_t * m, double now, double dt)
 }
 
 void
-motion_begin_sampling (motion_t * m, encoder_sample_t sample, double now)
+motion_begin_sampling (motion_t * m, encoder_sample_t sample, float64_t now)
 {
     unsigned w;
 
@@ -465,7 +467,7 @@ motion_begin_sampling (motion_t * m, encoder_sample_t sample, double now)
 }
 
 static void
-stopping (motion_t * m, double now)
+stopping (motion_t * m, float64_t now)
 {
     zero_output(m);
     m->status.state = STOPPING;
@@ -475,7 +477,7 @@ stopping (motion_t * m, double now)
 }
 
 void
-motion_cancel (motion_t * m, double now)
+motion_cancel (motion_t * m, float64_t now)
 {
     if (SHUTDOWN == m->status.state)
     {
@@ -511,7 +513,7 @@ motion_cancel (motion_t * m, double now)
 }
 
 void
-motion_shutdown (motion_t * m, double now)
+motion_shutdown (motion_t * m, float64_t now)
 {
     motion_cancel(m, now);
     zero_output(m);
@@ -522,7 +524,7 @@ motion_shutdown (motion_t * m, double now)
 /* Only reached with faults disabled. Nothing here sets FAULT or status.fault.
  */
 static void
-motion_fault_unlatched (motion_t * m, motion_fault_t fault, double now)
+motion_fault_unlatched (motion_t * m, motion_fault_t fault, float64_t now)
 {
     switch (fault)
     {
@@ -602,7 +604,7 @@ motion_release (motion_t * m, bool checks_ok)
 
 bool
 motion_reset (motion_t * m, bool cleared, bool external_rest,
-              encoder_sample_t sample, double now)
+              encoder_sample_t sample, float64_t now)
 {
     uint32_t        generation = m->status.generation;
     motion_config_t config     = m->config;
@@ -624,7 +626,7 @@ motion_reset (motion_t * m, bool cleared, bool external_rest,
 }
 
 motion_result_t
-motion_accept (motion_t * m, const motion_command_t * c, double now)
+motion_accept (motion_t * m, const motion_command_t * c, float64_t now)
 {
     unsigned                 w;
     motion_storage_command_t stored;
@@ -692,7 +694,7 @@ motion_accept (motion_t * m, const motion_command_t * c, double now)
 
         for (w = 0U; w < 2U; ++w)
         {
-            double goal
+            float64_t goal
                 = c->value
                   + ((((0U == w) ? -1.0 : 1.0) * c->angle * m->config.track)
                      / 2.0);
@@ -716,8 +718,8 @@ motion_accept (motion_t * m, const motion_command_t * c, double now)
 
     for (w = 0; w < 2U; ++w)
     {
-        double limit = (MANUAL_OUTPUT == c->mode) ? m->config.manual_limit
-                                                  : m->config.max_speed;
+        float64_t limit = (MANUAL_OUTPUT == c->mode) ? m->config.manual_limit
+                                                     : m->config.max_speed;
 
         if (fabs(c->speed[w]) > limit)
         {
@@ -759,10 +761,10 @@ motion_accept (motion_t * m, const motion_command_t * c, double now)
 
         for (w = 0u; w < 2u; ++w)
         {
-            double goal = decoded.value
-                          + ((((0u == w) ? -1.0 : 1.0) * decoded.angle
-                              * m->config.track)
-                             / 2.0);
+            float64_t goal = decoded.value
+                             + ((((0u == w) ? -1.0 : 1.0) * decoded.angle
+                                 * m->config.track)
+                                / 2.0);
 
             if (((goal * decoded.speed[w]) < 0.0)
                 || ((fabs(goal) > 1e-12) && (fabs(decoded.speed[w]) < 1e-12)))
@@ -815,8 +817,8 @@ final_goal (const motion_t * m)
         return false;
     }
 
-    double left  = m->odom.travel[0] - m->start[0];
-    double right = m->odom.travel[1] - m->start[1];
+    float64_t left  = m->odom.travel[0] - m->start[0];
+    float64_t right = m->odom.travel[1] - m->start[1];
 
     if (ARC_MOVE == command.mode)
     {
@@ -839,7 +841,7 @@ final_goal (const motion_t * m)
 }
 
 static void
-drive (motion_t * m, double now, double dt, const bool progressed[2])
+drive (motion_t * m, float64_t now, float64_t dt, const bool progressed[2])
 {
     motion_command_t command;
     uint8_t          stalled_wheels = 0U;
@@ -850,8 +852,8 @@ drive (motion_t * m, double now, double dt, const bool progressed[2])
         return;
     }
 
-    double   desired[2] = {command.speed[0], command.speed[1]};
-    unsigned w;
+    float64_t desired[2] = {command.speed[0], command.speed[1]};
+    unsigned  w;
 
     if ((MANUAL_OUTPUT == command.mode) && (now >= command.deadline))
     {
@@ -873,10 +875,10 @@ drive (motion_t * m, double now, double dt, const bool progressed[2])
 
     if (ARC_MOVE == command.mode)
     {
-        double elapsed = now - m->entered;
-        double left    = m->odom.travel[0] - m->start[0];
-        double right   = m->odom.travel[1] - m->start[1];
-        double tolerance
+        float64_t elapsed = now - m->entered;
+        float64_t left    = m->odom.travel[0] - m->start[0];
+        float64_t right   = m->odom.travel[1] - m->start[1];
+        float64_t tolerance
             = fmin(m->config.distance_tolerance / 2.0,
                    (m->config.angle_tolerance * m->config.track) / 4.0);
         /* Distance and heading constrain common and differential wheel error
@@ -901,17 +903,17 @@ drive (motion_t * m, double now, double dt, const bool progressed[2])
 
         for (w = 0U; w < 2U; ++w)
         {
-            double goal      = command.value
-                               + ((((0U == w) ? -1.0 : 1.0) * command.angle
-                                   * m->config.track)
-                                  / 2.0);
-            double travelled = m->odom.travel[w] - m->start[w];
-            double remaining = goal - travelled;
+            float64_t goal      = command.value
+                                  + ((((0U == w) ? -1.0 : 1.0) * command.angle
+                                      * m->config.track)
+                                     / 2.0);
+            float64_t travelled = m->odom.travel[w] - m->start[w];
+            float64_t remaining = goal - travelled;
 
             if (command.duration > 0.0)
             {
-                double u = fmax(0.0, fmin(1.0, elapsed / command.duration));
-                double progress = u * u * (3.0 - (2.0 * u));
+                float64_t u = fmax(0.0, fmin(1.0, elapsed / command.duration));
+                float64_t progress = u * u * (3.0 - (2.0 * u));
 
                 desired[w] = (command.speed[w] * 6.0 * u * (1.0 - u))
                              + (2.0 * m->config.straight_gain
@@ -935,13 +937,13 @@ drive (motion_t * m, double now, double dt, const bool progressed[2])
              * stopped early never gets an endpoint correction. Half the slower
              * wheel's speed at most, so neither wheel reverses; none once a
              * wheel is at its goal. */
-            double progress
+            float64_t progress
                 = (0.0 == command.value)
                       ? 1.0
                       : fmax(0.0,
                              fmin(1.0, (left + right) / (2.0 * command.value)));
-            double slack      = fmin(fabs(desired[0]), fabs(desired[1])) / 2.0;
-            double correction = fmax(
+            float64_t slack = fmin(fabs(desired[0]), fabs(desired[1])) / 2.0;
+            float64_t correction = fmax(
                 -slack, fmin(slack, 2.0 * m->config.straight_gain
                                         * ((right - left)
                                            - (command.angle * m->config.track
@@ -961,16 +963,16 @@ drive (motion_t * m, double now, double dt, const bool progressed[2])
 
     if ((DISTANCE_MOVE == command.mode) || (ENCODER_TURN == command.mode))
     {
-        double left      = m->odom.travel[0] - m->start[0];
-        double right     = m->odom.travel[1] - m->start[1];
-        double travelled = (DISTANCE_MOVE == command.mode)
-                               ? (left + right) / 2.0
-                               : (right - left) / m->config.track;
-        double remaining
+        float64_t left      = m->odom.travel[0] - m->start[0];
+        float64_t right     = m->odom.travel[1] - m->start[1];
+        float64_t travelled = (DISTANCE_MOVE == command.mode)
+                                  ? (left + right) / 2.0
+                                  : (right - left) / m->config.track;
+        float64_t remaining
             = fabs(command.value) - (copysign(1.0, command.value) * travelled);
-        double tolerance = (DISTANCE_MOVE == command.mode)
-                               ? m->config.distance_tolerance
-                               : m->config.angle_tolerance;
+        float64_t tolerance = (DISTANCE_MOVE == command.mode)
+                                  ? m->config.distance_tolerance
+                                  : m->config.angle_tolerance;
 
         if (remaining <= (tolerance * 0.5))
         {
@@ -999,7 +1001,7 @@ drive (motion_t * m, double now, double dt, const bool progressed[2])
 
         if (DISTANCE_MOVE == command.mode)
         {
-            double correction
+            float64_t correction
                 = fmax(-m->config.max_speed / 2.0,
                        fmin(m->config.max_speed / 2.0,
                             m->config.straight_gain * (right - left)));
@@ -1011,10 +1013,10 @@ drive (motion_t * m, double now, double dt, const bool progressed[2])
 
     for (w = 0; w < 2U; ++w)
     {
-        double change;
-        double quantum = (3.141592653589793 * m->config.diameter[w])
-                         / m->config.counts_per_rev[w];
-        bool   manual  = MANUAL_OUTPUT == command.mode;
+        float64_t change;
+        float64_t quantum = (3.141592653589793 * m->config.diameter[w])
+                            / m->config.counts_per_rev[w];
+        bool      manual  = MANUAL_OUTPUT == command.mode;
 
         desired[w]
             = fmax(-m->config.max_speed, fmin(m->config.max_speed, desired[w]));
@@ -1038,11 +1040,11 @@ drive (motion_t * m, double now, double dt, const bool progressed[2])
             && ((desired[w] * m->status.target[w]) > 0.0)
             && (fabs(desired[w]) >= fabs(m->status.target[w])))
         {
-            double kick = fmin(m->config.max_output,
-                               m->config.breakaway[w]
-                                   * (1.0
-                                      + ((now - m->last_progress[w])
-                                         / m->config.feedback_timeout)));
+            float64_t kick = fmin(m->config.max_output,
+                                  m->config.breakaway[w]
+                                      * (1.0
+                                         + ((now - m->last_progress[w])
+                                            / m->config.feedback_timeout)));
 
             if (fabs(m->status.output[w]) < kick)
             {
@@ -1071,8 +1073,8 @@ drive (motion_t * m, double now, double dt, const bool progressed[2])
         }
         else if (MOTION_FAULTS_ENABLED)
         {
-            double timeout = m->config.feedback_timeout
-                             + ((2.0 * quantum) / fabs(m->status.target[w]));
+            float64_t timeout = m->config.feedback_timeout
+                                + ((2.0 * quantum) / fabs(m->status.target[w]));
 
             if (((now - m->expected_since[w]) >= m->config.startup_grace)
                 && ((now - m->last_progress[w]) > timeout))
@@ -1097,12 +1099,12 @@ drive (motion_t * m, double now, double dt, const bool progressed[2])
 }
 
 void
-motion_step (motion_t * m, encoder_sample_t sample, double now)
+motion_step (motion_t * m, encoder_sample_t sample, float64_t now)
 {
-    double   dt = now - m->last_time;
-    bool     progressed[2];
-    bool     fresh;
-    unsigned w;
+    float64_t dt = now - m->last_time;
+    bool      progressed[2];
+    bool      fresh;
+    unsigned  w;
 
     m->status.encoder             = sample;
     m->status.encoder_sample_time = now;

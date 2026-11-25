@@ -1,4 +1,5 @@
 #ifdef ROBO_ANGLE_TEST
+#include "../../include/float_types.h"
 #include "angle_test.h"
 #include "motion_hal.h"
 #include "board_config.h"
@@ -122,8 +123,8 @@ angle_test_poll (void)
     {
         for (w = 0U; w < 2U; ++w)
         {
-            double   output = control.output[w] * control.config.motor_sign[w];
-            uint16_t duty   = (uint16_t)(fmin(0.25, fabs(output)) * 4000.0);
+            float64_t output = control.output[w] * control.config.motor_sign[w];
+            uint16_t  duty   = (uint16_t)(fmin(0.25, fabs(output)) * 4000.0);
 
             pwm_set_both_levels(4U + w, (output > 0.0) ? duty : 0U,
                                 (output < 0.0) ? duty : 0U);

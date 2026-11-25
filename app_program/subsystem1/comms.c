@@ -12,6 +12,8 @@
  *  delay the 10 ms motion task beyond one snapshot copy.
  */
 
+#include "../../include/float_types.h"
+#include <stdint.h>
 #include "subsystem1.h" /* first: sets up size_t for the kernel */
 #include "robot.h"
 #include "motion_hal.h"
@@ -190,7 +192,7 @@ comms_stats (COMMS_STATS * out)
 /* ---- hooks, called from the WiFi service task (comms_hooks.h) ---- */
 
 int
-comms_hook_next (char * topic, unsigned char * payload, int * qos)
+comms_hook_next (char * topic, uint8_t * payload, int * qos)
 {
     COMMS_MSG msg;
     INT       i;
@@ -222,7 +224,7 @@ seq_newer (UB seq)
 }
 
 void
-comms_hook_command (const unsigned char * payload, int len)
+comms_hook_command (const uint8_t * payload, int len)
 {
     tf_command_t cmd;
     tf_ack_t     result;
@@ -280,7 +282,7 @@ comms_hook_command (const unsigned char * payload, int len)
 }
 
 void
-comms_hook_route (const unsigned char * payload, int len)
+comms_hook_route (const uint8_t * payload, int len)
 {
     UB           reply[COMMS_PAYLOAD_MAX + 1];
     const char * head = ((len >= 0) && (route_set((const char *)payload, len)))
@@ -314,9 +316,9 @@ comms_hook_online (int online)
 /* ---- task ---- */
 
 LOCAL UW
-elapsed_us (double from, double to)
+elapsed_us (float64_t from, float64_t to)
 {
-    double us = (to - from) * 1.0e6;
+    float64_t us = (to - from) * 1.0e6;
 
     return (us <= 0.0) ? 0U : ((us >= 4.0e9) ? 0xFFFFFFFFU : (UW)us);
 }
@@ -361,10 +363,10 @@ comms_task (INT stacd, void * exinf)
     UW              base_rejected = 0;
     UW              base_drops    = 0;
 
-    double t0;
-    double t1;
-    double t2;
-    UW     us;
+    float64_t t0;
+    float64_t t1;
+    float64_t t2;
+    UW        us;
 
     (void)stacd;
     (void)exinf;

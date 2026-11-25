@@ -4,12 +4,13 @@
  *  See detour_plan.h for the frame and the steps.
  */
 
+#include "../../include/float_types.h"
 #include "detour_plan.h"
 #include <math.h>
 
 #define DEG_TO_RAD (0.017453292519943295)
 
-static double
+static float64_t
 side_sign (s5_avoid_side_t side)
 {
     return (S5_AVOID_LEFT == side) ? 1.0 : -1.0;
@@ -29,18 +30,18 @@ s5_detour_plan (const s5_scan_t * p_scan, s5_detour_plan_t * p_plan)
 
 bool
 s5_detour_plan_side (const s5_scan_t * p_scan, s5_avoid_side_t side,
-                     double max_out_deg, s5_detour_plan_t * p_plan)
+                     float64_t max_out_deg, s5_detour_plan_t * p_plan)
 {
-    unsigned index;
-    double   sign;
-    double   shift;
-    double   travel;
-    double   heading;
-    double   front_reach;
-    double   room;
-    double   tan_max;
-    double   angle_deg;
-    bool     b_face = p_scan->face.b_valid;
+    unsigned  index;
+    float64_t sign;
+    float64_t shift;
+    float64_t travel;
+    float64_t heading;
+    float64_t front_reach;
+    float64_t room;
+    float64_t tan_max;
+    float64_t angle_deg;
+    bool      b_face = p_scan->face.b_valid;
 
     p_plan->b_ok        = false;
     p_plan->side        = S5_AVOID_NONE;
@@ -147,12 +148,13 @@ s5_pass_init (s5_pass_t * p_pass, const s5_detour_plan_t * p_plan)
    the end, which only moves that later: safe. */
 bool
 s5_pass_observe (s5_pass_t * p_pass, const s5_detour_plan_t * p_plan,
-                 double x_mm, double y_mm, bool b_echo, double range_mm)
+                 float64_t x_mm, float64_t y_mm, bool b_echo,
+                 float64_t range_mm)
 {
-    double look          = (double)S5_SIDE_LOOK_DEG * DEG_TO_RAD;
-    double servo_x       = x_mm + S5_SERVO_AHEAD_MM;
-    double axis_range_mm = range_mm + S5_SENSOR_OFFSET_MM;
-    double crossing;
+    float64_t look          = (float64_t)S5_SIDE_LOOK_DEG * DEG_TO_RAD;
+    float64_t servo_x       = x_mm + S5_SERVO_AHEAD_MM;
+    float64_t axis_range_mm = range_mm + S5_SENSOR_OFFSET_MM;
+    float64_t crossing;
 
     p_pass->gap_mm = side_sign(p_plan->side) * (y_mm - p_plan->edge_mm);
 
@@ -192,7 +194,7 @@ s5_pass_observe (s5_pass_t * p_pass, const s5_detour_plan_t * p_plan,
 }
 
 /* Turning in place, the rear corners sweep a circle of rear_reach. */
-double
+float64_t
 s5_pass_clear_x (const s5_pass_t * p_pass)
 {
     return fmax(p_pass->rear_mm, p_pass->end_mm)
@@ -200,14 +202,14 @@ s5_pass_clear_x (const s5_pass_t * p_pass)
            - S5_PASS_TRIM_MM;
 }
 
-double
-s5_return_length (double y_mm)
+float64_t
+s5_return_length (float64_t y_mm)
 {
     return (fabs(y_mm) / sin(S5_RETURN_DEG * DEG_TO_RAD)) + S5_RETURN_EXTRA_MM;
 }
 
 bool
-s5_line_expected (double y_mm, double heading_deg)
+s5_line_expected (float64_t y_mm, float64_t heading_deg)
 {
     return fabs(y_mm + (S5_IR_AHEAD_MM * sin(heading_deg * DEG_TO_RAD)))
            <= S5_LINE_WINDOW_MM;
@@ -216,7 +218,7 @@ s5_line_expected (double y_mm, double heading_deg)
 /* t >= 0 along a ray stays inside the half-plane a + t * d >= 0: narrow [*p_lo,
  * *p_hi]. */
 static bool
-clip_ray (double a, double d, double * p_lo, double * p_hi)
+clip_ray (float64_t a, float64_t d, float64_t * p_lo, float64_t * p_hi)
 {
     if (fabs(d) < 1e-12)
     {
@@ -235,26 +237,27 @@ clip_ray (double a, double d, double * p_lo, double * p_hi)
     return *p_lo <= *p_hi;
 }
 
-double
-s5_obstacle_range (const s5_detour_plan_t * p_plan, double x_mm, double y_mm,
-                   double heading_deg, int angle_deg)
+float64_t
+s5_obstacle_range (const s5_detour_plan_t * p_plan, float64_t x_mm,
+                   float64_t y_mm, float64_t heading_deg, int angle_deg)
 {
-    double sign     = side_sign(p_plan->side);
-    double heading  = heading_deg * DEG_TO_RAD;
-    double servo_x  = x_mm + (S5_SERVO_AHEAD_MM * cos(heading));
-    double servo_y  = y_mm + (S5_SERVO_AHEAD_MM * sin(heading));
-    double look_deg = heading_deg + (double)(S5_ANGLE_CENTRE_DEG - angle_deg);
-    double nearest  = INFINITY;
-    int    offset;
+    float64_t sign    = side_sign(p_plan->side);
+    float64_t heading = heading_deg * DEG_TO_RAD;
+    float64_t servo_x = x_mm + (S5_SERVO_AHEAD_MM * cos(heading));
+    float64_t servo_y = y_mm + (S5_SERVO_AHEAD_MM * sin(heading));
+    float64_t look_deg
+        = heading_deg + (float64_t)(S5_ANGLE_CENTRE_DEG - angle_deg);
+    float64_t nearest = INFINITY;
+    int       offset;
 
     for (offset = -S5_KNOWN_BEAM_HALF_DEG; offset <= S5_KNOWN_BEAM_HALF_DEG;
          offset++)
     {
-        double ray = (look_deg + (double)offset) * DEG_TO_RAD;
-        double ux  = cos(ray);
-        double uy  = sin(ray);
-        double lo  = 0.0;
-        double hi  = INFINITY;
+        float64_t ray = (look_deg + (float64_t)offset) * DEG_TO_RAD;
+        float64_t ux  = cos(ray);
+        float64_t uy  = sin(ray);
+        float64_t lo  = 0.0;
+        float64_t hi  = INFINITY;
 
         /* Beyond the face (x >= face_mm), on the obstacle's side of the passed
          * end */
@@ -270,10 +273,11 @@ s5_obstacle_range (const s5_detour_plan_t * p_plan, double x_mm, double y_mm,
 }
 
 bool
-s5_echo_on_obstacle (const s5_detour_plan_t * p_plan, double x_mm, double y_mm,
-                     double heading_deg, int angle_deg, double range_mm)
+s5_echo_on_obstacle (const s5_detour_plan_t * p_plan, float64_t x_mm,
+                     float64_t y_mm, float64_t heading_deg, int angle_deg,
+                     float64_t range_mm)
 {
-    double expected;
+    float64_t expected;
 
     if ((!p_plan->b_ok) || (S5_AVOID_NONE == p_plan->side))
     {

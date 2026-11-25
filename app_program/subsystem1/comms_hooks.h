@@ -13,6 +13,7 @@
 
 #ifndef COMMS_HOOKS_H
 #define COMMS_HOOKS_H
+#include <stdint.h>
 
 /* retained text: online/offline */
 #define COMMS_TOPIC_STATUS    "robot/status"
@@ -39,17 +40,17 @@
 /* Next queued message, events before telemetry.  Never waits.  topic must
    hold COMMS_TOPIC_MAX bytes and payload COMMS_PAYLOAD_MAX bytes.
    Returns the payload length in bytes, or -1 if nothing is queued. */
-int comms_hook_next(char * topic, unsigned char * payload, int * qos);
+int comms_hook_next(char * topic, uint8_t * payload, int * qos);
 
 /* A message arrived on COMMS_TOPIC_CMD (len < 0: truncated).  Valid
    commands are passed on to the Vehicle Controller; either way a binary
    acknowledgement is queued. */
-void comms_hook_command(const unsigned char * payload, int len);
+void comms_hook_command(const uint8_t * payload, int len);
 
 /* A message arrived on COMMS_TOPIC_ROUTE (len < 0: truncated).  A valid
    route replaces the barcode route (subsystem3/route.h); either way a text
    acknowledgement is queued. */
-void comms_hook_route(const unsigned char * payload, int len);
+void comms_hook_route(const uint8_t * payload, int len);
 
 /* The MQTT connection came up (1) or went down (0). */
 void comms_hook_online(int online);

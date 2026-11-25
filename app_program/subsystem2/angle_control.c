@@ -1,7 +1,8 @@
+#include "../../include/float_types.h"
 #include "angle_test.h"
 #include <math.h>
 #include <string.h>
-static const double pi = 3.141592653589793;
+static const float64_t pi = 3.141592653589793;
 static void
 finish (angle_control_t * c, angle_state_t state)
 {
@@ -37,7 +38,7 @@ angle_control_init (angle_control_t * c, const motion_config_t * config)
 
 bool
 angle_control_start (angle_control_t * c, int direction,
-                     encoder_sample_t sample, double now)
+                     encoder_sample_t sample, float64_t now)
 {
     if ((!c->ready) || (!sample.reliable) || (!isfinite(now))
         || ((1 != direction) && (-1 != direction))
@@ -64,13 +65,13 @@ angle_control_start (angle_control_t * c, int direction,
 }
 
 void
-angle_control_step (angle_control_t * c, encoder_sample_t sample, double now)
+angle_control_step (angle_control_t * c, encoder_sample_t sample, float64_t now)
 {
     unsigned w;
 
-    double travel[2];
-    double progress[2];
-    bool   changed = false;
+    float64_t travel[2];
+    float64_t progress[2];
+    bool      changed = false;
 
     if ((ANGLE_TURNING != c->state) && (ANGLE_BRAKING != c->state))
     {
@@ -89,9 +90,9 @@ angle_control_step (angle_control_t * c, encoder_sample_t sample, double now)
         int64_t delta    = encoder_delta(sample.count[w], c->baseline.count[w]);
 
         c->delta[w] = sample.count[w] - c->baseline.count[w];
-        travel[w]   = ((double)delta * pi * c->config.diameter[w])
+        travel[w]   = ((float64_t)delta * pi * c->config.diameter[w])
                       / c->config.counts_per_rev[w];
-        progress[w] = (double)delta * expected;
+        progress[w] = (float64_t)delta * expected;
 
         if (sample.count[w] != c->previous.count[w])
         {
@@ -142,8 +143,9 @@ angle_control_step (angle_control_t * c, encoder_sample_t sample, double now)
 
     for (w = 0U; w < 2U; ++w)
     {
-        double remaining = fmax(0.0, 1.0 - (progress[w] / c->goal[w]));
-        double duty = fmin(0.25, 0.12 + ((0.13 * remaining) / (25.0 / 90.0)));
+        float64_t remaining = fmax(0.0, 1.0 - (progress[w] / c->goal[w]));
+        float64_t duty
+            = fmin(0.25, 0.12 + ((0.13 * remaining) / (25.0 / 90.0)));
 
         if (progress[w] >= c->goal[w])
         {

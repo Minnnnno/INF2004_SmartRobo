@@ -4,12 +4,10 @@
 #ifndef MOTION_STORAGE_H
 #define MOTION_STORAGE_H
 
+#include "float_types.h"
 #include <float.h>
 #include <limits.h>
 #include <stdint.h>
-
-/* BARR-C 5.4 alias: this C11 toolchain has no standard float64_t typedef. */
-typedef double float64_t;
 
 #define MOTION_PAYLOAD_BYTES    6u
 #define MOTION_EVENT_CAPACITY   8u

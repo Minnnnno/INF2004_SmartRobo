@@ -1,5 +1,6 @@
 #ifndef ROBO_SYSTEM_RUNTIME_H
 #define ROBO_SYSTEM_RUNTIME_H
+#include "../../include/float_types.h"
 #include <stdbool.h>
 #include "robot_rtos.h"
 
@@ -22,7 +23,7 @@ void system_supervise(const app_task_spec_t * tasks, const ID * ids,
 
 /* Motion owner calls these at exactly the existing start/feed points. */
 void system_watchdog_start(void);
-void system_watchdog_feed(double now);
+void system_watchdog_feed(float64_t now);
 #endif
 
 /*** end of file ***/

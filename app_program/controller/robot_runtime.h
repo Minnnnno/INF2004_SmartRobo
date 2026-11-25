@@ -1,6 +1,7 @@
 #ifndef ROBO_ROBOT_RUNTIME_H
 #define ROBO_ROBOT_RUNTIME_H
 #include "robot_rtos.h"
+#include "../../include/float_types.h"
 #include "robot.h"
 
 /* Startup: prepare the bus, create its mutex, then enable submissions
@@ -18,8 +19,8 @@ bool robot_runtime_lock(void);
 bool robot_runtime_wait(void);
 void robot_runtime_unlock(void);
 void robot_runtime_motion_inputs(motion_t * owner, encoder_sample_t sample,
-                                 double now);
-void robot_runtime_publish(motion_t * owner, double now);
+                                 float64_t now);
+void robot_runtime_publish(motion_t * owner, float64_t now);
 bool robot_runtime_stop_pending(void);
 #endif
 

@@ -1,5 +1,7 @@
 #ifdef ROBO_MANUAL_CONSOLE
 #include "robot_rtos.h"
+#include "../../include/float_types.h"
+#include <stdint.h>
 #include "robot.h"
 #include "subsystems.h"
 #include "motion_hal.h"
@@ -34,10 +36,10 @@ count_sign (uint32_t raw)
     return (const UB *)((raw > INT32_MAX) ? "-" : "");
 }
 
-static unsigned long
+static uint32_t
 count_magnitude (uint32_t raw)
 {
-    return (unsigned long)((raw > INT32_MAX) ? 0U - raw : raw);
+    return (uint32_t)((raw > INT32_MAX) ? 0U - raw : raw);
 }
 
 static void
@@ -49,9 +51,8 @@ print_counts (const encoder_sample_t * sample)
     printf("counts=%s%lu,%s%lu raw_counts=%lu,%lu invalid=%lu,%lu\n",
            count_sign(sample->count[0]), count_magnitude(sample->count[0]),
            count_sign(sample->count[1]), count_magnitude(sample->count[1]),
-           (unsigned long)sample->count[0], (unsigned long)sample->count[1],
-           (unsigned long)sample->invalid[0],
-           (unsigned long)sample->invalid[1]);
+           (uint32_t)sample->count[0], (uint32_t)sample->count[1],
+           (uint32_t)sample->invalid[0], (uint32_t)sample->invalid[1]);
 }
 
 static void
@@ -76,10 +77,10 @@ encoder_diagnostics (void)
             "edges=%lu irq_mask=%u func=%u prev_AB=%u\n",
             (const UB *)((0U == wheel) ? "left" : "right"), d.pins[wheel][0],
             (unsigned)((d.levels >> d.pins[wheel][0]) & 1U),
-            (unsigned long)d.edges[wheel][0], (unsigned)d.irq_events[wheel][0],
+            (uint32_t)d.edges[wheel][0], (unsigned)d.irq_events[wheel][0],
             (unsigned)d.function[wheel][0], d.pins[wheel][1],
             (unsigned)((d.levels >> d.pins[wheel][1]) & 1U),
-            (unsigned long)d.edges[wheel][1], (unsigned)d.irq_events[wheel][1],
+            (uint32_t)d.edges[wheel][1], (unsigned)d.irq_events[wheel][1],
             (unsigned)d.function[wheel][1], (unsigned)d.previous_ab[wheel]);
     }
 
@@ -134,13 +135,13 @@ button_diagnostics (void)
     printf("GP20=%u GP21=%u pressed_level=0 ready=%u armed=%u active=%u "
            "polls=%lu stop_actions=%lu\n",
            (unsigned)d.start_high, (unsigned)d.stop_high, (unsigned)d.ready,
-           (unsigned)d.armed, (unsigned)d.active, (unsigned long)d.polls,
-           (unsigned long)d.stop_actions);
+           (unsigned)d.armed, (unsigned)d.active, (uint32_t)d.polls,
+           (uint32_t)d.stop_actions);
     printf("button_irq_registered=%u button_irq_events=%lu cutoff_ms=2000\n",
-           (unsigned)d.irq_registered, (unsigned long)d.irq_events);
+           (unsigned)d.irq_registered, (uint32_t)d.irq_events);
     printf("cutoff_irq_count=%lu polled_cutoffs=%lu remaining_ms=%lu\n",
-           (unsigned long)d.cutoff_irq_count, (unsigned long)d.polled_cutoffs,
-           (unsigned long)d.remaining_ms);
+           (uint32_t)d.cutoff_irq_count, (uint32_t)d.polled_cutoffs,
+           (uint32_t)d.remaining_ms);
 }
 #endif
 
@@ -152,9 +153,9 @@ manual_console (void)
     unsigned used = 0U;
 #if !defined(ROBO_ENCODER_DIAGNOSTICS_ONLY) && !defined(ROBO_SAFE_MOTOR_TEST) \
     && !defined(ROBO_ANGLE_TEST)
-    uint32_t id       = 1U;
-    bool     armed    = false;
-    double   armed_at = 0.0;
+    uint32_t  id       = 1U;
+    bool      armed    = false;
+    float64_t armed_at = 0.0;
 #else
     bool armed = false;
 #endif
@@ -225,8 +226,8 @@ manual_console (void)
                 (const UB *)(result.timed_out ? "timeout" : "stop"),
                 count_sign(result.delta[0]), count_magnitude(result.delta[0]),
                 count_sign(result.delta[1]), count_magnitude(result.delta[1]),
-                (unsigned long)result.invalid_delta[0],
-                (unsigned long)result.invalid_delta[1]);
+                (uint32_t)result.invalid_delta[0],
+                (uint32_t)result.invalid_delta[1]);
         }
 #endif
         while (0U != budget--)
@@ -294,8 +295,8 @@ manual_console (void)
                                status.motion.state, status.motion.fault,
                                status.motion.hold, status.motion.stationary,
                                status.motion.feedback_trusted,
-                               (unsigned long)status.motion.id,
-                               (unsigned long)status.motion.generation);
+                               (uint32_t)status.motion.id,
+                               (uint32_t)status.motion.generation);
                         printf("speed_mm_s=%d,%d output_permille=%d,%d\n",
                                (int)(status.motion.speed[0] * 1000.0),
                                (int)(status.motion.speed[1] * 1000.0),

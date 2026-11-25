@@ -1,12 +1,9 @@
 /* Robot orientation relative to a stationary, known-level startup reference. */
 #ifndef TILT_H
 #define TILT_H
+#include "../../include/float_types.h"
 #include <stdbool.h>
 #include <stdint.h>
-
-/* Project alias for the BARR-C single-precision naming convention. */
-typedef float float32_t;
-_Static_assert(4U == sizeof(float32_t), "32-bit floating point required");
 
 /* Floating-point working precision is retained for reference rotation and
  * filtering. Packed output is quantised to 0.1 degree, not claimed accuracy.

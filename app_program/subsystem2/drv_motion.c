@@ -1,3 +1,4 @@
+#include "../../include/float_types.h"
 #include "motion_hal.h"
 #include "board_config.h"
 #include "template_hal.h"
@@ -11,17 +12,17 @@ static motion_motor_storage_t     g_motor_config;
 static volatile encoder_capture_t capture;
 static uint32_t                   encoder_event_mask[4];
 static uint8_t                    g_driver_flags;
-static double                     neutral_since[2];
+static float64_t                  neutral_since[2];
 /* neutral bits0:1; last directions bits2:5 */
-static uint8_t  g_wheel_flags = 3u;
-static uint16_t wrap;
-static uint16_t configured_divider_16;
-static uint16_t last_compare[2][2];
-static double   last_requested[2];
-static double   last_applied[2];
-static uint8_t  reversal_wait_mask;
-static bool     last_inhibited = true;
-static uint32_t last_write_us;
+static uint8_t   g_wheel_flags = 3u;
+static uint16_t  wrap;
+static uint16_t  configured_divider_16;
+static uint16_t  last_compare[2][2];
+static float64_t last_requested[2];
+static float64_t last_applied[2];
+static uint8_t   reversal_wait_mask;
+static bool      last_inhibited = true;
+static uint32_t  last_write_us;
 
 #define DRIVER_ENCODER_READY  0x01u
 #define DRIVER_IRQ_REGISTERED 0x02u
@@ -154,10 +155,10 @@ motion_hal_emergency_stop (void)
 bool
 motion_hal_init (const motion_config_t * config)
 {
-    unsigned w;
-    uint32_t mask = 0U;
-    uint32_t irq_state;
-    double   divider;
+    unsigned  w;
+    uint32_t  mask = 0U;
+    uint32_t  irq_state;
+    float64_t divider;
 
     g_motor_config.max_output    = config->max_output;
     g_motor_config.reversal_time = config->reversal_time;
@@ -187,7 +188,7 @@ motion_hal_init (const motion_config_t * config)
     }
 
     wrap    = 4095U;
-    divider = 125000000.0 / ((double)config->pwm_hz * (wrap + 1U));
+    divider = 125000000.0 / ((float64_t)config->pwm_hz * (wrap + 1U));
     /* Never exceed the requested/max 20 kHz. */
     divider = ceil(divider * 16.0) / 16.0;
 
@@ -204,7 +205,7 @@ motion_hal_init (const motion_config_t * config)
 
         pwm_config pwm = pwm_get_default_config();
         pwm_config_set_wrap(&pwm, wrap);
-        pwm_config_set_clkdiv(&pwm, (float)divider);
+        pwm_config_set_clkdiv(&pwm, (float32_t)divider);
         pwm_init(pwm_gpio_to_slice_num(motor_pins[w][0]), &pwm, false);
         pwm_set_both_levels(pwm_gpio_to_slice_num(motor_pins[w][0]), 0U, 0U);
         last_compare[w][0] = last_compare[w][1] = 0U;
@@ -350,7 +351,7 @@ motion_hal_encoder_diagnostics (encoder_diagnostics_t * d)
 }
 
 static int32_t
-diagnostic_permille (double value)
+diagnostic_permille (float64_t value)
 {
     if (!isfinite(value))
     {
@@ -423,7 +424,7 @@ motion_hal_motor_diagnostics (motor_diagnostics_t * d)
 }
 
 void
-motion_hal_write (const double output[2], bool inhibited, double now)
+motion_hal_write (const float64_t output[2], bool inhibited, float64_t now)
 {
 #if defined(ROBO_ENCODER_DIAGNOSTICS_ONLY) || defined(ROBO_SAFE_MOTOR_TEST) \
     || defined(ROBO_ANGLE_TEST)
@@ -446,15 +447,15 @@ motion_hal_write (const double output[2], bool inhibited, double now)
 
     for (w = 0; w < 2U; ++w)
     {
-        double requested
+        float64_t requested
             = isfinite(output[w])
                   ? fmax(-g_motor_config.max_output,
                          fmin(g_motor_config.max_output, output[w]))
                   : 0.0;
-        double   value     = inhibited ? 0.0 : requested;
-        int      direction = (value > 0.0) ? 1 : ((value < 0.0) ? -1 : 0);
-        uint16_t a         = 0U;
-        uint16_t b         = 0U;
+        float64_t value     = inhibited ? 0.0 : requested;
+        int       direction = (value > 0.0) ? 1 : ((value < 0.0) ? -1 : 0);
+        uint16_t  a         = 0U;
+        uint16_t  b         = 0U;
 
         if ((0 != direction) && (0 != motor_direction_get(w))
             && (direction != motor_direction_get(w))
@@ -513,10 +514,10 @@ motion_hal_write (const double output[2], bool inhibited, double now)
 #endif
 }
 
-double
+float64_t
 motion_hal_time (void)
 {
-    return (double)time_us_64() / 1000000.0;
+    return (float64_t)time_us_64() / 1000000.0;
 }
 
 void
