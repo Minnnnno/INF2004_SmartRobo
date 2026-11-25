@@ -3,7 +3,7 @@
  * Kept: the barcode reader, line/barcode state changes, route actions and calibration, plus the
  * firmware banner, crash reports and errors, so a stop never goes unexplained.
  * Also kept: the raw sensor stream ("bc t=" lines, with -DROBO_BARCODE_STREAM=1), which
- * tests/test_barcode_decode.c replays. Dropped: everything else (line_pid, IMU, obstacle, stack
+ * tests/subsystem3/test_barcode_decode.c replays. Dropped: everything else (line_pid, IMU, obstacle, stack
  * reports); the bv/bp/bh/bw dumps are off when the stream is on (barcode.c). */
 #ifdef ROBO_BARCODE_LOG_ONLY
 #include <tk/tkernel.h>

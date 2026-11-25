@@ -120,7 +120,7 @@ accuracy and the currently flashed firmware have not been verified remotely.
 Changed files: `CMakeLists.txt`, `include/encoder_capture.h`,
 `include/motion_hal.h`, `app_program/subsystem2/encoder_capture.c`,
 `app_program/subsystem2/drv_motion.c`, `app_program/subsystem2/template_hal.h`,
-`app_program/subsystem2/manual_console.c`, `tests/test_motion.c`, and documentation.
+`app_program/subsystem2/manual_console.c`, `tests/subsystem2/test_motion.c`, and documentation.
 
 ## Hardware verification
 

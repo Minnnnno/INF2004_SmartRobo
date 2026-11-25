@@ -1,6 +1,6 @@
 /* Line task start-up wait for Buddy 4's tilt reference (ROBO_SUBSYSTEM4=1).
  * Includes the real line_following.c so its static wait can be called directly. */
-#include "../app_program/subsystem3/line_following.c"
+#include "../../app_program/subsystem3/line_following.c"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>

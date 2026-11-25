@@ -67,7 +67,7 @@ ctest --test-dir build-host-cmake --output-on-failure
 Direct Zig/GCC/Clang compilation is also supported; create build-host first:
 
 ~~~sh
-zig cc -std=c11 -O2 -Wall -Wextra -Werror -Wconversion -Wshadow -fsanitize=undefined -Iinclude app_program/subsystem2/math.c app_program/subsystem2/motion.c app_program/subsystem2/board_config.c app_program/subsystem2/encoder_capture.c app_program/controller/vehicle_controller.c tests/test_motion.c -o build-host/motion_tests.exe
+zig cc -std=c11 -O2 -Wall -Wextra -Werror -Wconversion -Wshadow -fsanitize=undefined -Iinclude app_program/subsystem2/math.c app_program/subsystem2/motion.c app_program/subsystem2/board_config.c app_program/subsystem2/encoder_capture.c app_program/controller/vehicle_controller.c tests/subsystem2/test_motion.c -o build-host/motion_tests.exe
 ~~~
 
 Run build-host/motion_tests.exe. Synthetic values are test fixtures, not measured

@@ -53,7 +53,7 @@ cmake -S . -B build-host-cmake -G Ninja -DROBO_HOST_TESTS=ON
 cmake --build build-host-cmake --target buddy1_frame_checks
 ./build-host-cmake/buddy1_frame_checks > testing/subsystem1/logs/<date>_host.txt
 python tools/dashboard.py selftest > testing/subsystem1/logs/<date>_dashboard_selftest.txt
-python tests/buddy1_frame/web_dashboard_check.py > testing/subsystem1/logs/<date>_web_dashboard_demo.txt
+python tests/subsystem1/web_dashboard_check.py > testing/subsystem1/logs/<date>_web_dashboard_demo.txt
 ```
 
 | ID | What is tested | Requirement | Expected result (in the log) |
@@ -68,7 +68,7 @@ S1-H05 tests the dashboard, not the robot: the simulator always accepts a route
 and never goes silent, so a rejected route (S1-U18) and stale marking (S1-U20)
 still need the robot.
 
-The Start gate's controller side (`web_start_gate_tests` in `tests/test_motion.c`)
+The Start gate's controller side (`web_start_gate_tests` in `tests/subsystem2/test_motion.c`)
 belongs to Buddy 2's `motion_tests` suite; it is evidence for INT-09, not a Buddy 1 test.
 
 ## Robot tests (robot + dashboard)

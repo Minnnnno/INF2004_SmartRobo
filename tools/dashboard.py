@@ -55,7 +55,7 @@ ENC_FIELDS = ["seq", "reliable", "trusted", "fresh", "cause", "state", "fault",
               "sample_ms", "age_ms", "count_l", "count_r", "invalid_l", "invalid_r"]
 STALE_AFTER_S = 1.0     # no message for this long (dashboard clock) = stale
 
-# Same golden frame as tests/buddy1_frame/test_frame.c.
+# Same golden frame as tests/subsystem1/test_frame.c.
 GOLDEN_HEX = "30730394808dcbe69475b02a4bf7139a4a9dc807b0"     # layout v3
 GOLDEN = dict(VERSION=3, SEQ=7, UPTIME_DS=12345, M_STATE=2, M_MODE=2, M_FAULT=0,
               M_FLAGS=2, OWNER=1, CMD_ID=0xB9, SPEED_L=-1, SPEED_R=80,
@@ -63,7 +63,7 @@ GOLDEN = dict(VERSION=3, SEQ=7, UPTIME_DS=12345, M_STATE=2, M_MODE=2, M_FAULT=0,
               LINE_TRACK=1, BC_CHAR=11, BC_READ=1, T_VALID=7, T_STATE=3, M_CLASS=4,
               PITCH=-12, TURN_RATE=-46, HUMP_MM=42, O_FLAGS=14, O_AVAIL=1,
               O_DIST_CM=400, O_WIDTH_CM=15, REJECTED=3, DROPPED=0)
-# Same golden encoder frame as tests/buddy1_frame/test_frame.c.
+# Same golden encoder frame as tests/subsystem1/test_frame.c.
 GOLDEN_ENC_HEX = "010707200012d687000cfffffffe0001e2400000000000000003"
 GOLDEN_ENC = dict(seq=7, reliable=1, trusted=1, fresh=1, cause=0, state=2, fault=0,
                   sample_ms=1234567, age_ms=12, count_l=0xFFFFFFFE, count_r=123456,

@@ -100,7 +100,7 @@ motion-valid << 9 (`TERRAIN_MOTION_VALID`, 0x200).
 slot stays unavailable, so everything sends 0). `tf_pack` already clamps
 out-of-range values, so no extra range checks are needed.
 
-### 3. Tests: `tests/buddy1_frame/test_frame.c`
+### 3. Tests: `tests/subsystem1/test_frame.c`
 
 - `golden_values()`: replace `v[TF_F_T_HEADING] = 0;` with
   `v[TF_F_M_CLASS] = 4; v[TF_F_TURN_RATE] = -46;`, and set
@@ -144,7 +144,7 @@ No new events: the event byte is full, and `TF_EV_HUMP_PEAK` is unchanged.
 ## Acceptance checks
 
 1. `TF_FRAME_BYTES` is still 21, and `TF_FRAME_BITS` is 163.
-2. `tests/buddy1_frame` passes with the regenerated golden frame, and
+2. `tests/subsystem1` passes with the regenerated golden frame, and
    `python tools/dashboard.py --selftest` passes.
 3. On the robot (Wi-Fi build): the dashboard shows `motion=` changing
    STATIONARY → MOVING → TURNING, `turn=` negative on right turns and positive

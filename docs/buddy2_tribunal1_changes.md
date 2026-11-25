@@ -263,7 +263,7 @@ arm-none-eabi-size <firmware.elf>
 
 A probe declares, for example,
 `const unsigned char request_bytes[sizeof(robot_request_t)] = {0};`.
-The existing [memory probe](../tests/buddy2_compact/memory_probe.c) uses this
+The existing [memory probe](../tests/subsystem2/compact/memory_probe.c) uses this
 method for the motion, command, event, capture and other core types.
 
 Recorded implementation validation comprises 15 regression suites and two

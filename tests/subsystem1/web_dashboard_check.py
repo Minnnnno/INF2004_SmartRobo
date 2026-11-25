@@ -4,7 +4,7 @@ Starts tools/web_dashboard.py --demo on a local port, drives it through the
 same HTTP API the browser buttons use, and checks the link figures and the
 event log.  Prints one PASS/FAIL line per check and a summary line.
 
-    python tests/buddy1_frame/web_dashboard_check.py
+    python tests/subsystem1/web_dashboard_check.py
 
 The simulator always accepts a route, so a rejected route is a robot test
 (S1-U18).  Stale/offline marking needs the robot to go away (S1-U20).

@@ -543,7 +543,7 @@ gcc -std=c11 -Wall -Wextra -Werror -Wconversion -Wshadow -DS5_BEAM_CORRECTION_DE
     app_program/subsystem5/subsystem5_test.c -lm -o s5_tests && ./s5_tests
 ```
 
-`tests/test_line_pid.c` checks that the line follower does not drive while
+`tests/subsystem3/test_line_pid.c` checks that the line follower does not drive while
 `values[3]` reads 5 and resumes when it clears.
 
 The CMake host build also runs `obstacle_runtime_checks` and

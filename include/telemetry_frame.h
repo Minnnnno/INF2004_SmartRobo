@@ -7,7 +7,7 @@
  *
  *	This is the ONE definition of every field's range, bit width and sign.
  *	The firmware codec (app_program/subsystem1/telemetry_frame.c), the host
- *	round-trip test (tests/buddy1_frame) and the dashboard decoder
+ *	round-trip test (tests/subsystem1) and the dashboard decoder
  *	(tools/dashboard.py, which parses TF_FIELDS below) all read this table.
  *	Plain C only: no kernel headers, so mqtt_utk.c and host tests can use it.
  *

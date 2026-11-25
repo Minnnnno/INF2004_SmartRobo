@@ -5,7 +5,7 @@
  *	Each TEST_CHECK prints a PASS/FAIL line on the console.  Save the
  *	console output to testing/subsystem1/logs/ and record the result
  *	in testing/subsystem1/TEST_LOG.md.  Test IDs: S1-U01, S1-U02, ...
- *	The same frame/command checks also run on the PC: tests/buddy1_frame.
+ *	The same frame/command checks also run on the PC: tests/subsystem1.
  *
  *	Run these before the Vehicle Controller task starts: S1-U04/U09 put
  *	commands on mbf_comms_cmd, and a running controller would act on them.
