@@ -459,29 +459,12 @@ barcode_median_height (const uint16_t * p_samples, const unsigned * p_peak,
     return (0U == bars) ? 0U : heights[bars / 2U];
 }
 
-static unsigned
-barcode_elements (uint16_t * p_samples, unsigned count, uint32_t * p_widths,
-                  unsigned contrast_div)
+/* Smooth in place: each sample becomes the mean of its neighbours. */
+static void
+barcode_smooth (uint16_t * p_samples, unsigned count)
 {
     /* Unsmoothed values of the last BARCODE_SMOOTH samples. */
     uint16_t raw[BARCODE_SMOOTH] = {0};
-
-    /* Trough: lowest point before each bar, and after the last. */
-    unsigned  peak[BARCODE_MAX_BARS];
-    unsigned  trough[BARCODE_MAX_BARS + 1U];
-    unsigned  bars;
-    unsigned  sample_count = 0U;
-    uint32_t  white        = 0U;
-    uint32_t  noise        = 0U;
-    uint32_t  prominence;
-    uint32_t  highest = 0U;
-    uint32_t  contrast;
-    float64_t previous_end = 0.0;
-
-    if ((count < BARCODE_QUIET) || (count > BARCODE_SAMPLES))
-    {
-        return 0U;
-    }
 
     for (unsigned index = 0U; index < count; ++index)
     {
@@ -500,6 +483,15 @@ barcode_elements (uint16_t * p_samples, unsigned count, uint32_t * p_widths,
         raw[index % BARCODE_SMOOTH] = p_samples[index];
         p_samples[index] = (uint16_t)(sum / (last_sample - from + 1U));
     }
+}
+
+/* Mean of the quiet zone and its mean deviation. */
+static void
+barcode_quiet_level (const uint16_t * p_samples, uint32_t * p_white,
+                     uint32_t * p_noise)
+{
+    uint32_t white = 0U;
+    uint32_t noise = 0U;
 
     for (unsigned index = 0U; index < BARCODE_QUIET; ++index)
     {
@@ -515,6 +507,56 @@ barcode_elements (uint16_t * p_samples, unsigned count, uint32_t * p_widths,
     }
 
     noise /= BARCODE_QUIET;
+
+    *p_white = white;
+    *p_noise = noise;
+}
+
+/* The samples of one bar above its edge level. */
+static void
+barcode_bar_span (const uint16_t * p_samples, unsigned first, unsigned last,
+                  float64_t edge, unsigned * p_start, unsigned * p_end)
+{
+    unsigned start = *p_start;
+    unsigned end   = *p_end;
+
+    while ((start > first) && ((float64_t)p_samples[start - 1U] > edge))
+    {
+        --start;
+    }
+
+    while ((end < last) && ((float64_t)p_samples[end + 1U] > edge))
+    {
+        ++end;
+    }
+
+    *p_start = start;
+    *p_end   = end;
+}
+
+static unsigned
+barcode_elements (uint16_t * p_samples, unsigned count, uint32_t * p_widths,
+                  unsigned contrast_div)
+{
+    /* Trough: lowest point before each bar, and after the last. */
+    unsigned  peak[BARCODE_MAX_BARS];
+    unsigned  trough[BARCODE_MAX_BARS + 1U];
+    unsigned  bars;
+    unsigned  sample_count = 0U;
+    uint32_t  white        = 0U;
+    uint32_t  noise        = 0U;
+    uint32_t  prominence;
+    uint32_t  highest = 0U;
+    uint32_t  contrast;
+    float64_t previous_end = 0.0;
+
+    if ((count < BARCODE_QUIET) || (count > BARCODE_SAMPLES))
+    {
+        return 0U;
+    }
+
+    barcode_smooth(p_samples, count);
+    barcode_quiet_level(p_samples, &white, &noise);
     prominence = (BARCODE_BAR_GAIN * noise) + BARCODE_BAR_RISE;
 
     for (unsigned index = 0U; index < count; ++index)
@@ -588,17 +630,8 @@ barcode_elements (uint16_t * p_samples, unsigned count, uint32_t * p_widths,
         unsigned  start = peak[position];
         unsigned  end   = peak[position];
 
-        while ((start > trough[position])
-               && ((float64_t)p_samples[start - 1U] > edge))
-        {
-            --start;
-        }
-
-        while ((end < trough[position + 1U])
-               && ((float64_t)p_samples[end + 1U] > edge))
-        {
-            ++end;
-        }
+        barcode_bar_span(p_samples, trough[position], trough[position + 1U],
+                         edge, &start, &end);
 
         for (unsigned index = start; index <= end; ++index)
         {

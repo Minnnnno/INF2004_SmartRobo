@@ -737,6 +737,95 @@ motion_reset (motion_t * p_motion, bool b_cleared, bool b_external_rest,
     return b_result;
 }
 
+/* An arc must be possible for both wheels.  */
+static bool
+accept_arc (const motion_t * p_motion, const motion_command_t * p_command,
+            float64_t now)
+{
+    unsigned wheel;
+
+    if ((fabs(p_command->value) > p_motion->config.max_distance)
+        || (fabs(p_command->angle) > p_motion->config.max_angle)
+        || (p_command->duration < 0.0)
+        || ((0.0 == p_command->value) && (0.0 == p_command->angle))
+        || ((p_command->duration > 0.0)
+            && (((p_command->duration + p_motion->config.command_lifetime)
+                 >= p_motion->config.movement_timeout)
+                || ((now + p_command->duration) > p_command->deadline))))
+    {
+        return false;
+    }
+
+    for (wheel = 0U; wheel < MOTION_WHEELS; ++wheel)
+    {
+        float64_t goal = p_command->value
+                         + ((((0U == wheel) ? -1.0 : 1.0) * p_command->angle
+                             * p_motion->config.track)
+                            / 2.0);
+
+        if (((goal * p_command->speed[wheel]) < 0.0)
+            || ((0.0 != goal) && (0.0 == p_command->speed[wheel])))
+        {
+            return false;
+        }
+
+        if ((p_command->duration > 0.0)
+            && ((fabs(p_command->speed[wheel] - (goal / p_command->duration))
+                 > 1e-9)
+                || ((1.5 * fabs(p_command->speed[wheel]))
+                    > p_motion->config.max_speed)
+                || (((6.0 * fabs(goal))
+                     / (p_command->duration * p_command->duration))
+                    > p_motion->config.acceleration)))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/* Rounded ARC goals must remain physically valid. Timed targets are recomputed
+ * by the adapter, never independently rounded from goal/time. */
+static bool
+accept_rounded_arc (const motion_t *         p_motion,
+                    const motion_command_t * p_decoded)
+{
+    unsigned wheel;
+
+    if ((fabs(p_decoded->value) < 1e-12) && (fabs(p_decoded->angle) < 1e-12))
+    {
+        return false;
+    }
+
+    for (wheel = 0u; wheel < MOTION_WHEELS; ++wheel)
+    {
+        float64_t goal = p_decoded->value
+                         + ((((0u == wheel) ? -1.0 : 1.0) * p_decoded->angle
+                             * p_motion->config.track)
+                            / 2.0);
+
+        if (((goal * p_decoded->speed[wheel]) < 0.0)
+            || ((fabs(goal) > 1e-12)
+                && (fabs(p_decoded->speed[wheel]) < 1e-12)))
+        {
+            return false;
+        }
+
+        if ((p_decoded->duration > 0.0)
+            && (((1.5 * fabs(p_decoded->speed[wheel]))
+                 > p_motion->config.max_speed)
+                || (((6.0 * fabs(goal))
+                     / (p_decoded->duration * p_decoded->duration))
+                    > p_motion->config.acceleration)))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 motion_result_t
 motion_accept (motion_t * p_motion, const motion_command_t * p_command,
                float64_t now)
@@ -797,46 +886,10 @@ motion_accept (motion_t * p_motion, const motion_command_t * p_command,
         return R_INVALID;
     }
 
-    if (ARC_MOVE == p_command->mode)
+    if ((ARC_MOVE == p_command->mode)
+        && (!accept_arc(p_motion, p_command, now)))
     {
-        if ((fabs(p_command->value) > p_motion->config.max_distance)
-            || (fabs(p_command->angle) > p_motion->config.max_angle)
-            || (p_command->duration < 0.0)
-            || ((0.0 == p_command->value) && (0.0 == p_command->angle))
-            || ((p_command->duration > 0.0)
-                && (((p_command->duration + p_motion->config.command_lifetime)
-                     >= p_motion->config.movement_timeout)
-                    || ((now + p_command->duration) > p_command->deadline))))
-        {
-            return R_INVALID;
-        }
-
-        for (wheel = 0U; wheel < MOTION_WHEELS; ++wheel)
-        {
-            float64_t goal = p_command->value
-                             + ((((0U == wheel) ? -1.0 : 1.0) * p_command->angle
-                                 * p_motion->config.track)
-                                / 2.0);
-
-            if (((goal * p_command->speed[wheel]) < 0.0)
-                || ((0.0 != goal) && (0.0 == p_command->speed[wheel])))
-            {
-                return R_INVALID;
-            }
-
-            if ((p_command->duration > 0.0)
-                && ((fabs(p_command->speed[wheel]
-                          - (goal / p_command->duration))
-                     > 1e-9)
-                    || ((1.5 * fabs(p_command->speed[wheel]))
-                        > p_motion->config.max_speed)
-                    || (((6.0 * fabs(goal))
-                         / (p_command->duration * p_command->duration))
-                        > p_motion->config.acceleration)))
-            {
-                return R_INVALID;
-            }
-        }
+        return R_INVALID;
     }
 
     for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
@@ -874,39 +927,9 @@ motion_accept (motion_t * p_motion, const motion_command_t * p_command,
         return R_INVALID;
     }
 
-    /* Rounded ARC goals must remain physically valid. Timed targets are
-     * recomputed by the adapter, never independently rounded from goal/time. */
-    if (ARC_MOVE == decoded.mode)
+    if ((ARC_MOVE == decoded.mode) && (!accept_rounded_arc(p_motion, &decoded)))
     {
-        if ((fabs(decoded.value) < 1e-12) && (fabs(decoded.angle) < 1e-12))
-        {
-            return R_INVALID;
-        }
-
-        for (wheel = 0u; wheel < MOTION_WHEELS; ++wheel)
-        {
-            float64_t goal = decoded.value
-                             + ((((0u == wheel) ? -1.0 : 1.0) * decoded.angle
-                                 * p_motion->config.track)
-                                / 2.0);
-
-            if (((goal * decoded.speed[wheel]) < 0.0)
-                || ((fabs(goal) > 1e-12)
-                    && (fabs(decoded.speed[wheel]) < 1e-12)))
-            {
-                return R_INVALID;
-            }
-
-            if ((decoded.duration > 0.0)
-                && (((1.5 * fabs(decoded.speed[wheel]))
-                     > p_motion->config.max_speed)
-                    || (((6.0 * fabs(goal))
-                         / (decoded.duration * decoded.duration))
-                        > p_motion->config.acceleration)))
-            {
-                return R_INVALID;
-            }
-        }
+        return R_INVALID;
     }
 
     if (!b_refresh)
@@ -977,6 +1000,284 @@ final_goal (const motion_t * p_motion)
     return b_result;
 }
 
+/* Out of time: the command ends here.  True: it did. */
+static bool
+drive_expired (motion_t * p_motion, const motion_command_t * p_command,
+               float64_t now)
+{
+    if ((MANUAL_OUTPUT == p_command->mode) && (now >= p_command->deadline))
+    {
+        motion_cancel(p_motion, now);
+        return true;
+    }
+
+    if (now >= p_command->deadline)
+    {
+        motion_raise_fault(p_motion, F_DEADLINE, now);
+        return true;
+    }
+
+    if ((WHEEL_SPEED_TRACKING == p_command->mode)
+        && (now >= p_command->expires))
+    {
+        motion_raise_fault(p_motion, F_EXPIRED, now);
+        return true;
+    }
+
+    return false;
+}
+
+/* Keep the wheels of an arc matched on the way, not only at the end: a move
+ * stopped early never gets an endpoint correction. Half the slower wheel's
+ * speed at most, so neither wheel reverses; none once a wheel is at its goal.
+ */
+static void
+drive_arc_match (const motion_t * p_motion, const motion_command_t * p_command,
+                 float64_t left, float64_t right, float64_t desired[2])
+{
+    float64_t progress
+        = (0.0 == p_command->value)
+              ? 1.0
+              : fmax(0.0, fmin(1.0, (left + right) / (2.0 * p_command->value)));
+    float64_t slack      = fmin(fabs(desired[0]), fabs(desired[1])) / 2.0;
+    float64_t correction = fmax(
+        -slack, fmin(slack, 2.0 * p_motion->config.straight_gain
+                                * ((right - left)
+                                   - (p_command->angle * p_motion->config.track
+                                      * progress))));
+
+    desired[0] += correction;
+    desired[1] -= correction;
+}
+
+/* Wheel speeds for an arc.  True: it is finished (stopping). */
+static bool
+drive_arc (motion_t * p_motion, const motion_command_t * p_command,
+           float64_t now, float64_t desired[2])
+{
+    unsigned wheel;
+
+    float64_t elapsed   = now - p_motion->entered;
+    float64_t left      = p_motion->odom.travel[0] - p_motion->start[0];
+    float64_t right     = p_motion->odom.travel[1] - p_motion->start[1];
+    float64_t tolerance = fmin(
+        p_motion->config.distance_tolerance / 2.0,
+        (p_motion->config.angle_tolerance * p_motion->config.track) / 4.0);
+    /* Distance and heading constrain common and differential wheel error
+     * separately. Requiring EACH wheel within the smaller angular-derived
+     * tolerance makes a valid endpoint chase millimetres in reverse until
+     * the no-progress protection trips. Keep half of each configured
+     * tolerance for stopping, then verify both full limits after settling.
+     */
+    bool b_reached
+        = (fabs(((left + right) / 2.0) - p_command->value)
+           <= (p_motion->config.distance_tolerance / 2.0))
+          && (fabs(((right - left) / p_motion->config.track) - p_command->angle)
+              <= (p_motion->config.angle_tolerance / 2.0));
+
+    if ((p_command->duration > 0.0) && (elapsed >= p_command->duration))
+    {
+        motion_flag_set(p_motion, MOTION_GOAL_PENDING, true);
+        /* Final encoder distance AND heading are checked after settling. */
+        stopping(p_motion, now);
+        return true;
+    }
+
+    for (wheel = 0U; wheel < MOTION_WHEELS; ++wheel)
+    {
+        float64_t goal = p_command->value
+                         + ((((0U == wheel) ? -1.0 : 1.0) * p_command->angle
+                             * p_motion->config.track)
+                            / 2.0);
+        float64_t travelled
+            = p_motion->odom.travel[wheel] - p_motion->start[wheel];
+        float64_t remaining = goal - travelled;
+
+        if (p_command->duration > 0.0)
+        {
+            float64_t wheel_output
+                = fmax(0.0, fmin(1.0, elapsed / p_command->duration));
+            float64_t progress
+                = wheel_output * wheel_output * (3.0 - (2.0 * wheel_output));
+
+            desired[wheel] = (p_command->speed[wheel] * 6.0 * wheel_output
+                              * (1.0 - wheel_output))
+                             + (2.0 * p_motion->config.straight_gain
+                                * ((goal * progress) - travelled));
+        }
+        else
+        {
+            desired[wheel]
+                = (fabs(remaining) <= tolerance)
+                      ? 0.0
+                      : copysign(fmin(fabs(p_command->speed[wheel]),
+                                      sqrt(2.0 * p_motion->config.acceleration
+                                           * fabs(remaining))),
+                                 remaining);
+        }
+    }
+
+    if (0.0 == p_command->duration)
+    {
+        drive_arc_match(p_motion, p_command, left, right, desired);
+    }
+
+    if ((0.0 == p_command->duration) && b_reached)
+    {
+        motion_flag_set(p_motion, MOTION_GOAL_PENDING, true);
+        stopping(p_motion, now);
+        return true;
+    }
+
+    return false;
+}
+
+/* Wheel speeds for a straight move or a turn on the spot.  True: it is finished
+ * (stopping). */
+static bool
+drive_finite (motion_t * p_motion, const motion_command_t * p_command,
+              float64_t now, float64_t desired[2])
+{
+    float64_t left      = p_motion->odom.travel[0] - p_motion->start[0];
+    float64_t right     = p_motion->odom.travel[1] - p_motion->start[1];
+    float64_t travelled = (DISTANCE_MOVE == p_command->mode)
+                              ? (left + right) / 2.0
+                              : (right - left) / p_motion->config.track;
+    float64_t remaining = fabs(p_command->value)
+                          - (copysign(1.0, p_command->value) * travelled);
+    float64_t tolerance = (DISTANCE_MOVE == p_command->mode)
+                              ? p_motion->config.distance_tolerance
+                              : p_motion->config.angle_tolerance;
+
+    if (remaining <= (tolerance * 0.5))
+    {
+        motion_flag_set(p_motion, MOTION_GOAL_PENDING, true);
+        stopping(p_motion, now);
+        return true;
+    }
+
+    if (ENCODER_TURN == p_command->mode)
+    {
+        remaining *= p_motion->config.track / 2.0;
+    }
+
+    /* The ramp alone falls to ~35 mm/s in the last 2 mm, where the PID
+     * output
+     * (~16% PWM) is below the motors' breakaway: the wheels stop short and
+     * the no-progress check faults. Hold min_goal_speed instead; stopping()
+     * above cuts the output at once, so the floor does not delay the stop.
+     */
+    desired[1] = copysign(
+        fmax(p_motion->config.min_goal_speed,
+             fmin(p_motion->config.max_speed,
+                  sqrt(2.0 * p_motion->config.acceleration * remaining))),
+        p_command->value);
+    desired[0] = (DISTANCE_MOVE == p_command->mode) ? desired[1] : -desired[1];
+
+    if (DISTANCE_MOVE == p_command->mode)
+    {
+        float64_t correction
+            = fmax(-p_motion->config.max_speed / 2.0,
+                   fmin(p_motion->config.max_speed / 2.0,
+                        p_motion->config.straight_gain * (right - left)));
+
+        desired[0] += correction;
+        desired[1] -= correction;
+    }
+
+    return false;
+}
+
+/* Target, output and no-progress check for one wheel.  True: it has stalled. */
+static bool
+drive_wheel (motion_t * p_motion, const motion_command_t * p_command,
+             unsigned wheel, float64_t * p_desired, bool b_progressed,
+             float64_t now, float64_t delta_s)
+{
+    bool      b_stalled = false;
+    float64_t change;
+    float64_t quantum  = (3.141592653589793 * p_motion->config.diameter[wheel])
+                         / p_motion->config.counts_per_rev[wheel];
+    bool      b_manual = MANUAL_OUTPUT == p_command->mode;
+
+    (*p_desired) = fmax(-p_motion->config.max_speed,
+                        fmin(p_motion->config.max_speed, (*p_desired)));
+    change       = fmax(-p_motion->config.acceleration * delta_s,
+                        fmin(p_motion->config.acceleration * delta_s,
+                             (*p_desired) - p_motion->status.target[wheel]));
+    p_motion->status.target[wheel] += change;
+    p_motion->status.output[wheel]
+        = b_manual
+              ? p_command->speed[wheel]
+              : pid_step(&p_motion->pid[wheel], &p_motion->config.pid[wheel],
+                         p_motion->status.target[wheel],
+                         p_motion->odom.speed[wheel], delta_s,
+                         p_motion->config.max_output);
+
+    /* Breakaway: from rest the PID integral took longer than the
+     * no-progress limit to pass the motor's starting threshold, so a
+     * stationary wheel asked to move or speed up gets at least
+     * breakaway[w], doubling by the time that limit expires. Not while the
+     * target is falling (braking ramp) and never for manual output; a truly
+     * blocked wheel still trips the no-progress check below. */
+    if ((!b_manual) && (!b_progressed)
+        && (fabs(p_motion->status.target[wheel]) > 1e-9)
+        && (((*p_desired) * p_motion->status.target[wheel]) > 0.0)
+        && (fabs(*p_desired) >= fabs(p_motion->status.target[wheel])))
+    {
+        float64_t kick = fmin(p_motion->config.max_output,
+                              p_motion->config.breakaway[wheel]
+                                  * (1.0
+                                     + ((now - p_motion->last_progress[wheel])
+                                        / p_motion->config.feedback_timeout)));
+
+        if (fabs(p_motion->status.output[wheel]) < kick)
+        {
+            p_motion->status.output[wheel]
+                = copysign(kick, p_motion->status.target[wheel]);
+        }
+    }
+
+    /* No active reverse torque at zero target. Hardware enforces reversal
+     * dead-time. */
+    if ((0.0 == (*p_desired)) && (fabs(p_motion->status.target[wheel]) < 1e-9))
+    {
+        p_motion->status.output[wheel] = 0.0;
+        pid_reset(&p_motion->pid[wheel]);
+    }
+
+    if (b_progressed)
+    {
+        p_motion->last_progress[wheel] = now;
+    }
+
+    if ((fabs(p_motion->status.target[wheel]) < 1e-9)
+        || (fabs(p_motion->status.output[wheel]) < 1e-9))
+    {
+        p_motion->expected_since[wheel] = now;
+        p_motion->last_progress[wheel]  = now;
+    }
+    else if (MOTION_FAULTS_ENABLED)
+    {
+        float64_t timeout
+            = p_motion->config.feedback_timeout
+              + ((2.0 * quantum) / fabs(p_motion->status.target[wheel]));
+
+        if (((now - p_motion->expected_since[wheel])
+             >= p_motion->config.startup_grace)
+            && ((now - p_motion->last_progress[wheel]) > timeout))
+        {
+            b_stalled = true;
+        }
+    }
+    else
+    {
+        /* Nothing to do in any other case. */
+    }
+
+    return b_stalled;
+}
+
 static void
 drive (motion_t * p_motion, float64_t now, float64_t delta_s,
        const bool progressed[2])
@@ -993,251 +1294,29 @@ drive (motion_t * p_motion, float64_t now, float64_t delta_s,
     float64_t desired[2] = {command.speed[0], command.speed[1]};
     unsigned  wheel;
 
-    if ((MANUAL_OUTPUT == command.mode) && (now >= command.deadline))
+    if (drive_expired(p_motion, &command, now))
     {
-        motion_cancel(p_motion, now);
         return;
     }
 
-    if (now >= command.deadline)
+    if ((ARC_MOVE == command.mode)
+        && drive_arc(p_motion, &command, now, desired))
     {
-        motion_raise_fault(p_motion, F_DEADLINE, now);
         return;
     }
 
-    if ((WHEEL_SPEED_TRACKING == command.mode) && (now >= command.expires))
+    if (((DISTANCE_MOVE == command.mode) || (ENCODER_TURN == command.mode))
+        && drive_finite(p_motion, &command, now, desired))
     {
-        motion_raise_fault(p_motion, F_EXPIRED, now);
         return;
-    }
-
-    if (ARC_MOVE == command.mode)
-    {
-        float64_t elapsed   = now - p_motion->entered;
-        float64_t left      = p_motion->odom.travel[0] - p_motion->start[0];
-        float64_t right     = p_motion->odom.travel[1] - p_motion->start[1];
-        float64_t tolerance = fmin(
-            p_motion->config.distance_tolerance / 2.0,
-            (p_motion->config.angle_tolerance * p_motion->config.track) / 4.0);
-        /* Distance and heading constrain common and differential wheel error
-         * separately. Requiring EACH wheel within the smaller angular-derived
-         * tolerance makes a valid endpoint chase millimetres in reverse until
-         * the no-progress protection trips. Keep half of each configured
-         * tolerance for stopping, then verify both full limits after settling.
-         */
-        bool b_reached = (fabs(((left + right) / 2.0) - command.value)
-                          <= (p_motion->config.distance_tolerance / 2.0))
-                         && (fabs(((right - left) / p_motion->config.track)
-                                  - command.angle)
-                             <= (p_motion->config.angle_tolerance / 2.0));
-
-        if ((command.duration > 0.0) && (elapsed >= command.duration))
-        {
-            motion_flag_set(p_motion, MOTION_GOAL_PENDING, true);
-            /* Final encoder distance AND heading are checked after settling. */
-            stopping(p_motion, now);
-            return;
-        }
-
-        for (wheel = 0U; wheel < MOTION_WHEELS; ++wheel)
-        {
-            float64_t goal = command.value
-                             + ((((0U == wheel) ? -1.0 : 1.0) * command.angle
-                                 * p_motion->config.track)
-                                / 2.0);
-            float64_t travelled
-                = p_motion->odom.travel[wheel] - p_motion->start[wheel];
-            float64_t remaining = goal - travelled;
-
-            if (command.duration > 0.0)
-            {
-                float64_t wheel_output
-                    = fmax(0.0, fmin(1.0, elapsed / command.duration));
-                float64_t progress = wheel_output * wheel_output
-                                     * (3.0 - (2.0 * wheel_output));
-
-                desired[wheel] = (command.speed[wheel] * 6.0 * wheel_output
-                                  * (1.0 - wheel_output))
-                                 + (2.0 * p_motion->config.straight_gain
-                                    * ((goal * progress) - travelled));
-            }
-            else
-            {
-                desired[wheel]
-                    = (fabs(remaining) <= tolerance)
-                          ? 0.0
-                          : copysign(
-                                fmin(fabs(command.speed[wheel]),
-                                     sqrt(2.0 * p_motion->config.acceleration
-                                          * fabs(remaining))),
-                                remaining);
-            }
-        }
-
-        if (0.0 == command.duration)
-        {
-            /* Keep the wheels matched on the way, not only at the end: a move
-             * stopped early never gets an endpoint correction. Half the slower
-             * wheel's speed at most, so neither wheel reverses; none once a
-             * wheel is at its goal. */
-            float64_t progress
-                = (0.0 == command.value)
-                      ? 1.0
-                      : fmax(0.0,
-                             fmin(1.0, (left + right) / (2.0 * command.value)));
-            float64_t slack = fmin(fabs(desired[0]), fabs(desired[1])) / 2.0;
-            float64_t correction = fmax(
-                -slack,
-                fmin(slack, 2.0 * p_motion->config.straight_gain
-                                * ((right - left)
-                                   - (command.angle * p_motion->config.track
-                                      * progress))));
-
-            desired[0] += correction;
-            desired[1] -= correction;
-        }
-
-        if ((0.0 == command.duration) && b_reached)
-        {
-            motion_flag_set(p_motion, MOTION_GOAL_PENDING, true);
-            stopping(p_motion, now);
-            return;
-        }
-    }
-
-    if ((DISTANCE_MOVE == command.mode) || (ENCODER_TURN == command.mode))
-    {
-        float64_t left      = p_motion->odom.travel[0] - p_motion->start[0];
-        float64_t right     = p_motion->odom.travel[1] - p_motion->start[1];
-        float64_t travelled = (DISTANCE_MOVE == command.mode)
-                                  ? (left + right) / 2.0
-                                  : (right - left) / p_motion->config.track;
-        float64_t remaining
-            = fabs(command.value) - (copysign(1.0, command.value) * travelled);
-        float64_t tolerance = (DISTANCE_MOVE == command.mode)
-                                  ? p_motion->config.distance_tolerance
-                                  : p_motion->config.angle_tolerance;
-
-        if (remaining <= (tolerance * 0.5))
-        {
-            motion_flag_set(p_motion, MOTION_GOAL_PENDING, true);
-            stopping(p_motion, now);
-            return;
-        }
-
-        if (ENCODER_TURN == command.mode)
-        {
-            remaining *= p_motion->config.track / 2.0;
-        }
-
-        /* The ramp alone falls to ~35 mm/s in the last 2 mm, where the PID
-         * output
-         * (~16% PWM) is below the motors' breakaway: the wheels stop short and
-         * the no-progress check faults. Hold min_goal_speed instead; stopping()
-         * above cuts the output at once, so the floor does not delay the stop.
-         */
-        desired[1] = copysign(
-            fmax(p_motion->config.min_goal_speed,
-                 fmin(p_motion->config.max_speed,
-                      sqrt(2.0 * p_motion->config.acceleration * remaining))),
-            command.value);
-        desired[0] = (DISTANCE_MOVE == command.mode) ? desired[1] : -desired[1];
-
-        if (DISTANCE_MOVE == command.mode)
-        {
-            float64_t correction
-                = fmax(-p_motion->config.max_speed / 2.0,
-                       fmin(p_motion->config.max_speed / 2.0,
-                            p_motion->config.straight_gain * (right - left)));
-
-            desired[0] += correction;
-            desired[1] -= correction;
-        }
     }
 
     for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
     {
-        float64_t change;
-        float64_t quantum
-            = (3.141592653589793 * p_motion->config.diameter[wheel])
-              / p_motion->config.counts_per_rev[wheel];
-        bool b_manual = MANUAL_OUTPUT == command.mode;
-
-        desired[wheel] = fmax(-p_motion->config.max_speed,
-                              fmin(p_motion->config.max_speed, desired[wheel]));
-        change = fmax(-p_motion->config.acceleration * delta_s,
-                      fmin(p_motion->config.acceleration * delta_s,
-                           desired[wheel] - p_motion->status.target[wheel]));
-        p_motion->status.target[wheel] += change;
-        p_motion->status.output[wheel]
-            = b_manual ? command.speed[wheel]
-                       : pid_step(&p_motion->pid[wheel],
-                                  &p_motion->config.pid[wheel],
-                                  p_motion->status.target[wheel],
-                                  p_motion->odom.speed[wheel], delta_s,
-                                  p_motion->config.max_output);
-
-        /* Breakaway: from rest the PID integral took longer than the
-         * no-progress limit to pass the motor's starting threshold, so a
-         * stationary wheel asked to move or speed up gets at least
-         * breakaway[w], doubling by the time that limit expires. Not while the
-         * target is falling (braking ramp) and never for manual output; a truly
-         * blocked wheel still trips the no-progress check below. */
-        if ((!b_manual) && (!progressed[wheel])
-            && (fabs(p_motion->status.target[wheel]) > 1e-9)
-            && ((desired[wheel] * p_motion->status.target[wheel]) > 0.0)
-            && (fabs(desired[wheel]) >= fabs(p_motion->status.target[wheel])))
+        if (drive_wheel(p_motion, &command, wheel, &desired[wheel],
+                        progressed[wheel], now, delta_s))
         {
-            float64_t kick
-                = fmin(p_motion->config.max_output,
-                       p_motion->config.breakaway[wheel]
-                           * (1.0
-                              + ((now - p_motion->last_progress[wheel])
-                                 / p_motion->config.feedback_timeout)));
-
-            if (fabs(p_motion->status.output[wheel]) < kick)
-            {
-                p_motion->status.output[wheel]
-                    = copysign(kick, p_motion->status.target[wheel]);
-            }
-        }
-
-        /* No active reverse torque at zero target. Hardware enforces reversal
-         * dead-time. */
-        if ((0.0 == desired[wheel])
-            && (fabs(p_motion->status.target[wheel]) < 1e-9))
-        {
-            p_motion->status.output[wheel] = 0.0;
-            pid_reset(&p_motion->pid[wheel]);
-        }
-
-        if (progressed[wheel])
-        {
-            p_motion->last_progress[wheel] = now;
-        }
-
-        if ((fabs(p_motion->status.target[wheel]) < 1e-9)
-            || (fabs(p_motion->status.output[wheel]) < 1e-9))
-        {
-            p_motion->expected_since[wheel] = now;
-            p_motion->last_progress[wheel]  = now;
-        }
-        else if (MOTION_FAULTS_ENABLED)
-        {
-            float64_t timeout
-                = p_motion->config.feedback_timeout
-                  + ((2.0 * quantum) / fabs(p_motion->status.target[wheel]));
-
-            if (((now - p_motion->expected_since[wheel])
-                 >= p_motion->config.startup_grace)
-                && ((now - p_motion->last_progress[wheel]) > timeout))
-            {
-                stalled_wheels |= (uint8_t)(1U << wheel);
-            }
-        }
-        else
-        {
-            /* Nothing to do in any other case. */
+            stalled_wheels |= (uint8_t)(1U << wheel);
         }
     }
 
@@ -1256,116 +1335,91 @@ drive (motion_t * p_motion, float64_t now, float64_t delta_s,
     }
 }
 
-void
-motion_step (motion_t * p_motion, encoder_sample_t sample, float64_t now)
+/* A long gap while starting up, outputs still disabled. */
+static void
+step_startup_gap (motion_t * p_motion, encoder_sample_t sample, float64_t now,
+                  float64_t delta_s)
 {
-    float64_t delta_s = now - p_motion->last_time;
-    bool      progressed[2];
-    bool      b_fresh;
-    unsigned  wheel;
+    unsigned wheel;
 
-    p_motion->status.encoder             = sample;
-    p_motion->status.encoder_sample_time = now;
+    /* Outputs are still disabled: qualify startup cadence/rest before
+     * READY, rather than treating bring-up as a missed running control
+     * deadline. Keep the original setup deadline; repeated gaps cannot
+     * postpone it. */
+    zero_output(p_motion);
+    ++p_motion->status.startup_gaps;
+    p_motion->status.max_startup_gap
+        = fmax(p_motion->status.max_startup_gap, delta_s);
+    motion_flag_set(p_motion, MOTION_STILL_TRACKING, false);
+    p_motion->status.stationary = false;
 
-    if (SHUTDOWN == p_motion->status.state)
+    if (MOTION_FAULTS_ENABLED
+        && ((now - p_motion->entered) > p_motion->config.setup_timeout))
     {
-        zero_output(p_motion);
+        motion_raise_fault(p_motion, F_SETUP_TIMEOUT, now);
         return;
     }
 
-    p_motion->status.last_dt = delta_s;
-
-    if ((isfinite(delta_s)) && (delta_s > p_motion->status.max_observed_dt))
+    if (MOTION_FAULTS_ENABLED
+        && ((!sample.reliable) || (sample.invalid[0] != p_motion->invalid[0])
+            || (sample.invalid[1] != p_motion->invalid[1])))
     {
-        p_motion->status.max_observed_dt = delta_s;
-    }
-
-    if (!motion_config_valid(&p_motion->config))
-    {
-        motion_raise_fault(p_motion, F_CONFIG, now);
+        record_feedback(p_motion, sample,
+                        sample.reliable ? FB_INVALID_TRANSITION
+                                        : FB_UNRELIABLE);
+        motion_raise_fault(p_motion, F_FEEDBACK, now);
         return;
     }
 
-    if ((isfinite(now)) && (isfinite(delta_s))
-        && (delta_s > p_motion->config.max_dt)
-        && (INITIALISING == p_motion->status.state) && (!p_motion->active)
-        && (p_motion->status.inhibited))
+    /* Rebase the pre-drive encoder/time sample. Do not feed an oversized
+     * interval into odometry/PID, or count it as stationary settling. */
+    for (wheel = 0U; wheel < MOTION_WHEELS; ++wheel)
     {
-        /* Outputs are still disabled: qualify startup cadence/rest before
-         * READY, rather than treating bring-up as a missed running control
-         * deadline. Keep the original setup deadline; repeated gaps cannot
-         * postpone it. */
-        zero_output(p_motion);
-        ++p_motion->status.startup_gaps;
-        p_motion->status.max_startup_gap
-            = fmax(p_motion->status.max_startup_gap, delta_s);
-        motion_flag_set(p_motion, MOTION_STILL_TRACKING, false);
-        p_motion->status.stationary = false;
-
-        if (MOTION_FAULTS_ENABLED
-            && ((now - p_motion->entered) > p_motion->config.setup_timeout))
-        {
-            motion_raise_fault(p_motion, F_SETUP_TIMEOUT, now);
-            return;
-        }
-
-        if (MOTION_FAULTS_ENABLED
-            && ((!sample.reliable)
-                || (sample.invalid[0] != p_motion->invalid[0])
-                || (sample.invalid[1] != p_motion->invalid[1])))
-        {
-            record_feedback(p_motion, sample,
-                            sample.reliable ? FB_INVALID_TRANSITION
-                                            : FB_UNRELIABLE);
-            motion_raise_fault(p_motion, F_FEEDBACK, now);
-            return;
-        }
-
-        /* Rebase the pre-drive encoder/time sample. Do not feed an oversized
-         * interval into odometry/PID, or count it as stationary settling. */
-        for (wheel = 0U; wheel < MOTION_WHEELS; ++wheel)
-        {
-            p_motion->odom.previous[wheel] = sample.count[wheel];
-            p_motion->odom.speed[wheel] = p_motion->status.speed[wheel] = 0.0;
-        }
-
-        p_motion->last_time = p_motion->status.sample_time = now;
-        p_motion->status.feedback_trusted                  = false;
-        return;
-    }
-    else if ((!isfinite(now)) || (!isfinite(delta_s)) || (delta_s <= 0.0)
-             || (delta_s > p_motion->config.max_dt))
-    {
-        timing_fault(p_motion, now, delta_s);
-
-        if (isfinite(now))
-        {
-            p_motion->last_time = now;
-        }
-
-        if (MOTION_FAULTS_ENABLED)
-        {
-            return;
-        }
-
-        if ((!isfinite(now)) || (!isfinite(delta_s)) || (delta_s <= 0.0))
-        {
-            /* No usable clock means no deadline checks: do not keep driving. */
-            p_motion->status.output[0] = 0.0;
-            p_motion->status.output[1] = 0.0;
-            return;
-        }
-
-        /* A late cycle must still reach the deadline checks below. */
-        delta_s = p_motion->config.max_dt;
-    }
-    else
-    {
-        /* Nothing to do in any other case. */
+        p_motion->odom.previous[wheel] = sample.count[wheel];
+        p_motion->odom.speed[wheel] = p_motion->status.speed[wheel] = 0.0;
     }
 
-    p_motion->last_time          = now;
-    p_motion->status.sample_time = now;
+    p_motion->last_time = p_motion->status.sample_time = now;
+    p_motion->status.feedback_trusted                  = false;
+}
+
+/* An unusable interval.  True: carry on with the interval given back. */
+static bool
+step_bad_interval (motion_t * p_motion, float64_t now, float64_t * p_delta_s)
+{
+    timing_fault(p_motion, now, *p_delta_s);
+
+    if (isfinite(now))
+    {
+        p_motion->last_time = now;
+    }
+
+    if (MOTION_FAULTS_ENABLED)
+    {
+        return false;
+    }
+
+    if ((!isfinite(now)) || (!isfinite(*p_delta_s)) || (*p_delta_s <= 0.0))
+    {
+        /* No usable clock means no deadline checks: do not keep driving. */
+        p_motion->status.output[0] = 0.0;
+        p_motion->status.output[1] = 0.0;
+        return false;
+    }
+
+    /* A late cycle must still reach the deadline checks below. */
+    *p_delta_s = p_motion->config.max_dt;
+
+    return true;
+}
+
+/* New encoder counts into odometry.  False: a fault, nothing more to do. */
+static bool
+step_odometry (motion_t * p_motion, encoder_sample_t sample, float64_t now,
+               float64_t delta_s, bool progressed[2], bool * p_fresh)
+{
+    unsigned wheel;
+    bool     b_fresh;
 
     if (!sample.reliable)
     {
@@ -1401,7 +1455,7 @@ motion_step (motion_t * p_motion, encoder_sample_t sample, float64_t now)
 
         if (MOTION_FAULTS_ENABLED)
         {
-            return;
+            return false;
         }
 
         /* Rebase, or a rejected jump would be rejected again on every later
@@ -1416,19 +1470,15 @@ motion_step (motion_t * p_motion, encoder_sample_t sample, float64_t now)
         }
     }
 
-    p_motion->status.feedback_trusted
-        = b_fresh && (!motion_flag_get(p_motion, MOTION_FEEDBACK_LATCHED));
+    *p_fresh = b_fresh;
 
-    for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
-    {
-        p_motion->status.speed[wheel]  = p_motion->odom.speed[wheel];
-        p_motion->status.travel[wheel] = p_motion->odom.travel[wheel];
-    }
+    return true;
+}
 
-    p_motion->status.centre  = p_motion->odom.centre;
-    p_motion->status.path    = p_motion->odom.path;
-    p_motion->status.heading = p_motion->odom.heading;
-
+/* Standing still for long enough counts as stationary. */
+static void
+step_stationary (motion_t * p_motion, float64_t now)
+{
     if ((fabs(p_motion->odom.speed[0]) <= p_motion->config.stopped_speed)
         && (fabs(p_motion->odom.speed[1]) <= p_motion->config.stopped_speed)
         && (p_motion->status.feedback_trusted))
@@ -1447,7 +1497,13 @@ motion_step (motion_t * p_motion, encoder_sample_t sample, float64_t now)
         motion_flag_set(p_motion, MOTION_STILL_TRACKING, false);
         p_motion->status.stationary = false;
     }
+}
 
+/* What this state does in one cycle. */
+static void
+step_state (motion_t * p_motion, float64_t now, float64_t delta_s,
+            const bool progressed[2])
+{
     switch (p_motion->status.state)
     {
         case INITIALISING:
@@ -1505,6 +1561,82 @@ motion_step (motion_t * p_motion, encoder_sample_t sample, float64_t now)
         default:
         break;
     }
+}
+
+void
+motion_step (motion_t * p_motion, encoder_sample_t sample, float64_t now)
+{
+    float64_t delta_s = now - p_motion->last_time;
+    bool      progressed[2];
+    bool      b_fresh;
+    unsigned  wheel;
+
+    p_motion->status.encoder             = sample;
+    p_motion->status.encoder_sample_time = now;
+
+    if (SHUTDOWN == p_motion->status.state)
+    {
+        zero_output(p_motion);
+        return;
+    }
+
+    p_motion->status.last_dt = delta_s;
+
+    if ((isfinite(delta_s)) && (delta_s > p_motion->status.max_observed_dt))
+    {
+        p_motion->status.max_observed_dt = delta_s;
+    }
+
+    if (!motion_config_valid(&p_motion->config))
+    {
+        motion_raise_fault(p_motion, F_CONFIG, now);
+        return;
+    }
+
+    if ((isfinite(now)) && (isfinite(delta_s))
+        && (delta_s > p_motion->config.max_dt)
+        && (INITIALISING == p_motion->status.state) && (!p_motion->active)
+        && (p_motion->status.inhibited))
+    {
+        step_startup_gap(p_motion, sample, now, delta_s);
+        return;
+    }
+    else if ((!isfinite(now)) || (!isfinite(delta_s)) || (delta_s <= 0.0)
+             || (delta_s > p_motion->config.max_dt))
+    {
+        if (!step_bad_interval(p_motion, now, &delta_s))
+        {
+            return;
+        }
+    }
+    else
+    {
+        /* Nothing to do in any other case. */
+    }
+
+    p_motion->last_time          = now;
+    p_motion->status.sample_time = now;
+
+    if (!step_odometry(p_motion, sample, now, delta_s, progressed, &b_fresh))
+    {
+        return;
+    }
+
+    p_motion->status.feedback_trusted
+        = b_fresh && (!motion_flag_get(p_motion, MOTION_FEEDBACK_LATCHED));
+
+    for (wheel = 0; wheel < MOTION_WHEELS; ++wheel)
+    {
+        p_motion->status.speed[wheel]  = p_motion->odom.speed[wheel];
+        p_motion->status.travel[wheel] = p_motion->odom.travel[wheel];
+    }
+
+    p_motion->status.centre  = p_motion->odom.centre;
+    p_motion->status.path    = p_motion->odom.path;
+    p_motion->status.heading = p_motion->odom.heading;
+
+    step_stationary(p_motion, now);
+    step_state(p_motion, now, delta_s, progressed);
 }
 
 /*** end of file ***/

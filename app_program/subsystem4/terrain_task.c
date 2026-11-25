@@ -142,6 +142,45 @@ static void terrain_mag_cal(buddy4_t const *    p_context,
                             s4_motion_t const * p_motion);
 #endif
 
+/* Build ID and how to place the robot. */
+static void
+terrain_banner (void)
+{
+#ifndef ROBO_IR_MONITOR /* Keep the IR monitor's single console line clean. */
+#ifdef ROBO_ENCODER_BUILD_ID
+    /* Build ID next to the Buddy 4 start-up lines, to confirm which image is
+     * flashed. */
+    tm_printf((UB const *)"[B4] firmware=%s\n",
+              (UB const *)ROBO_ENCODER_BUILD_ID);
+#endif
+    tm_printf((UB const *)"[B4] GY-511 on I2C1 SDA=GP6 SCL=GP7. Keep the robot "
+                          "LEVEL and STILL:\n");
+    tm_printf((UB const *)"[B4] tilt reference is captured about 1-2 s after "
+                          "boot (50 stable samples).\n");
+#endif
+}
+
+/* A finished hump: latch the event and print it.  Owning task consumes the
+ * latch; the comms latch is interrupt-safe. */
+static void
+terrain_hump_done (buddy4_t * p_context)
+{
+    if (terrain_take_completed(&p_context->terrain))
+    {
+        comms_latch_event(TF_EV_HUMP_PEAK);
+#ifndef ROBO_IR_MONITOR
+        uint8_t peak = terrain_last_peak(&p_context->terrain);
+
+        tm_printf(
+            (UB const *)"[TERRAIN] Hump completed: peak=%d mm under "
+                        "%s wheel | run max=%d mm\n",
+            (INT)(peak & TERRAIN_PEAK_MM_MASK),
+            (0U != (peak & TERRAIN_PEAK_RIGHT)) ? "RIGHT" : "LEFT",
+            (INT)(terrain_run_max(&p_context->terrain) & TERRAIN_PEAK_MM_MASK));
+#endif
+    }
+}
+
 /* Started by usermain at priority 8 when ROBO_SUBSYSTEM4 is enabled.
  * One lifecycle step per 20 ms release. Missed releases are skipped, never
  * replayed. Startup contract: the robot is level and still when it boots.
@@ -176,18 +215,8 @@ terrain_task (INT code, void * p_context)
     gb_s_turn_paused = false;
     gb_s_turn_seen   = false;
     g_s_turn_ms      = 0U;
-#ifndef ROBO_IR_MONITOR /* Keep the IR monitor's single console line clean. */
-#ifdef ROBO_ENCODER_BUILD_ID
-    /* Build ID next to the Buddy 4 start-up lines, to confirm which image is
-     * flashed. */
-    tm_printf((UB const *)"[B4] firmware=%s\n",
-              (UB const *)ROBO_ENCODER_BUILD_ID);
-#endif
-    tm_printf((UB const *)"[B4] GY-511 on I2C1 SDA=GP6 SCL=GP7. Keep the robot "
-                          "LEVEL and STILL:\n");
-    tm_printf((UB const *)"[B4] tilt reference is captured about 1-2 s after "
-                          "boot (50 stable samples).\n");
-#endif
+    terrain_banner();
+
     for (;;)
     {
         uint32_t now           = 0U;
@@ -213,22 +242,7 @@ terrain_task (INT code, void * p_context)
 #if defined(ROBO_MAG_CAL)
         terrain_mag_cal(&s_context, &motion);
 #endif
-        /* Owning task consumes the latch; the comms latch is interrupt-safe. */
-        if (terrain_take_completed(&s_context.terrain))
-        {
-            comms_latch_event(TF_EV_HUMP_PEAK);
-#ifndef ROBO_IR_MONITOR
-            uint8_t peak = terrain_last_peak(&s_context.terrain);
-
-            tm_printf((UB const *)"[TERRAIN] Hump completed: peak=%d mm under "
-                                  "%s wheel | run max=%d mm\n",
-                      (INT)(peak & TERRAIN_PEAK_MM_MASK),
-                      (0U != (peak & TERRAIN_PEAK_RIGHT)) ? "RIGHT" : "LEFT",
-                      (INT)(terrain_run_max(&s_context.terrain)
-                            & TERRAIN_PEAK_MM_MASK));
-#endif
-        }
-
+        terrain_hump_done(&s_context);
         state         = buddy4_state(&s_context);
         phase         = terrain_status(&s_context.terrain) & TERRAIN_PHASE_MASK;
         motion_class  = motion_class_get(&s_class);
