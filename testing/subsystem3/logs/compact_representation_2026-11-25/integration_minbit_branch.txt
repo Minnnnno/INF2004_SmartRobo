@@ -1,0 +1,56 @@
+Integration check, 2026-11-24: origin/main dac3f96 + origin/buddy2/minimum-bit-review 109a511, trial merge (not committed)
+Merge conflicts: 0
+
+== Team host tests (cmake -DROBO_HOST_TESTS=ON -DCMAKE_C_FLAGS=-Wno-error=float-conversion)
+ 1/24 Test  #1: motion_tests ..........................   Passed    0.11 sec
+ 2/24 Test  #2: motion_faults_disabled_checks .........   Passed    0.09 sec
+ 3/24 Test  #3: motor_test_checks .....................   Passed    0.07 sec
+ 4/24 Test  #4: line_test_checks ......................   Passed    0.06 sec
+ 5/24 Test  #5: buddy1_frame_checks ...................   Passed    0.18 sec
+ 6/24 Test  #6: steering_checks .......................   Passed    0.08 sec
+ 7/24 Test  #7: line_pid_checks .......................   Passed    0.12 sec
+ 8/24 Test  #8: line_imu_wait_checks ..................   Passed    0.09 sec
+ 9/24 Test  #9: line_imu_wait_start_gate_checks .......   Passed    0.08 sec
+10/24 Test #10: angle_control_checks ..................   Passed    0.08 sec
+11/24 Test #11: angle_hal_checks ......................   Passed    0.06 sec
+12/24 Test #12: obstacle_geometry_checks ..............   Passed    0.04 sec
+13/24 Test #13: obstacle_runtime_checks ...............   Passed    0.07 sec
+14/24 Test #14: obstacle_servo_checks .................   Passed    0.11 sec
+15/24 Test #15: tmonitor_format_checks ................   Passed    0.08 sec
+16/24 Test #16: barcode_decode_checks .................   Passed    0.10 sec
+17/24 Test #17: barcode_decode_letters_checks .........   Passed    0.04 sec
+18/24 Test #18: barcode_decode_reject_checks ..........   Passed    0.03 sec
+19/24 Test #19: barcode_decode_ladder_checks ..........   Passed    0.04 sec
+20/24 Test #20: barcode_decode_ladder_reject_checks ...   Passed    0.07 sec
+21/24 Test #21: barcode_decode_route4_checks ..........   Passed    0.08 sec
+22/24 Test #22: route_checks ..........................   Passed    0.08 sec
+23/24 Test #23: crash_restart_checks ..................   Passed    0.17 sec
+24/24 Test #24: motor_driver_diagnostics_checks .......   Passed    0.07 sec
+100% tests passed, 0 tests failed out of 24
+
+== Buddy 1: python tools/dashboard.py selftest
+PASS: dashboard selftest, 0 failures
+
+== Buddy 4: python tests/subsystem4/run_tests.py
+PASS: 36 GY-511 configuration and startup scenarios
+PASS: acceleration failure paths and 4096 XYZ vectors (12288 axis conversions)
+PASS: magnetic failure/lock/range paths and 4096 XYZ vectors (12288 axis conversions)
+PASS: 632 motion class checks (rules, priority, debounce, overturned, yaw, gaps)
+PASS: 35 compass checks (calibration, heading, validity, unwrap, failures)
+PASS: 682 tilt geometry, reference, validity and hysteresis checks
+PASS: 2273 lift checks (overturn, lift, hold, clear, humps, scale, gaps, NULL)
+PASS: 54 height hump, sway, side, peak, run max, hold, gap and wrap checks
+PASS: 296 autonomous recovery, reference, deadline, STOP, reset and terrain checks
+PASS: 14749 terrain task checks (snapshot, state codes, hump event, level gating, timing, lift stop, hump freeze)
+PASS: 4973 terrain task web Start gate checks (wait, START, capture, hump, STOP/START)
+PASS: 13 calibration-sequence checks (pivot left/right, stop, constants, failures)
+PASS: production I2C receive arm, 1/2/6/16-byte completion and final STOP command
+All Buddy 4 host suites passed.
+
+== Integrated firmware (mqtt): MQTT=ON, warnings/errors: 0, smartrobo_integrated.uf2 built
+
+== Integrated firmware (nonet): MQTT=OFF, warnings/errors: 0, smartrobo_integrated.uf2 built
+
+== Not run here
+buddy2_compact (tests/buddy2_compact): MinGW gcc has no -fsanitize=undefined runtime (link fails); Buddy 2 files only.
+forward_console: needs clang (not installed).
