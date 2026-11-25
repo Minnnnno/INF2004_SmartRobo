@@ -58,7 +58,7 @@ Test IDs never change and are never reused, even if a test is dropped.
      false float-conversion errors under the team's `-Werror` flags.
    - subsystem-specific suites, if your subsystem has one (e.g.
      `python tests/subsystem4/run_tests.py`, or Buddy 1's dashboard check
-     `python tests/buddy1_frame/web_dashboard_check.py`).
+     `python tests/subsystem1/web_dashboard_check.py`).
 
    Each `TEST_LOG.md` lists the exact commands for its tests.
 3. **Otherwise it is a robot test.** A test that needs eyes or instruments (a
