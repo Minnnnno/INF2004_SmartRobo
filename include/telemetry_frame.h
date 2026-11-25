@@ -46,50 +46,40 @@
  *  X(name, min, max, bits, owner, "units and meaning")
  *  Keep each entry on ONE line: tools/dashboard.py parses these lines.
  * --------------------------------------------------------------------- */
-#define TF_FIELDS(X)                                                          \
-    X(VERSION, 0, 15, 4, B1, "frame layout version, TF_LAYOUT_VERSION")       \
-    X(SEQ, 0, 255, 8, B1, "frame counter, wraps; gaps = lost frames")         \
-    X(UPTIME_DS, 0, 65535, 16, B1, "uptime in 0.1 s, wraps every 109 min")    \
-    X(M_STATE, 0, 6, 3, B2, "motion_state_t")                                 \
-    X(M_MODE, 0, 4, 3, B2, "motion_mode_t")                                   \
-    X(M_FAULT, 0, 12, 4, B2, "motion_fault_t (primary cause)")                \
-    X(M_FLAGS, 0, 15, 4, B2,                                                  \
-      "bit0 stationary, bit1 feedback trusted, bit2 inhibited, bit3 hold")    \
-    X(OWNER, 0, 7, 3, B2, "request_source_t owning motion; 7 = no owner")     \
-    X(CMD_ID, 0, 255, 8, B2, "active command id, low 8 bits")                 \
-    X(SPEED_L, -250, 250, 9, B2, "left wheel speed, mm/s")                    \
-    X(SPEED_R, -250, 250, 9, B2, "right wheel speed, mm/s")                   \
-    X(CENTRE_MM, -5000, 5000, 14, B2, "signed centre travel, mm")             \
-    X(HEADING, -180, 179, 9, B2, "odometry heading, degrees, wrapped")        \
-    X(LINE_AVAIL, 0, 1, 1, B3, "line status available")                       \
-    X(LINE_ERR, -1, 1, 2, B3, "line error: -1 left, 0 centred, +1 right")     \
-    X(LINE_TRACK, 0, 1, 1, B3, "line trackable")                              \
-    X(BC_CHAR, 0, 44, 6, B3,                                                  \
-      "last decoded Code 39 character: 0 none yet, n = TF_BC_CHARS[n - 1]")   \
-    X(BC_READ, 0, 1, 1, B3,                                                   \
-      "flips on every valid read (low bit of B3's read counter)")             \
-    X(T_VALID, 0, 7, 3, B4,                                                   \
-      "bit0 motion class + turn rate, bit1 pitch, bit2 hump height valid")    \
-    X(T_STATE, 0, 7, 3, B4,                                                   \
-      "terrain state (8 states, B4 statechart; 7 = LIFTED)")                  \
-    X(M_CLASS, 0, 7, 3, B4,                                                   \
-      "motion class: 0 still 1 moving 2 accel 3 reverse 4 turn 5 climb 6 "    \
-      "descend 7 overturned")                                                 \
-    X(PITCH, -90, 90, 8, B4, "pitch, degrees, + nose up")                     \
-    X(TURN_RATE, -256, 255, 9, B4,                                            \
-      "turn rate from wheel speeds, deg/s, + left (anticlockwise)")           \
-    X(HUMP_MM, 0, 127, 7, B4, "highest completed hump peak this run, mm")     \
-    X(O_FLAGS, 0, 31, 5, B5,                                                  \
-      "bit0 scanning, bit1 first boundary, bit2 second boundary, bit3 width " \
-      "valid, bit4 no echo")                                                  \
-    X(O_AVAIL, 0, 1, 1, B5, "obstacle status available")                      \
-    X(O_DIST_CM, 0, 400, 9, B5, "nearest obstacle distance, cm")              \
-    X(O_WIDTH_CM, 0, 255, 8, B5,                                              \
-      "obstacle width, cm; use only if width valid")                          \
-    X(REJECTED, 0, 7, 3, B1,                                                  \
-      "controller rejections since last frame, saturates")                    \
-    X(DROPPED, 0, 7, 3, B1,                                                   \
-      "comms messages dropped since last frame, saturates")
+/* BARR-C deviation 1.2.a: lines over 80 columns, kept whole for that parser. */
+/* clang-format off */
+#define TF_FIELDS(X) \
+    X(VERSION,     0,     15,     4,  B1, "frame layout version, TF_LAYOUT_VERSION") \
+    X(SEQ,         0,     255,    8,  B1, "frame counter, wraps; gaps = lost frames") \
+    X(UPTIME_DS,   0,     65535,  16, B1, "uptime in 0.1 s, wraps every 109 min") \
+    X(M_STATE,     0,     6,      3,  B2, "motion_state_t") \
+    X(M_MODE,      0,     4,      3,  B2, "motion_mode_t") \
+    X(M_FAULT,     0,     12,     4,  B2, "motion_fault_t (primary cause)") \
+    X(M_FLAGS,     0,     15,     4,  B2, "bit0 stationary, bit1 feedback trusted, bit2 inhibited, bit3 hold") \
+    X(OWNER,       0,     7,      3,  B2, "request_source_t owning motion; 7 = no owner") \
+    X(CMD_ID,      0,     255,    8,  B2, "active command id, low 8 bits") \
+    X(SPEED_L,     -250,  250,    9,  B2, "left wheel speed, mm/s") \
+    X(SPEED_R,     -250,  250,    9,  B2, "right wheel speed, mm/s") \
+    X(CENTRE_MM,   -5000, 5000,   14, B2, "signed centre travel, mm") \
+    X(HEADING,     -180,  179,    9,  B2, "odometry heading, degrees, wrapped") \
+    X(LINE_AVAIL,  0,     1,      1,  B3, "line status available") \
+    X(LINE_ERR,    -1,    1,      2,  B3, "line error: -1 left, 0 centred, +1 right") \
+    X(LINE_TRACK,  0,     1,      1,  B3, "line trackable") \
+    X(BC_CHAR,     0,     44,     6,  B3, "last decoded Code 39 character: 0 none yet, n = TF_BC_CHARS[n - 1]") \
+    X(BC_READ,     0,     1,      1,  B3, "flips on every valid read (low bit of B3's read counter)") \
+    X(T_VALID,     0,     7,      3,  B4, "bit0 motion class + turn rate, bit1 pitch, bit2 hump height valid") \
+    X(T_STATE,     0,     7,      3,  B4, "terrain state (8 states, B4 statechart; 7 = LIFTED)") \
+    X(M_CLASS,     0,     7,      3,  B4, "motion class: 0 still 1 moving 2 accel 3 reverse 4 turn 5 climb 6 descend 7 overturned") \
+    X(PITCH,       -90,   90,     8,  B4, "pitch, degrees, + nose up") \
+    X(TURN_RATE,   -256,  255,    9,  B4, "turn rate from wheel speeds, deg/s, + left (anticlockwise)") \
+    X(HUMP_MM,     0,     127,    7,  B4, "highest completed hump peak this run, mm") \
+    X(O_FLAGS,     0,     31,     5,  B5, "bit0 scanning, bit1 first boundary, bit2 second boundary, bit3 width valid, bit4 no echo") \
+    X(O_AVAIL,     0,     1,      1,  B5, "obstacle status available") \
+    X(O_DIST_CM,   0,     400,    9,  B5, "nearest obstacle distance, cm") \
+    X(O_WIDTH_CM,  0,     255,    8,  B5, "obstacle width, cm; use only if width valid") \
+    X(REJECTED,    0,     7,      3,  B1, "controller rejections since last frame, saturates") \
+    X(DROPPED,     0,     7,      3,  B1, "comms messages dropped since last frame, saturates")
+/* clang-format on */
 
 #define TF_ENUM_(name, lo, hi, bits, owner, text) TF_F_##name,
 enum
