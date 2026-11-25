@@ -93,20 +93,3 @@ Possible saving, **not done** (the decoder is tuned and working): `path[]` as an
 | Bit-field for the pending action | Already one byte in a padded struct: no RAM saved, and a second encoding beside `route_action_t` |
 | Separate ADC acquisition task | One ADC user only; would add scheduling cost |
 | Smaller decoder buffers | See section 3: ~4 KB possible, deferred |
-
-## 7. Correctness
-
-- Host tests (`line_test_checks`, `line_pid_checks`, `barcode_decode_*`,
-  `route_checks`) pass on the minimum-bit branch, including all four IR
-  combinations: `logs/compact_representation_2026-11-25/host_minbit_branch.txt`.
-- The minimum-bit branch trial-merged onto `main` (not committed): no conflicts,
-  24/24 team host tests, Buddy 1 dashboard selftest, Buddy 4 suites, integrated
-  firmware with and without MQTT built with no warnings:
-  `integration_minbit_branch.txt`.
-- On the robot: S3-H01 to S3-H04 videos (`TEST_LOG.md`), SYS-02 and SYS-03.
-
-## Still open
-
-- **A3, start without a visible line:** in code the robot does not move until it
-  sees the line; not yet tried at different alignments and lighting.
-- **S3-H05 rerun** for the carry-on behaviour after a failed read.

@@ -158,6 +158,7 @@ status frame (layout v3) and a separate 26-byte encoder frame, published at 10 H
 | Ultrasonic TRIG / ECHO | GP16 / GP17 |
 | Right / centre IR | GP26 / GP27 |
 | Barcode ADC | GP28 |
+| Barcode calibration button (optional, active low) | GP21 |
 | Optional UART0 console TX / RX | GP0 / GP1 |
 
 GP23/GP24/GP25/GP29 are reserved for Pico W board/radio use. I2C0 stays disabled

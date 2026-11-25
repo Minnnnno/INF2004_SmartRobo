@@ -21,7 +21,7 @@ testing/
 |---|---|---|---|
 | `subsystem1/` | Wi-Fi, MQTT, commands and telemetry frame | Buddy 1 (2500842) | — |
 | `subsystem2/` | Motion control: motors, encoders, wheel-speed PID, odometry | Buddy 2 | `BUDDY2_COMPACT_REPRESENTATION.md`: minimum-bit representation and measured memory |
-| `subsystem3/` | Line following and barcode navigation | Buddy 3 (2500622) | — |
+| `subsystem3/` | Line following and barcode navigation | Buddy 3 (2500622) | `BUDDY3_COMPACT_REPRESENTATION.md`: minimum-bit representation, measured RAM and message sizes; `logs/compact_representation_2026-11-25/`: its evidence |
 | `subsystem4/` | IMU tilt, hump height, motion class, lift/overturn stop | Buddy 4 (2500910) | `BUDDY4_COMPACT_REPRESENTATION.md`: minimum-bit representation, measured RAM and message sizes; `logs/compact_representation_2026-11-25/`: its evidence |
 | `subsystem5/` | Obstacle detection, width estimation and avoidance | Buddy 5 (2500344) | — |
 | `integration/` | Interfaces between two or more subsystems (`INT-..`) | the owners on both sides | — |
