@@ -8,13 +8,13 @@
 #define TMCLK_MHz 125
 #define GPIO_FUNC_PWM 4U
 typedef uint32_t RELTIM;
-typedef struct { uint16_t wrap; float divider; } pwm_config;
+typedef struct { uint16_t wrap; float divider; } pwm_config_t;
 static struct { unsigned slice, pin; uint16_t a, b; uint32_t delay; bool enabled; } rig;
 static unsigned pwm_gpio_to_slice_num(unsigned pin) { return (pin >> 1U) & 7U; }
-static pwm_config pwm_get_default_config(void) { return (pwm_config){0U, 0.0f}; }
-static void pwm_config_set_wrap(pwm_config *p, uint16_t wrap) { p->wrap = wrap; }
-static void pwm_config_set_clkdiv(pwm_config *p, float divider) { p->divider = divider; }
-static void pwm_init(unsigned slice, const pwm_config *p, bool enable)
+static pwm_config_t pwm_get_default_config(void) { return (pwm_config_t){0U, 0.0f}; }
+static void pwm_config_set_wrap(pwm_config_t *p, uint16_t wrap) { p->wrap = wrap; }
+static void pwm_config_set_clkdiv(pwm_config_t *p, float divider) { p->divider = divider; }
+static void pwm_init(unsigned slice, const pwm_config_t *p, bool enable)
 { (void)p; rig.slice = slice; rig.enabled = enable; }
 static void pwm_set_both_levels(unsigned slice, uint16_t a, uint16_t b)
 { rig.slice = slice; rig.a = a; rig.b = b; }

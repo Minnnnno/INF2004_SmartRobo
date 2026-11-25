@@ -61,10 +61,10 @@ bool board_gpio_irq_register(uint32_t mask, void (*p_handler)(void))
 {
     CHECK(0x3cu == mask); gp_encoder_handler = p_handler; return true;
 }
-pwm_config pwm_get_default_config(void) { pwm_config config = {4095u, 1.0f}; return config; }
-void pwm_config_set_wrap(pwm_config *p_config, uint16_t value) { p_config->wrap = value; }
-void pwm_config_set_clkdiv(pwm_config *p_config, float value) { p_config->divider = value; }
-void pwm_init(unsigned slice, const pwm_config *p_config, bool b_enabled)
+pwm_config_t pwm_get_default_config(void) { pwm_config_t config = {4095u, 1.0f}; return config; }
+void pwm_config_set_wrap(pwm_config_t *p_config, uint16_t value) { p_config->wrap = value; }
+void pwm_config_set_clkdiv(pwm_config_t *p_config, float value) { p_config->divider = value; }
+void pwm_init(unsigned slice, const pwm_config_t *p_config, bool b_enabled)
 {
     CHECK(slice >= 4u && slice <= 5u); CHECK(4095u == p_config->wrap); CHECK(!b_enabled);
     g_top[slice - 4U] = p_config->wrap;

@@ -30,16 +30,17 @@ static bool
 shuttle_leg (uint32_t command_id, float64_t metres)
 {
     robot_status_t status;
-    float64_t      start = motion_hal_time(), path = 0.0;
+    float64_t      start = motion_hal_time();
+    float64_t      path  = 0.0;
 
     if (motion_get_status(&status))
     {
         path = status.motion.path;
     }
 
-    if (motion_steer_distance(SOURCE_LINE, command_id, metres, 0.0,
-                              SHUTTLE_SPEED)
-        != R_OK)
+    if (R_OK
+        != motion_steer_distance(SOURCE_LINE, command_id, metres, 0.0,
+                                 SHUTTLE_SPEED))
     {
         tm_printf((const UB *)"shuttle: move was not accepted\n");
         return false;
@@ -62,7 +63,7 @@ shuttle_leg (uint32_t command_id, float64_t metres)
             continue;
         }
 
-        if (status.motion.hold || F_NONE != status.motion.fault)
+        if ((status.motion.hold) || (F_NONE != status.motion.fault))
         {
             return false;
         }
@@ -71,12 +72,13 @@ shuttle_leg (uint32_t command_id, float64_t metres)
         /* With motion faults disabled a missed goal still completes, so check
          * the distance too. */
         {
-            return status.last_event.type == EV_COMPLETE
-                   && status.last_event.fault == F_NONE
-                   && status.motion.path - path >= 0.9 * SHUTTLE_DISTANCE_M;
+            return (EV_COMPLETE == status.last_event.type)
+                   && (F_NONE == status.last_event.fault)
+                   && ((status.motion.path - path)
+                       >= (0.9 * SHUTTLE_DISTANCE_M));
         }
 
-        if (elapsed > SHUTTLE_IDLE_S && status.motion.path - path < 0.005)
+        if ((elapsed > SHUTTLE_IDLE_S) && ((status.motion.path - path) < 0.005))
         {
             return false;
         }

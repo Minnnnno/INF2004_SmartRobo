@@ -272,8 +272,8 @@ controller_task (INT code, void * p_context)
          */
         for (unsigned budget = 0U; budget < 4U; ++budget)
         {
-            COMMS_CMD command;
-            INT       received = tk_rcv_mbf(g_mbf_comms_cmd, &command, TMO_POL);
+            comms_cmd_t command;
+            INT received = tk_rcv_mbf(g_mbf_comms_cmd, &command, TMO_POL);
 
             if (received < E_OK)
             {
@@ -287,7 +287,7 @@ controller_task (INT code, void * p_context)
 
             if (E_OK == tk_loc_mtx(g_status_mutex, TMO_FEVR))
             {
-                (void)vehicle_controller_remote_command(
+                (void)vehicle_controller_remote(
                     &g_bus, (robot_remote_command_t)command);
                 unlock_bus();
             }

@@ -58,10 +58,10 @@ static void press_start(void)
 uint32_t save_and_disable_interrupts(void) { return 0U; }
 void restore_interrupts(uint32_t state) { (void)state; }
 uint64_t time_us_64(void) { return now; }
-pwm_config pwm_get_default_config(void) { pwm_config config = {4095U, 1.0f}; return config; }
-void pwm_config_set_wrap(pwm_config *config, uint16_t wrap) { config->wrap = wrap; }
-void pwm_config_set_clkdiv(pwm_config *config, float divider) { config->divider = divider; }
-void pwm_init(unsigned slice, const pwm_config *config, bool enable)
+pwm_config_t pwm_get_default_config(void) { pwm_config_t config = {4095U, 1.0f}; return config; }
+void pwm_config_set_wrap(pwm_config_t *config, uint16_t wrap) { config->wrap = wrap; }
+void pwm_config_set_clkdiv(pwm_config_t *config, float divider) { config->divider = divider; }
+void pwm_init(unsigned slice, const pwm_config_t *config, bool enable)
 { CHECK(slice == 4U || slice == 5U); CHECK(config->wrap == 3999U && config->divider == 1.5625f); CHECK(!enable); }
 encoder_sample_t motion_hal_sample(void) { return sample; }
 void motion_hal_emergency_stop(void)

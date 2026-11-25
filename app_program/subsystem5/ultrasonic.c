@@ -51,7 +51,7 @@ us_counter (void)
 bool
 s5_us_init (void)
 {
-    pwm_config config = pwm_get_default_config();
+    pwm_config_t config = pwm_get_default_config();
 
     gpio_init(S5_US_TRIG_PIN);
     gpio_put(S5_US_TRIG_PIN, false);

@@ -300,10 +300,10 @@ hold_still (void)
     tm_printf(
         (const UB *)"[OBSTACLE] hold/still confirmation lost; scan aborted\n");
     g_s5_scan_why
-        = (uint8_t)(!b_status                         ? S5_WHY_no_status
-                    : (F_NONE != status.motion.fault) ? S5_WHY_motion_fault
-                    : !status.motion.hold ? S5_WHY_released_while_scanning
-                                          : S5_WHY_moved_while_scanning);
+        = (uint8_t)(!b_status                         ? S5_WHY_NO_STATUS
+                    : (F_NONE != status.motion.fault) ? S5_WHY_MOTION_FAULT
+                    : !status.motion.hold ? S5_WHY_RELEASED_WHILE_SCANNING
+                                          : S5_WHY_MOVED_WHILE_SCANNING);
     return false;
 }
 
@@ -335,7 +335,7 @@ scan_measure (void * p_context, int angle_deg, s5_estimate_t * p_estimate)
         motion_stop();
         tm_printf(
             (const UB *)"[OBSTACLE] ultrasonic failed during scan; holding\n");
-        g_s5_scan_why = (uint8_t)S5_WHY_ultrasonic_failed;
+        g_s5_scan_why = (uint8_t)S5_WHY_ULTRASONIC_FAILED;
         return false;
     }
 
@@ -740,9 +740,9 @@ report_abort (s5_why_t why, int detail_a, int detail_b, unsigned tries,
               bool b_pose)
 {
     bool         b_lifted  = robot_lifted();
-    bool         b_outside = b_lifted || (S5_WHY_stopped == why)
-                             || (S5_WHY_released_while_scanning == why);
-    const char * p_code    = s5_why_name(b_lifted ? S5_WHY_lifted : why);
+    bool         b_outside = b_lifted || (S5_WHY_STOPPED == why)
+                             || (S5_WHY_RELEASED_WHILE_SCANNING == why);
+    const char * p_code    = s5_why_name(b_lifted ? S5_WHY_LIFTED : why);
     int          pos_x     = 0;
     int          pos_y     = 0;
 
@@ -1020,7 +1020,7 @@ drive_round (void)
 
     if ((!g_s5_task.decided) || (S5_AVOID_NONE == g_s5_scan.avoid.side))
     {
-        report_abort(S5_WHY_no_way_around,
+        report_abort(S5_WHY_NO_WAY_AROUND,
                      finite_mm(g_s5_scan.avoid.clear_mm[S5_LEFT]),
                      finite_mm(g_s5_scan.avoid.clear_mm[S5_RIGHT]), 0U, false);
         /* the state says NO_WAY: a result, not a failure */
@@ -1033,7 +1033,7 @@ drive_round (void)
     {
         tm_printf((const UB *)"[OBSTACLE] line sensors not reporting, could "
                               "not find the way back; holding\n");
-        report_abort(S5_WHY_line_not_reporting, 0, 0, 0U, false);
+        report_abort(S5_WHY_LINE_NOT_REPORTING, 0, 0, 0U, false);
         (void)publish_verified();
         return false;
     }
@@ -1045,7 +1045,7 @@ drive_round (void)
         g_s5_task.phase = S5_PHASE_IDLE;
         tm_printf((const UB *)"[OBSTACLE] could not tell the line follower to "
                               "keep off; holding\n");
-        report_abort(S5_WHY_publish_failed, 0, 0, 0U, false);
+        report_abort(S5_WHY_PUBLISH_FAILED, 0, 0, 0U, false);
         return false;
     }
 
@@ -1117,12 +1117,12 @@ drive_round (void)
                               "would need over %d mm of "
                               "reversing); holding\n",
                   s5_round(S5_BACKUP_MAX_MM));
-        why      = S5_WHY_no_safe_detour;
+        why      = S5_WHY_NO_SAFE_DETOUR;
         detail_a = s5_round(S5_BACKUP_MAX_MM);
         detail_b = 0;
     }
 
-    report_abort((S5_WHY_none != why) ? why : S5_WHY_unknown, detail_a,
+    report_abort((S5_WHY_NONE != why) ? why : S5_WHY_UNKNOWN, detail_a,
                  detail_b, tries, tries > 0U);
     (void)publish_verified();
     return false;
@@ -1243,7 +1243,7 @@ resume_line (const s5_scan_t * p_scan)
 
     if (!b_resume)
     {
-        report_abort(S5_WHY_repeated_spurious, ahead,
+        report_abort(S5_WHY_REPEATED_SPURIOUS, ahead,
                      (int)g_s5_task.spurious_count, 0U, false);
         (void)publish_verified();
         return false;
@@ -1258,7 +1258,7 @@ resume_line (const s5_scan_t * p_scan)
     {
         motion_stop();
         g_s5_task.blocked = true;
-        report_abort(S5_WHY_no_release, 0, 0, 0U, false);
+        report_abort(S5_WHY_NO_RELEASE, 0, 0, 0U, false);
         (void)publish_verified();
         return false;
     }
@@ -1402,7 +1402,7 @@ obstacle_task (INT code, void * p_context)
             motion_stop();
             g_s5_task.blocked = true;
             b_may_move        = false;
-            report_abort(S5_WHY_sensor_failed, (int)result, 0, 0U, false);
+            report_abort(S5_WHY_SENSOR_FAILED, (int)result, 0, 0U, false);
         }
 
         if (g_s5_front_mm > S5_CLEAR_MM)
@@ -1440,7 +1440,7 @@ obstacle_task (INT code, void * p_context)
                 g_s5_task.decided = false;
                 tm_printf((const UB *)"[OBSTACLE] robot not confirmed still; "
                                       "scan cancelled, holding\n");
-                report_abort(S5_WHY_not_still, 0, 0, 0U, false);
+                report_abort(S5_WHY_NOT_STILL, 0, 0, 0U, false);
                 (void)publish_verified();
                 history_clear(&history);
                 continue;
@@ -1451,7 +1451,7 @@ obstacle_task (INT code, void * p_context)
                 float64_t squared_deg = 0.0;
                 bool      b_measured;
 
-                g_s5_scan_why = (uint8_t)S5_WHY_none;
+                g_s5_scan_why = (uint8_t)S5_WHY_NONE;
 #if S5_AVOID_DRIVE
                 s5_detour_reason_clear();
 
@@ -1462,10 +1462,10 @@ obstacle_task (INT code, void * p_context)
                     s5_why_t why      = s5_detour_reason(&detail_a, &detail_b);
 
                     g_s5_task.decided = false;
-                    report_abort((S5_WHY_none != why) ? why
-                                 : ((uint8_t)S5_WHY_none != g_s5_scan_why)
+                    report_abort((S5_WHY_NONE != why) ? why
+                                 : ((uint8_t)S5_WHY_NONE != g_s5_scan_why)
                                      ? (s5_why_t)g_s5_scan_why
-                                     : S5_WHY_scan_setup_failed,
+                                     : S5_WHY_SCAN_SETUP_FAILED,
                                  detail_a, detail_b, 0U, false);
                     (void)publish_verified();
                     history_clear(&history);
@@ -1498,9 +1498,9 @@ obstacle_task (INT code, void * p_context)
                 else
                 {
                     motion_stop();
-                    report_abort(((uint8_t)S5_WHY_none != g_s5_scan_why)
+                    report_abort(((uint8_t)S5_WHY_NONE != g_s5_scan_why)
                                      ? (s5_why_t)g_s5_scan_why
-                                     : S5_WHY_scan_failed,
+                                     : S5_WHY_SCAN_FAILED,
                                  0, 0, 0U, false);
                 }
 

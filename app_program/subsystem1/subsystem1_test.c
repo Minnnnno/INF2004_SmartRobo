@@ -28,7 +28,7 @@ send_cmd (UB opcode, UB session, UB seq)
 }
 
 LOCAL INT
-take_cmd (COMMS_CMD * p_cmd)
+take_cmd (comms_cmd_t * p_cmd)
 {
     return tk_rcv_mbf(g_mbf_comms_cmd, p_cmd, TMO_POL);
 }
@@ -36,10 +36,10 @@ take_cmd (COMMS_CMD * p_cmd)
 LOCAL void
 drain (void)
 {
-    char      topic[COMMS_TOPIC_MAX];
-    uint8_t   payload[COMMS_PAYLOAD_MAX];
-    int       qos;
-    COMMS_CMD cmd;
+    char        topic[COMMS_TOPIC_MAX];
+    uint8_t     payload[COMMS_PAYLOAD_MAX];
+    int         qos;
+    comms_cmd_t cmd;
 
     while (comms_hook_next(topic, payload, &qos) >= 0)
     {
@@ -69,7 +69,7 @@ subsystem1_test (void)
 
         result = E_OK;
 
-        for (index = 0; index < 20 && E_OK == result; index++)
+        for (index = 0; (index < 20) && (E_OK == result); index++)
         {
             result = comms_send_telemetry("test", "fill");
         }
@@ -98,10 +98,10 @@ subsystem1_test (void)
     /* S1-U04: a valid binary command reaches the controller's queue;
        wrong length, truncated and reserved opcodes do not */
     {
-        COMMS_CMD cmd         = 0;
-        UB        junk[3]     = {0x20, 0x01, 0x00};
-        UB        reserved[2] = {0xE0, 0x01}; /* opcode 7 */
-        BOOL      none;
+        comms_cmd_t cmd         = 0;
+        UB          junk[3]     = {0x20, 0x01, 0x00};
+        UB          reserved[2] = {0xE0, 0x01}; /* opcode 7 */
+        BOOL        none;
 
         comms_hook_command(junk, 3);
         comms_hook_command(junk, -1);
@@ -116,9 +116,13 @@ subsystem1_test (void)
 
     /* S1-U09: a repeated or stale START is not forwarded; STOP always is */
     {
-        COMMS_CMD cmd = 0;
+        comms_cmd_t cmd = 0;
 
-        BOOL first, again, stale, stop, fresh;
+        BOOL first;
+        BOOL again;
+        BOOL stale;
+        BOOL stop;
+        BOOL fresh;
 
         send_cmd(TF_OP_START, 9, 2);
         first = (take_cmd(&cmd) >= E_OK) && (COMMS_CMD_START == cmd);
@@ -136,7 +140,8 @@ subsystem1_test (void)
 
     /* S1-U10: frame round trip keeps negatives and clamps out-of-range */
     {
-        int32_t inward[TF_FIELD_COUNT] = {0}, out[TF_FIELD_COUNT];
+        int32_t inward[TF_FIELD_COUNT] = {0};
+        int32_t out[TF_FIELD_COUNT];
         UB      frame[TF_FRAME_BYTES];
         INT     index;
         BOOL    same;
@@ -153,7 +158,7 @@ subsystem1_test (void)
         inward[TF_F_SPEED_R]   = 250;
         same                   = tf_unpack(frame, TF_FRAME_BYTES, out);
 
-        for (index = 0; same && index < TF_FIELD_COUNT; index++)
+        for (index = 0; same && (index < TF_FIELD_COUNT); index++)
         {
             same = (inward[index] == out[index]);
         }

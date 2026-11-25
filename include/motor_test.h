@@ -23,12 +23,19 @@ void motor_test_poll_buttons(void);
 
 typedef struct
 {
-    bool     start_high, stop_high, ready, armed, active;
-    uint32_t polls, stop_actions;
+    bool     start_high;
+    bool     stop_high;
+    bool     ready;
+    bool     armed;
+    bool     active;
+    uint32_t polls;
+    uint32_t stop_actions;
     bool     irq_registered;
     uint32_t irq_events;
 
-    uint32_t cutoff_irq_count, polled_cutoffs, remaining_ms;
+    uint32_t cutoff_irq_count;
+    uint32_t polled_cutoffs;
+    uint32_t remaining_ms;
 } motor_test_button_diag_t;
 
 /* Read-only GPIO/task snapshot. */

@@ -617,18 +617,18 @@ static void production_line_integration_tests(void)
     CHECK(r.m.status.state == STOPPED && r.m.status.hold);
     robot_publish(&bus, &r.m, r.now);
     vehicle_controller_cycle(&bus, r.now);
-    CHECK(vehicle_controller_remote_command(&bus, (robot_remote_command_t)99) == R_INVALID);
-    CHECK(vehicle_controller_remote_command(&bus, REMOTE_START) == R_OK);
+    CHECK(vehicle_controller_remote(&bus, (robot_remote_command_t)99) == R_INVALID);
+    CHECK(vehicle_controller_remote(&bus, REMOTE_START) == R_OK);
     robot_motion_inputs(&bus, &r.m, r.sample, r.now);
     CHECK(r.m.status.state == READY && !r.m.status.hold);
     robot_publish(&bus, &r.m, r.now);
-    CHECK(vehicle_controller_remote_command(&bus, REMOTE_STOP) == R_OK);
-    CHECK(vehicle_controller_remote_command(&bus, REMOTE_START) == R_HELD);
-    CHECK(vehicle_controller_remote_command(&bus, REMOTE_ESTOP) == R_OK);
+    CHECK(vehicle_controller_remote(&bus, REMOTE_STOP) == R_OK);
+    CHECK(vehicle_controller_remote(&bus, REMOTE_START) == R_HELD);
+    CHECK(vehicle_controller_remote(&bus, REMOTE_ESTOP) == R_OK);
     robot_motion_inputs(&bus, &r.m, r.sample, r.now);
     CHECK(r.m.status.state == FAULT && r.m.status.fault == F_ESTOP && r.m.status.inhibited);
     robot_publish(&bus, &r.m, r.now);
-    CHECK(vehicle_controller_remote_command(&bus, REMOTE_START) == R_HELD);
+    CHECK(vehicle_controller_remote(&bus, REMOTE_START) == R_HELD);
     config.hardware_confirmed = false;
     motion_init(&r.m, &config, r.sample, r.now, true);
     CHECK(r.m.status.state == FAULT && r.m.status.fault == F_CONFIG && r.m.status.inhibited);
@@ -1072,7 +1072,7 @@ static void fault_reason_tests(void)
         vehicle_controller_cycle(&b, r.now);
         CHECK(b.approved_valid);
         if (system_first != 0U) { robot_control(&b, CONTROL_FAULT, false, false); }
-        CHECK(vehicle_controller_remote_command(&b, REMOTE_ESTOP) == R_OK);
+        CHECK(vehicle_controller_remote(&b, REMOTE_ESTOP) == R_OK);
         if (system_first == 0U) { robot_control(&b, CONTROL_FAULT, false, false); }
         CHECK(!b.approved_valid && b.count == 0U && b.status.motion.hold);
         /* A queued release must not override either stop cause. */
@@ -1086,7 +1086,7 @@ static void fault_reason_tests(void)
         CHECK(!motion_next_event(&r.m, &e));
         robot_publish(&b, &r.m, r.now);
         CHECK(robot_request(&b, &request) == R_STALE);
-        CHECK(vehicle_controller_remote_command(&b, REMOTE_START) == R_HELD);
+        CHECK(vehicle_controller_remote(&b, REMOTE_START) == R_HELD);
     }
 
     rig_t r;
@@ -1174,13 +1174,13 @@ static void web_start_gate_tests(void)
     CHECK(r.m.status.state == STOPPED && r.m.status.hold);
 
     /* Dashboard START releases it and the line follower takes over. */
-    CHECK(vehicle_controller_remote_command(&bus, REMOTE_START) == R_OK && !bus.remote_hold);
+    CHECK(vehicle_controller_remote(&bus, REMOTE_START) == R_OK && !bus.remote_hold);
     for (i = 0U; i < 50U; ++i) { gate_period(&r, &bus, &request); }
     CHECK(r.m.status.state == DRIVING && !r.m.status.hold);
     CHECK(bus.status.owner_valid && bus.status.owner == SOURCE_LINE);
 
     /* Dashboard STOP: stops, and stays stopped despite subsystem releases. */
-    CHECK(vehicle_controller_remote_command(&bus, REMOTE_STOP) == R_OK && bus.remote_hold);
+    CHECK(vehicle_controller_remote(&bus, REMOTE_STOP) == R_OK && bus.remote_hold);
     for (i = 0U; i < 100U; ++i) {
         gate_period(&r, &bus, &request);
         robot_control(&bus, CONTROL_RELEASE, true, false);
@@ -1189,7 +1189,7 @@ static void web_start_gate_tests(void)
     CHECK(r.m.status.output[0] == 0.0 && r.m.status.output[1] == 0.0);
 
     /* START again resumes. */
-    CHECK(vehicle_controller_remote_command(&bus, REMOTE_START) == R_OK);
+    CHECK(vehicle_controller_remote(&bus, REMOTE_START) == R_OK);
     for (i = 0U; i < 50U; ++i) { gate_period(&r, &bus, &request); }
     CHECK(r.m.status.state == DRIVING);
 

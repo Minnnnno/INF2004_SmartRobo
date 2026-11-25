@@ -30,7 +30,7 @@ typedef enum
     COMMS_CMD_START = 1,
     COMMS_CMD_STOP,
     COMMS_CMD_ESTOP
-} COMMS_CMD;
+} comms_cmd_t;
 
 /* Latch one or more TF_EV_* events.  They are published once, together,
    at QoS 1 within 100 ms of the broker being reachable.  Safe from tasks
@@ -46,8 +46,8 @@ IMPORT ER comms_send_telemetry(const char * p_name, const char * p_payload);
 /* TRUE while connected to the MQTT broker */
 IMPORT BOOL comms_is_online(void);
 
-/* IF-07: each message is one COMMS_CMD.  The Vehicle Controller reads it:
-       COMMS_CMD cmd;
+/* IF-07: each message is one comms_cmd_t.  The Vehicle Controller reads it:
+       comms_cmd_t cmd;
        tk_rcv_mbf(mbf_comms_cmd, &cmd, TMO_POL);                           */
 IMPORT ID g_mbf_comms_cmd;
 
@@ -67,9 +67,9 @@ typedef struct
     UW cmd_rejected;
     UW copy_us_max; /* longest snapshot copy, includes the mutex hold */
     UW pack_us_max; /* longest map + pack, done with no lock held */
-} COMMS_STATS;
+} comms_stats_t;
 
-IMPORT void comms_stats(COMMS_STATS * p_stats);
+IMPORT void comms_stats(comms_stats_t * p_stats);
 
 /* Private to subsystem 1 */
 IMPORT ER comms_init(void);

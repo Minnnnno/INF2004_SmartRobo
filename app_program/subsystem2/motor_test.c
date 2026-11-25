@@ -16,12 +16,16 @@ static volatile bool gb_active;
 static volatile bool gb_result_pending;
 static bool          gb_sensor_forward;
 #ifdef ROBO_BATTERY_FORWARD_TEST
-static volatile bool gb_sensor_paused = true;
-static volatile bool gb_button_armed, gb_release_tracking, gb_press_tracking;
-static uint64_t      g_released_since, g_pressed_since;
-static uint32_t      g_button_polls, g_button_stop_actions;
-static bool          gb_button_irq_registered;
-static volatile bool gb_stop_release_seen;
+static volatile bool     gb_sensor_paused = true;
+static volatile bool     gb_button_armed;
+static volatile bool     gb_release_tracking;
+static volatile bool     gb_press_tracking;
+static uint64_t          g_released_since;
+static uint64_t          g_pressed_since;
+static uint32_t          g_button_polls;
+static uint32_t          g_button_stop_actions;
+static bool              gb_button_irq_registered;
+static volatile bool     gb_stop_release_seen;
 static volatile uint64_t g_stop_released_at;
 static volatile uint32_t g_button_irq_events;
 static void
@@ -153,7 +157,7 @@ button_irq (void)
         gpio_acknowledge_irq(21U, stop_events);
     }
 
-    if ((start_events | stop_events) == 0U)
+    if (0U == (start_events | stop_events))
     {
         return;
     }
@@ -165,7 +169,7 @@ button_irq (void)
         return;
     }
 
-    if ((stop_events & GPIO_IRQ_EDGE_FALL) != 0U)
+    if (0U != (stop_events & GPIO_IRQ_EDGE_FALL))
     {
         button_stop_now();
         return;
@@ -173,15 +177,15 @@ button_irq (void)
 
     now = time_us_64();
 
-    if ((start_events & GPIO_IRQ_EDGE_RISE) != 0U)
+    if (0U != (start_events & GPIO_IRQ_EDGE_RISE))
     {
         g_stop_released_at   = now;
         gb_stop_release_seen = true;
     }
 
-    if ((start_events & GPIO_IRQ_EDGE_FALL) != 0U)
+    if (0U != (start_events & GPIO_IRQ_EDGE_FALL))
     {
-        if (gb_stop_release_seen && now - g_stop_released_at >= 40000U)
+        if (gb_stop_release_seen && ((now - g_stop_released_at) >= 40000U))
         {
             button_stop_now();
         }
@@ -197,8 +201,8 @@ motor_test_init (void)
     motion_config_t  config = board_motion_config();
     encoder_sample_t sample = motion_hal_sample();
 
-    pwm_config pwm        = pwm_get_default_config();
-    T_DINT     definition = {.intatr = TA_HLNG, .inthdr = (FP)deadline_irq};
+    pwm_config_t pwm        = pwm_get_default_config();
+    T_DINT       definition = {.intatr = TA_HLNG, .inthdr = (FP)deadline_irq};
 
     gb_ready = false;
     stop_outputs();
@@ -369,7 +373,7 @@ motor_test_poll_buttons (void)
             gb_release_tracking = true;
         }
 
-        if (now - g_released_since >= 40000U)
+        if ((now - g_released_since) >= 40000U)
         {
             gb_button_armed = true;
         }
@@ -398,7 +402,7 @@ motor_test_poll_buttons (void)
         return;
     }
 
-    if (now - g_pressed_since >= 40000U)
+    if ((now - g_pressed_since) >= 40000U)
     {
         disarm_buttons();
         (void)start_test(3U, 1, false, BUTTON_DURATION_US);
@@ -430,7 +434,7 @@ motor_test_get_buttons (motor_test_button_diag_t * p_delta)
     p_delta->polled_cutoffs   = g_polled_cutoffs;
     uint64_t now              = time_us_64();
 
-    p_delta->remaining_ms = gb_active && g_cutoff_at > now
+    p_delta->remaining_ms = (gb_active && (g_cutoff_at > now))
                                 ? (uint32_t)((g_cutoff_at - now + 999U) / 1000U)
                                 : 0U;
     restore_interrupts(irq_state);

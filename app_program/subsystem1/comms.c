@@ -30,7 +30,7 @@
 _Static_assert(((int)COMMS_CMD_START == (int)TF_OP_START)
                    && ((int)COMMS_CMD_STOP == (int)TF_OP_STOP)
                    && ((int)COMMS_CMD_ESTOP == (int)TF_OP_ESTOP),
-               "COMMS_CMD must equal the binary opcodes");
+               "comms_cmd_t must equal the binary opcodes");
 _Static_assert(TF_FRAME_BYTES <= COMMS_PAYLOAD_MAX,
                "frame does not fit a message");
 _Static_assert(TF_ENC_BYTES <= COMMS_PAYLOAD_MAX,
@@ -42,7 +42,7 @@ typedef struct
     UB   len;
     char topic[COMMS_TOPIC_MAX];
     UB   payload[COMMS_PAYLOAD_MAX];
-} COMMS_MSG;
+} comms_msg_t;
 
 EXPORT ID g_mbf_comms_cmd; /* IF-07, see comms.h */
 
@@ -51,7 +51,7 @@ LOCAL ID            g_mbf_comms_evt;
 LOCAL volatile BOOL g_comms_online;
 LOCAL volatile UW   g_comms_drops;  /* diagnostic only */
 LOCAL volatile UB   g_comms_events; /* latched TF_EV_* bits; DI/EI only */
-LOCAL COMMS_STATS   g_stats;
+LOCAL comms_stats_t g_stats;
 
 /* Command de-duplication; touched only by comms_hook_command(). */
 LOCAL BOOL g_cmd_seen;
@@ -86,7 +86,7 @@ LOCAL ER
 queue_message (ID mbf, UB qos, const char * p_topic, const char * p_name,
                const UB * p_data, INT len)
 {
-    COMMS_MSG msg;
+    comms_msg_t msg;
 
     INT tlen;
     INT index;
@@ -184,7 +184,7 @@ comms_dropped (void)
 }
 
 EXPORT void
-comms_stats (COMMS_STATS * p_out)
+comms_stats (comms_stats_t * p_out)
 {
     *p_out = g_stats;
 }
@@ -194,8 +194,8 @@ comms_stats (COMMS_STATS * p_out)
 int
 comms_hook_next (char * p_topic, uint8_t * p_payload, int * p_qos)
 {
-    COMMS_MSG msg;
-    INT       index;
+    comms_msg_t msg;
+    INT         index;
 
     if ((tk_rcv_mbf(g_mbf_comms_evt, &msg, TMO_POL) < E_OK)
         && (tk_rcv_mbf(g_mbf_comms_tlm, &msg, TMO_POL) < E_OK))
@@ -229,7 +229,7 @@ comms_hook_command (const uint8_t * p_payload, int len)
     tf_command_t cmd;
     tf_ack_t     result;
     UB           ack[TF_ACK_BYTES];
-    COMMS_CMD    forward;
+    comms_cmd_t  forward;
     BOOL         same_session;
 
     if ((len < 0) || (!tf_cmd_decode(p_payload, (size_t)len, &cmd)))
@@ -253,7 +253,7 @@ comms_hook_command (const uint8_t * p_payload, int len)
         }
         else
         {
-            forward = (COMMS_CMD)cmd.opcode;
+            forward = (comms_cmd_t)cmd.opcode;
 
             if (tk_snd_mbf(g_mbf_comms_cmd, &forward, sizeof(forward), TMO_POL)
                 < E_OK)
@@ -374,7 +374,7 @@ comms_task (INT stacd, void * p_exinf)
     (void)stacd;
     (void)p_exinf;
 
-    while (1)
+    for (;;)
     {
         tk_dly_tsk(COMMS_STATUS_MS);
 
@@ -484,21 +484,21 @@ create_queue (INT depth, INT msgsz)
 EXPORT ER
 comms_init (void)
 {
-    g_mbf_comms_tlm = create_queue(COMMS_TLM_DEPTH, sizeof(COMMS_MSG));
+    g_mbf_comms_tlm = create_queue(COMMS_TLM_DEPTH, sizeof(comms_msg_t));
 
     if (g_mbf_comms_tlm < E_OK)
     {
         return g_mbf_comms_tlm;
     }
 
-    g_mbf_comms_evt = create_queue(COMMS_EVT_DEPTH, sizeof(COMMS_MSG));
+    g_mbf_comms_evt = create_queue(COMMS_EVT_DEPTH, sizeof(comms_msg_t));
 
     if (g_mbf_comms_evt < E_OK)
     {
         return g_mbf_comms_evt;
     }
 
-    g_mbf_comms_cmd = create_queue(COMMS_CMD_DEPTH, sizeof(COMMS_CMD));
+    g_mbf_comms_cmd = create_queue(COMMS_CMD_DEPTH, sizeof(comms_cmd_t));
     return (g_mbf_comms_cmd < E_OK) ? g_mbf_comms_cmd : E_OK;
 }
 

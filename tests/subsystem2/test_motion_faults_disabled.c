@@ -157,7 +157,7 @@ static void estop_still_holds(void)
     motion_command_t c = tracking(&r, 0.25, 20.0);
     CHECK(motion_accept(&r.m, &c, r.now) == R_OK);
     tick(&r, 1U);
-    CHECK(vehicle_controller_remote_command(&b, REMOTE_ESTOP) == R_OK);
+    CHECK(vehicle_controller_remote(&b, REMOTE_ESTOP) == R_OK);
     robot_motion_inputs(&b, &r.m, r.sample, r.now);
     check_never_faulted(&r);
     CHECK(r.m.status.state == STOPPING && r.m.status.hold);
@@ -167,7 +167,7 @@ static void estop_still_holds(void)
     run_quiet(&r, 50U);
     CHECK(r.m.status.state == STOPPED && r.m.status.hold);
     robot_publish(&b, &r.m, r.now);
-    CHECK(vehicle_controller_remote_command(&b, REMOTE_START) == R_OK);
+    CHECK(vehicle_controller_remote(&b, REMOTE_START) == R_OK);
     robot_motion_inputs(&b, &r.m, r.sample, r.now);
     CHECK(r.m.status.state == READY && !r.m.status.hold);
 }

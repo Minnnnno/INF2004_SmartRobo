@@ -77,7 +77,7 @@ void
 robot_control (robot_bus_t * p_bus, robot_control_t control, bool b_checks_ok,
                bool b_external_rest)
 {
-    /* Operator stop latched: only vehicle_controller_remote_command(START) may
+    /* Operator stop latched: only vehicle_controller_remote(START) may
      * release. */
     if ((CONTROL_RELEASE == control) && (p_bus->remote_hold))
     {
@@ -168,8 +168,7 @@ vehicle_controller_cycle (robot_bus_t * p_bus, float64_t now)
 }
 
 motion_result_t
-vehicle_controller_remote_command (robot_bus_t *          p_bus,
-                                   robot_remote_command_t command)
+vehicle_controller_remote (robot_bus_t * p_bus, robot_remote_command_t command)
 {
     if (REMOTE_STOP == command)
     {

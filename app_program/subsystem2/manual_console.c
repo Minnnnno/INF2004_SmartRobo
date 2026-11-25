@@ -9,8 +9,6 @@
 #include "motor_test.h"
 #include "angle_test.h"
 #include <tm/tmonitor.h>
-#define printf(format, ...) tm_printf((const UB *)(format), __VA_ARGS__)
-#define puts(text)          tm_putstring((const UB *)(text "\n"))
 #include <string.h>
 #include <math.h>
 
@@ -48,11 +46,12 @@ print_counts (const encoder_sample_t * p_sample)
     /* Keep modulo uint32 counters internally. Explicit sign/magnitude
      * formatting also handles INT32_MIN without the legacy formatter's signed
      * negation. */
-    printf("counts=%s%lu,%s%lu raw_counts=%lu,%lu invalid=%lu,%lu\n",
-           count_sign(p_sample->count[0]), count_magnitude(p_sample->count[0]),
-           count_sign(p_sample->count[1]), count_magnitude(p_sample->count[1]),
-           (uint32_t)p_sample->count[0], (uint32_t)p_sample->count[1],
-           (uint32_t)p_sample->invalid[0], (uint32_t)p_sample->invalid[1]);
+    tm_printf(
+        (const UB *)"counts=%s%lu,%s%lu raw_counts=%lu,%lu invalid=%lu,%lu\n",
+        count_sign(p_sample->count[0]), count_magnitude(p_sample->count[0]),
+        count_sign(p_sample->count[1]), count_magnitude(p_sample->count[1]),
+        (uint32_t)p_sample->count[0], (uint32_t)p_sample->count[1],
+        (uint32_t)p_sample->invalid[0], (uint32_t)p_sample->invalid[1]);
 }
 
 static void
@@ -62,20 +61,21 @@ encoder_diagnostics (void)
     unsigned              wheel;
 
     motion_hal_encoder_diagnostics(&diagnostics);
-    printf("firmware=%s built=%s %s backend=rp2040-registers "
-           "motors_inhibited=%u\n",
-           (const UB *)ROBO_ENCODER_BUILD_ID, (const UB *)__DATE__,
-           (const UB *)__TIME__, (unsigned)diagnostics.motors_inhibited);
-    printf("enc_init=%u irq_registered=%u nvic13_enabled=%u\n",
-           (unsigned)diagnostics.initialised,
-           (unsigned)diagnostics.irq_registered,
-           (unsigned)diagnostics.nvic_enabled);
+    tm_printf((const UB *)"firmware=%s built=%s %s backend=rp2040-registers "
+                          "motors_inhibited=%u\n",
+              (const UB *)ROBO_ENCODER_BUILD_ID, (const UB *)__DATE__,
+              (const UB *)__TIME__, (unsigned)diagnostics.motors_inhibited);
+    tm_printf((const UB *)"enc_init=%u irq_registered=%u nvic13_enabled=%u\n",
+              (unsigned)diagnostics.initialised,
+              (unsigned)diagnostics.irq_registered,
+              (unsigned)diagnostics.nvic_enabled);
 
     for (wheel = 0; wheel < 2U; ++wheel)
     {
-        printf(
-            "%s A=GP%u level=%u edges=%lu irq_mask=%u func=%u B=GP%u level=%u "
-            "edges=%lu irq_mask=%u func=%u prev_AB=%u\n",
+        tm_printf(
+            (const UB *)"%s A=GP%u level=%u edges=%lu irq_mask=%u func=%u "
+                        "B=GP%u level=%u "
+                        "edges=%lu irq_mask=%u func=%u prev_AB=%u\n",
             (const UB *)((0U == wheel) ? "left" : "right"),
             diagnostics.pins[wheel][0],
             (unsigned)((diagnostics.levels >> diagnostics.pins[wheel][0]) & 1U),
@@ -91,8 +91,9 @@ encoder_diagnostics (void)
     }
 
     print_counts(&diagnostics.sample);
-    puts("edges count observed rising/falling latches; fast repeated edges may "
-         "coalesce.");
+    tm_putstring((const UB *)"edges count observed rising/falling latches; "
+                             "fast repeated edges may "
+                             "coalesce.\n");
 }
 
 static void
@@ -114,13 +115,16 @@ usb_diagnostics (void)
 
     W registered = tm_usb_def_int_ercd;
     restore_interrupts(irq_state);
-    printf("usb init=%lu link=%lu irq_count=%lu nvic_enabled=%lu "
-           "define_irq_result=%ld tx_dropped=%lu\n",
-           init, link, interrupts, enabled, registered, dropped);
-    puts("link: 1=not mounted, 2=mounted, 3=mounted with DTR; "
-         "define_irq_result=0 means success.");
+    tm_printf(
+        (const UB *)"usb init=%lu link=%lu irq_count=%lu nvic_enabled=%lu "
+                    "define_irq_result=%ld tx_dropped=%lu\n",
+        init, link, interrupts, enabled, registered, dropped);
+    tm_putstring(
+        (const UB *)"link: 1=not mounted, 2=mounted, 3=mounted with DTR; "
+                    "define_irq_result=0 means success.\n");
 #else
-    puts("console=uart; USB CDC is not part of this firmware.");
+    tm_putstring(
+        (const UB *)"console=uart; USB CDC is not part of this firmware.\n");
 #endif
 }
 
@@ -135,19 +139,24 @@ button_diagnostics (void)
         return;
     }
 
-    printf("firmware=%s profile=button_test gp20_mode=toggle gp21_mode=stop "
-           "ir_enabled=0 automatic_start=0\n",
-           (const UB *)ROBO_ENCODER_BUILD_ID);
-    printf("GP20=%u GP21=%u pressed_level=0 ready=%u armed=%u active=%u "
-           "polls=%lu stop_actions=%lu\n",
-           (unsigned)delta.start_high, (unsigned)delta.stop_high,
-           (unsigned)delta.ready, (unsigned)delta.armed, (unsigned)delta.active,
-           (uint32_t)delta.polls, (uint32_t)delta.stop_actions);
-    printf("button_irq_registered=%u button_irq_events=%lu cutoff_ms=2000\n",
-           (unsigned)delta.irq_registered, (uint32_t)delta.irq_events);
-    printf("cutoff_irq_count=%lu polled_cutoffs=%lu remaining_ms=%lu\n",
-           (uint32_t)delta.cutoff_irq_count, (uint32_t)delta.polled_cutoffs,
-           (uint32_t)delta.remaining_ms);
+    tm_printf((const UB *)"firmware=%s profile=button_test gp20_mode=toggle "
+                          "gp21_mode=stop "
+                          "ir_enabled=0 automatic_start=0\n",
+              (const UB *)ROBO_ENCODER_BUILD_ID);
+    tm_printf((const UB *)"GP20=%u GP21=%u pressed_level=0 ready=%u armed=%u "
+                          "active=%u "
+                          "polls=%lu stop_actions=%lu\n",
+              (unsigned)delta.start_high, (unsigned)delta.stop_high,
+              (unsigned)delta.ready, (unsigned)delta.armed,
+              (unsigned)delta.active, (uint32_t)delta.polls,
+              (uint32_t)delta.stop_actions);
+    tm_printf((const UB *)"button_irq_registered=%u button_irq_events=%lu "
+                          "cutoff_ms=2000\n",
+              (unsigned)delta.irq_registered, (uint32_t)delta.irq_events);
+    tm_printf((const UB *)"cutoff_irq_count=%lu polled_cutoffs=%lu "
+                          "remaining_ms=%lu\n",
+              (uint32_t)delta.cutoff_irq_count, (uint32_t)delta.polled_cutoffs,
+              (uint32_t)delta.remaining_ms);
 }
 #endif
 
@@ -171,22 +180,25 @@ manual_console (void)
     bool          b_angle_discard  = false;
     angle_state_t reported         = ANGLE_IDLE;
 
-    printf("firmware=%s angle_test_ready=%u production_inhibited=1 "
-           "max_output_percent=25 timeout_ms=8000\n",
-           (const UB *)ROBO_ENCODER_BUILD_ID, (unsigned)angle_test_init());
+    tm_printf(
+        (const UB *)"firmware=%s angle_test_ready=%u production_inhibited=1 "
+                    "max_output_percent=25 timeout_ms=8000\n",
+        (const UB *)ROBO_ENCODER_BUILD_ID, (unsigned)angle_test_init());
 #endif
 #ifdef ROBO_SAFE_MOTOR_TEST
     bool b_test_shutdown = false;
     bool b_discard_line  = false;
     bool b_test_ready    = motor_test_init();
 
-    printf("firmware=%s safe_motor_test_ready=%u production_inhibited=1 "
-           "single_output_percent=25 paired_left_percent=24.9 "
-           "paired_right_percent=25 serial_max_ms=1000\n",
-           (const UB *)ROBO_ENCODER_BUILD_ID, (unsigned)b_test_ready);
+    tm_printf((const UB *)"firmware=%s safe_motor_test_ready=%u "
+                          "production_inhibited=1 "
+                          "single_output_percent=25 paired_left_percent=24.9 "
+                          "paired_right_percent=25 serial_max_ms=1000\n",
+              (const UB *)ROBO_ENCODER_BUILD_ID, (unsigned)b_test_ready);
 #ifdef ROBO_BATTERY_FORWARD_TEST
-    puts("button_test_ready start_stop=GP20 extra_stop=GP21 active_low=1 "
-         "cutoff_ms=2000 ir_enabled=0 automatic_start=0");
+    tm_putstring((const UB *)"button_test_ready start_stop=GP20 "
+                             "extra_stop=GP21 active_low=1 "
+                             "cutoff_ms=2000 ir_enabled=0 automatic_start=0\n");
 #endif
 #endif
     for (;;)
@@ -205,15 +217,16 @@ manual_console (void)
         if (angle_status.state != reported)
         {
             reported = angle_status.state;
-            printf("angle_state=%s angle_mdeg=%d delta_counts=%s%lu,%s%lu "
-                   "motors_stopped=%u\n",
-                   angle_state_name(reported),
-                   (int)(angle_status.angle * 57295.779513),
-                   count_sign(angle_status.delta[0]),
-                   count_magnitude(angle_status.delta[0]),
-                   count_sign(angle_status.delta[1]),
-                   count_magnitude(angle_status.delta[1]),
-                   (unsigned)!angle_test_active());
+            tm_printf((const UB *)"angle_state=%s angle_mdeg=%d "
+                                  "delta_counts=%s%lu,%s%lu "
+                                  "motors_stopped=%u\n",
+                      angle_state_name(reported),
+                      (int)(angle_status.angle * 57295.779513),
+                      count_sign(angle_status.delta[0]),
+                      count_magnitude(angle_status.delta[0]),
+                      count_sign(angle_status.delta[1]),
+                      count_magnitude(angle_status.delta[1]),
+                      (unsigned)!angle_test_active());
         }
 #endif
 #ifdef ROBO_SAFE_MOTOR_TEST
@@ -221,10 +234,10 @@ manual_console (void)
 
         if (motor_test_result(&result))
         {
-            printf(
-                "motor_test_done wheel=%s direction=%s reason=%s "
-                "delta_counts=%s%lu,%s%lu invalid_delta=%lu,%lu "
-                "motors_stopped=1\n",
+            tm_printf(
+                (const UB *)"motor_test_done wheel=%s direction=%s reason=%s "
+                            "delta_counts=%s%lu,%s%lu invalid_delta=%lu,%lu "
+                            "motors_stopped=1\n",
                 (const UB *)(result.wheel == 2U
                                  ? "both"
                                  : (0U == result.wheel ? "left" : "right")),
@@ -296,41 +309,48 @@ manual_console (void)
 
                     if (motion_get_status(&status))
                     {
-                        printf("state=%d fault=%d hold=%d rest=%d trusted=%d "
-                               "id=%lu generation=%lu\n",
-                               status.motion.state, status.motion.fault,
-                               status.motion.hold, status.motion.stationary,
-                               status.motion.feedback_trusted,
-                               (uint32_t)status.motion.id,
-                               (uint32_t)status.motion.generation);
-                        printf("speed_mm_s=%d,%d output_permille=%d,%d\n",
-                               (int)(status.motion.speed[0] * 1000.0),
-                               (int)(status.motion.speed[1] * 1000.0),
-                               (int)(status.motion.output[0] * 1000.0),
-                               (int)(status.motion.output[1] * 1000.0));
+                        tm_printf((const UB *)"state=%d fault=%d hold=%d "
+                                              "rest=%d trusted=%d "
+                                              "id=%lu generation=%lu\n",
+                                  status.motion.state, status.motion.fault,
+                                  status.motion.hold, status.motion.stationary,
+                                  status.motion.feedback_trusted,
+                                  (uint32_t)status.motion.id,
+                                  (uint32_t)status.motion.generation);
+                        tm_printf((const UB *)"speed_mm_s=%d,%d "
+                                              "output_permille=%d,%d\n",
+                                  (int)(status.motion.speed[0] * 1000.0),
+                                  (int)(status.motion.speed[1] * 1000.0),
+                                  (int)(status.motion.output[0] * 1000.0),
+                                  (int)(status.motion.output[1] * 1000.0));
                     }
 
                     print_counts(&sample);
 #ifdef ROBO_ANGLE_TEST
                     angle_control_t turn = angle_test_status();
 
-                    printf("firmware=%s production_inhibited=1 angle_state=%s "
-                           "angle_mdeg=%d target_mdeg=%d output_permille=%d,%d "
-                           "goal_counts=%u,%u\n",
-                           (const UB *)ROBO_ENCODER_BUILD_ID,
-                           angle_state_name(turn.state),
-                           (int)(turn.angle * 57295.779513),
-                           turn.direction * 90000,
-                           (int)(turn.output[0] * 1000.0),
-                           (int)(turn.output[1] * 1000.0),
-                           (unsigned)ceil(turn.goal[0]),
-                           (unsigned)ceil(turn.goal[1]));
+                    tm_printf((const UB *)"firmware=%s production_inhibited=1 "
+                                          "angle_state=%s "
+                                          "angle_mdeg=%d target_mdeg=%d "
+                                          "output_permille=%d,%d "
+                                          "goal_counts=%u,%u\n",
+                              (const UB *)ROBO_ENCODER_BUILD_ID,
+                              angle_state_name(turn.state),
+                              (int)(turn.angle * 57295.779513),
+                              turn.direction * 90000,
+                              (int)(turn.output[0] * 1000.0),
+                              (int)(turn.output[1] * 1000.0),
+                              (unsigned)ceil(turn.goal[0]),
+                              (unsigned)ceil(turn.goal[1]));
 #endif
 #ifdef ROBO_SAFE_MOTOR_TEST
-                    printf("production_inhibited=1 motor_test_active=%u "
-                           "single_output_percent=25 paired_left_percent=24.9 "
-                           "paired_right_percent=25 serial_max_ms=1000\n",
-                           (unsigned)motor_test_active());
+                    tm_printf((const UB *)"production_inhibited=1 "
+                                          "motor_test_active=%u "
+                                          "single_output_percent=25 "
+                                          "paired_left_percent=24.9 "
+                                          "paired_right_percent=25 "
+                                          "serial_max_ms=1000\n",
+                              (unsigned)motor_test_active());
 #ifdef ROBO_BATTERY_FORWARD_TEST
                     button_diagnostics();
 #endif
@@ -356,20 +376,23 @@ manual_console (void)
                 {
                     b_armed  = true;
                     armed_at = motion_hal_time();
-                    puts("One command armed for 5 seconds; configuration gates "
-                         "still apply.");
+                    tm_putstring((const UB *)"One command armed for 5 seconds; "
+                                             "configuration gates "
+                                             "still apply.\n");
 #endif
                 }
                 else if (0 == strcmp(line, "stop"))
                 {
 #ifdef ROBO_ANGLE_TEST
                     angle_test_stop();
-                    puts("angle_test_stopped motors_stopped=1");
+                    tm_putstring(
+                        (const UB *)"angle_test_stopped motors_stopped=1\n");
 #endif
 #ifdef ROBO_SAFE_MOTOR_TEST
                     line_forward_pause();
                     motor_test_stop();
-                    puts("motors_stopped=1 ir_paused_until_reboot=1");
+                    tm_putstring((const UB *)"motors_stopped=1 "
+                                             "ir_paused_until_reboot=1\n");
 #endif
                     motion_stop();
                     b_armed = false;
@@ -395,13 +418,16 @@ manual_console (void)
                         && (angle_test_start(
                             (0 == strcmp(line, "turn_left_90")) ? 1 : -1)))
                     {
-                        puts("angle_test_started target_deg=90 "
-                             "max_output_percent=25 timeout_ms=8000");
+                        tm_putstring(
+                            (const UB *)"angle_test_started target_deg=90 "
+                                        "max_output_percent=25 "
+                                        "timeout_ms=8000\n");
                     }
                     else
                     {
-                        puts("angle_test_rejected: busy, cooling down or "
-                             "initialization failed");
+                        tm_putstring((const UB *)"angle_test_rejected: busy, "
+                                                 "cooling down or "
+                                                 "initialization failed\n");
                     }
 #endif
 #ifdef ROBO_SAFE_MOTOR_TEST
@@ -431,19 +457,24 @@ manual_console (void)
                     {
                         if (b_both)
                         {
-                            puts("motor_test_started left_output_percent=24.9 "
-                                 "right_output_percent=25 cutoff_ms=1000");
+                            tm_putstring((const UB *)"motor_test_started "
+                                                     "left_output_percent=24.9 "
+                                                     "right_output_percent=25 "
+                                                     "cutoff_ms=1000\n");
                         }
                         else
                         {
-                            puts("motor_test_started output_percent=25 "
-                                 "cutoff_ms=1000");
+                            tm_putstring((const UB *)"motor_test_started "
+                                                     "output_percent=25 "
+                                                     "cutoff_ms=1000\n");
                         }
                     }
                     else
                     {
-                        puts("motor_test_rejected: busy, cooling down, "
-                             "disabled or initialization failed");
+                        tm_putstring(
+                            (const UB *)"motor_test_rejected: busy, cooling "
+                                        "down, "
+                                        "disabled or initialization failed\n");
                     }
 #endif
 #if !defined(ROBO_ENCODER_DIAGNOSTICS_ONLY) && !defined(ROBO_SAFE_MOTOR_TEST) \
@@ -500,29 +531,36 @@ manual_console (void)
                         result = R_OK;
                     }
 
-                    printf(
-                        "submission=%d; inspect status for approval/result\n",
-                        result);
+                    tm_printf((const UB *)"submission=%d; inspect status for "
+                                          "approval/result\n",
+                              result);
 #endif
                 }
                 else if ('\0' != line[0])
                 {
-                    puts("status | encdiag | usbdiag | stop | shutdown");
+                    tm_putstring((const UB *)"status | encdiag | usbdiag | "
+                                             "stop | shutdown\n");
 #ifdef ROBO_BATTERY_FORWARD_TEST
-                    puts("buttons: raw GP20/GP21 levels and button "
-                         "polling/stop diagnostics");
+                    tm_putstring(
+                        (const UB *)"buttons: raw GP20/GP21 levels and button "
+                                    "polling/stop diagnostics\n");
 #endif
 #ifdef ROBO_ANGLE_TEST
-                    puts("turn_left_90 | turn_right_90 | status | stop");
+                    tm_putstring((const UB *)"turn_left_90 | turn_right_90 | "
+                                             "status | stop\n");
 #elif defined(ROBO_SAFE_MOTOR_TEST)
-                    puts("forward | backward | left_forward | left_reverse | "
-                         "right_forward | right_reverse; wait for completion "
-                         "between tests");
+                    tm_putstring((const UB *)"forward | backward | "
+                                             "left_forward | left_reverse | "
+                                             "right_forward | right_reverse; "
+                                             "wait for completion "
+                                             "between tests\n");
 #elif defined(ROBO_ENCODER_DIAGNOSTICS_ONLY)
-                    puts("Read-only diagnostics build: movement, ARM and reset "
-                         "are unavailable.");
+                    tm_putstring((const UB *)"Read-only diagnostics build: "
+                                             "movement, ARM and reset "
+                                             "are unavailable.\n");
 #else
-                    puts("ARM then a documented test command");
+                    tm_putstring(
+                        (const UB *)"ARM then a documented test command\n");
 #endif
                 }
             }

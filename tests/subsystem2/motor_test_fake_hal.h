@@ -5,7 +5,7 @@
 typedef unsigned UINT;
 typedef void (*FP)(UINT);
 typedef struct { unsigned intatr; FP inthdr; } T_DINT;
-typedef struct { uint16_t wrap; float divider; } pwm_config;
+typedef struct { uint16_t wrap; float divider; } pwm_config_t;
 #define TA_HLNG 1U
 #define E_OK 0
 #define GPIO_FUNC_PWM 4U
@@ -18,10 +18,10 @@ typedef struct { uint16_t wrap; float divider; } pwm_config;
 uint32_t save_and_disable_interrupts(void);
 void restore_interrupts(uint32_t state);
 uint64_t time_us_64(void);
-pwm_config pwm_get_default_config(void);
-void pwm_config_set_wrap(pwm_config *config, uint16_t wrap);
-void pwm_config_set_clkdiv(pwm_config *config, float divider);
-void pwm_init(unsigned slice, const pwm_config *config, bool enable);
+pwm_config_t pwm_get_default_config(void);
+void pwm_config_set_wrap(pwm_config_t *config, uint16_t wrap);
+void pwm_config_set_clkdiv(pwm_config_t *config, float divider);
+void pwm_init(unsigned slice, const pwm_config_t *config, bool enable);
 void pwm_set_both_levels(unsigned slice, uint16_t a, uint16_t b);
 void pwm_set_enabled(unsigned slice, bool enabled);
 void gpio_set_function(unsigned pin, unsigned function);

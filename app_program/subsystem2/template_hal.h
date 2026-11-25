@@ -13,7 +13,7 @@ typedef struct
 {
     uint16_t  wrap;
     float32_t divider;
-} pwm_config;
+} pwm_config_t;
 
 bool board_gpio_irq_register(uint32_t mask, void (*p_handler)(void));
 static inline uint32_t
@@ -123,27 +123,28 @@ pwm_gpio_to_slice_num (unsigned pin)
     return (pin >> 1U) & 7U;
 }
 
-static inline pwm_config
+static inline pwm_config_t
 pwm_get_default_config (void)
 {
-    pwm_config config = {4095U, 1.0f};
+    pwm_config_t config = {4095U, 1.0f};
+
     return config;
 }
 
 static inline void
-pwm_config_set_wrap (pwm_config * p_config, uint16_t wrap)
+pwm_config_set_wrap (pwm_config_t * p_config, uint16_t wrap)
 {
     p_config->wrap = wrap;
 }
 
 static inline void
-pwm_config_set_clkdiv (pwm_config * p_config, float32_t divider)
+pwm_config_set_clkdiv (pwm_config_t * p_config, float32_t divider)
 {
     p_config->divider = divider;
 }
 
 static inline void
-pwm_init (unsigned slice, const pwm_config * p_config, bool b_enable)
+pwm_init (unsigned slice, const pwm_config_t * p_config, bool b_enable)
 {
     UW base = PWM_BASE + (slice * 0x14U);
 

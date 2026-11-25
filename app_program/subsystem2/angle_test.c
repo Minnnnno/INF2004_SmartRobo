@@ -37,8 +37,8 @@ angle_test_init (void)
 {
     motion_config_t config = board_motion_config();
 
-    pwm_config pwm        = pwm_get_default_config();
-    T_DINT     definition = {.intatr = TA_HLNG, .inthdr = (FP)deadline_irq};
+    pwm_config_t pwm        = pwm_get_default_config();
+    T_DINT       definition = {.intatr = TA_HLNG, .inthdr = (FP)deadline_irq};
 
     brake();
     angle_control_init(&g_control, &config);

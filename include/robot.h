@@ -99,9 +99,8 @@ void            robot_control(robot_bus_t * p_bus, robot_control_t control,
 void            vehicle_controller_cycle(robot_bus_t * p_bus, float64_t now);
 /* Bridge for Buddy 1's queued start/stop/estop commands; caller holds bus
  * mutex. */
-motion_result_t
-vehicle_controller_remote_command(robot_bus_t *          p_bus,
-                                  robot_remote_command_t command);
+motion_result_t vehicle_controller_remote(robot_bus_t *          p_bus,
+                                          robot_remote_command_t command);
 /* Take controls/approved under lock; run control calculations outside lock. */
 void robot_motion_inputs(robot_bus_t * p_bus, motion_t * p_motion,
                          encoder_sample_t sample, float64_t now);

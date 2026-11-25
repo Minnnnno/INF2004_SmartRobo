@@ -71,7 +71,7 @@ static void encoder_latch_tests(void)
     CHECK(!motion_release(&motion, true));
     robot_bus_t bus;
     robot_bus_init(&bus, &motion.status);
-    CHECK(vehicle_controller_remote_command(&bus, REMOTE_START) == R_HELD);
+    CHECK(vehicle_controller_remote(&bus, REMOTE_START) == R_HELD);
     robot_control(&bus, CONTROL_RELEASE, true, true);
     robot_motion_inputs(&bus, &motion, sample, now);
     CHECK(motion.status.state == FAULT && motion.status.hold);

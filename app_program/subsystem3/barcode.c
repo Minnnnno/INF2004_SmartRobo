@@ -638,7 +638,7 @@ barcode_stream (uint16_t sample, uint32_t path)
 
     value[count]   = sample;
     ir_bits[count] = (char)('0' + (unsigned)gpio_get(BOARD_LINE_C)
-                            + 2U * (unsigned)gpio_get(BOARD_LINE_R));
+                            + (2U * (unsigned)gpio_get(BOARD_LINE_R)));
     point[count]   = path;
 
     if (++count < 10U)
@@ -659,7 +659,12 @@ barcode_stream (uint16_t sample, uint32_t path)
         point[3], point[4], point[5], point[6], point[7], point[8], point[9]);
 }
 #else
-#define barcode_stream(s, path) ((void)(s), (void)(path))
+static void
+barcode_stream (uint16_t sample, uint32_t path)
+{
+    (void)sample;
+    (void)path;
+}
 #endif
 
 #if defined(ROBO_BARCODE_TEST) && !defined(ROBO_LINE_STEERING)
@@ -678,7 +683,11 @@ barcode_idle (uint16_t sample)
     }
 }
 #else
-#define barcode_idle(s) ((void)(s))
+static void
+barcode_idle (uint16_t sample)
+{
+    (void)sample;
+}
 #endif
 
 #if BARCODE_JUNCTION_RECORD
@@ -688,7 +697,8 @@ barcode_idle (uint16_t sample)
 static uint16_t g_cap_hist[BARCODE_CAP_BEFORE]; /* Ring of the last samples. */
 static unsigned g_cap_head;
 static uint16_t g_cap[BARCODE_CAP_BEFORE + BARCODE_CAP_AFTER];
-static unsigned g_cap_n, g_cap_target;
+static unsigned g_cap_n;
+static unsigned g_cap_target;
 
 static void
 barcode_record_sample (uint16_t sample)
@@ -709,11 +719,11 @@ barcode_record_sample (uint16_t sample)
             for (unsigned index = 0U; index < g_cap_n; ++index)
             {
                 tm_printf((const UB *)"%u%s", (unsigned)g_cap[index],
-                          ((index % 20U) == 19U || index + 1U == g_cap_n)
+                          ((19U == (index % 20U)) || ((index + 1U) == g_cap_n))
                               ? "\n"
                               : " ");
 
-                if ((index % 20U) == 19U)
+                if (19U == (index % 20U))
                 {
                     (void)tk_dly_tsk(20U);
                 } /* Let the USB buffer drain. */
@@ -737,8 +747,18 @@ barcode_record_junction (void)
     g_cap_target = BARCODE_CAP_BEFORE + BARCODE_CAP_AFTER;
 }
 #else
-#define barcode_record_sample(s)  ((void)(s))
-#define barcode_record_junction() ((void)0)
+static void
+barcode_record_sample (uint16_t sample)
+{
+    (void)sample;
+}
+
+#if ROBO_LINE_TASK
+static void
+barcode_record_junction (void)
+{
+}
+#endif
 #endif
 
 #if ROBO_LINE_TASK
@@ -777,7 +797,14 @@ barcode_check_junction (const barcode_seg_t * p_seg, uint16_t sample,
     barcode_record_junction();
 }
 #else
-#define barcode_check_junction(seg, s, at) ((void)(seg), (void)(s), (void)(at))
+static void
+barcode_check_junction (const barcode_seg_t * p_seg, uint16_t sample,
+                        uint32_t sample_time)
+{
+    (void)p_seg;
+    (void)sample;
+    (void)sample_time;
+}
 #endif
 
 void

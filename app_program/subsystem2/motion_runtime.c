@@ -159,7 +159,7 @@ motion_runtime_init (void)
 #ifdef ROBO_REQUIRE_START
     /* Buddy 1 web Start gate: boot held. INITIALISING then settles into STOPPED
        (not READY) once still, and only the dashboard START releases it
-       (vehicle_controller_remote_command; robot_runtime_prepare sets the
+       (vehicle_controller_remote; robot_runtime_prepare sets the
        latch). */
     g_motion.status.hold = true;
 #endif

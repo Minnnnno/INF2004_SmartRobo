@@ -308,7 +308,7 @@ s5_point_is_object (const s5_estimate_t * p_estimate, int angle_deg,
 }
 
 void
-s5_sample_point (s5_ping_fn p_ping, void * p_context, s5_estimate_t * p_out)
+s5_sample_point (s5_ping_fn_t p_ping, void * p_context, s5_estimate_t * p_out)
 {
     float64_t range_mm[S5_MAX_SAMPLES];
     uint16_t  echo  = 0U; /* a bit per ping */
@@ -373,7 +373,7 @@ s5_follow_surface (s5_point_t * p_point, float64_t * p_prev_mm, bool * p_have)
 
 static bool
 s5_measure_point (s5_point_t * p_point, int angle_deg,
-                  float64_t centre_forward_mm, s5_measure_fn p_measure,
+                  float64_t centre_forward_mm, s5_measure_fn_t p_measure,
                   void * p_context)
 {
     s5_estimate_t estimate;
@@ -396,7 +396,7 @@ s5_measure_point (s5_point_t * p_point, int angle_deg,
    the coarse edge angle, so that is no limit. */
 static bool
 s5_walk_inward (s5_scan_t * p_scan, unsigned side, int last_deg,
-                s5_measure_fn p_measure, void * p_context)
+                s5_measure_fn_t p_measure, void * p_context)
 {
     s5_edge_t * p_edge = &p_scan->edge[side];
     int         step = (S5_LEFT == side) ? S5_FINE_STEP_DEG : -S5_FINE_STEP_DEG;
@@ -456,7 +456,7 @@ s5_walk_inward (s5_scan_t * p_scan, unsigned side, int last_deg,
    walk back inward and average the two crossings. */
 static bool
 s5_find_edge (s5_scan_t * p_scan, unsigned side, int start_deg,
-              float64_t start_range_mm, s5_measure_fn p_measure,
+              float64_t start_range_mm, s5_measure_fn_t p_measure,
               void * p_context)
 {
     s5_edge_t * p_edge = &p_scan->edge[side];
@@ -974,7 +974,7 @@ s5_face_apply (s5_scan_t * p_scan)
 
 /* The reading straight ahead, then the coarse sweep if it found something */
 static bool
-s5_scan_coarse (s5_scan_t * p_scan, s5_measure_fn p_measure, void * p_context)
+s5_scan_coarse (s5_scan_t * p_scan, s5_measure_fn_t p_measure, void * p_context)
 {
     int           angle;
     s5_estimate_t estimate;
@@ -1015,7 +1015,7 @@ s5_scan_coarse (s5_scan_t * p_scan, s5_measure_fn p_measure, void * p_context)
 }
 
 bool
-s5_tilt_scan (s5_scan_t * p_scan, s5_measure_fn p_measure, void * p_context)
+s5_tilt_scan (s5_scan_t * p_scan, s5_measure_fn_t p_measure, void * p_context)
 {
     if (!s5_scan_coarse(p_scan, p_measure, p_context))
     {
@@ -1028,7 +1028,7 @@ s5_tilt_scan (s5_scan_t * p_scan, s5_measure_fn p_measure, void * p_context)
 }
 
 bool
-s5_scan_run (s5_scan_t * p_scan, s5_measure_fn p_measure, void * p_context)
+s5_scan_run (s5_scan_t * p_scan, s5_measure_fn_t p_measure, void * p_context)
 {
     unsigned side;
 

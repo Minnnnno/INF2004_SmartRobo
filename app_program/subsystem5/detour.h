@@ -61,54 +61,56 @@ bool s5_detour_retryable(void);
 
 /* Why a scan or detour stopped (README.md "Why a detour stopped"): a 6-bit
    index kept in one byte, with one table of names for the console and MQTT. */
-#define S5_WHY_CODES(X)        \
-    X(ahead_blocked)           \
-    X(diagonal_blocked)        \
-    X(lifted)                  \
-    X(line_lost_at_stop)       \
-    X(line_not_found)          \
-    X(line_not_reporting)      \
-    X(look_moved)              \
-    X(look_unstable)           \
-    X(motion_fault)            \
-    X(move_event)              \
-    X(moved)                   \
-    X(moved_while_scanning)    \
-    X(no_progress)             \
-    X(no_release)              \
-    X(no_safe_detour)          \
-    X(no_status)               \
-    X(no_way_around)           \
-    X(not_accepted)            \
-    X(not_still)               \
-    X(noted_line_blocked)      \
-    X(noted_line_not_found)    \
-    X(obstacle_too_long)       \
-    X(parallel_blocked)        \
-    X(pass_ahead_blocked)      \
-    X(pass_look_failed)        \
-    X(publish_failed)          \
-    X(refused)                 \
-    X(released_while_scanning) \
-    X(repeated_spurious)       \
-    X(scan_failed)             \
-    X(scan_setup_failed)       \
-    X(sensor_failed)           \
-    X(sensor_fault)            \
-    X(side_too_close)          \
-    X(stall_no_escape)         \
-    X(stalled) X(stopped) X(timeout) X(ultrasonic_failed) X(unknown)
-#define S5_WHY_ENUM(name) S5_WHY_##name,
 typedef enum
 {
-    S5_WHY_none,
-    S5_WHY_CODES(S5_WHY_ENUM) S5_WHY_COUNT
+    S5_WHY_NONE,
+    S5_WHY_AHEAD_BLOCKED,
+    S5_WHY_DIAGONAL_BLOCKED,
+    S5_WHY_LIFTED,
+    S5_WHY_LINE_LOST_AT_STOP,
+    S5_WHY_LINE_NOT_FOUND,
+    S5_WHY_LINE_NOT_REPORTING,
+    S5_WHY_LOOK_MOVED,
+    S5_WHY_LOOK_UNSTABLE,
+    S5_WHY_MOTION_FAULT,
+    S5_WHY_MOVE_EVENT,
+    S5_WHY_MOVED,
+    S5_WHY_MOVED_WHILE_SCANNING,
+    S5_WHY_NO_PROGRESS,
+    S5_WHY_NO_RELEASE,
+    S5_WHY_NO_SAFE_DETOUR,
+    S5_WHY_NO_STATUS,
+    S5_WHY_NO_WAY_AROUND,
+    S5_WHY_NOT_ACCEPTED,
+    S5_WHY_NOT_STILL,
+    S5_WHY_NOTED_LINE_BLOCKED,
+    S5_WHY_NOTED_LINE_NOT_FOUND,
+    S5_WHY_OBSTACLE_TOO_LONG,
+    S5_WHY_PARALLEL_BLOCKED,
+    S5_WHY_PASS_AHEAD_BLOCKED,
+    S5_WHY_PASS_LOOK_FAILED,
+    S5_WHY_PUBLISH_FAILED,
+    S5_WHY_REFUSED,
+    S5_WHY_RELEASED_WHILE_SCANNING,
+    S5_WHY_REPEATED_SPURIOUS,
+    S5_WHY_SCAN_FAILED,
+    S5_WHY_SCAN_SETUP_FAILED,
+    S5_WHY_SENSOR_FAILED,
+    S5_WHY_SENSOR_FAULT,
+    S5_WHY_SIDE_TOO_CLOSE,
+    S5_WHY_STALL_NO_ESCAPE,
+    S5_WHY_STALLED,
+    S5_WHY_STOPPED,
+    S5_WHY_TIMEOUT,
+    S5_WHY_ULTRASONIC_FAILED,
+    S5_WHY_UNKNOWN,
+    S5_WHY_COUNT
 } s5_why_t;
 
 const char * s5_why_name(s5_why_t why);
 
 /* Why the last s5_detour_run() (or anything since the last clear) gave up,
-   or S5_WHY_none when nothing failed.
+   or S5_WHY_NONE when nothing failed.
    *p_a and *p_b: two numbers whose meaning depends on the code. */
 void     s5_detour_reason_clear(void);
 s5_why_t s5_detour_reason(int * p_a, int * p_b);

@@ -1316,8 +1316,8 @@ line_drive (line_ctx_t * p_context, const robot_status_t * p_status,
 #ifdef ROBO_LINE_RUN_LIMIT_S
     /* Analysis builds: one run of ROBO_LINE_RUN_LIMIT_S seconds, then stand
      * still (reset to rerun). */
-    if (!p_context->run_done && p_context->run_start >= 0.0
-        && (now - p_context->run_start) >= (float64_t)ROBO_LINE_RUN_LIMIT_S)
+    if ((!p_context->run_done) && (p_context->run_start >= 0.0)
+        && ((now - p_context->run_start) >= (float64_t)ROBO_LINE_RUN_LIMIT_S))
     {
         p_context->run_done = true;
         tm_printf((const UB *)"line_test: run limit reached, car stopped\n");
@@ -1325,7 +1325,7 @@ line_drive (line_ctx_t * p_context, const robot_status_t * p_status,
 
     if (p_context->run_done)
     {
-        if (b_usable && line_can_drive(p_status, b_owns))
+        if (b_usable && (line_can_drive(p_status, b_owns)))
         {
             result = line_hold();
         }

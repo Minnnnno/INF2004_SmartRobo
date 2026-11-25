@@ -17,10 +17,10 @@ uint64_t time_us_64(void) { return now; }
 double motion_hal_time(void) { return (double)now/1000000.0; }
 encoder_sample_t motion_hal_sample(void) { return sample; }
 void motion_hal_emergency_stop(void) { enabled[0]=false; enabled[1]=false; }
-pwm_config pwm_get_default_config(void) { pwm_config c={4095U,1.0f}; return c; }
-void pwm_config_set_wrap(pwm_config *c,uint16_t wrap) { c->wrap=wrap; }
-void pwm_config_set_clkdiv(pwm_config *c,float divider) { c->divider=divider; }
-void pwm_init(unsigned slice,const pwm_config *c,bool enable)
+pwm_config_t pwm_get_default_config(void) { pwm_config_t c={4095U,1.0f}; return c; }
+void pwm_config_set_wrap(pwm_config_t *c,uint16_t wrap) { c->wrap=wrap; }
+void pwm_config_set_clkdiv(pwm_config_t *c,float divider) { c->divider=divider; }
+void pwm_init(unsigned slice,const pwm_config_t *c,bool enable)
 { CHECK(slice==4U || slice==5U); CHECK(c->wrap==3999U && c->divider==1.5625f && !enable); }
 void pwm_set_both_levels(unsigned slice,uint16_t a,uint16_t b)
 { CHECK(slice==4U || slice==5U); CHECK(a<=1000U && b<=1000U && (a==0U || b==0U)); duty[slice-4U][0]=a; duty[slice-4U][1]=b; }

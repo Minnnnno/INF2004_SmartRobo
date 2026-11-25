@@ -54,7 +54,7 @@ servo_clamp (int angle_deg)
 void
 s5_servo_init (int angle_deg)
 {
-    pwm_config config = pwm_get_default_config();
+    pwm_config_t config = pwm_get_default_config();
 
     pwm_config_set_wrap(&config, (uint16_t)(SERVO_PERIOD_US - 1U));
     pwm_config_set_clkdiv(&config, (float32_t)TMCLK_MHz); /* 1 count per us */

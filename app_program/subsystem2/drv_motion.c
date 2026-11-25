@@ -205,7 +205,8 @@ motion_hal_init (const motion_config_t * p_config)
     {
         unsigned channel;
 
-        pwm_config pwm = pwm_get_default_config();
+        pwm_config_t pwm = pwm_get_default_config();
+
         pwm_config_set_wrap(&pwm, g_wrap);
         pwm_config_set_clkdiv(&pwm, (float32_t)divider);
         pwm_init(pwm_gpio_to_slice_num(g_motor_pins[wheel][0]), &pwm, false);

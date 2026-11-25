@@ -234,15 +234,59 @@ static uint8_t g_s5_why; /* s5_why_t */
 static int16_t g_s5_why_a;
 static int16_t g_s5_why_b;
 
-#define S5_WHY_NAME(name) #name,
-static const char * const g_s5_why_names[]
-    = {"none", S5_WHY_CODES(S5_WHY_NAME)};
+/* In the order of s5_why_t. */
+static const char * const g_s5_why_names[] = {
+    "none",
+    "ahead_blocked",
+    "diagonal_blocked",
+    "lifted",
+    "line_lost_at_stop",
+    "line_not_found",
+    "line_not_reporting",
+    "look_moved",
+    "look_unstable",
+    "motion_fault",
+    "move_event",
+    "moved",
+    "moved_while_scanning",
+    "no_progress",
+    "no_release",
+    "no_safe_detour",
+    "no_status",
+    "no_way_around",
+    "not_accepted",
+    "not_still",
+    "noted_line_blocked",
+    "noted_line_not_found",
+    "obstacle_too_long",
+    "parallel_blocked",
+    "pass_ahead_blocked",
+    "pass_look_failed",
+    "publish_failed",
+    "refused",
+    "released_while_scanning",
+    "repeated_spurious",
+    "scan_failed",
+    "scan_setup_failed",
+    "sensor_failed",
+    "sensor_fault",
+    "side_too_close",
+    "stall_no_escape",
+    "stalled",
+    "stopped",
+    "timeout",
+    "ultrasonic_failed",
+    "unknown",
+};
+_Static_assert((sizeof(g_s5_why_names) / sizeof(g_s5_why_names[0]))
+                   == S5_WHY_COUNT,
+               "one name per code");
 _Static_assert(S5_WHY_COUNT <= 64, "a code is 6 bits");
 
 const char *
 s5_why_name (s5_why_t why)
 {
-    return g_s5_why_names[(why < S5_WHY_COUNT) ? why : S5_WHY_unknown];
+    return g_s5_why_names[(why < S5_WHY_COUNT) ? why : S5_WHY_UNKNOWN];
 }
 
 /* 14 bits, clamped */
@@ -255,7 +299,7 @@ why_number (int value)
 static void
 detour_why (s5_why_t why, int detail_a, int detail_b)
 {
-    if ((uint8_t)S5_WHY_none == g_s5_why)
+    if ((uint8_t)S5_WHY_NONE == g_s5_why)
     {
         g_s5_why   = (uint8_t)why;
         g_s5_why_a = why_number(detail_a);
@@ -266,7 +310,7 @@ detour_why (s5_why_t why, int detail_a, int detail_b)
 void
 s5_detour_reason_clear (void)
 {
-    g_s5_why   = (uint8_t)S5_WHY_none;
+    g_s5_why   = (uint8_t)S5_WHY_NONE;
     g_s5_why_a = 0;
     g_s5_why_b = 0;
 }
@@ -389,7 +433,7 @@ release_hold (void)
     {
         tm_printf(
             (const UB *)"[DETOUR] robot not confirmed still; not releasing\n");
-        detour_why(S5_WHY_not_still, 0, 0);
+        detour_why(S5_WHY_NOT_STILL, 0, 0);
         return false;
     }
 
@@ -408,7 +452,7 @@ release_hold (void)
     }
 
     tm_printf((const UB *)"[DETOUR] Motion Control did not release the hold\n");
-    detour_why(S5_WHY_no_release, 0, 0);
+    detour_why(S5_WHY_NO_RELEASE, 0, 0);
     return false;
 }
 
@@ -452,13 +496,13 @@ move_poll (uint32_t command_id, float64_t start, float64_t timeout_s,
 
         if (F_NONE != status.motion.fault)
         {
-            detour_why(S5_WHY_motion_fault, (int)status.motion.fault,
+            detour_why(S5_WHY_MOTION_FAULT, (int)status.motion.fault,
                        (int)status.motion.state);
         }
         else
         {
             /* STOP, or Buddy 4: lifted */
-            detour_why(S5_WHY_stopped, (int)status.motion.state, 0);
+            detour_why(S5_WHY_STOPPED, (int)status.motion.state, 0);
         }
 
         return S5_MOVE_FAILED;
@@ -471,7 +515,7 @@ move_poll (uint32_t command_id, float64_t start, float64_t timeout_s,
             (const UB *)"[DETOUR] move %u ended with event %u, fault %u\n",
             (unsigned)command_id, (unsigned)status.last_event.type,
             (unsigned)status.last_event.fault);
-        detour_why(S5_WHY_move_event, (int)status.last_event.type,
+        detour_why(S5_WHY_MOVE_EVENT, (int)status.last_event.type,
                    (int)status.last_event.fault);
         return S5_MOVE_FAILED;
     }
@@ -546,7 +590,7 @@ move_poll (uint32_t command_id, float64_t start, float64_t timeout_s,
                             * (fabs(status.motion.target[0])
                                + fabs(status.motion.target[1]))));
             /* Cleared again if the pass escapes it (pass_obstacle) */
-            detour_why(S5_WHY_stalled, s5_mm(g_s5_x), s5_mm(g_s5_y));
+            detour_why(S5_WHY_STALLED, s5_mm(g_s5_x), s5_mm(g_s5_y));
             return S5_MOVE_STALLED;
         }
     }
@@ -567,7 +611,7 @@ move_poll (uint32_t command_id, float64_t start, float64_t timeout_s,
                               "owner %u)\n",
                   (unsigned)command_id, (unsigned)status.motion.state,
                   (unsigned)status.owner);
-        detour_why(S5_WHY_not_accepted, (int)status.motion.state,
+        detour_why(S5_WHY_NOT_ACCEPTED, (int)status.motion.state,
                    (int)status.owner);
         return S5_MOVE_FAILED;
     }
@@ -577,7 +621,7 @@ move_poll (uint32_t command_id, float64_t start, float64_t timeout_s,
         motion_stop();
         tm_printf((const UB *)"[DETOUR] move %u timed out\n",
                   (unsigned)command_id);
-        detour_why(S5_WHY_timeout, (int)command_id, 0);
+        detour_why(S5_WHY_TIMEOUT, (int)command_id, 0);
         return S5_MOVE_FAILED;
     }
 
@@ -665,7 +709,7 @@ straight (float64_t distance_mm, bool b_watch_line, float64_t * p_line_centre_m)
     {
         tm_printf((const UB *)"[DETOUR] drive %d mm refused (%u)\n",
                   s5_mm(distance_mm), (unsigned)result);
-        detour_why(S5_WHY_refused, (int)result, s5_mm(distance_mm));
+        detour_why(S5_WHY_REFUSED, (int)result, s5_mm(distance_mm));
         log_encoder_after(command_id, &counts_before, S5_MOVE_FAILED);
         return S5_MOVE_FAILED;
     }
@@ -685,7 +729,7 @@ straight (float64_t distance_mm, bool b_watch_line, float64_t * p_line_centre_m)
             tm_printf(
                 (const UB *)"[DETOUR] move %u could not confirm line stop\n",
                 (unsigned)command_id);
-            detour_why(S5_WHY_not_still, (int)command_id, 0);
+            detour_why(S5_WHY_NOT_STILL, (int)command_id, 0);
             log_encoder_after(command_id, &counts_before, S5_MOVE_FAILED);
             return S5_MOVE_FAILED;
         }
@@ -698,7 +742,7 @@ straight (float64_t distance_mm, bool b_watch_line, float64_t * p_line_centre_m)
         motion_stop();
         tm_printf((const UB *)"[DETOUR] move %u lost final position; holding\n",
                   (unsigned)command_id);
-        detour_why(S5_WHY_no_status, (int)command_id, 0);
+        detour_why(S5_WHY_NO_STATUS, (int)command_id, 0);
         return S5_MOVE_FAILED;
     }
 
@@ -762,7 +806,7 @@ turn_to (float64_t target_deg)
     {
         tm_printf((const UB *)"[DETOUR] turn %d deg refused (%u)\n",
                   s5_mm(turn), (unsigned)result);
-        detour_why(S5_WHY_refused, (int)result, s5_mm(turn));
+        detour_why(S5_WHY_REFUSED, (int)result, s5_mm(turn));
         log_encoder_after(command_id, &counts_before, S5_MOVE_FAILED);
         return S5_MOVE_FAILED;
     }
@@ -842,8 +886,8 @@ look_failed (int angle_deg, s5_why_t code, const char * p_why,
 
     if (b_now && ((now.motion.hold) || (F_NONE != now.motion.fault)))
     {
-        detour_why((F_NONE != now.motion.fault) ? S5_WHY_motion_fault
-                                                : S5_WHY_stopped,
+        detour_why((F_NONE != now.motion.fault) ? S5_WHY_MOTION_FAULT
+                                                : S5_WHY_STOPPED,
                    (F_NONE != now.motion.fault) ? (int)now.motion.fault
                                                 : (int)now.motion.state,
                    angle_deg);
@@ -874,7 +918,7 @@ look_ex (int angle_deg, float64_t * p_range_mm, bool b_unsure,
 
     if ((!s5_status(&status)) || (!look_still(status.motion.generation)))
     {
-        return look_failed(angle_deg, S5_WHY_look_moved,
+        return look_failed(angle_deg, S5_WHY_LOOK_MOVED,
                            "not still before the look", NULL);
     }
 
@@ -882,7 +926,7 @@ look_ex (int angle_deg, float64_t * p_range_mm, bool b_unsure,
 
     if (!look_still(status.motion.generation))
     {
-        return look_failed(angle_deg, S5_WHY_look_moved,
+        return look_failed(angle_deg, S5_WHY_LOOK_MOVED,
                            "not still after the servo", NULL);
     }
 
@@ -896,13 +940,13 @@ look_ex (int angle_deg, float64_t * p_range_mm, bool b_unsure,
 
     if (b_failed)
     {
-        return look_failed(angle_deg, S5_WHY_sensor_fault, "ultrasonic fault",
+        return look_failed(angle_deg, S5_WHY_SENSOR_FAULT, "ultrasonic fault",
                            &estimate);
     }
 
     if (!look_still(status.motion.generation))
     {
-        return look_failed(angle_deg, S5_WHY_look_moved,
+        return look_failed(angle_deg, S5_WHY_LOOK_MOVED,
                            "not still after the pings", &estimate);
     }
 
@@ -921,7 +965,7 @@ look_ex (int angle_deg, float64_t * p_range_mm, bool b_unsure,
         return S5_LOOK_UNSURE;
     }
 
-    return look_failed(angle_deg, S5_WHY_look_unstable, "pings disagree",
+    return look_failed(angle_deg, S5_WHY_LOOK_UNSTABLE, "pings disagree",
                        &estimate);
 }
 
@@ -953,7 +997,7 @@ path_clear (float64_t distance_mm)
         tm_printf((const UB *)"[DETOUR] something %d mm ahead, need %d mm\n",
                   s5_mm(s5_forward_mm(range_mm, S5_ANGLE_CENTRE_DEG)),
                   s5_mm(needed_mm));
-        detour_why(S5_WHY_ahead_blocked,
+        detour_why(S5_WHY_AHEAD_BLOCKED,
                    s5_mm(s5_forward_mm(range_mm, S5_ANGLE_CENTRE_DEG)),
                    s5_mm(needed_mm));
         return false;
@@ -1009,10 +1053,10 @@ clearance_sweep (float64_t distance_mm, const char * p_phase)
         robot_status_t now;
         bool           b_now = s5_status(&now);
 
-        detour_why(!b_now                         ? S5_WHY_no_status
-                   : (F_NONE != now.motion.fault) ? S5_WHY_motion_fault
-                   : now.motion.hold              ? S5_WHY_stopped
-                                                  : S5_WHY_not_still,
+        detour_why(!b_now                         ? S5_WHY_NO_STATUS
+                   : (F_NONE != now.motion.fault) ? S5_WHY_MOTION_FAULT
+                   : now.motion.hold              ? S5_WHY_STOPPED
+                                                  : S5_WHY_NOT_STILL,
                    0, 0);
         return false;
     }
@@ -1050,10 +1094,10 @@ clearance_sweep (float64_t distance_mm, const char * p_phase)
                       b_now ? (unsigned)now.motion.state : 9U,
                       b_now ? (unsigned)now.motion.fault : 9U,
                       (b_now && (s5_still_moved(&now))) ? 1U : 0U);
-            detour_why(!b_now                         ? S5_WHY_no_status
-                       : (F_NONE != now.motion.fault) ? S5_WHY_motion_fault
-                       : now.motion.hold              ? S5_WHY_stopped
-                                                      : S5_WHY_moved,
+            detour_why(!b_now                         ? S5_WHY_NO_STATUS
+                       : (F_NONE != now.motion.fault) ? S5_WHY_MOTION_FAULT
+                       : now.motion.hold              ? S5_WHY_STOPPED
+                                                      : S5_WHY_MOVED,
                        angle, 0);
             return false;
         }
@@ -1156,7 +1200,7 @@ passing_clearance (const s5_detour_plan_t * p_plan)
     {
         if (g_s5_leg.sweep_blocked)
         {
-            detour_why(S5_WHY_parallel_blocked, g_s5_block_angle,
+            detour_why(S5_WHY_PARALLEL_BLOCKED, g_s5_block_angle,
                        g_s5_block_range);
         }
 
@@ -1183,7 +1227,7 @@ passing_clearance (const s5_detour_plan_t * p_plan)
             tm_printf((const UB *)"[DETOUR] insufficient sideways clearance: "
                                   "%d mm, need %d mm; holding\n",
                       s5_mm(gap), s5_mm(needed));
-            detour_why(S5_WHY_side_too_close, s5_mm(gap), s5_mm(needed));
+            detour_why(S5_WHY_SIDE_TOO_CLOSE, s5_mm(gap), s5_mm(needed));
             return false;
         }
     }
@@ -1245,7 +1289,7 @@ go_out (const s5_detour_plan_t * p_plan)
 
                 if (g_s5_leg.sweep_blocked)
                 {
-                    detour_why(S5_WHY_diagonal_blocked, g_s5_block_angle,
+                    detour_why(S5_WHY_DIAGONAL_BLOCKED, g_s5_block_angle,
                                g_s5_block_range);
                     /* Still where it turned out: the caller can go back and try
                      * another way */
@@ -1285,7 +1329,7 @@ go_out (const s5_detour_plan_t * p_plan)
         {
             tm_printf((const UB *)"[DETOUR] diagonal made no forward progress; "
                                   "holding\n");
-            detour_why(S5_WHY_no_progress, s5_mm(progress), 0);
+            detour_why(S5_WHY_NO_PROGRESS, s5_mm(progress), 0);
             return false;
         }
 
@@ -1355,7 +1399,7 @@ rejoin_after_stop (void)
     {
         tm_printf((const UB *)"[DETOUR] line not under the sensors after "
                               "stopping; holding\n");
-        detour_why(S5_WHY_line_lost_at_stop, s5_mm(g_s5_x), s5_mm(g_s5_y));
+        detour_why(S5_WHY_LINE_LOST_AT_STOP, s5_mm(g_s5_x), s5_mm(g_s5_y));
         return false;
     }
 
@@ -1526,7 +1570,7 @@ drive_settle (s5_drive_t * p_drive)
     {
         tm_printf((const UB *)"[DETOUR] move %u could not confirm the stop\n",
                   (unsigned)p_drive->id);
-        detour_why(S5_WHY_not_still, (int)p_drive->id, 0);
+        detour_why(S5_WHY_NOT_STILL, (int)p_drive->id, 0);
         return false;
     }
 
@@ -1555,7 +1599,7 @@ drive_ended (s5_drive_t * p_drive)
     {
         tm_printf((const UB *)"[DETOUR] drove the whole pass without the "
                               "obstacle ending\n");
-        detour_why(S5_WHY_obstacle_too_long, s5_mm(g_s5_x), s5_mm(g_s5_y));
+        detour_why(S5_WHY_OBSTACLE_TOO_LONG, s5_mm(g_s5_x), s5_mm(g_s5_y));
     }
 
     return false;
@@ -1592,7 +1636,7 @@ drive_look_ahead (s5_drive_t * p_drive)
 
     if (S5_LOOK_FAILED == result)
     {
-        return drive_refuse(S5_WHY_pass_look_failed, "front measurement failed",
+        return drive_refuse(S5_WHY_PASS_LOOK_FAILED, "front measurement failed",
                             0);
     }
 
@@ -1600,7 +1644,7 @@ drive_look_ahead (s5_drive_t * p_drive)
         && (s5_forward_mm(range_mm, S5_ANGLE_CENTRE_DEG) <= needed))
     {
         return drive_refuse(
-            S5_WHY_pass_ahead_blocked, "something ahead",
+            S5_WHY_PASS_AHEAD_BLOCKED, "something ahead",
             s5_mm(s5_forward_mm(range_mm, S5_ANGLE_CENTRE_DEG)));
     }
 
@@ -1640,7 +1684,7 @@ pass_steps (const s5_detour_plan_t * p_plan)
 
         if (S5_LOOK_FAILED == result)
         {
-            return drive_refuse(S5_WHY_pass_look_failed,
+            return drive_refuse(S5_WHY_PASS_LOOK_FAILED,
                                 "side measurement failed", 0);
         }
 
@@ -1668,7 +1712,7 @@ pass_steps (const s5_detour_plan_t * p_plan)
 
         if ((g_s5_x - start_x) >= S5_PASS_MAX_MM)
         {
-            return drive_refuse(S5_WHY_obstacle_too_long,
+            return drive_refuse(S5_WHY_OBSTACLE_TOO_LONG,
                                 "obstacle has not ended",
                                 s5_mm(S5_PASS_MAX_MM));
         }
@@ -1764,7 +1808,7 @@ escape_stall (const s5_detour_plan_t * p_plan, unsigned attempt)
     }
 
     tm_printf((const UB *)"[DETOUR] no way out of the stall; holding\n");
-    detour_why(S5_WHY_stall_no_escape, s5_mm(g_s5_x), s5_mm(g_s5_y));
+    detour_why(S5_WHY_STALL_NO_ESCAPE, s5_mm(g_s5_x), s5_mm(g_s5_y));
     motion_stop();
     return false;
 }
@@ -1839,7 +1883,7 @@ drive_onto_noted (float64_t distance_mm)
         case S5_MOVE_DONE:
             tm_printf(
                 (const UB *)"[DETOUR] the noted line is not there either\n");
-            detour_why(S5_WHY_noted_line_not_found, s5_mm(g_s5_x),
+            detour_why(S5_WHY_NOTED_LINE_NOT_FOUND, s5_mm(g_s5_x),
                        s5_mm(g_s5_y));
             return false;
         default:
@@ -1898,7 +1942,7 @@ return_to_noted (void)
     {
         if (g_s5_leg.sweep_blocked)
         {
-            detour_why(S5_WHY_noted_line_blocked, g_s5_block_angle,
+            detour_why(S5_WHY_NOTED_LINE_BLOCKED, g_s5_block_angle,
                        g_s5_block_range);
         }
 
@@ -1986,7 +2030,7 @@ return_to_line (const s5_detour_plan_t * p_plan)
              * turn and go there. */
             if (!(gb_s5_noted_here ? reverse_to_noted() : return_to_noted()))
             {
-                detour_why(S5_WHY_line_not_found, s5_mm(g_s5_y), s5_mm(g_s5_x));
+                detour_why(S5_WHY_LINE_NOT_FOUND, s5_mm(g_s5_y), s5_mm(g_s5_x));
                 return false;
             }
         break;
@@ -2115,7 +2159,7 @@ back_to_start (const s5_detour_plan_t * p_plan)
 
     if (!wait_stopped())
     {
-        detour_why(S5_WHY_not_still, 0, 0);
+        detour_why(S5_WHY_NOT_STILL, 0, 0);
         return false;
     }
 

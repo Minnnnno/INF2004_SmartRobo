@@ -13,7 +13,7 @@
 static BOOL
 log_starts_with (const UB * p_text, const char * p_prefix)
 {
-    while (*p_prefix != '\0')
+    while ('\0' != *p_prefix)
     {
         if ((char)*p_text++ != *p_prefix++)
         {
@@ -36,7 +36,7 @@ robo_log_allowed (const UB * p_format)
         return FALSE;
     }
 
-    for (unsigned index = 0U; index < sizeof keep / sizeof keep[0]; ++index)
+    for (unsigned index = 0U; index < (sizeof keep / sizeof keep[0]); ++index)
     {
         if (log_starts_with(p_format, keep[index]))
         {
@@ -47,7 +47,7 @@ robo_log_allowed (const UB * p_format)
     return FALSE;
 }
 #else
-typedef int robo_log_filter_unused; /* Not an empty file in normal builds. */
+typedef int robo_log_filter_unused_t; /* Not an empty file in normal builds. */
 #endif
 
 /*** end of file ***/
